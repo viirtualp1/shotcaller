@@ -566,16 +566,16 @@
   },
   "cloud": {
     "title": "Cloud save",
+    "localTitle": "Local save",
     "status": {
-      "local": "Progress is saved on this device",
-      "syncing": "Saving to the cloud…",
-      "synced": "Saved to the cloud {time}",
+      "local": "Saved on this device",
+      "syncing": "Saving…",
+      "synced": "Saved {time}",
       "justNow": "just now",
-      "offline": "No connection: saving once you are back online",
-      "error": "Could not reach the cloud"
+      "offline": "No connection, will save later",
+      "error": "Could not save"
     },
-    "pitch": "Sign in so your progress is safe and waits for you on any device.",
-    "guest": "Saved in the cloud, but only this device can reach it. Sign in to play on another one.",
+    "pitch": "Sign in to keep your progress online and play on any device.",
     "signedIn": "Signed in as {email}",
     "signIn": "Sign in",
     "signInEmail": "Sign in with email",

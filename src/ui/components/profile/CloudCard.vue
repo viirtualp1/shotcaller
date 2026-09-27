@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Mail, RotateCw } from 'lucide-vue-next'
+import { HardDrive, LogOut, Mail, RotateCw } from 'lucide-vue-next'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
@@ -14,7 +14,17 @@ const { t } = useGameText()
 /** Keeps "saved 5 minutes ago" moving while the page stays open. */
 const now = useNow({ scheduler: (tick) => useIntervalFn(tick, 30_000) })
 
+/**
+ * Before signing in the player's progress is theirs on this device only (the guest backup is our
+ * business), so the card speaks of a local save and never shows cloud sync states.
+ */
+const local = computed(() => !cloud.signedIn)
+
 const statusText = computed(() => {
+  if (local.value) {
+    return t('cloud.status.local')
+  }
+
   if (cloud.status === 'synced' && cloud.syncedAt !== null && now.value.getTime() - cloud.syncedAt < 60_000) {
     return t('cloud.status.synced', { time: t('cloud.status.justNow') })
   }
@@ -38,18 +48,22 @@ function signOut() {
 </script>
 
 <template>
-  <section v-if="cloud.enabled" class="cloud" :data-status="cloud.status">
+  <section v-if="cloud.enabled" class="cloud" :data-status="local ? 'local' : cloud.status">
     <span class="icon">
-      <component :is="CLOUD_ICONS[cloud.status]" :size="20" :class="{ spin: cloud.busy }" />
+      <HardDrive v-if="local" :size="20" />
+      <component :is="CLOUD_ICONS[cloud.status]" v-else :size="20" :class="{ spin: cloud.busy }" />
     </span>
 
     <div class="text">
-      <strong>{{ t('cloud.title') }}</strong>
-      <span class="status">{{ statusText }}</span>
+      <p class="heading">
+        <strong>{{ t(local ? 'cloud.localTitle' : 'cloud.title') }}</strong>
+        <span class="dot" aria-hidden="true">·</span>
+        <span class="status">{{ statusText }}</span>
+      </p>
+
       <span v-if="cloud.conflict" class="note warn">{{ t('cloud.conflict.pending') }}</span>
-      <span v-else-if="cloud.signedIn" class="note">{{ t('cloud.signedIn', { email: maskedEmail }) }}</span>
-      <span v-else-if="cloud.account" class="note">{{ t('cloud.guest') }}</span>
-      <span v-else class="note">{{ t('cloud.pitch') }}</span>
+      <span v-else-if="local" class="note">{{ t('cloud.pitch') }}</span>
+      <span v-else class="note">{{ t('cloud.signedIn', { email: maskedEmail }) }}</span>
     </div>
 
     <div class="actions">
@@ -66,7 +80,7 @@ function signOut() {
       </button>
 
       <button
-        v-if="cloud.status === 'error' || cloud.status === 'offline'"
+        v-if="!local && (cloud.status === 'error' || cloud.status === 'offline')"
         type="button"
         class="btn ghost"
         @click="cloud.syncNow()"
@@ -120,6 +134,18 @@ function signOut() {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  margin: 0;
+}
+
+.dot {
+  color: var(--chalk-faint);
 }
 
 .status {

@@ -97,8 +97,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Справа от карточки профиля на главном экране появилась **кнопка облака**: войти можно прямо оттуда. После входа она показывает, сохранён ли прогресс.',
       },
       {
-        en: 'The profile page has a **Cloud save** card with the save status, a Sign in with email button and, once signed in, Sign out.',
-        ru: 'На странице профиля появилась карточка **«Облачное сохранение»**: статус сохранения, кнопка «Войти по почте», а после входа — «Выйти».',
+        en: 'The profile page shows how your progress is kept: **Local save** until you sign in, **Cloud save** after, with the save status on the same line.',
+        ru: 'На странице профиля видно, где хранится прогресс: **«Локальное сохранение»**, пока ты не вошёл, и **«Облачное сохранение»** после входа, со статусом в той же строке.',
       },
       {
         en: 'Sign-in problems are explained in plain words: a wrong or expired code, too many attempts, no connection.',
