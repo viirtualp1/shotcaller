@@ -80,7 +80,7 @@ export function useTutorial() {
     {
       key: 'fight',
       target: '[data-tour="fight"]',
-      side: 'bottom',
+      side: 'top',
     },
   ]
 

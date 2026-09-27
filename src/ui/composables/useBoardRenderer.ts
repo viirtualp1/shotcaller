@@ -15,6 +15,7 @@ export function useBoardLabels(): BoardLabels {
   return {
     laneName: (id) => t(`lanes.${id}`),
     baseName: (team) => t(team === 0 ? 'teams.ourBase' : 'teams.theirBase'),
+    combatText: (kind) => t(`battle.${kind}`),
   }
 }
 

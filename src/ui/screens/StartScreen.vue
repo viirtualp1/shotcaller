@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Play, RotateCcw, Settings } from 'lucide-vue-next'
+import { Play, Swords } from 'lucide-vue-next'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
+import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import { useGameText } from '../composables/useGameText'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
@@ -35,11 +36,7 @@ const { t } = useGameText()
           :class="{ primary: !store.savedRound }"
           @click="menu.newMatch = true"
         >
-          <RotateCcw :size="18" /> {{ t('start.newMatch') }}
-        </button>
-
-        <button type="button" class="btn ghost block big" @click="menu.settings = true">
-          <Settings :size="18" /> {{ t('hud.settings') }}
+          <Swords :size="18" /> {{ t('start.newMatch') }}
         </button>
       </nav>
     </section>
@@ -49,11 +46,14 @@ const { t } = useGameText()
         <BoardPreview :key="settings.locale" />
       </BoardFrame>
     </section>
+
+    <LatestPatchCard class="news" />
   </main>
 </template>
 
 <style scoped>
 .start {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   align-items: center;
@@ -99,12 +99,15 @@ h1 {
   animation-delay: 50ms;
 }
 
-.menu .btn:nth-child(3) {
-  animation-delay: 100ms;
-}
-
 .preview {
   min-width: 0;
+}
+
+.news {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 1;
 }
 
 @media (max-width: 860px) {
@@ -116,6 +119,12 @@ h1 {
 
   .menu {
     max-width: none;
+  }
+
+  .news {
+    position: relative;
+    inset: auto;
+    width: auto;
   }
 }
 </style>

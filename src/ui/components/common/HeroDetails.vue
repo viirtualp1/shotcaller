@@ -58,6 +58,7 @@ const stats = computed(() => ({
       {{ text.abilityDescription(hero.ability, power) }}
     </p>
 
+    <p v-if="text.heroPassive(heroId)" class="passive">{{ text.heroPassive(heroId) }}</p>
     <p class="passive">{{ text.rolePassive(hero.role) }}</p>
 
     <ul v-if="items.length" class="items">

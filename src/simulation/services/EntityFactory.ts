@@ -8,6 +8,7 @@ import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
 import { CREEPS, STRUCTURES, type CreepVariant, type StructureType } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
+import { createPrd } from '@/core/random/prd'
 import type { Rng } from '@/core/random/rng'
 import type { OwnedHero } from '@/domain/roster/Roster'
 import type { LaneReport } from '@/domain/synergy/resolveLane'
@@ -39,6 +40,26 @@ function itemEffects(items: readonly ItemId[]) {
       revive: 0,
     },
   )
+}
+
+/** Crit chances from several items combine as independent rolls; the biggest multiplier wins. */
+function itemCrit(items: readonly ItemId[]) {
+  let noCrit = 1
+  let multiplier = 1
+  for (const id of items) {
+    const { critChance = 0, critMultiplier = 1 } = ITEMS[id].effects
+    if (critChance > 0) {
+      noCrit *= 1 - critChance
+      multiplier = Math.max(multiplier, critMultiplier)
+    }
+  }
+
+  return noCrit < 1
+    ? {
+        chance: 1 - noCrit,
+        multiplier,
+      }
+    : null
 }
 
 export interface CreepSpawn {
@@ -105,6 +126,7 @@ export class EntityFactory {
 
     const maxHp = stats.hp * star * mods.maxHp
     const base = this.map.base(team)
+    const crit = itemCrit(owned.items)
     return this.world.add({
       team,
       kind: 'hero',
@@ -183,6 +205,23 @@ export class EntityFactory {
             },
           }
         : {}),
+      ...(crit
+        ? {
+            crit: {
+              multiplier: crit.multiplier,
+              prd: createPrd(this.rng, crit.chance),
+            },
+          }
+        : {}),
+      ...(definition.bash
+        ? {
+            bash: {
+              stun: definition.bash.stun,
+              prd: createPrd(this.rng, definition.bash.chance),
+            },
+          }
+        : {}),
+      ...(role.evasion ? { evasion: { prd: createPrd(this.rng, role.evasion) } } : {}),
     }) as HeroUnit
   }
 

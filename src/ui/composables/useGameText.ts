@@ -69,6 +69,7 @@ function roleParams(format: Format, role: RoleId) {
     mult: format(definition.modifiers.manaGain ?? definition.modifiers.structureDamage ?? 1),
     bonus: format((definition.laneCreepDamageBonus ?? 0) * 100),
     speed: percentGain(format, definition.modifiers.speed ?? 1),
+    evasion: format((definition.evasion ?? 0) * 100),
   }
 }
 
@@ -95,6 +96,16 @@ export function useGameText() {
     heroGlyph: (id: HeroId) => HEROES[id].glyph,
     roleName: (id: RoleId) => t(`roles.${id}.name`),
     rolePassive: (id: RoleId) => t(`roles.${id}.passive`, roleParams(number, id)),
+    /** Innate hero passive on top of the role one, if the hero has any. */
+    heroPassive: (id: HeroId) => {
+      const bash = HEROES[id].bash
+      return bash
+        ? t('innate.bash', {
+            chance: number(bash.chance * 100),
+            stun: number(bash.stun),
+          })
+        : null
+    },
     abilityName: (id: AbilityId) => ABILITY_NAMES[id],
     abilityDescription: (id: AbilityId, power = 1) => t(`abilities.${id}`, abilityParams(number, id, power)),
     synergyName: (id: SynergyId) => t(`synergies.${id}.name`),

@@ -4,4 +4,5 @@ import type { LaneId, TeamId } from '@/content/ids'
 export interface BoardLabels {
   laneName(id: LaneId): string
   baseName(team: TeamId): string
+  combatText(kind: 'miss' | 'bash'): string
 }

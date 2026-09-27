@@ -60,7 +60,7 @@ export class BoardRenderer {
     art.width = art.height = BATTLE.worldSize
     this.planning = new PlanningLayer(map)
     this.battle = new BattleLayer()
-    this.effects = new EffectsLayer((strength) => this.shake(strength))
+    this.effects = new EffectsLayer(labels, (strength) => this.shake(strength))
     this.world.addChild(art, this.planning, this.battle, this.effects)
     this.camera.addChild(this.world)
     app.stage.addChild(this.camera)
