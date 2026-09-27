@@ -49,6 +49,102 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '4.0',
+    date: '2026-09-27',
+    title: {
+      en: 'Coach profile',
+      ru: 'Профиль тренера',
+    },
+    summary: {
+      en: 'Every finished match now counts: climb seven ranks, level up your coach and look back at your heroes, synergies and recent games.',
+      ru: 'Теперь каждый доигранный матч идёт в зачёт: поднимайся по семи рангам, качай уровень тренера и смотри, какие герои, связки и матчи у тебя были.',
+    },
+    general: [
+      {
+        en: 'New **coach profile**. Open it from the card in the top-left corner of the start screen: your name, avatar, rank and level.',
+        ru: 'Новый **профиль тренера**. Он открывается с карточки в левом верхнем углу стартового экрана: там твоё имя, аватар, ранг и уровень.',
+      },
+      {
+        en: 'Seven ranks, like Dota medals: **Rookie**, **Scout**, **Tactician**, **Strategist**, **Commander**, **Legend** and **Shotcaller**.',
+        ru: 'Семь рангов, как медали в доте: **Новичок**, **Разведчик**, **Тактик**, **Стратег**, **Командир**, **Легенда** и **Шотколлер**.',
+      },
+      {
+        en: 'Every rank but the last has **5** stars, and each star takes **40** rating. Shotcaller has no stars: it is the top.',
+        ru: 'У каждого ранга, кроме последнего, по **5** звёзд, и каждая звезда стоит **40** рейтинга. У Шотколлера звёзд нет, это вершина.',
+      },
+      {
+        en: 'A win gives **+25** rating, or **+30** when you break the enemy throne before the round limit. A loss takes **20**, a draw changes nothing.',
+        ru: 'Победа даёт **+25** рейтинга, а если сломать трон соперника до лимита раундов — **+30**. Поражение отнимает **20**, ничья ничего не меняет.',
+      },
+      {
+        en: 'On the **Relaxed** difficulty, without the planning timer, rating gains are **20%** smaller: **+20** and **+24**. Losses stay the same.',
+        ru: 'На сложности **Спокойная**, без таймера подготовки, прирост рейтинга на **20%** меньше: **+20** и **+24**. Потери те же.',
+      },
+      {
+        en: 'Coach level grows with experience: **60** for every match, **15** for every round won and **60** more for a win.',
+        ru: 'Уровень тренера растёт от опыта: **60** за каждый матч, **15** за каждый выигранный раунд и ещё **60** за победу.',
+      },
+      {
+        en: 'Level 2 takes **200** experience, and every next level takes **50** more than the one before.',
+        ru: 'До 2 уровня нужно **200** опыта, и каждый следующий уровень требует на **50** больше предыдущего.',
+      },
+      {
+        en: 'Only finished matches count. A match you leave for the main menu stays saved and counts once you finish it.',
+        ru: 'В зачёт идут только доигранные матчи. Матч, из которого ты вышел в главное меню, сохраняется и засчитается, когда ты его закончишь.',
+      },
+    ],
+    interface: [
+      {
+        en: 'The profile page shows the **rank ladder** with how much rating is left to the next star and the next rank.',
+        ru: 'На странице профиля есть **лестница рангов**: видно, сколько рейтинга осталось до следующей звезды и следующего ранга.',
+      },
+      {
+        en: 'Profile tiles: matches with wins, losses and draws, win rate with your **best rating**, current and best win streak, fastest win, thrones broken and hero kills per match.',
+        ru: 'Плитки профиля: матчи с победами, поражениями и ничьими, доля побед и **лучший рейтинг**, текущая и лучшая серия побед, самая быстрая победа, разрушенные троны и убийства героев за матч.',
+      },
+      {
+        en: '**Favourite heroes**: matches, win rate, kills and deaths and damage per match for every hero you put on the map.',
+        ru: '**Любимые герои**: матчи, доля побед, убийства и смерти и урон за матч по каждому герою, которого ты выставлял.',
+      },
+      {
+        en: '**Favourite synergies**: the synergies of your final lineups, with match count and win rate.',
+        ru: '**Любимые связки**: связки из твоих финальных составов с числом матчей и долей побед.',
+      },
+      {
+        en: '**Recent matches**: the last **20** games with the result, rating change, experience, final lineup with the best hero crowned, rounds won and lost, difficulty and when it was played.',
+        ru: '**Последние матчи**: **20** последних игр с результатом, изменением рейтинга, опытом, финальным составом с короной у лучшего героя, выигранными и проигранными раундами, сложностью и временем игры.',
+      },
+      {
+        en: 'Pick a **name** of up to **20** characters and any hero as your avatar. By default the avatar is your most played hero.',
+        ru: 'Можно задать **имя** до **20** символов и выбрать аватаром любого героя. По умолчанию аватар — твой самый частый герой.',
+      },
+      {
+        en: 'Match statistics now open with your **rating change** and experience, and show a badge when you reach a new rank or level.',
+        ru: 'Статистика матча теперь начинается с **изменения рейтинга** и опыта, а при новом ранге или уровне появляется значок.',
+      },
+      {
+        en: 'The profile and patch notes have their own links, like **#/profile**, and the browser Back button closes them.',
+        ru: 'У профиля и патчноутов теперь свои ссылки, например **#/profile**, а кнопка «Назад» в браузере их закрывает.',
+      },
+      {
+        en: 'Shop: a hero card turns **grey** and cannot be bought when you lack the gold or have no free slot for the hero. A card that completes a set of three stays available.',
+        ru: 'Магазин: карточка героя становится **серой** и не покупается, если не хватает золота или герою некуда встать. Карточка, которая собирает тройку, остаётся доступной.',
+      },
+      {
+        en: 'The coach level now explains itself: **Level 2 · up to 2 heroes on the map**.',
+        ru: 'Уровень тренера теперь подписан понятнее: **Уровень 2 · до 2 героев на карте**.',
+      },
+      {
+        en: 'The **Bench** panel is now called **Heroes**, and the Lanes panel lost its title.',
+        ru: 'Панель **Резерв** теперь называется **Герои**, а у панели линий больше нет заголовка.',
+      },
+      {
+        en: 'During a battle the **left panel slides away** and the map grows into the freed space. It comes back when the round ends.',
+        ru: 'Во время боя **левая панель уезжает**, а карта увеличивается на освободившееся место. После раунда панель возвращается.',
+      },
+    ],
+  },
+  {
     version: '3.0',
     date: '2026-09-27',
     title: {
