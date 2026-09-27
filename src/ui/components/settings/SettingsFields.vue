@@ -3,23 +3,14 @@ import { Gauge, Languages } from 'lucide-vue-next'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { DIFFICULTIES, type Difficulty } from '@/content/rules'
-import { LOCALE_LABELS, LOCALES, isLocale } from '../../i18n'
 import { useGameText } from '../../composables/useGameText'
 import { useSettingsStore } from '../../stores/settings'
+import LanguageSwitch from './LanguageSwitch.vue'
 
 const DIFFICULTY_IDS = Object.keys(DIFFICULTIES) as Difficulty[]
 
 const settings = useSettingsStore()
 const { t } = useGameText()
-
-const language = computed({
-  get: () => settings.locale,
-  set: (value: string | undefined) => {
-    if (isLocale(value)) {
-      settings.locale = value
-    }
-  },
-})
 
 const difficulty = computed({
   get: () => settings.difficulty,
@@ -60,11 +51,7 @@ const difficultyHint = computed(() => {
     <section class="field">
       <h3 class="label"><Languages :size="16" /> {{ t('settings.language') }}</h3>
 
-      <ToggleGroupRoot v-model="language" type="single" class="choices" :aria-label="t('settings.language')">
-        <ToggleGroupItem v-for="locale in LOCALES" :key="locale" :value="locale" class="choice">
-          {{ LOCALE_LABELS[locale] }}
-        </ToggleGroupItem>
-      </ToggleGroupRoot>
+      <LanguageSwitch />
     </section>
   </div>
 </template>
