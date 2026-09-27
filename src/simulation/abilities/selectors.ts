@@ -16,17 +16,21 @@ export function enemiesAround(
   radius: number,
   filter: EnemyFilter = {},
 ) {
-  return ctx.index.near(
-    center,
-    radius,
-    (u) =>
-      u.team !== caster.team &&
-      isAlive(u) &&
-      (filter.includeStructures || u.kind !== 'structure') &&
-      (!filter.heroesOnly || u.kind === 'hero') &&
-      withinLaneBand(ctx.map, caster, u.position) &&
-      (!filter.excludeProtected || !ctx.safety.isProtected(u, caster.team)),
-  )
+  return ctx.index
+    .near(
+      center,
+      radius,
+      (u) =>
+        u.team !== caster.team &&
+        isAlive(u) &&
+        (filter.includeStructures || u.kind !== 'structure') &&
+        (!filter.heroesOnly || u.kind === 'hero'),
+    )
+    .filter(
+      (u) =>
+        withinLaneBand(ctx.map, caster, u.position) &&
+        (!filter.excludeProtected || !ctx.safety.isProtected(u, caster.team)),
+    )
 }
 
 export function alliedHeroesAround(ctx: SimulationContext, caster: Unit, radius: number) {

@@ -18,5 +18,5 @@ export function withinLaneBand(map: LaneMap, unit: Unit, point: Vec2) {
     return true
   }
 
-  return map.project(unit.laneFollower.path, point).distance <= LANE_BAND
+  return map.isWithin(unit.laneFollower.path, point, LANE_BAND)
 }

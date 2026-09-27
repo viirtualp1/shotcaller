@@ -26,12 +26,12 @@ describe('patch notes', () => {
 
     const sorted = [...versions].sort((a, b) => {
       const [x, y] = [versionKey(a), versionKey(b)]
-      return (y[0]! - x[0]!) * 1000 + (y[1]! - x[1]!)
+      return (y[0]! - x[0]!) * 1_000_000 + (y[1]! - x[1]!) * 1000 + ((y[2] ?? 0) - (x[2] ?? 0))
     })
 
     expect(versions).toEqual(sorted)
     expect(new Set(versions).size).toBe(versions.length)
-    expect(pkg.version.startsWith(`${LATEST_PATCH.version}.`)).toBe(true)
+    expect([LATEST_PATCH.version, `${LATEST_PATCH.version}.0`]).toContain(pkg.version)
   })
 
   it('uses real calendar dates', () => {

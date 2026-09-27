@@ -452,14 +452,16 @@
       "items": "Items",
       "roles": "Roles",
       "heroes": "Heroes",
-      "interface": "Interface"
+      "interface": "Interface",
+      "fixes": "Fixes"
     },
     "sections": {
       "general": "General updates",
       "items": "Item updates",
       "roles": "Role updates",
       "heroes": "Hero updates",
-      "interface": "Interface"
+      "interface": "Interface",
+      "fixes": "Bug fixes"
     },
     "badges": {
       "new": "New",

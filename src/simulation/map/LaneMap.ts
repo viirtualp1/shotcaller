@@ -120,6 +120,26 @@ export class LaneMap {
     return best
   }
 
+  /** Same answer as `project(path, p).distance <= maxDistance`, but stops at the first segment close enough. */
+  isWithin(path: LanePath, p: Vec2, maxDistance: number) {
+    for (let i = 0; i < path.points.length - 1; i++) {
+      const a = path.points[i]!
+      const b = path.points[i + 1]!
+      const vx = b.x - a.x
+      const vy = b.y - a.y
+      const lengthSq = vx * vx + vy * vy
+      const t = lengthSq ? Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / lengthSq)) : 0
+      const dx = p.x - (a.x + vx * t)
+      const dy = p.y - (a.y + vy * t)
+      // The distance is never shorter than either leg, so far segments are ruled out without Math.hypot.
+      if (Math.abs(dx) <= maxDistance && Math.abs(dy) <= maxDistance && Math.hypot(dx, dy) <= maxDistance) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   towerAlong(path: LanePath) {
     return path.length * BATTLE.towerFraction
   }

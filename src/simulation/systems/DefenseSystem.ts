@@ -66,9 +66,12 @@ export class DefenseSystem implements System {
     }
 
     let nearest: Unit | null = null
+    let nearestDistance = Infinity
     for (const invader of invaders) {
-      if (!nearest || distance(hero.position, invader.position) < distance(hero.position, nearest.position)) {
+      const d = distance(hero.position, invader.position)
+      if (!nearest || d < nearestDistance) {
         nearest = invader
+        nearestDistance = d
       }
     }
 

@@ -452,14 +452,16 @@
       "items": "Предметы",
       "roles": "Роли",
       "heroes": "Герои",
-      "interface": "Интерфейс"
+      "interface": "Интерфейс",
+      "fixes": "Исправления"
     },
     "sections": {
       "general": "Общие изменения",
       "items": "Предметы",
       "roles": "Роли",
       "heroes": "Герои",
-      "interface": "Интерфейс"
+      "interface": "Интерфейс",
+      "fixes": "Исправления"
     },
     "badges": {
       "new": "Новое",

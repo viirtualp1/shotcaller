@@ -51,9 +51,12 @@ export class BoardRenderer {
   private pressedToken = false
   private placing = false
   private hovered: HeroHit | null = null
+  /** Pixi only follows window resizes; this also catches the host changing size on its own. */
+  private readonly hostObserver: ResizeObserver
 
   private constructor(
     private readonly app: Application,
+    private readonly host: HTMLElement,
     private readonly map: LaneMap,
     labels: BoardLabels,
     icons: RoleIcons,
@@ -80,6 +83,8 @@ export class BoardRenderer {
     app.stage.on('pointertap', (e) => this.onPointerTap(e))
     app.renderer.on('resize', () => this.fit(false))
     app.ticker.add((ticker) => this.onFrame(ticker.deltaMS / 1000))
+    this.hostObserver = new ResizeObserver(() => app.queueResize())
+    this.hostObserver.observe(host)
     this.fit(false)
   }
 
@@ -96,7 +101,7 @@ export class BoardRenderer {
     const icons = await loadRoleIcons()
     host.appendChild(app.canvas)
 
-    return new BoardRenderer(app, map, labels, icons)
+    return new BoardRenderer(app, host, map, labels, icons)
   }
 
   /** Space covered by HUD panels; the map is fitted into what is left. */
@@ -110,6 +115,17 @@ export class BoardRenderer {
     }
 
     this.insets = insets
+
+    /*
+     * The HUD reports new insets as soon as the window changes size, while Pixi resizes the canvas a frame later.
+     * Fitting then would aim the camera at the old canvas size, so resize first; the resize event refits the map.
+     */
+    if (this.canvasIsStale()) {
+      this.app.resize()
+
+      return
+    }
+
     this.fit(true)
   }
 
@@ -185,6 +201,7 @@ export class BoardRenderer {
   }
 
   destroy() {
+    this.hostObserver.disconnect()
     this.leaveBattle()
     this.events.all.clear()
     gsap.killTweensOf(this.world)
@@ -205,7 +222,16 @@ export class BoardRenderer {
     this.effects.detach()
   }
 
+  private canvasIsStale() {
+    const { width, height } = this.app.screen
+    return width !== this.host.clientWidth || height !== this.host.clientHeight
+  }
+
   private fit(animate: boolean) {
+    /* A camera move still in flight would otherwise carry on towards a target computed for an older size. */
+    gsap.killTweensOf(this.world)
+    gsap.killTweensOf(this.world.scale)
+
     const { width, height } = this.app.screen
     const { top, right, bottom, left } = this.insets
     const availableWidth = Math.max(MIN_MAP_SIZE, width - left - right - MAP_MARGIN * 2)

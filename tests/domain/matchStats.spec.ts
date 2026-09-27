@@ -6,6 +6,8 @@ import { createRng } from '@/core/random/rng'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
+const FULL_MATCH_TIMEOUT = 15_000
+
 function playOut(seed: string) {
   const match = createMatch({
     seed,
@@ -28,7 +30,9 @@ function playOut(seed: string) {
 }
 
 describe('match statistics', () => {
-  it('adds up every round of the match', () => {
+  // Plays a whole match: since thrones are defended (v5) this seed goes all 20 rounds instead of ending
+  // in round 7, which takes about as long as vitest's default 5 s timeout.
+  it('adds up every round of the match', { timeout: FULL_MATCH_TIMEOUT }, () => {
     const match = playOut('stats')
     const { stats } = match
     const [ours, theirs] = stats.teams

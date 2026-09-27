@@ -21,16 +21,64 @@ export class SpatialIndex {
     )
   }
 
+  /**
+   * Moves bodies to their units. Only bodies that actually moved are touched: re-inserting one
+   * into the tree is the expensive part, and an untouched body would be left where it is anyway.
+   */
   sync() {
+    let moved = false
     for (const unit of this.units) {
-      unit.body?.setPosition(unit.position.x, unit.position.y, false)
+      const body = unit.body
+      if (body && (body.x !== unit.position.x || body.y !== unit.position.y)) {
+        body.setPosition(unit.position.x, unit.position.y, false)
+        moved = true
+      }
     }
 
-    this.system.update()
+    if (moved) {
+      this.system.update()
+    }
   }
 
+  /**
+   * Pushes overlapping bodies apart, exactly as check2d's `System.separate()` does: bodies in tree order,
+   * each moved at once by the sum of its overlaps, in the same floating-point steps. Our bodies are plain
+   * circles (no offset, trigger, padding or collision group), so the generic collision response check2d
+   * builds for every touching pair can be skipped.
+   */
   separate() {
-    this.system.separate()
+    for (const body of this.system.all()) {
+      if (body.isStatic) {
+        continue
+      }
+
+      let pushX = 0
+      let pushY = 0
+      for (const other of this.system.search(body)) {
+        if (other === body) {
+          continue
+        }
+
+        const dx = other.pos.x - body.pos.x
+        const dy = other.pos.y - body.pos.y
+        const reach = body.r + other.r
+        const dSq = dx * dx + dy * dy
+        if (dSq > reach * reach) {
+          continue
+        }
+
+        const d = Math.sqrt(dSq)
+        if (d > 0) {
+          const overlap = reach - d
+          pushX += (dx / d) * overlap
+          pushY += (dy / d) * overlap
+        }
+      }
+
+      if (pushX || pushY) {
+        body.setPosition(body.x - pushX, body.y - pushY)
+      }
+    }
 
     for (const unit of this.units) {
       if (!unit.body || unit.body.isStatic) {
@@ -42,6 +90,10 @@ export class SpatialIndex {
     }
   }
 
+  /**
+   * Units reaching within `radius` of `center`. The predicate runs before the distance check, so keep it
+   * a cheap filter without side effects (team, kind, alive); costlier or stateful checks go on the result.
+   */
   near(center: Vec2, radius: number, predicate: (unit: Unit) => boolean = () => true) {
     const hits = this.system.search({
       minX: center.x - radius,
@@ -53,7 +105,7 @@ export class SpatialIndex {
     const result: Unit[] = []
     for (const body of hits) {
       const unit = body.userData
-      if (unit && distance(center, unit.position) - unit.radius <= radius && predicate(unit)) {
+      if (unit && predicate(unit) && distance(center, unit.position) - unit.radius <= radius) {
         result.push(unit)
       }
     }
