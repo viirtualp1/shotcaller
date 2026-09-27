@@ -4,6 +4,7 @@ import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
+import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useGameText } from '../composables/useGameText'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
@@ -51,6 +52,7 @@ const { t } = useGameText()
     </section>
 
     <LatestPatchCard class="news" />
+    <LanguageSwitch compact class="language" />
   </main>
 </template>
 
@@ -120,6 +122,14 @@ h1 {
   z-index: 1;
 }
 
+.language {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1;
+  animation: fade-in 0.4s 0.2s ease-out both;
+}
+
 @media (max-width: 860px) {
   .start {
     grid-template-columns: minmax(0, 1fr);
@@ -138,6 +148,12 @@ h1 {
   }
 
   .coach {
+    position: relative;
+    inset: auto;
+    justify-self: start;
+  }
+
+  .language {
     position: relative;
     inset: auto;
     justify-self: start;
