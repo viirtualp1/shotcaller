@@ -104,8 +104,6 @@ function play() {
         <button type="button" class="btn ghost" @click="profile.close()">
           <ArrowLeft :size="16" /> {{ t('profile.back') }}
         </button>
-
-        <span class="eyebrow">{{ t('app.title') }} · {{ t('profile.title') }}</span>
       </div>
     </header>
 
@@ -132,7 +130,6 @@ function play() {
 
       <section v-else class="empty">
         <h2 class="hand">{{ t('profile.empty.title') }}</h2>
-        <p>{{ t('profile.empty.text') }}</p>
 
         <button type="button" class="btn primary big" @click="play">
           <Swords :size="18" /> {{ t('profile.empty.play') }}

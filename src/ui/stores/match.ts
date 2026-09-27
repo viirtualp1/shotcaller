@@ -23,6 +23,7 @@ import type { Match } from '@/domain/match/Match'
 import type { RosterSlot } from '@/domain/roster/Roster'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
 import { useProfileStore } from './profile'
+import { useSettingsStore } from './settings'
 
 export type BattleSpeed = 1 | 2 | 4
 export type ShopTab = 'heroes' | 'items'
@@ -69,6 +70,7 @@ export const useMatchStore = defineStore('match', () => {
   const repository = new LocalStorageMatchRepository()
   const optimizer = new LaneOptimizer()
   const profile = useProfileStore()
+  const settings = useSettingsStore()
   let match: Match | null = null
   let session: BattleSession | null = null
   let liveCountdown = 0
@@ -166,7 +168,7 @@ export const useMatchStore = defineStore('match', () => {
 
   function newMatch() {
     disposeBattle()
-    match = createMatch()
+    match = createMatch({ difficulty: settings.difficulty })
     clearSelection()
     shopTab.value = 'heroes'
     refresh()
@@ -179,7 +181,7 @@ export const useMatchStore = defineStore('match', () => {
     }
 
     disposeBattle()
-    match = restoreMatch(state)
+    match = restoreMatch(state, { difficulty: settings.difficulty })
     clearSelection()
     refresh()
 

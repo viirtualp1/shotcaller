@@ -176,4 +176,38 @@ describe('BattleSimulation', () => {
     expect(outcome.throneFell).toBe(1)
     expect(sim.elapsed).toBeLessThan(sim.duration)
   })
+
+  it('heals heroes standing inside their own throne range', () => {
+    const sim = new BattleSimulation(setup('fountain', lineup('a', { mid: ['giant'] }), lineup('b', {})))
+    const hero = sim.queries.heroes.entities.find((h) => h.team === 0)!
+    const throne = sim.queries.structures.entities.find((s) => s.team === 0 && s.structure.type === 'throne')!
+
+    hero.position = { ...throne.position }
+    hero.health.current = hero.health.max / 2
+    sim.step()
+
+    expect(hero.health.current).toBeGreaterThan(hero.health.max / 2)
+  })
+
+  it('calls heroes home when enemy heroes hit the throne', () => {
+    const sim = new BattleSimulation(
+      setup('defense', lineup('a', { top: ['giant'] }), lineup('b', { mid: ['sniper'] })),
+    )
+
+    const defender = sim.queries.heroes.entities.find((h) => h.team === 0)!
+    const raider = sim.queries.heroes.entities.find((h) => h.team === 1)!
+    const throne = sim.queries.structures.entities.find((s) => s.team === 0 && s.structure.type === 'throne')!
+
+    sim.events.emit('damaged', {
+      target: throne,
+      source: raider,
+      amount: 10,
+      type: 'physical',
+      crit: false,
+    })
+
+    sim.step()
+
+    expect(defender.defend?.point).toEqual(throne.position)
+  })
 })

@@ -1,6 +1,7 @@
 import { BATTLE } from '@/content/rules'
 import { distance } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
+import { creditedHero } from '../services/CombatService'
 import { withinLaneBand } from '../services/laneBand'
 import type { SimulationContext, System } from '../SimulationContext'
 
@@ -14,17 +15,30 @@ const PRIORITY = {
   roamerQuarry: -300,
 } as const
 
-export class TargetingSystem implements System {
-  constructor(private readonly ctx: SimulationContext) {}
+/** A hero already trading blows with another hero keeps its target if it is this close to reach. */
+const REACH_SLACK = 10
 
-  update() {
+export class TargetingSystem implements System {
+  constructor(private readonly ctx: SimulationContext) {
+    ctx.events.on('damaged', ({ target, source }) => this.remember(target, source))
+  }
+
+  update(dt: number) {
     for (const unit of this.ctx.queries.fighters) {
-      if (!isAlive(unit) || isDisabled(unit)) {
+      if (unit.threat) {
+        unit.threat.remaining -= dt
+      }
+
+      if (!isAlive(unit) || isDisabled(unit) || unit.defend) {
         continue
       }
 
       const targeting = unit.targeting
-      if (!this.isValid(unit, targeting.target)) {
+      const attacker = this.answerable(unit)
+
+      if (attacker && this.shouldAnswer(unit, attacker)) {
+        targeting.target = attacker
+      } else if (!this.isValid(unit, targeting.target)) {
         targeting.target = this.find(unit)
       }
 
@@ -32,6 +46,57 @@ export class TargetingSystem implements System {
         targeting.chasing = true
       }
     }
+  }
+
+  /** Heroes hit by an enemy hero, directly or through its summons, remember who did it. */
+  private remember(target: Unit, source: Unit) {
+    const attacker = creditedHero(source)
+    if (target.kind !== 'hero' || !attacker || attacker.team === target.team) {
+      return
+    }
+
+    const remaining = BATTLE.hero.retaliationMemory
+    if (target.threat) {
+      target.threat.attacker = attacker
+      target.threat.remaining = remaining
+    } else {
+      this.ctx.world.addComponent(target, 'threat', {
+        attacker,
+        remaining,
+      })
+    }
+  }
+
+  /** The hero that hit this one moments ago, if it can be answered without diving under a tower. */
+  private answerable(unit: Unit) {
+    const threat = unit.threat
+    if (unit.kind !== 'hero' || !threat || threat.remaining <= 0 || !isAlive(threat.attacker)) {
+      return null
+    }
+
+    const attacker = threat.attacker
+    const gap = distance(unit.position, attacker.position) - attacker.radius
+    if (gap > (unit.targeting?.aggroRange ?? 0) * BATTLE.targetLeash) {
+      return null
+    }
+
+    const inReach = gap <= (unit.attack?.range ?? 0)
+    if (!inReach && this.ctx.safety.isProtected(attacker, unit.team)) {
+      return null
+    }
+
+    return attacker
+  }
+
+  /** Farming creeps or hitting buildings never beats answering a hero; a hero fight within reach does. */
+  private shouldAnswer(unit: Unit, attacker: Unit) {
+    const current = unit.targeting?.target
+    if (!current || current === attacker || current.kind !== 'hero' || !isAlive(current)) {
+      return true
+    }
+
+    const gap = distance(unit.position, current.position) - current.radius
+    return gap > (unit.attack?.range ?? 0) + REACH_SLACK
   }
 
   private isValid(unit: Unit, target: Unit | null) {

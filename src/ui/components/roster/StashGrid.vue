@@ -6,6 +6,7 @@ import { useDragStore } from '../../stores/drag'
 import { useMatchStore } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import ItemDetails from '../common/ItemDetails.vue'
 import ItemIcon from '../common/ItemIcon.vue'
 
 const store = useMatchStore()
@@ -52,8 +53,7 @@ function press(item: StashItemView, e: PointerEvent) {
         </button>
 
         <template #content>
-          <strong>{{ text.itemName(item.itemId) }}</strong>
-          <div>{{ text.itemDescription(item.itemId) }}</div>
+          <ItemDetails :item-id="item.itemId" />
         </template>
       </InfoTooltip>
 

@@ -60,6 +60,8 @@ export interface StructureStats {
   readonly range: number
   readonly armor: number
   readonly radius: number
+  /** Share of max health restored every second to allied heroes within the attack range. */
+  readonly fountainHeal?: number
 }
 
 export const STRUCTURES: Readonly<Record<StructureType, StructureStats>> = {
@@ -78,5 +80,6 @@ export const STRUCTURES: Readonly<Record<StructureType, StructureStats>> = {
     range: 165,
     armor: 0.3,
     radius: 20,
+    fountainHeal: 0.05,
   },
 }

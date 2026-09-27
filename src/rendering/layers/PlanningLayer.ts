@@ -16,6 +16,7 @@ import type { Vec2 } from '@/core/math/vec2'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import type { LaneMap } from '@/simulation/map/LaneMap'
 import { stagingPosition } from '../layout'
+import type { RoleIcons } from '../roleIcons'
 import { PALETTE } from '../theme'
 import { HeroToken, isOverToken } from '../views/HeroToken'
 import { StructureView } from '../views/StructureView'
@@ -57,7 +58,10 @@ export class PlanningLayer extends Container {
   private dragging = false
   private draggedUid: string | null = null
 
-  constructor(private readonly map: LaneMap) {
+  constructor(
+    private readonly map: LaneMap,
+    private readonly icons: RoleIcons,
+  ) {
     super()
     this.addChild(this.highlight, this.structureLayer, this.tokenLayer)
   }
@@ -194,7 +198,7 @@ export class PlanningLayer extends Container {
     const token = new HeroToken({
       color: HEROES[model.heroId].color,
       team,
-      glyph: HEROES[model.heroId].glyph,
+      icon: this.icons[HEROES[model.heroId].role],
       stars: model.stars,
       items: model.items,
     })

@@ -7,8 +7,10 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
+import { Castle } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { LANE_IDS, type StructureSlot } from '@/content/ids'
+import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
 import { starsLabel, useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
@@ -35,6 +37,21 @@ const open = computed({
 const verdict = computed(() => {
   const winner = summary.value?.winner
   return winner === 0 ? 'win' : winner === 1 ? 'loss' : 'draw'
+})
+
+/** A round goes to whoever dealt more damage to buildings; a small gap is a draw. */
+const reason = computed(() => {
+  if (!summary.value) {
+    return ''
+  }
+
+  const [ours, theirs] = summary.value.structureDamage.map((damage) => text.number(Math.round(damage)))
+
+  return t(`summary.reason.${verdict.value}`, {
+    ours,
+    theirs,
+    threshold: MATCH.drawThreshold,
+  })
 })
 
 /** Health after the round, plus how much each side lost this round. */
@@ -122,8 +139,9 @@ const incomeRows = computed(() => {
           {{ t(`summary.${verdict}`, { round: summary.round }) }}
         </DialogTitle>
 
-        <DialogDescription class="visually-hidden">
-          {{ t('summary.kills', { ours: summary.heroKills[0], theirs: summary.heroKills[1] }) }}
+        <DialogDescription class="reason">
+          <Castle :size="15" />
+          <span>{{ reason }}</span>
         </DialogDescription>
 
         <section class="fallen">
@@ -267,12 +285,21 @@ const incomeRows = computed(() => {
   color: var(--theirs);
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+.reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--chalk-dim);
+  font-size: 13px;
+}
+
+.reason svg {
+  flex: none;
+  color: var(--gold);
 }
 
 .fallen {

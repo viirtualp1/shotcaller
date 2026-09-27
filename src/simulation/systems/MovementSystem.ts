@@ -1,3 +1,4 @@
+import { BATTLE } from '@/content/rules'
 import { direction, distance, offset, stepTowards } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
@@ -29,6 +30,14 @@ export class MovementSystem implements System {
       if (unit.targeting.chasing) {
         unit.targeting.chasing = false
         this.rejoinLane(unit)
+      }
+
+      if (unit.defend) {
+        if (distance(unit.position, unit.defend.point) > BATTLE.defense.holdDistance) {
+          stepTowards(unit.position, unit.defend.point, step)
+        }
+
+        continue
       }
 
       const quarry = unit.roamer?.quarry

@@ -186,18 +186,8 @@ function paintLanes(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
   ctx.setLineDash([])
 }
 
-function paintBases(ctx: CanvasRenderingContext2D, map: LaneMap, labels: BoardLabels) {
+function paintBases(ctx: CanvasRenderingContext2D, labels: BoardLabels) {
   for (const team of TEAM_IDS) {
-    const base = map.base(team)
-    ctx.beginPath()
-    ctx.arc(base.x, base.y, 105, 0, Math.PI * 2)
-    ctx.fillStyle = cssColor(TEAM_COLORS[team], 0.07)
-    ctx.fill()
-    ctx.setLineDash([6, 8])
-    ctx.strokeStyle = cssColor(TEAM_COLORS[team], 0.5)
-    ctx.lineWidth = 1.6
-    ctx.stroke()
-    ctx.setLineDash([])
     const label = BASE_LABEL_POSITIONS[team]
     ctx.font = `700 26px ${FONTS.hand}`
     ctx.textAlign = 'center'
@@ -247,7 +237,7 @@ export function paintBoardArt(map: LaneMap, labels: BoardLabels, resolution = 20
   paintRiver(ctx)
   paintTrees(ctx, map, rng)
   paintLanes(ctx, map, rng)
-  paintBases(ctx, map, labels)
+  paintBases(ctx, labels)
   paintLaneLabels(ctx, labels)
   paintFrame(ctx)
 

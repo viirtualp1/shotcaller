@@ -1,13 +1,14 @@
 import gsap from 'gsap'
-import { Graphics, Text } from 'pixi.js'
+import { Graphics, Sprite, type Texture } from 'pixi.js'
 import type { ItemId, StarLevel, TeamId } from '@/content/ids'
 import { distance, type Vec2 } from '@/core/math/vec2'
 import type { Entity } from '@/simulation/ecs/components'
-import { FONTS, PALETTE, TEAM_COLORS } from '../theme'
+import { PALETTE, TEAM_COLORS } from '../theme'
 import { drawBar, strokeArc } from './bars'
 import { EntityView } from './EntityView'
 
 export const TOKEN_RADIUS = 16
+const ICON_SIZE = 15
 const HIT_SLOP = 4
 
 /** A hero token under the pointer, identified by its roster uid. */
@@ -21,7 +22,8 @@ export const isOverToken = (center: Vec2, point: Vec2) => distance(center, point
 export interface HeroTokenOptions {
   readonly color: number
   readonly team: TeamId
-  readonly glyph: string
+  /** The hero's role symbol, drawn in the middle of the disc. */
+  readonly icon: Texture
   readonly stars: StarLevel
   readonly items: readonly ItemId[]
 }
@@ -83,21 +85,14 @@ export class HeroToken extends EntityView {
         })
     })
 
-    const label = new Text({
-      text: options.glyph,
-      style: {
-        fontFamily: FONTS.ui,
-        fontSize: 12.5,
-        fontWeight: '700',
-        fill: PALETTE.ink,
-      },
-      resolution: 4,
-    })
+    const icon = new Sprite(options.icon)
+    icon.anchor.set(0.5)
+    icon.setSize(ICON_SIZE)
+    icon.tint = PALETTE.ink
 
-    label.anchor.set(0.5)
     this.flashRing.circle(0, 0, r + 1).fill({ color: 0xffffff })
     this.flashRing.alpha = 0
-    this.body.addChild(this.overlay, disc, label, this.flashRing, this.bars)
+    this.body.addChild(this.overlay, disc, icon, this.flashRing, this.bars)
   }
 
   setBars(health: number | null, mana: number | null) {

@@ -9,6 +9,7 @@ export const useMenuStore = defineStore('menu', () => {
   const settings = ref(false)
   const help = ref(false)
   const newMatch = ref(false)
+  const confirmFight = ref(false)
   /** Set when a tutorial should start as soon as the game screen is ready. */
   const tutorialPending = ref(false)
 
@@ -16,6 +17,7 @@ export const useMenuStore = defineStore('menu', () => {
   watch(settings, (open) => pause.set('settings', open))
   watch(help, (open) => pause.set('help', open))
   watch(newMatch, (open) => pause.set('newMatch', open))
+  watch(confirmFight, (open) => pause.set('confirm', open))
 
   function requestTutorial() {
     tutorialPending.value = true
@@ -26,6 +28,7 @@ export const useMenuStore = defineStore('menu', () => {
     settings,
     help,
     newMatch,
+    confirmFight,
     tutorialPending,
     requestTutorial,
   }

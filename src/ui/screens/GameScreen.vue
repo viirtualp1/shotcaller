@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
 import BattlePanel from '../components/battle/BattlePanel.vue'
 import BoardView from '../components/board/BoardView.vue'
+import ConfirmFightDialog from '../components/dialogs/ConfirmFightDialog.vue'
 import GameMenuDialog from '../components/dialogs/GameMenuDialog.vue'
 import HelpDrawer from '../components/dialogs/HelpDrawer.vue'
 import MatchReportDialog from '../components/dialogs/report/MatchReportDialog.vue'
@@ -21,6 +22,7 @@ import BenchGrid from '../components/roster/BenchGrid.vue'
 import HeroCard from '../components/roster/HeroCard.vue'
 import StashGrid from '../components/roster/StashGrid.vue'
 import ShopPanel from '../components/shop/ShopPanel.vue'
+import { useFightRequest } from '../composables/useFightRequest'
 import { useGameText } from '../composables/useGameText'
 import { useHotkeys } from '../composables/useHotkeys'
 import { useDragStore } from '../stores/drag'
@@ -55,12 +57,17 @@ const rightBox = useElementBounding(right)
 /** During a battle the planning tools slide away and the map takes their space. */
 const battling = computed(() => store.phase === 'battle')
 
+/** Equal side insets keep the map centred under the scoreboard. */
+const sideInset = computed(() =>
+  Math.max(battling.value ? 0 : leftBox.right.value, viewportWidth.value - rightBox.left.value),
+)
+
 const insets = computed<Insets>(() =>
   wide.value
     ? {
         top: topBox.bottom.value,
-        left: battling.value ? 0 : leftBox.right.value,
-        right: viewportWidth.value - rightBox.left.value,
+        left: sideInset.value,
+        right: sideInset.value,
         bottom: 0,
       }
     : {
@@ -128,7 +135,7 @@ function escape() {
 useHotkeys({
   reroll: store.reroll,
   buyXp: store.buyXp,
-  fight: store.startBattle,
+  fight: useFightRequest(),
   sell: () => store.selectedUid && store.sell(store.selectedUid),
   cancel: escape,
 })
@@ -196,6 +203,7 @@ watch(
     <PhaseBanner />
     <DragLayer />
     <RoundSummaryDialog />
+    <ConfirmFightDialog />
     <MatchReportDialog />
     <HelpDrawer v-model:open="menu.help" />
     <GameMenuDialog />
@@ -289,6 +297,7 @@ watch(
 
 /* Desktop: the board fills the window and the HUD sits on its edges. */
 .game.wide {
+  --side: clamp(290px, 22vw, 420px);
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -333,7 +342,7 @@ watch(
 
 .wide .hud-left {
   left: var(--gutter);
-  width: 272px;
+  width: var(--side);
   transition:
     translate 0.35s ease-in-out,
     opacity 0.35s ease-in-out;
@@ -350,7 +359,7 @@ watch(
 
 .wide .hud-right {
   right: var(--gutter);
-  width: 312px;
+  width: var(--side);
 }
 
 /* On desktop the fight button sits in the bottom-right corner, under the shop. */

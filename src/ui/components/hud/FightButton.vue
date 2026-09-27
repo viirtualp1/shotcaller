@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Swords } from 'lucide-vue-next'
+import { useFightRequest } from '../../composables/useFightRequest'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 
 const store = useMatchStore()
 const { t } = useGameText()
+const fight = useFightRequest()
 </script>
 
 <template>
@@ -16,7 +18,7 @@ const { t } = useGameText()
         class="btn primary block fight"
         :disabled="!store.isPlanning"
         data-tour="fight"
-        @click="store.startBattle()"
+        @click="fight()"
       >
         <Swords :size="18" /> {{ t('shop.fight') }}
       </button>

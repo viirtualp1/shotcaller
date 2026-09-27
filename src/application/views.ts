@@ -47,6 +47,8 @@ export interface ItemOfferView {
   readonly itemId: ItemId
   readonly cost: number
   readonly affordable: boolean
+  /** The stash has room for it. */
+  readonly fits: boolean
 }
 
 export interface StashItemView {
@@ -206,6 +208,7 @@ function toPlayerView(player: Player) {
       itemId,
       cost: ITEMS[itemId].cost,
       affordable: ITEMS[itemId].cost <= gold,
+      fits: !player.stash.isFull,
     })),
   }
 }

@@ -128,7 +128,6 @@ function save() {
       <RankMedal :tier="profile.rank.tier" :stars="profile.rank.stars" :size="112" />
 
       <div class="rank-text">
-        <span class="eyebrow">{{ t('profile.rating') }}</span>
         <strong class="rank-name">{{ t(`profile.ranks.${profile.rank.tier}`) }}</strong>
         <span class="rating">{{ text.number(profile.profile.rating) }}</span>
         <span class="bar"><span class="fill" :style="{ width: `${rankShare}%` }" /></span>

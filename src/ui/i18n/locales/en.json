@@ -150,10 +150,7 @@
     "respawnIn": "{hero} respawns in {s} s"
   },
   "tracker": {
-    "emptyLane": "Empty: the enemy walks in unopposed",
-    "add": "+ {who}",
     "anyHero": "any hero",
-    "or": " or ",
     "vs": "VS",
     "recruit": "Click to send in {hero}"
   },
@@ -183,16 +180,17 @@
   },
   "card": {
     "sell": "Sell for {gold}",
-    "toBench": "To bench",
-    "items": "Items",
     "noItems": "Drag an item from your stash onto the hero",
-    "unequip": "Remove",
     "hp": "Health",
     "damage": "Damage",
     "melee": "Melee",
-    "range": "Range {range}",
     "close": "Close",
-    "enemy": "Opponent"
+    "enemy": "Opponent",
+    "ranged": "Ranged · range {range}",
+    "ability": "Ability",
+    "innate": "Innate",
+    "rolePassive": "Role: {role}",
+    "unequipHint": "Click to unequip"
   },
   "battle": {
     "speed": "Speed",
@@ -220,7 +218,6 @@
     "win": "Round {round} won",
     "loss": "Round {round} lost",
     "draw": "Round {round}: draw",
-    "kills": "Hero kills: {ours} to {theirs}",
     "base": "Base",
     "interest": "Interest",
     "farm": "Farm",
@@ -236,7 +233,12 @@
     "destroyed": "destroyed",
     "enemiesKilled": "Enemies killed",
     "ourLosses": "Our losses",
-    "noLosses": "Nobody died"
+    "noLosses": "Nobody died",
+    "reason": {
+      "win": "We dealt more damage to buildings: {ours} to {theirs}",
+      "loss": "The enemy dealt more damage to buildings: {theirs} to {ours}",
+      "draw": "Building damage was almost even: {ours} to {theirs}. A win needs a gap of {threshold} or more"
+    }
   },
   "result": {
     "win": "Victory",
@@ -252,11 +254,38 @@
     "synergies": "Lane synergies",
     "items": "Items",
     "stars": "Stars",
-    "starsText": "Three copies of the same hero merge into one with an extra star. ★★ is about 1.8 times stronger, ★★★ about 3.2 times. Items move to the upgraded hero.",
     "economy": "Economy",
-    "economyText": "After each round: 5 gold, 1 per 10 saved (up to 3), up to 6 from farming and 1 for winning the round. Every round also grants 1 XP.",
     "close": "Close",
-    "hotkeys": "D — reroll · F — experience · E — sell · Esc — menu · Space — fight"
+    "win": "Who wins a round",
+    "winRules": {
+      "damage": "A round goes to the side that dealt more damage to buildings: towers and the throne.",
+      "draw": "If the gap is under {threshold}, the round is a draw.",
+      "persist": "Building damage never heals and carries over from round to round.",
+      "throne": "Break the enemy throne and the match is won on the spot.",
+      "limit": "After {max} rounds the side with sturdier buildings wins."
+    },
+    "starsRules": {
+      "two": "{count} copies of a ★ hero merge into one ★★: power ×{power}",
+      "three": "{count} copies of a ★★ hero merge into one ★★★: power ×{power}",
+      "auto": "Just buy copies in the shop: they merge on their own, wherever they stand. The shop card shows how many you already own.",
+      "items": "Items move to the upgraded hero, extra ones go to the stash."
+    },
+    "economyRules": {
+      "base": "+{gold} gold every round",
+      "interest": "+1 for every {per} gold saved, up to +{max}",
+      "farm": "Farm: +1 for every {creeps} creeps and for each hero kill, up to +{max}",
+      "win": "+{gold} for winning the round",
+      "xp": "+{xp} experience every round"
+    },
+    "hotkeysTitle": "Hotkeys",
+    "space": "Space",
+    "hotkeys": {
+      "reroll": "Reroll the shop",
+      "xp": "Buy experience",
+      "sell": "Sell the hero",
+      "menu": "Menu",
+      "fight": "Fight"
+    }
   },
   "errors": {
     "notEnoughGold": "Not enough gold",
@@ -456,7 +485,6 @@
     "level": "Level {level}",
     "xp": "{into} / {needed} XP",
     "since": "Coaching since {date}",
-    "rating": "Rating",
     "toNextStar": "{points} to the next star",
     "toNextRank": "{points} to {rank}",
     "topRank": "The highest rank",
@@ -508,7 +536,6 @@
     },
     "empty": {
       "title": "No matches yet",
-      "text": "Finish a match and your rank, favourite heroes and history will show up here.",
       "play": "New match"
     },
     "progress": {
@@ -517,5 +544,22 @@
       "rankUp": "New rank",
       "levelUp": "Level up"
     }
+  },
+  "itemTip": {
+    "passive": "Passive",
+    "bonus": "Bonus"
+  },
+  "synergyTip": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "need": "Needs",
+    "effect": "Effect",
+    "missing": "Missing"
+  },
+  "confirmFight": {
+    "title": "Empty lanes",
+    "text": "You have empty lanes. Start the round anyway?",
+    "cancel": "Cancel",
+    "confirm": "Start round"
   }
 }

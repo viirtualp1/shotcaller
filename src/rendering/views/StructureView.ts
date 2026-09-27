@@ -71,10 +71,19 @@ export class StructureView extends EntityView {
     const color = TEAM_COLORS[this.team]
     const g = this.range.clear()
     if (!active) {
+      /** The throne's reach doubles as the outline of the base, so it reads a little stronger. */
+      const throne = this.type === 'throne'
+      if (throne) {
+        g.circle(0, 0, range).fill({
+          color,
+          alpha: 0.05,
+        })
+      }
+
       g.circle(0, 0, range).stroke({
-        width: 1,
+        width: throne ? 1.6 : 1,
         color,
-        alpha: 0.16,
+        alpha: throne ? 0.35 : 0.16,
       })
 
       return

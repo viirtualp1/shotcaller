@@ -62,6 +62,50 @@ export const DIFFICULTIES: Readonly<Record<Difficulty, { readonly planningSecond
   standard: { planningSeconds: 35 },
 }
 
+/** How the computer opponent spends its gold. */
+export interface OpponentStyle {
+  /** Before this round the bot only buys heroes it does not own yet, so nobody opens with a promoted hero. */
+  readonly copiesFromRound: number
+  readonly levelFromRound: number
+  readonly goldReserveForXp: number
+  readonly rerollFromRound: number
+  readonly rerollAboveGold: number
+  readonly maxRerolls: number
+  /** Heroes kept on top of a full board. */
+  readonly spareHeroes: number
+  readonly benchLimitOverTeam: number
+  readonly itemsFromRound: number
+  readonly goldReserveForItems: number
+}
+
+/** Relaxed is for learning: the bot never rerolls, levels up late and buys items only in the late game. */
+export const OPPONENT: Readonly<Record<Difficulty, OpponentStyle>> = {
+  relaxed: {
+    copiesFromRound: 3,
+    levelFromRound: 9,
+    goldReserveForXp: 6,
+    rerollFromRound: Infinity,
+    rerollAboveGold: Infinity,
+    maxRerolls: 0,
+    spareHeroes: 0,
+    benchLimitOverTeam: 2,
+    itemsFromRound: 12,
+    goldReserveForItems: 8,
+  },
+  standard: {
+    copiesFromRound: 2,
+    levelFromRound: 2,
+    goldReserveForXp: 2,
+    rerollFromRound: 3,
+    rerollAboveGold: 8,
+    maxRerolls: 3,
+    spareHeroes: 2,
+    benchLimitOverTeam: 4,
+    itemsFromRound: 3,
+    goldReserveForItems: 4,
+  },
+}
+
 export const MATCH = {
   maxRounds: 20,
   drawThreshold: 60,
@@ -91,6 +135,8 @@ export const BATTLE = {
     structureDamage: 0.6,
     finishStructureBelow: 0.15,
     finishStructureIfHealthAbove: 0.6,
+    /** Seconds a hero keeps answering the enemy hero that last hit it. */
+    retaliationMemory: 2,
   },
   meleeReach: 6,
   towerSafetyMargin: 14,
@@ -100,6 +146,14 @@ export const BATTLE = {
   projectileSpeed: {
     unit: 520,
     structure: 420,
+  },
+  defense: {
+    /** Seconds heroes keep guarding the base after the last hit on their throne. */
+    alarmSeconds: 4,
+    /** Enemies this far beyond the throne's reach still count as attacking the base. */
+    radiusBonus: 60,
+    /** Defenders with nobody to fight wait this close to the throne. */
+    holdDistance: 70,
   },
   gank: {
     thinkInterval: 1.2,

@@ -93,7 +93,6 @@ export function useGameText() {
     t,
     number,
     heroName: (id: HeroId) => HEROES[id].name,
-    heroGlyph: (id: HeroId) => HEROES[id].glyph,
     roleName: (id: RoleId) => t(`roles.${id}.name`),
     rolePassive: (id: RoleId) => t(`roles.${id}.passive`, roleParams(number, id)),
     /** Innate hero passive on top of the role one, if the hero has any. */

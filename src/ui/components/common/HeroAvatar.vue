@@ -3,7 +3,8 @@ import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
 import type { HeroId, StarLevel, TeamId } from '@/content/ids'
 import { cssColor } from '@/rendering/theme'
-import { starsLabel, useGameText } from '../../composables/useGameText'
+import { starsLabel } from '../../composables/useGameText'
+import { ROLE_ICONS } from '../../icons'
 
 const props = withDefaults(
   defineProps<{ heroId: HeroId; team?: TeamId; stars?: StarLevel; size?: number }>(),
@@ -14,8 +15,6 @@ const props = withDefaults(
   },
 )
 
-const text = useGameText()
-
 const style = computed(() => ({
   '--hero': cssColor(HEROES[props.heroId].color),
   '--size': `${props.size}px`,
@@ -24,7 +23,10 @@ const style = computed(() => ({
 
 <template>
   <span class="avatar" :class="team === 0 ? 'ours' : 'theirs'" :style="style" aria-hidden="true">
-    <span class="disc">{{ text.heroGlyph(heroId) }}</span>
+    <span class="disc">
+      <component :is="ROLE_ICONS[HEROES[heroId].role]" :size="Math.round(size * 0.5)" :stroke-width="2.4" />
+    </span>
+
     <span v-if="stars" class="stars">{{ starsLabel(stars) }}</span>
   </span>
 </template>

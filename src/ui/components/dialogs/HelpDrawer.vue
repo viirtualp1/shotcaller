@@ -1,14 +1,136 @@
 <script setup lang="ts">
+import {
+  ArrowRight,
+  Castle,
+  Coins,
+  Crown,
+  Hourglass,
+  Keyboard,
+  Route,
+  Scale,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  Swords,
+  TrendingUp,
+  Trophy,
+  Users,
+  Wand2,
+} from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
+import type { Component } from 'vue'
 import { ITEM_IDS, ROLE_IDS, SYNERGY_IDS } from '@/content/ids'
 import { ITEMS } from '@/content/items'
-import ItemIcon from '../common/ItemIcon.vue'
+import { ROLES } from '@/content/roles'
+import { ECONOMY, MATCH, MERGE_COUNT, STAR_POWER } from '@/content/rules'
+import { SYNERGY_BY_ID } from '@/content/synergies'
+import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
+import { ROLE_ICONS } from '../../icons'
+import HeroAvatar from '../common/HeroAvatar.vue'
+import ItemIcon from '../common/ItemIcon.vue'
 
 const open = defineModel<boolean>('open', { required: true })
 const text = useGameText()
 const { t } = text
-const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
+
+const STEPS: readonly { key: 'shop' | 'lanes' | 'fight' | 'grow'; icon: Component }[] = [
+  {
+    key: 'shop',
+    icon: ShoppingBag,
+  },
+  {
+    key: 'lanes',
+    icon: Route,
+  },
+  {
+    key: 'fight',
+    icon: Swords,
+  },
+  {
+    key: 'grow',
+    icon: TrendingUp,
+  },
+]
+
+const WIN_RULES: readonly { key: string; icon: Component; params?: Record<string, number> }[] = [
+  {
+    key: 'damage',
+    icon: Castle,
+  },
+  {
+    key: 'draw',
+    icon: Scale,
+    params: { threshold: MATCH.drawThreshold },
+  },
+  {
+    key: 'persist',
+    icon: Hourglass,
+  },
+  {
+    key: 'throne',
+    icon: Crown,
+  },
+  {
+    key: 'limit',
+    icon: Trophy,
+    params: { max: MATCH.maxRounds },
+  },
+]
+
+const ECONOMY_RULES: readonly { key: string; params: Record<string, number> }[] = [
+  {
+    key: 'base',
+    params: { gold: ECONOMY.baseIncome },
+  },
+  {
+    key: 'interest',
+    params: {
+      per: ECONOMY.goldPerInterest,
+      max: ECONOMY.maxInterest,
+    },
+  },
+  {
+    key: 'farm',
+    params: {
+      creeps: ECONOMY.creepKillsPerGold,
+      max: ECONOMY.maxFarmIncome,
+    },
+  },
+  {
+    key: 'win',
+    params: { gold: ECONOMY.winBonus },
+  },
+  {
+    key: 'xp',
+    params: { xp: ECONOMY.passiveXpPerRound },
+  },
+]
+
+const HOTKEYS: readonly { key: string; label: string }[] = [
+  {
+    key: 'D',
+    label: 'reroll',
+  },
+  {
+    key: 'F',
+    label: 'xp',
+  },
+  {
+    key: 'E',
+    label: 'sell',
+  },
+  {
+    key: 'Esc',
+    label: 'menu',
+  },
+  {
+    key: 'Space',
+    label: 'fight',
+  },
+]
+
+const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
 </script>
 
 <template>
@@ -17,70 +139,155 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
       <DialogOverlay class="overlay" />
 
       <DialogContent class="drawer" :aria-describedby="undefined">
-        <header>
+        <header class="top">
           <DialogTitle class="hand title">{{ t('help.title') }}</DialogTitle>
           <DialogClose class="btn ghost">{{ t('help.close') }}</DialogClose>
         </header>
 
         <section>
-          <h3>{{ t('help.how') }}</h3>
+          <h3 class="section-title"><Sparkles :size="15" /> {{ t('help.how') }}</h3>
 
           <ol class="steps">
-            <li v-for="step in STEPS" :key="step">{{ t(`start.steps.${step}`) }}</li>
+            <li v-for="(step, i) in STEPS" :key="step.key" class="card step">
+              <span class="badge">{{ i + 1 }}</span>
+              <component :is="step.icon" :size="18" class="step-icon" />
+              <p>{{ t(`start.steps.${step.key}`) }}</p>
+            </li>
           </ol>
         </section>
 
         <section>
-          <h3>{{ t('help.synergies') }}</h3>
+          <h3 class="section-title"><Trophy :size="15" /> {{ t('help.win') }}</h3>
 
-          <dl>
-            <template v-for="id in SYNERGY_IDS" :key="id">
-              <dt>
-                {{ text.synergyName(id) }} <span>{{ text.synergyNeed(id) }}</span>
-              </dt>
-
-              <dd>{{ text.synergyEffect(id) }}</dd>
-            </template>
-          </dl>
-        </section>
-
-        <section>
-          <h3>{{ t('help.roles') }}</h3>
-
-          <dl>
-            <template v-for="role in ROLE_IDS" :key="role">
-              <dt>{{ text.roleName(role) }}</dt>
-              <dd>{{ text.rolePassive(role) }}</dd>
-            </template>
-          </dl>
-        </section>
-
-        <section>
-          <h3>{{ t('help.items') }}</h3>
-
-          <ul class="item-list">
-            <li v-for="id in ITEM_IDS" :key="id">
-              <ItemIcon :item-id="id" :size="26" />
-
-              <span>
-                <b>{{ text.itemName(id) }}</b> ·
-                <span class="cost"><span class="coin" /> {{ ITEMS[id].cost }}</span>
-                <br />
-                <span class="muted">{{ text.itemDescription(id) }}</span>
-              </span>
+          <ul class="rules">
+            <li v-for="rule in WIN_RULES" :key="rule.key" class="rule">
+              <component :is="rule.icon" :size="16" class="rule-icon" />
+              <span>{{ t(`help.winRules.${rule.key}`, rule.params ?? {}) }}</span>
             </li>
           </ul>
         </section>
 
         <section>
-          <h3>{{ t('help.stars') }}</h3>
-          <p>{{ t('help.starsText') }}</p>
+          <h3 class="section-title"><Star :size="15" /> {{ t('help.stars') }}</h3>
+
+          <div class="card merge">
+            <span class="copies">
+              <HeroAvatar v-for="i in copies" :key="i" hero-id="spearman" :stars="1" :size="30" />
+            </span>
+
+            <ArrowRight :size="18" class="arrow" />
+            <HeroAvatar hero-id="spearman" :stars="2" :size="42" />
+          </div>
+
+          <ul class="rules">
+            <li class="rule">
+              <span class="stars-badge">★★</span>
+
+              <span>{{
+                t('help.starsRules.two', { count: MERGE_COUNT, power: text.number(STAR_POWER[2]) })
+              }}</span>
+            </li>
+
+            <li class="rule">
+              <span class="stars-badge">★★★</span>
+
+              <span>{{
+                t('help.starsRules.three', { count: MERGE_COUNT, power: text.number(STAR_POWER[3]) })
+              }}</span>
+            </li>
+
+            <li class="rule">
+              <ShoppingBag :size="16" class="rule-icon" />
+              <span>{{ t('help.starsRules.auto') }}</span>
+            </li>
+
+            <li class="rule">
+              <Wand2 :size="16" class="rule-icon" />
+              <span>{{ t('help.starsRules.items') }}</span>
+            </li>
+          </ul>
         </section>
 
         <section>
-          <h3>{{ t('help.economy') }}</h3>
-          <p>{{ t('help.economyText') }}</p>
-          <p class="hotkeys">{{ t('help.hotkeys') }}</p>
+          <h3 class="section-title"><Users :size="15" /> {{ t('help.roles') }}</h3>
+
+          <ul class="grid">
+            <li
+              v-for="role in ROLE_IDS"
+              :key="role"
+              class="card role"
+              :style="{ '--accent': cssColor(ROLES[role].color) }"
+            >
+              <span class="role-head">
+                <span class="role-icon"><component :is="ROLE_ICONS[role]" :size="15" /></span>
+                <strong>{{ text.roleName(role) }}</strong>
+              </span>
+
+              <p>{{ text.rolePassive(role) }}</p>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="section-title"><Route :size="15" /> {{ t('help.synergies') }}</h3>
+
+          <ul class="list">
+            <li
+              v-for="id in SYNERGY_IDS"
+              :key="id"
+              class="card synergy"
+              :style="{ '--accent': cssColor(SYNERGY_BY_ID[id].color) }"
+            >
+              <span class="synergy-head">
+                <span class="dot" aria-hidden="true" />
+                <strong>{{ text.synergyName(id) }}</strong>
+                <span class="need">{{ text.synergyNeed(id) }}</span>
+              </span>
+
+              <p>{{ text.synergyEffect(id) }}</p>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="section-title"><Wand2 :size="15" /> {{ t('help.items') }}</h3>
+
+          <ul class="grid">
+            <li v-for="id in ITEM_IDS" :key="id" class="card item">
+              <span class="item-head">
+                <ItemIcon :item-id="id" :size="30" />
+
+                <span class="item-title">
+                  <strong>{{ text.itemName(id) }}</strong>
+                  <span class="cost"><span class="coin" /> {{ ITEMS[id].cost }}</span>
+                </span>
+              </span>
+
+              <p>{{ text.itemDescription(id) }}</p>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="section-title"><Coins :size="15" /> {{ t('help.economy') }}</h3>
+
+          <ul class="rules">
+            <li v-for="rule in ECONOMY_RULES" :key="rule.key" class="rule">
+              <span class="coin" />
+              <span>{{ t(`help.economyRules.${rule.key}`, rule.params) }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="section-title"><Keyboard :size="15" /> {{ t('help.hotkeysTitle') }}</h3>
+
+          <ul class="hotkeys">
+            <li v-for="hotkey in HOTKEYS" :key="hotkey.key">
+              <kbd>{{ hotkey.key === 'Space' ? t('help.space') : hotkey.key }}</kbd>
+              <span>{{ t(`help.hotkeys.${hotkey.label}`) }}</span>
+            </li>
+          </ul>
         </section>
       </DialogContent>
     </DialogPortal>
@@ -93,7 +300,7 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 100vw);
+  width: min(460px, 100vw);
   overflow-y: auto;
   padding: calc(18px + env(safe-area-inset-top, 0px)) 20px calc(24px + env(safe-area-inset-bottom, 0px));
   background: var(--panel);
@@ -102,10 +309,10 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
   z-index: 41;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
-header {
+.top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -116,78 +323,215 @@ header {
   line-height: 1;
 }
 
-h3 {
-  margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 600;
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--chalk-dim);
+  color: var(--gold);
 }
 
-p,
-dd {
-  margin: 0;
-}
-
-.steps {
-  margin: 0;
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-dl {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-}
-
-dt {
-  margin-top: 8px;
-  font-weight: 700;
-}
-
-dt span {
-  font-weight: 400;
-  color: var(--chalk-dim);
-  font-size: 12px;
-  margin-left: 6px;
-}
-
-dd {
-  color: var(--chalk-dim);
-}
-
-.item-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+ol,
+ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.item-list li {
+p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--chalk-dim);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--edge);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.step-icon {
+  color: var(--chalk);
+}
+
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.rule {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   font-size: 13px;
+  color: var(--chalk);
 }
 
-.cost {
+.rule-icon {
+  flex: none;
+  margin-top: 1px;
   color: var(--gold);
 }
 
-.muted {
+.rule .coin {
+  flex: none;
+  margin-top: 3px;
+}
+
+.stars-badge {
+  flex: none;
+  min-width: 40px;
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.merge {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 11px 20px;
+}
+
+.copies {
+  display: flex;
+  gap: 8px;
+}
+
+.arrow {
+  color: var(--gold);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role,
+.synergy {
+  border-left: 3px solid var(--accent);
+}
+
+.role-head,
+.synergy-head,
+.item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent);
+}
+
+.role strong {
+  color: var(--accent);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.need {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--edge-strong);
+  font-size: 11px;
   color: var(--chalk-dim);
+  white-space: nowrap;
+}
+
+.item-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.item-title strong {
+  font-size: 12.5px;
+}
+
+.cost {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
 }
 
 .hotkeys {
-  margin-top: 8px;
-  color: var(--chalk-dim);
-  font-size: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+
+.hotkeys li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.hotkeys kbd {
+  min-width: 34px;
+  text-align: center;
 }
 </style>

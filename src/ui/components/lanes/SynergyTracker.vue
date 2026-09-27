@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { TriangleAlert } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { LANE_IDS } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
@@ -46,16 +45,25 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
         <span class="name hand">{{ text.slotName(entry.lane) }}</span>
 
         <div class="matchup">
-          <div class="side ours">
-            <TransitionGroup name="pop" tag="span" class="heroes">
-              <HeroAvatar
-                v-for="hero in entry.ours.heroes"
-                :key="hero.uid"
-                :hero-id="hero.heroId"
-                :size="22"
-              />
-            </TransitionGroup>
+          <TransitionGroup name="pop" tag="span" class="heroes ours">
+            <HeroAvatar v-for="hero in entry.ours.heroes" :key="hero.uid" :hero-id="hero.heroId" :size="34" />
+          </TransitionGroup>
 
+          <span class="vs">{{ t('tracker.vs') }}</span>
+
+          <TransitionGroup name="pop" tag="span" class="heroes theirs">
+            <HeroAvatar
+              v-for="hero in entry.theirs.heroes"
+              :key="hero.uid"
+              :hero-id="hero.heroId"
+              :team="1"
+              :size="34"
+            />
+          </TransitionGroup>
+        </div>
+
+        <div class="chip-row">
+          <div class="chips ours">
             <SynergyChip v-for="id in entry.ours.report.synergies" :key="id" :synergy="id" />
 
             <SynergyChip
@@ -68,26 +76,10 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
             />
           </div>
 
-          <span class="vs">{{ t('tracker.vs') }}</span>
-
-          <div class="side theirs">
-            <TransitionGroup name="pop" tag="span" class="heroes">
-              <HeroAvatar
-                v-for="hero in entry.theirs.heroes"
-                :key="hero.uid"
-                :hero-id="hero.heroId"
-                :team="1"
-                :size="22"
-              />
-            </TransitionGroup>
-
+          <div class="chips theirs">
             <SynergyChip v-for="id in entry.theirs.report.synergies" :key="id" :synergy="id" />
           </div>
         </div>
-
-        <p v-if="!entry.ours.heroes.length" class="warning">
-          <TriangleAlert :size="13" /> {{ t('tracker.emptyLane') }}
-        </p>
       </li>
     </ul>
   </HudPanel>
@@ -97,7 +89,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 .lanes {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -106,9 +98,9 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 .lane {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px 10px;
-  border-radius: 9px;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border-radius: 10px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.03);
   transition:
@@ -135,52 +127,49 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 .matchup {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: start;
-  gap: 8px;
-  padding-block: 8px;
-}
-
-.side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-  min-width: 0;
-}
-
-.side.theirs {
-  align-items: flex-end;
+  align-items: center;
+  gap: 16px;
 }
 
 .heroes {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  min-height: 22px;
+  gap: 6px;
+  min-height: 34px;
 }
 
-.heroes:not(:last-child) {
-  margin-bottom: 7px;
-}
-
-.theirs .heroes {
+.heroes.theirs {
   justify-content: flex-end;
 }
 
+/* Two columns under the heroes, ours left and theirs right: never more than two synergies in a row. */
+.chip-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.chip-row:not(:has(.chip)) {
+  display: none;
+}
+
+.chips {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chips.theirs {
+  align-items: flex-end;
+}
+
 .vs {
-  line-height: 22px;
+  line-height: 34px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
   color: var(--chalk-faint);
-}
-
-.warning {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0;
-  font-size: 11px;
-  color: #ffb36b;
 }
 </style>

@@ -4,6 +4,7 @@ import type { Vec2 } from '@/core/math/vec2'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import { isAlive, type Entity } from '@/simulation/ecs/components'
 import type { SimulationEvents } from '@/simulation/events'
+import type { RoleIcons } from '../roleIcons'
 import { PALETTE, TEAM_COLORS } from '../theme'
 import { CreepView } from '../views/CreepView'
 import type { EntityView } from '../views/EntityView'
@@ -24,7 +25,7 @@ export class BattleLayer extends Container {
   private subscriptions: (() => void)[] = []
   private hoveredUid: string | null = null
 
-  constructor() {
+  constructor(private readonly icons: RoleIcons) {
     super()
     this.addChild(this.zones, this.structures, this.creeps, this.heroes, this.projectiles)
   }
@@ -164,7 +165,7 @@ export class BattleLayer extends Container {
       const token = new HeroToken({
         color: entity.color ?? PALETTE.chalk,
         team: entity.team,
-        glyph: HEROES[entity.hero.heroId].glyph,
+        icon: this.icons[HEROES[entity.hero.heroId].role],
         stars: entity.hero.stars,
         items: entity.hero.items,
       })

@@ -21,6 +21,7 @@ import { AbilitySystem } from './systems/AbilitySystem'
 import { AttackSystem } from './systems/AttackSystem'
 import { CollisionSystem } from './systems/CollisionSystem'
 import { DeathSystem } from './systems/DeathSystem'
+import { DefenseSystem } from './systems/DefenseSystem'
 import { HealAuraSystem } from './systems/HealAuraSystem'
 import { MovementSystem } from './systems/MovementSystem'
 import { ProjectileSystem } from './systems/ProjectileSystem'
@@ -106,6 +107,7 @@ export class BattleSimulation {
       new DotSystem(ctx),
       new AbilitySystem(ctx, options.abilities ?? ABILITIES),
       new RoamSystem(ctx),
+      new DefenseSystem(ctx),
       new TargetingSystem(ctx),
       new AttackSystem(ctx),
       new MovementSystem(ctx),

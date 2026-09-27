@@ -8,6 +8,7 @@ import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
 import { ROLE_ICONS } from '../../icons'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import SynergyDetails from './SynergyDetails.vue'
 
 /**
  * Without `missing` the synergy is active. With it, the chip shows which roles would switch it on,
@@ -17,25 +18,8 @@ const props = defineProps<{ synergy: SynergyId; missing?: readonly RoleId[]; rec
 const emit = defineEmits<{ recruit: [] }>()
 
 const text = useGameText()
-const { t } = text
 const anyHero = computed(() => props.missing?.length === ROLE_IDS.length)
 const recruitable = computed(() => Boolean(props.missing && props.recruit))
-
-const hint = computed(() => {
-  if (!props.missing) {
-    return null
-  }
-
-  if (props.recruit) {
-    return t('tracker.recruit', { hero: text.heroName(props.recruit) })
-  }
-
-  const who = anyHero.value
-    ? t('tracker.anyHero')
-    : props.missing.map((role) => text.roleName(role)).join(t('tracker.or'))
-
-  return `${t('tracker.add', { who })} → ${text.synergyName(props.synergy)}`
-})
 </script>
 
 <template>
@@ -67,9 +51,7 @@ const hint = computed(() => {
     </component>
 
     <template #content>
-      <div v-if="hint" :class="{ call: recruitable }">{{ hint }}</div>
-      <strong>{{ text.synergyName(synergy) }}</strong> · {{ text.synergyNeed(synergy) }}
-      <div>{{ text.synergyEffect(synergy) }}</div>
+      <SynergyDetails :synergy="synergy" :missing="missing" :recruit="recruit" />
     </template>
   </InfoTooltip>
 </template>
@@ -120,10 +102,5 @@ const hint = computed(() => {
 .chip.recruitable:hover {
   border-color: var(--c);
   background: color-mix(in srgb, var(--c) 18%, transparent);
-}
-
-.call {
-  color: var(--gold);
-  font-weight: 600;
 }
 </style>

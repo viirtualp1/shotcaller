@@ -11,6 +11,7 @@ import type { BoardLabels } from './labels'
 import { BattleLayer } from './layers/BattleLayer'
 import { EffectsLayer } from './layers/EffectsLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
+import { loadRoleIcons, type RoleIcons } from './roleIcons'
 import { TOKEN_RADIUS, type HeroHit } from './views/HeroToken'
 
 export type BoardEvents = {
@@ -55,11 +56,12 @@ export class BoardRenderer {
     private readonly app: Application,
     private readonly map: LaneMap,
     labels: BoardLabels,
+    icons: RoleIcons,
   ) {
     const art = new Sprite(Texture.from(paintBoardArt(map, labels)))
     art.width = art.height = BATTLE.worldSize
-    this.planning = new PlanningLayer(map)
-    this.battle = new BattleLayer()
+    this.planning = new PlanningLayer(map, icons)
+    this.battle = new BattleLayer(icons)
     this.effects = new EffectsLayer(labels, (strength) => this.shake(strength))
     this.world.addChild(art, this.planning, this.battle, this.effects)
     this.camera.addChild(this.world)
@@ -91,9 +93,10 @@ export class BoardRenderer {
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     })
 
+    const icons = await loadRoleIcons()
     host.appendChild(app.canvas)
 
-    return new BoardRenderer(app, map, labels)
+    return new BoardRenderer(app, map, labels, icons)
   }
 
   /** Space covered by HUD panels; the map is fitted into what is left. */

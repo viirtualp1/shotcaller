@@ -76,6 +76,17 @@ export interface Roamer {
   quarry: Unit | null
 }
 
+/** Set while the hero's throne is under attack: it leaves its lane to guard this point. */
+export interface Defend {
+  point: Vec2
+}
+
+/** The enemy hero that hit this hero last; the hero turns on it for a short while. */
+export interface Threat {
+  attacker: Unit
+  remaining: number
+}
+
 export interface HealAura {
   radius: number
   hpPercentPerSecond: number
@@ -194,6 +205,8 @@ export interface Entity {
   zone?: Zone
   shield?: Shield
   dot?: DamageOverTime
+  threat?: Threat
+  defend?: Defend
   itemEffects?: ItemEffectsState
   crit?: CriticalStrike
   bash?: Bash

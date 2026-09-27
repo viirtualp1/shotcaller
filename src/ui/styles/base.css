@@ -157,7 +157,7 @@ kbd {
 }
 
 .tooltip {
-  max-width: 280px;
+  max-width: 320px;
   padding: 10px 12px;
   border-radius: 8px;
   background: #0f1614;

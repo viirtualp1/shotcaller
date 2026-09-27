@@ -49,6 +49,126 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '5.0',
+    date: '2026-09-27',
+    title: {
+      en: 'Defend the throne',
+      ru: 'Защита трона',
+    },
+    summary: {
+      en: 'Heroes fight back, rush home when the throne is under attack and heal next to it. The opponent now plays to the difficulty, and heroes, items and synergies read the way they do in Dota.',
+      ru: 'Герои дают сдачи, бегут домой, когда бьют трон, и лечатся рядом с ним. Соперник играет под выбранную сложность, а герои, предметы и связки читаются как в доте.',
+    },
+    general: [
+      {
+        en: 'Heroes **defend the base**: when enemy heroes hit the throne, the whole team drops its lanes, runs home and fights at the throne until the base is clear and **4** s pass without a hit. Creeps alone are left to the throne.',
+        ru: 'Герои **защищают базу**: когда вражеские герои бьют трон, вся команда бросает линии, бежит домой и дерётся у трона, пока база не очистится и **4** с по трону никто не ударит. С одними крипами трон справляется сам.',
+      },
+      {
+        en: 'Heroes now **fight back**: a hero hit by an enemy hero turns on it for **2** s instead of farming creeps or hitting buildings. It keeps a hero fight it can already reach and never chases under an enemy tower.',
+        ru: 'Герои теперь **дают сдачи**: если героя бьёт вражеский герой, он на **2** с переключается на обидчика вместо крипов и строений. Бой с героем, до которого он уже дотягивается, он не бросает и под вражескую вышку за обидчиком не лезет.',
+      },
+      {
+        en: 'The **throne heals** allied heroes inside its attack range by **5%** of their max health every second.',
+        ru: '**Трон лечит** союзных героев в радиусе своей атаки: **5%** от максимального здоровья в секунду.',
+      },
+      {
+        en: 'The computer opponent now depends on the difficulty. On **Relaxed** it never rerolls, buys experience only from round **9** and items only from round **12**.',
+        ru: 'Сила компьютерного соперника теперь зависит от сложности. На **Спокойной** он не обновляет лавку, покупает опыт только с **9** раунда, а предметы — с **12**.',
+      },
+      {
+        en: 'The opponent no longer opens with a **★★** hero: in round 1 it only buys heroes it does not own yet.',
+        ru: 'Соперник больше не начинает матч с героем **★★**: в первом раунде он покупает только тех героев, которых у него ещё нет.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Item cards in the shop turn **grey** and cannot be bought when you lack the gold or the stash is full.',
+        ru: 'Карточки предметов в магазине становятся **серыми** и не покупаются, если не хватает золота или склад полон.',
+      },
+      {
+        en: 'Heroes on the map and in the panels show their **role icon** instead of initials.',
+        ru: 'Герои на карте и в панелях показывают **иконку роли** вместо инициалов.',
+      },
+      {
+        en: 'The round summary explains the result: **building damage** of both sides, and the gap a win needs.',
+        ru: 'Итоги раунда объясняют результат: **урон по строениям** обеих сторон и какая разница нужна для победы.',
+      },
+      {
+        en: 'The **help** is rebuilt: numbered steps, who wins a round, how stars work with a picture, role, synergy and item cards, income and hotkeys.',
+        ru: '**Справка** переделана: шаги по порядку, кто выигрывает раунд, как работают звёзды с картинкой, карточки ролей, связок и предметов, доход и горячие клавиши.',
+      },
+      {
+        en: 'The throne keeps a single circle, its attack range. The decorative base circle is gone.',
+        ru: 'У трона остался один круг — радиус его атаки. Декоративный круг базы убран.',
+      },
+      {
+        en: 'New **hero window**: portrait with stars, name, then the hero sheet split into blocks.',
+        ru: 'Новое **окно героя**: портрет со звёздами, имя и дальше карточка героя, разбитая на блоки.',
+      },
+      {
+        en: '**Health** and **damage** get their own tiles with a heart and a sword.',
+        ru: '**Здоровье** и **урон** вынесены в отдельные плашки с сердцем и мечом.',
+      },
+      {
+        en: 'Attack type is an icon, a **bow** for ranged heroes and an **axe** for melee ones. Hover it to see the attack range. The role badge sits right next to it.',
+        ru: 'Тип атаки теперь иконка: **лук** у героев дальнего боя и **топор** у героев ближнего. Дальность атаки видна при наведении. Значок роли стоит сразу справа.',
+      },
+      {
+        en: 'Ability, innate effect and role passive each get their own block with a coloured edge.',
+        ru: 'Способность, врождённое свойство и пассивка роли идут отдельными блоками с цветной полосой.',
+      },
+      {
+        en: 'Items in the hero window are **icons** in two slots, an empty slot is dashed. Click an item to take it off.',
+        ru: 'Предметы в окне героя — это **иконки** в двух слотах, пустой слот обведён пунктиром. Нажми на предмет, чтобы снять его.',
+      },
+      {
+        en: 'The **Sell for N** button has a coin icon. The To bench button is gone: drag a hero onto the Heroes panel to take it off the map.',
+        ru: 'У кнопки **Продать за N** появилась иконка монет. Кнопки «В резерв» больше нет: чтобы убрать героя с карты, перетащи его на панель «Герои».',
+      },
+      {
+        en: 'The hero window closes when you click anywhere else. Clicks on lanes, heroes and the Heroes panel keep it open, since they act on the selected hero.',
+        ru: 'Окно героя закрывается кликом в любое другое место. Клики по линиям, героям и панели «Герои» его не закрывают: они действуют на выбранного героя.',
+      },
+      {
+        en: 'Dota-style **item tooltips**: icon, name and cost on top, then a Passive or Bonus block with what the item does. They show in the hero window and in the stash.',
+        ru: '**Подсказки предметов** как в доте: сверху иконка, название и цена, ниже блок «Пассивно» или «Бонус» с тем, что делает предмет. Работают в окне героя и на складе.',
+      },
+      {
+        en: 'Hero tooltips use the same blocks, and a hero’s items show as **large icons** in a row.',
+        ru: 'Подсказки героев собраны из тех же блоков, а предметы героя показаны **крупными иконками** в ряд.',
+      },
+      {
+        en: 'The map is **centred** under the scoreboard in every phase, including battles.',
+        ru: 'Карта стоит **по центру** под табло во всех фазах, в том числе в бою.',
+      },
+      {
+        en: 'Both side panels are **wider** and grow with the screen, from **290** to **420** pixels.',
+        ru: 'Обе боковые панели стали **шире** и растут вместе с экраном: от **290** до **420** пикселей.',
+      },
+      {
+        en: 'Lanes panel: **bigger hero portraits** with readable initials and more room between heroes and synergies.',
+        ru: 'Панель линий: **крупнее портреты героев** с читаемыми инициалами и больше места между героями и связками.',
+      },
+      {
+        en: 'Synergies sit in two columns under the heroes, yours on the left and the enemy’s on the right, **two per row** at most.',
+        ru: 'Связки стоят двумя колонками под героями: твои слева, вражеские справа, **не больше двух** в ряду.',
+      },
+      {
+        en: 'New **synergy tooltips**: status, what the synergy needs, what it gives and which role is missing, each in its own block.',
+        ru: 'Новые **подсказки связок**: статус, условие, эффект и какой роли не хватает, каждое в своём блоке.',
+      },
+      {
+        en: 'The empty-lane warning under every lane is gone. Instead, **Fight** asks for confirmation when one of your lanes has no hero.',
+        ru: 'Предупреждения о пустой линии под каждой линией больше нет. Вместо него кнопка **В бой** спрашивает подтверждение, если на какой-то линии нет героя.',
+      },
+      {
+        en: 'Profile page: the header caption, the Rating caption and the empty-profile hint are gone.',
+        ru: 'Страница профиля: убраны подпись в шапке, подпись «Рейтинг» и подсказка в пустом профиле.',
+      },
+    ],
+  },
+  {
     version: '4.0',
     date: '2026-09-27',
     title: {

@@ -110,6 +110,15 @@ export class EntityFactory {
         type,
         lane,
       },
+      ...(stats.fountainHeal
+        ? {
+            healAura: {
+              radius: stats.range,
+              hpPercentPerSecond: stats.fountainHeal,
+              timer: 0,
+            },
+          }
+        : {}),
     }) as Unit
   }
 

@@ -1,22 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { ItemOfferView } from '@/application/views'
 import { useGameText } from '../../composables/useGameText'
 import ItemIcon from '../common/ItemIcon.vue'
 
-defineProps<{ offer: ItemOfferView; disabled: boolean; index: number }>()
+const props = defineProps<{ offer: ItemOfferView; disabled: boolean; index: number }>()
 
 defineEmits<{ buy: [itemId: ItemOfferView['itemId']] }>()
 const text = useGameText()
+const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
 </script>
 
 <template>
   <button
     type="button"
     class="offer anim-slide"
-    :class="{ poor: !offer.affordable }"
+    :class="{ unavailable }"
     :style="{ '--i': index }"
     :disabled="disabled"
-    @click="$emit('buy', offer.itemId)"
+    :aria-disabled="unavailable"
+    @click="!unavailable && $emit('buy', offer.itemId)"
   >
     <ItemIcon :item-id="offer.itemId" :size="32" />
 
@@ -46,7 +49,7 @@ const text = useGameText()
     border-color 0.15s;
 }
 
-.offer:hover:not(:disabled) {
+.offer:hover:not(:disabled, .unavailable) {
   transform: translateX(-3px);
   border-color: rgba(244, 197, 91, 0.5);
 }
@@ -56,8 +59,10 @@ const text = useGameText()
   opacity: 0.55;
 }
 
-.offer.poor {
-  opacity: 0.55;
+.offer.unavailable {
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.45;
 }
 
 .info {

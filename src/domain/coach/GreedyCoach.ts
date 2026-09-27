@@ -1,35 +1,11 @@
 import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, RoleId } from '@/content/ids'
 import { ITEM_SLOTS, ITEMS } from '@/content/items'
-import { COPIES_PER_STAR, ECONOMY } from '@/content/rules'
+import { COPIES_PER_STAR, ECONOMY, OPPONENT, type OpponentStyle } from '@/content/rules'
 import type { Player } from '../player/Player'
 import { arrangeStrongestLineup } from './arrange'
 import type { CoachContext, CoachStrategy } from './CoachStrategy'
 import { heroPower, LaneOptimizer } from './LaneOptimizer'
-
-interface GreedyCoachOptions {
-  readonly levelFromRound: number
-  readonly goldReserveForXp: number
-  readonly rerollFromRound: number
-  readonly rerollAboveGold: number
-  readonly maxRerolls: number
-  readonly spareHeroes: number
-  readonly benchLimitOverTeam: number
-  readonly itemsFromRound: number
-  readonly goldReserveForItems: number
-}
-
-const DEFAULTS: GreedyCoachOptions = {
-  levelFromRound: 2,
-  goldReserveForXp: 2,
-  rerollFromRound: 3,
-  rerollAboveGold: 8,
-  maxRerolls: 3,
-  spareHeroes: 2,
-  benchLimitOverTeam: 4,
-  itemsFromRound: 3,
-  goldReserveForItems: 4,
-}
 
 const ITEM_WISHLIST: Readonly<Record<RoleId, readonly ItemId[]>> = {
   carry: ['broadsword', 'gloves', 'vampireFang'],
@@ -43,14 +19,14 @@ const ITEM_WISHLIST: Readonly<Record<RoleId, readonly ItemId[]>> = {
 const MAX_ACTIONS_PER_TURN = 40
 
 export class GreedyCoach implements CoachStrategy {
-  private readonly options: GreedyCoachOptions
+  private readonly options: OpponentStyle
 
   constructor(
     private readonly optimizer = new LaneOptimizer(),
-    options: Partial<GreedyCoachOptions> = {},
+    options: Partial<OpponentStyle> = {},
   ) {
     this.options = {
-      ...DEFAULTS,
+      ...OPPONENT.standard,
       ...options,
     }
   }
@@ -58,7 +34,7 @@ export class GreedyCoach implements CoachStrategy {
   playTurn(player: Player, context: CoachContext) {
     let rerolls = 0
     for (let action = 0; action < MAX_ACTIONS_PER_TURN; action++) {
-      if (this.buyCopy(player)) {
+      if (this.buyCopy(player, context)) {
         continue
       }
 
@@ -83,7 +59,11 @@ export class GreedyCoach implements CoachStrategy {
     this.outfit(player, context)
   }
 
-  private buyCopy(player: Player) {
+  private buyCopy(player: Player, { round }: CoachContext) {
+    if (round < this.options.copiesFromRound) {
+      return false
+    }
+
     const owned = new Set(player.roster.all().map((h) => h.heroId))
 
     const slot = player.shop.slots.findIndex(
@@ -99,11 +79,14 @@ export class GreedyCoach implements CoachStrategy {
     return round >= this.options.levelFromRound && affordable && hasTeam && player.buyXp().isOk()
   }
 
-  private recruit(player: Player, { rng }: CoachContext) {
+  private recruit(player: Player, { rng, round }: CoachContext) {
     const owned = player.roster.all()
     if (owned.length >= player.boardCapacity + this.options.spareHeroes) {
       return false
     }
+
+    const ownedIds = new Set(owned.map((h) => h.heroId))
+    const allowCopies = round >= this.options.copiesFromRound
 
     const roles = new Set(owned.map((h) => HEROES[h.heroId].role))
     const score = (id: HeroId) => HEROES[id].tier * 2 + (roles.has(HEROES[id].role) ? 0 : 1.5) + rng.next()
@@ -114,7 +97,8 @@ export class GreedyCoach implements CoachStrategy {
         slot,
       }))
       .filter(
-        (o): o is { id: HeroId; slot: number } => o.id !== null && HEROES[o.id].tier <= player.wallet.gold,
+        (o): o is { id: HeroId; slot: number } =>
+          o.id !== null && HEROES[o.id].tier <= player.wallet.gold && (allowCopies || !ownedIds.has(o.id)),
       )
       .sort((a, b) => score(b.id) - score(a.id))[0]
 
