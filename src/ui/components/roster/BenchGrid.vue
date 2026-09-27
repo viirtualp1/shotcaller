@@ -14,6 +14,12 @@ const store = useMatchStore()
 const drag = useDragStore()
 const { t } = useGameText()
 const human = computed(() => store.view!.human)
+
+const canArrange = computed(
+  () =>
+    store.isPlanning && human.value.bench.length > 0 && human.value.boardCount < human.value.boardCapacity,
+)
+
 const empties = computed(() => Math.max(0, human.value.benchSize - human.value.bench.length))
 const dropping = computed(() => drag.active && drag.payload?.kind === 'hero')
 const hovered = computed(() => drag.target?.kind === 'bench')
@@ -79,7 +85,7 @@ function onPanelClick() {
     <button
       type="button"
       class="btn block auto"
-      :disabled="!store.isPlanning"
+      :disabled="!canArrange"
       data-tour="auto-place"
       @click="store.autoArrange()"
     >

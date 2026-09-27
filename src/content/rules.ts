@@ -137,8 +137,12 @@ export const BATTLE = {
     finishStructureIfHealthAbove: 0.6,
     /** Seconds a hero keeps answering the enemy hero that last hit it. */
     retaliationMemory: 2,
+    /** Below this health share a hero keeps out of enemy tower range even while creeps tank the tower. */
+    towerRetreatHealth: 0.4,
   },
   meleeReach: 6,
+  /** Creeps notice enemy heroes from farther away than enemy creeps, so they stop instead of walking past. */
+  creepHeroAggro: 200,
   towerSafetyMargin: 14,
   targetLeash: 1.25,
   manaPerAttack: 10,

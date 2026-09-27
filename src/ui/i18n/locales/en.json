@@ -143,7 +143,6 @@
     "toMenu": "Back to main menu",
     "tutorial": "Tutorial",
     "help": "Help",
-    "saved": "The game saves automatically",
     "towers": "Towers",
     "throne": "Throne",
     "settings": "Settings",
@@ -445,7 +444,7 @@
     "choose": "Choose a patch",
     "latest": "Latest update",
     "new": "New",
-    "read": "Read patch notes",
+    "read": "Read the patch notes",
     "jump": "Sections",
     "nav": {
       "general": "General",

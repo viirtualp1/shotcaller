@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { Languages } from 'lucide-vue-next'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { LOCALE_LABELS, LOCALES, isLocale } from '../../i18n'
 import { useGameText } from '../../composables/useGameText'
 import { useSettingsStore } from '../../stores/settings'
 
-/** `compact` shows short codes with a globe for tight corners; otherwise full language names. */
+/** `compact` shows short codes for tight corners; otherwise full language names. */
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
 const settings = useSettingsStore()
@@ -30,8 +29,6 @@ const language = computed({
     :class="{ compact }"
     :aria-label="t('settings.language')"
   >
-    <Languages v-if="compact" :size="15" class="globe" aria-hidden="true" />
-
     <ToggleGroupItem
       v-for="locale in LOCALES"
       :key="locale"
@@ -60,15 +57,10 @@ const language = computed({
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 3px 3px 3px 10px;
+  padding: 3px;
   border-radius: 999px;
   border: 1px solid var(--edge-strong);
   background: rgba(17, 24, 21, 0.9);
-}
-
-.globe {
-  margin-right: 6px;
-  color: var(--chalk-dim);
 }
 
 .choice {

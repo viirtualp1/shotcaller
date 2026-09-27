@@ -121,6 +121,7 @@ export function useTutorial() {
       stagePadding: 6,
       stageRadius: 12,
       smoothScroll: true,
+      overlayClickBehavior: () => undefined,
       onDestroyed: () => {
         completed.value = true
         pause.set('tutorial', false)

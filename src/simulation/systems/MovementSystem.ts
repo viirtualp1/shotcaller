@@ -1,5 +1,5 @@
 import { BATTLE } from '@/content/rules'
-import { direction, distance, offset, stepTowards } from '@/core/math/vec2'
+import { direction, distance, offset, stepTowards, type Vec2 } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
 import { inReach } from './AttackSystem'
@@ -20,11 +20,17 @@ export class MovementSystem implements System {
       const step = unit.speed * slow * dt
       const target = unit.targeting.target
       if (target && isAlive(target)) {
-        if (!inReach(unit, target)) {
-          stepTowards(unit.position, target.position, step)
+        if (inReach(unit, target)) {
+          continue
         }
 
-        continue
+        if (this.leadsUnderTower(unit, target.position, step)) {
+          unit.targeting.target = null
+        } else {
+          stepTowards(unit.position, target.position, step)
+
+          continue
+        }
       }
 
       if (unit.targeting.chasing) {
@@ -49,6 +55,18 @@ export class MovementSystem implements System {
     }
   }
 
+  /** Heroes never chase a target through the range of an untanked enemy tower. */
+  private leadsUnderTower(unit: Unit, goal: Vec2, step: number) {
+    if (unit.kind !== 'hero') {
+      return false
+    }
+
+    const { safety } = this.ctx
+    const probe = offset(unit.position, direction(unit.position, goal), step + TOWER_LOOKAHEAD)
+
+    return !safety.isUnsafeFor(unit, unit.position) && safety.isUnsafeFor(unit, probe)
+  }
+
   private followLane(unit: Unit, step: number) {
     const follower = unit.laneFollower
     if (!follower) {
@@ -64,14 +82,14 @@ export class MovementSystem implements System {
 
     if (follower.avoidsTowers) {
       const { safety } = this.ctx
-      if (safety.isUnsafe(unit.team, unit.position)) {
+      if (safety.isUnsafeFor(unit, unit.position)) {
         stepTowards(unit.position, points[Math.max(0, follower.waypoint - 1)]!, step)
 
         return
       }
 
       const probe = offset(unit.position, direction(unit.position, waypoint), TOWER_LOOKAHEAD)
-      if (safety.isUnsafe(unit.team, probe)) {
+      if (safety.isUnsafeFor(unit, probe)) {
         return
       }
     }

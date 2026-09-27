@@ -51,6 +51,68 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '6.0.1',
+    date: '2026-09-28',
+    title: {
+      en: 'Lane fixes',
+      ru: 'Исправления на линиях',
+    },
+    summary: {
+      en: 'Towers, creeps and crits behave the way they should.',
+      ru: 'Вышки, крипы и криты работают как надо.',
+    },
+    general: [
+      {
+        en: 'Critical strikes no longer work against buildings.',
+        ru: 'Криты больше не срабатывают по строениям.',
+      },
+      {
+        en: 'Creeps notice enemy heroes from **200** range (was **120**).',
+        ru: 'Крипы замечают вражеских героев с расстояния **200** (было **120**).',
+      },
+      {
+        en: 'Heroes no longer follow a target into range of an enemy tower that creeps are not tanking.',
+        ru: 'Герои больше не идут за целью под вражескую вышку, которую не танкуют крипы.',
+      },
+      {
+        en: 'Heroes below **40%** health stay out of enemy tower range.',
+        ru: 'Герои с запасом здоровья ниже **40%** не заходят под вражеские вышки.',
+      },
+    ],
+    interface: [
+      {
+        en: '**Auto place** is disabled when there is nobody to place or no room on the map.',
+        ru: '**«Расставить»** неактивна, если некого ставить или на карте нет места.',
+      },
+      {
+        en: 'Removed the globe icon from the language switch.',
+        ru: 'Из переключателя языка убрана иконка глобуса.',
+      },
+      {
+        en: 'Removed the autosave note from the game menu.',
+        ru: 'Из меню игры убрана подпись об автосохранении.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The tutorial checkbox tick is centred.',
+        ru: 'Галочка в чекбоксе обучения стоит по центру.',
+      },
+      {
+        en: 'The tutorial no longer closes on a click outside its window.',
+        ru: 'Обучение больше не закрывается кликом мимо окна.',
+      },
+      {
+        en: 'A scrollbar no longer flashes when switching screens.',
+        ru: 'При переходе между экранами больше не мелькает полоса прокрутки.',
+      },
+      {
+        en: 'The cloud save time no longer stays at “just now”.',
+        ru: 'Время облачного сохранения больше не застывает на «только что».',
+      },
+    ],
+  },
+  {
     version: '6.0',
     date: '2026-09-27',
     title: {

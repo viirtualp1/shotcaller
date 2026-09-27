@@ -80,6 +80,10 @@ export class TargetingSystem implements System {
       return null
     }
 
+    if (this.exposed(unit)) {
+      return null
+    }
+
     const inReach = gap <= (unit.attack?.range ?? 0)
     if (!inReach && this.ctx.safety.isProtected(attacker, unit.team)) {
       return null
@@ -109,7 +113,7 @@ export class TargetingSystem implements System {
       return gap <= (unit.attack?.range ?? 0)
     }
 
-    if (gap > unit.targeting.aggroRange * BATTLE.targetLeash) {
+    if (gap > this.reach(unit, target) * BATTLE.targetLeash) {
       return false
     }
 
@@ -126,16 +130,44 @@ export class TargetingSystem implements System {
     }
 
     if (target.kind === 'structure') {
-      return this.ctx.safety.canHitStructure(unit, target)
+      return !this.woundedUnderTower(unit) && this.ctx.safety.canHitStructure(unit, target)
     }
 
-    return !this.ctx.safety.isProtected(target, unit.team)
+    return !this.exposed(unit) && !this.ctx.safety.isProtected(target, unit.team)
+  }
+
+  /** A hero standing in range of an untanked enemy tower backs off instead of picking fights. */
+  private exposed(unit: Unit) {
+    return unit.kind === 'hero' && this.ctx.safety.isUnsafeFor(unit, unit.position)
+  }
+
+  private woundedUnderTower(unit: Unit) {
+    return (
+      unit.kind === 'hero' &&
+      unit.health !== undefined &&
+      unit.health.current / unit.health.max < BATTLE.hero.towerRetreatHealth &&
+      this.ctx.safety.isUnsafeFor(unit, unit.position)
+    )
+  }
+
+  private reach(unit: Unit, target: Unit) {
+    const aggro = unit.targeting?.aggroRange ?? 0
+
+    return unit.kind === 'creep' && target.kind === 'hero' ? Math.max(aggro, BATTLE.creepHeroAggro) : aggro
   }
 
   private find(unit: Unit) {
     const aggro = unit.targeting?.aggroRange ?? 0
+    const reach = unit.kind === 'creep' ? Math.max(aggro, BATTLE.creepHeroAggro) : aggro
 
-    const candidates = this.ctx.index.near(unit.position, aggro, (u) => u.team !== unit.team && isAlive(u))
+    const candidates = this.ctx.index.near(
+      unit.position,
+      reach,
+      (u) =>
+        u.team !== unit.team &&
+        isAlive(u) &&
+        (u.kind === 'hero' || distance(unit.position, u.position) <= aggro),
+    )
 
     let best: Unit | null = null
     let bestScore = Infinity
@@ -186,10 +218,17 @@ export class TargetingSystem implements System {
     }
 
     if (candidate.kind === 'structure') {
-      return this.ctx.safety.canHitStructure(hero, candidate) ? gap + PRIORITY.heroStructurePenalty : Infinity
+      return !this.woundedUnderTower(hero) && this.ctx.safety.canHitStructure(hero, candidate)
+        ? gap + PRIORITY.heroStructurePenalty
+        : Infinity
     }
 
-    if (this.ctx.safety.isProtected(candidate, hero.team)) {
+    const { safety } = this.ctx
+    if (
+      this.exposed(hero) ||
+      safety.isProtected(candidate, hero.team) ||
+      safety.isUnsafeFor(hero, candidate.position)
+    ) {
       return Infinity
     }
 

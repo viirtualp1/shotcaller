@@ -51,7 +51,7 @@ export class CombatService {
       return 0
     }
 
-    const crit = source.crit?.prd.roll() ? source.crit : null
+    const crit = target.kind !== 'structure' && source.crit?.prd.roll() ? source.crit : null
 
     const dealt = this.dealDamage(source, target, amount * (crit?.multiplier ?? 1), 'physical', {
       crit: crit !== null,

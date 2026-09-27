@@ -54,6 +54,13 @@ export class TowerSafety {
     return this.threatAt(point, team, BATTLE.towerSafetyMargin)
   }
 
+  /** Like `isUnsafe`, but a wounded hero also fears towers that creeps are tanking. */
+  isUnsafeFor(hero: Unit, point: Vec2) {
+    const wounded = hero.health.current / hero.health.max < BATTLE.hero.towerRetreatHealth
+
+    return this.threatAt(point, hero.team, BATTLE.towerSafetyMargin, wounded)
+  }
+
   canHitStructure(hero: Unit, structure: Unit) {
     if (this.isTanked(structure, hero.team)) {
       return true
@@ -66,14 +73,14 @@ export class TowerSafety {
     )
   }
 
-  private threatAt(point: Vec2, team: TeamId, margin: number) {
+  private threatAt(point: Vec2, team: TeamId, margin: number, ignoreTanks = false) {
     for (const structure of this.queries.structures) {
       if (structure.team === team || !isAlive(structure)) {
         continue
       }
 
       const range = (structure.attack?.range ?? 0) + margin
-      if (distance(structure.position, point) <= range && !this.isTanked(structure, team)) {
+      if (distance(structure.position, point) <= range && (ignoreTanks || !this.isTanked(structure, team))) {
         return true
       }
     }

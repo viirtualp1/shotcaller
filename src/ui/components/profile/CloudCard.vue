@@ -25,13 +25,13 @@ const statusText = computed(() => {
     return t('cloud.status.local')
   }
 
-  if (cloud.status === 'synced' && cloud.syncedAt !== null && now.value.getTime() - cloud.syncedAt < 60_000) {
+  if (cloud.status === 'synced' && cloud.savedAt !== null && now.value.getTime() - cloud.savedAt < 60_000) {
     return t('cloud.status.synced', { time: t('cloud.status.justNow') })
   }
 
-  if (cloud.status === 'synced' && cloud.syncedAt !== null) {
+  if (cloud.status === 'synced' && cloud.savedAt !== null) {
     return t('cloud.status.synced', {
-      time: relativeTime(new Date(cloud.syncedAt).toISOString(), settings.locale, now.value.getTime()),
+      time: relativeTime(new Date(cloud.savedAt).toISOString(), settings.locale, now.value.getTime()),
     })
   }
 

@@ -58,8 +58,6 @@ function leave() {
             <LogOut :size="18" /> {{ t('hud.toMenu') }}
           </button>
         </nav>
-
-        <p class="note">{{ t('hud.saved') }}</p>
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -114,12 +112,6 @@ function leave() {
 
 .items .btn:nth-child(6) {
   animation-delay: 200ms;
-}
-
-.note {
-  margin: 0;
-  font-size: 12px;
-  color: var(--chalk-faint);
 }
 
 @keyframes slide-up {

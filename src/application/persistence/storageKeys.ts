@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   patchNotesSeen: `${PREFIX}/patch-notes-seen`,
   profile: `${PREFIX}/profile`,
   cloudSync: `${PREFIX}/cloud-sync`,
+  cloudSavedAt: `${PREFIX}/cloud-saved-at`,
 } as const
 
 type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>

@@ -210,4 +210,34 @@ describe('BattleSimulation', () => {
 
     expect(defender.defend?.point).toEqual(throne.position)
   })
+
+  it('never crits against buildings', () => {
+    const base = lineup('a', { mid: ['sniper'] })
+
+    const armed: Lineup = {
+      ...base,
+      mid: base.mid.map((hero) => ({
+        ...hero,
+        items: ['broadsword', 'broadsword'],
+      })),
+    }
+
+    const sim = new BattleSimulation(setup('crits', armed, lineup('b', {})))
+
+    const crits = {
+      buildings: 0,
+      units: 0,
+    }
+
+    sim.events.on('damaged', ({ target, crit }) => {
+      if (crit) {
+        crits[target.kind === 'structure' ? 'buildings' : 'units']++
+      }
+    })
+
+    sim.runToEnd()
+
+    expect(crits.units).toBeGreaterThan(0)
+    expect(crits.buildings).toBe(0)
+  })
 })

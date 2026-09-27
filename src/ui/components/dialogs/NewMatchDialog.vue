@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Play } from 'lucide-vue-next'
+import { Check, Play } from 'lucide-vue-next'
 import {
   CheckboxIndicator,
   CheckboxRoot,
@@ -53,7 +53,7 @@ function start() {
 
         <label class="tutorial">
           <CheckboxRoot v-model="withTutorial" class="checkbox">
-            <CheckboxIndicator class="tick">✓</CheckboxIndicator>
+            <CheckboxIndicator class="tick"><Check :size="15" :stroke-width="3" /></CheckboxIndicator>
           </CheckboxRoot>
 
           <span>{{ t('newMatch.tutorial') }}</span>
@@ -97,8 +97,10 @@ function start() {
 .checkbox {
   display: grid;
   place-items: center;
+  flex: none;
   width: 22px;
   height: 22px;
+  padding: 0;
   border-radius: 6px;
   border: 1.5px solid var(--edge-strong);
   background: rgba(0, 0, 0, 0.25);
@@ -111,10 +113,9 @@ function start() {
 }
 
 .tick {
+  display: grid;
+  place-items: center;
   color: var(--ink);
-  font-weight: 800;
-  font-size: 14px;
-  line-height: 1;
 }
 
 .actions {

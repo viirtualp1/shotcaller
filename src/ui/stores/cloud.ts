@@ -1,10 +1,11 @@
-import { useDocumentVisibility, useEventListener } from '@vueuse/core'
+import { useDocumentVisibility, useEventListener, useLocalStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import type { AccountMode, CloudAccount, CloudProfile } from '@/application/cloud/CloudStore'
 import { cloudConfig } from '@/application/cloud/config'
 import { sendEmailCode } from '@/application/cloud/emailSignIn'
 import { isBlank, ProfileSync } from '@/application/cloud/ProfileSync'
+import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import type { SupabaseCloud } from '@/application/cloud/SupabaseCloud'
 import type { Profile } from '@/domain/profile/Profile'
 import { useProfileStore } from './profile'
@@ -39,6 +40,8 @@ export const useCloudStore = defineStore('cloud', () => {
   /** The player closed the conflict dialog to decide later. */
   const conflictDeferred = ref(false)
   const syncedAt = ref<number | null>(null)
+  /** When progress last actually moved between this device and the account; background checks leave it alone. */
+  const savedAt = useLocalStorage<number | null>(STORAGE_KEYS.cloudSavedAt, null)
   /** The sign-in dialog, opened from the start screen or the profile. */
   const signInOpen = ref(false)
 
@@ -96,6 +99,8 @@ export const useCloudStore = defineStore('cloud', () => {
       }
 
       status.value = 'syncing'
+      const hadWork = sync.hasWork
+      const revision = sync.state.revision
       const outcome = await sync.sync(cloud, user.id, () => profile.profile)
 
       if (outcome.kind === 'conflict') {
@@ -113,6 +118,10 @@ export const useCloudStore = defineStore('cloud', () => {
       profile.replace(outcome.profile)
       status.value = 'synced'
       syncedAt.value = Date.now()
+
+      if (hadWork || sync.state.revision !== revision || savedAt.value === null) {
+        savedAt.value = syncedAt.value
+      }
     } catch (error) {
       status.value = globalThis.navigator?.onLine === false ? 'offline' : 'error'
       console.warn('Cloud sync failed', error)
@@ -178,6 +187,7 @@ export const useCloudStore = defineStore('cloud', () => {
     account.value = null
     conflict.value = null
     syncedAt.value = null
+    savedAt.value = null
     status.value = 'local'
   }
 
@@ -219,6 +229,7 @@ export const useCloudStore = defineStore('cloud', () => {
     conflict,
     conflictDeferred,
     syncedAt,
+    savedAt,
     busy: computed(() => status.value === 'syncing'),
     syncNow,
     resolve,
