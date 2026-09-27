@@ -2,6 +2,7 @@
 import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer } from 'lucide-vue-next'
 import { computed, ref, type Component } from 'vue'
 import AvatarPicker from '../components/profile/AvatarPicker.vue'
+import CloudCard from '../components/profile/CloudCard.vue'
 import { winRate } from '../components/profile/format'
 import HeroTable from '../components/profile/HeroTable.vue'
 import MatchHistory from '../components/profile/MatchHistory.vue'
@@ -109,6 +110,7 @@ function play() {
 
     <main class="page">
       <ProfileHeader @pick-avatar="picking = true" />
+      <CloudCard />
       <RankLadder class="ladder" />
 
       <section class="tiles">

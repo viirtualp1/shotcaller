@@ -561,5 +561,53 @@
     "text": "You have empty lanes. Start the round anyway?",
     "cancel": "Cancel",
     "confirm": "Start round"
+  },
+  "cloud": {
+    "title": "Cloud save",
+    "status": {
+      "local": "Progress is saved on this device",
+      "syncing": "Saving to the cloud…",
+      "synced": "Saved to the cloud {time}",
+      "justNow": "just now",
+      "offline": "No connection: saving once you are back online",
+      "error": "Could not reach the cloud"
+    },
+    "noAccount": "Finish a match and your progress gets backed up to the cloud.",
+    "guest": "Guest account. Link an email or Google to carry on from another device.",
+    "signedIn": "Signed in as {email}",
+    "linkEmail": "Link email",
+    "linkGoogle": "Link Google",
+    "signInHint": "Played on another device before?",
+    "signIn": "Sign in",
+    "signInGoogle": "Sign in with Google",
+    "signOut": "Sign out",
+    "signOutConfirm": "Sign out? The profile leaves this device but stays in your account.",
+    "retry": "Try again",
+    "email": {
+      "linkTitle": "Link email",
+      "signInTitle": "Sign in",
+      "linkText": "We will send a code to confirm the address. Then you can sign in with it on any device.",
+      "signInText": "Enter the email linked to your coach and we will send a sign-in code.",
+      "address": "Email",
+      "send": "Send code",
+      "sent": "We sent a letter to {email}. Enter the code from it or open its link on this device.",
+      "code": "Code",
+      "verify": "Confirm",
+      "back": "Use another email",
+      "failed": "That did not work. {reason}",
+      "cancel": "Cancel"
+    },
+    "conflict": {
+      "title": "Which progress to keep?",
+      "text": "This device and your account both have progress. Pick one: the other is replaced.",
+      "cloud": "In the account",
+      "device": "On this device",
+      "matches": "{n} match | {n} matches",
+      "keepCloud": "Keep the account's",
+      "keepDevice": "Keep this device's",
+      "later": "Decide later",
+      "pending": "Progress here differs from your account.",
+      "choose": "Choose"
+    }
   }
 }
