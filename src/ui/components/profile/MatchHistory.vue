@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { Castle, Crown, Hourglass } from 'lucide-vue-next'
-import { SYNERGY_BY_ID } from '@/content/synergies'
+import { Crown } from 'lucide-vue-next'
 import type { MatchRecord } from '@/domain/profile/Profile'
-import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
@@ -28,12 +26,6 @@ const signed = (value: number) =>
       <li v-for="match in profile.profile.recent" :key="match.id" class="match" :class="match.verdict">
         <div class="verdict">
           <strong>{{ t(`result.${match.verdict}`) }}</strong>
-
-          <span class="muted reason">
-            <Castle v-if="match.reason === 'throne'" :size="13" />
-            <Hourglass v-else :size="13" />
-            {{ t(`profile.history.${match.reason}`) }}
-          </span>
         </div>
 
         <div class="delta">
@@ -61,16 +53,6 @@ const signed = (value: number) =>
               />
 
               <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" :size="28" />
-            </li>
-          </ul>
-
-          <ul v-if="match.synergies.length" class="synergies">
-            <li
-              v-for="id in match.synergies"
-              :key="id"
-              :style="{ '--synergy': cssColor(SYNERGY_BY_ID[id].color) }"
-            >
-              {{ text.synergyName(id) }}
             </li>
           </ul>
         </div>
@@ -136,12 +118,6 @@ const signed = (value: number) =>
   font-size: 15px;
 }
 
-.reason {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
 .muted {
   font-size: 12px;
   color: var(--chalk-dim);
@@ -176,8 +152,7 @@ const signed = (value: number) =>
   min-width: 0;
 }
 
-.lineup,
-.synergies {
+.lineup {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -188,21 +163,6 @@ const signed = (value: number) =>
 
 .lineup {
   padding-bottom: 6px;
-}
-
-.synergies {
-  gap: 4px;
-}
-
-.synergies li {
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--synergy) 45%, transparent);
-  background: color-mix(in srgb, var(--synergy) 12%, transparent);
-  color: color-mix(in srgb, var(--synergy) 70%, white);
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .lineup li {

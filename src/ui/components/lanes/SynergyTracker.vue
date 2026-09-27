@@ -30,7 +30,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 </script>
 
 <template>
-  <HudPanel :title="t('tracker.title')" data-tour="tracker">
+  <HudPanel data-tour="tracker">
     <ul class="lanes">
       <li
         v-for="entry in lanes"

@@ -18,6 +18,7 @@ import type { Match, MatchPhase, RoundSummary } from '@/domain/match/Match'
 import type { HeroMatchStats, TeamMatchStats } from '@/domain/match/matchStats'
 import type { Ledger } from '@/domain/player/ledger'
 import { itemSellValue, sellValue, type Player } from '@/domain/player/Player'
+import { wouldPromote } from '@/domain/roster/promotion'
 import type { OwnedHero } from '@/domain/roster/Roster'
 import { resolveLane, type LaneReport, type SynergySuggestion } from '@/domain/synergy/resolveLane'
 import type { BattleSimulation, HeroStatus } from '@/simulation/BattleSimulation'
@@ -38,6 +39,8 @@ export interface ShopOfferView {
   readonly ownedCopies: number
   /** Buying this card completes a set of three and promotes the hero. */
   readonly completesSet: boolean
+  /** The bought hero has somewhere to go: a free bench slot or an instant promotion. */
+  readonly fits: boolean
 }
 
 export interface ItemOfferView {
@@ -190,6 +193,7 @@ function toPlayerView(player: Player) {
       affordable: heroId !== null && HEROES[heroId].tier <= gold,
       ownedCopies: heroId ? copiesOf(heroId) : 0,
       completesSet: heroId !== null && singlesOf(heroId) >= MERGE_COUNT - 1,
+      fits: heroId !== null && (player.roster.hasBenchSpace || wouldPromote(player.roster, heroId)),
     })),
     shopOdds: SHOP_ODDS[player.level],
     stash: player.stash.items.map((itemId, index) => ({

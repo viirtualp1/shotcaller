@@ -18,6 +18,7 @@ defineEmits<{ buy: [slot: number] }>()
 const text = useGameText()
 const { t } = text
 const hero = computed(() => HEROES[props.offer.heroId])
+const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
 </script>
 
 <template>
@@ -25,10 +26,11 @@ const hero = computed(() => HEROES[props.offer.heroId])
     <button
       type="button"
       class="offer anim-slide"
-      :class="{ poor: !offer.affordable, completes: offer.completesSet, [`tier-${hero.tier}`]: true }"
+      :class="{ unavailable, completes: offer.completesSet && !unavailable, [`tier-${hero.tier}`]: true }"
       :style="{ '--i': index, '--hero': cssColor(hero.color), '--role': cssColor(ROLES[hero.role].color) }"
       :disabled="disabled"
-      @click="$emit('buy', offer.slot)"
+      :aria-disabled="unavailable"
+      @click="!unavailable && $emit('buy', offer.slot)"
     >
       <HeroAvatar :hero-id="offer.heroId" :size="36" />
 
@@ -87,12 +89,12 @@ const hero = computed(() => HEROES[props.offer.heroId])
   background: var(--hero);
 }
 
-.offer:hover:not(:disabled) {
+.offer:hover:not(:disabled, .unavailable) {
   transform: translateX(-3px);
   border-color: var(--edge-strong);
 }
 
-.offer:active:not(:disabled) {
+.offer:active:not(:disabled, .unavailable) {
   transform: scale(0.98);
 }
 
@@ -101,9 +103,10 @@ const hero = computed(() => HEROES[props.offer.heroId])
   opacity: 0.55;
 }
 
-.offer.poor {
-  filter: saturate(0.4);
-  opacity: 0.6;
+.offer.unavailable {
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.45;
 }
 
 .offer.completes {

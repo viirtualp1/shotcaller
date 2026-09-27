@@ -10,6 +10,14 @@ const store = useMatchStore()
 const { t } = useGameText()
 const human = computed(() => store.view!.human)
 const locked = computed(() => !store.isPlanning)
+
+const levelLabel = computed(() =>
+  t('shop.level', {
+    level: human.value.level,
+    capacity: human.value.boardCapacity,
+  }),
+)
+
 const xpRatio = computed(() => (human.value.isMaxLevel ? 1 : human.value.xp / human.value.xpToNext))
 const levelUp = ref(false)
 
@@ -32,7 +40,7 @@ watch(
       <span class="gold"><span class="coin" /> <AnimatedNumber :value="human.gold" /></span>
 
       <span class="level" :class="{ levelUp }" @animationend="levelUp = false">
-        <span class="label">{{ t('shop.level', { level: human.level }) }}</span>
+        <span class="label">{{ levelLabel }}</span>
         <span class="xp"><i :style="{ width: `${xpRatio * 100}%` }" /></span>
 
         <span class="hint">

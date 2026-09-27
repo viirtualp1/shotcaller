@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ArrowRight } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { levelFor, rankFor, rankStep } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
-import { useMatchStore } from '../../stores/match'
 import { useProfileStore } from '../../stores/profile'
 import RankMedal from './RankMedal.vue'
 
-const match = useMatchStore()
 const profile = useProfileStore()
 const text = useGameText()
 const { t } = text
@@ -35,11 +32,6 @@ const progress = computed(() => {
 
 const signed = (value: number) =>
   value > 0 ? `+${text.number(value)}` : value < 0 ? `−${text.number(-value)}` : '±0'
-
-function openProfile() {
-  match.leaveToMenu()
-  profile.open()
-}
 </script>
 
 <template>
@@ -80,10 +72,6 @@ function openProfile() {
 
       <span v-else class="muted">{{ t('profile.level', { level: progress.level }) }}</span>
     </div>
-
-    <button type="button" class="btn ghost open" @click="openProfile">
-      {{ t('profile.progress.open') }} <ArrowRight :size="15" />
-    </button>
   </section>
 </template>
 
@@ -143,9 +131,5 @@ function openProfile() {
   font-size: 11.5px;
   font-weight: 800;
   animation: pop-in 0.4s 0.3s ease-out both;
-}
-
-.open {
-  margin-left: auto;
 }
 </style>

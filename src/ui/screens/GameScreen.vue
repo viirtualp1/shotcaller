@@ -52,12 +52,14 @@ const { width: viewportWidth, height: viewportHeight } = useWindowSize()
 const topBox = useElementBounding(top)
 const leftBox = useElementBounding(left)
 const rightBox = useElementBounding(right)
+/** During a battle the planning tools slide away and the map takes their space. */
+const battling = computed(() => store.phase === 'battle')
 
 const insets = computed<Insets>(() =>
   wide.value
     ? {
         top: topBox.bottom.value,
-        left: leftBox.right.value,
+        left: battling.value ? 0 : leftBox.right.value,
         right: viewportWidth.value - rightBox.left.value,
         bottom: 0,
       }
@@ -166,7 +168,7 @@ watch(
       <span class="corner" />
     </header>
 
-    <aside ref="left" class="hud-left">
+    <aside ref="left" class="hud-left" :class="{ collapsed: battling }" :inert="battling">
       <SynergyTracker />
       <BenchGrid />
       <StashGrid />
@@ -332,6 +334,18 @@ watch(
 .wide .hud-left {
   left: var(--gutter);
   width: 272px;
+  transition:
+    translate 0.35s ease-in-out,
+    opacity 0.35s ease-in-out;
+}
+
+.wide .hud-left.collapsed {
+  translate: calc(-100% - var(--gutter)) 0;
+  opacity: 0;
+}
+
+.game:not(.wide) .hud-left.collapsed {
+  display: none;
 }
 
 .wide .hud-right {
