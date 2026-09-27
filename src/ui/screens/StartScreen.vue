@@ -3,6 +3,7 @@ import { Play, Swords } from 'lucide-vue-next'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
+import ProfileChip from '../components/profile/ProfileChip.vue'
 import { useGameText } from '../composables/useGameText'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
@@ -16,6 +17,8 @@ const { t } = useGameText()
 
 <template>
   <main class="start">
+    <ProfileChip class="coach" />
+
     <section class="copy">
       <h1 class="hand">{{ t('app.title') }}</h1>
       <p class="lede">{{ t('start.lede') }}</p>
@@ -110,6 +113,13 @@ h1 {
   z-index: 1;
 }
 
+.coach {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 1;
+}
+
 @media (max-width: 860px) {
   .start {
     grid-template-columns: minmax(0, 1fr);
@@ -125,6 +135,12 @@ h1 {
     position: relative;
     inset: auto;
     width: auto;
+  }
+
+  .coach {
+    position: relative;
+    inset: auto;
+    justify-self: start;
   }
 }
 </style>

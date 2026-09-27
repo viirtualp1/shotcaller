@@ -17,6 +17,7 @@ import type { TeamReportView } from '@/application/views'
 import { useGameText } from '../../../composables/useGameText'
 import { useMatchStore } from '../../../stores/match'
 import HeroAvatar from '../../common/HeroAvatar.vue'
+import ProgressStrip from '../../profile/ProgressStrip.vue'
 import HeroStatsTable from './HeroStatsTable.vue'
 import StatComparison from './StatComparison.vue'
 import type { ComparisonRow, HeroStatKey } from './reportModel'
@@ -116,6 +117,8 @@ const combat = computed(() => [
             </span>
           </p>
         </header>
+
+        <ProgressStrip />
 
         <TabsRoot v-model="tab" class="tabs">
           <TabsList class="tab-list" :aria-label="t('report.title')">

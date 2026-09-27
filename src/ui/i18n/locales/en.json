@@ -442,5 +442,84 @@
     "innate": "Innate",
     "ability": "Ability",
     "roleHeroes": "Heroes with this role"
+  },
+  "profile": {
+    "title": "Profile",
+    "back": "Main menu",
+    "defaultName": "Coach",
+    "rename": "Rename",
+    "namePlaceholder": "Coach name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "changeAvatar": "Change avatar",
+    "avatarTitle": "Avatar",
+    "avatarAuto": "Most played hero",
+    "level": "Level {level}",
+    "xp": "{into} / {needed} XP",
+    "since": "Coaching since {date}",
+    "rating": "Rating",
+    "toNextStar": "{points} to the next star",
+    "toNextRank": "{points} to {rank}",
+    "topRank": "The highest rank",
+    "ranks": {
+      "rookie": "Rookie",
+      "scout": "Scout",
+      "tactician": "Tactician",
+      "strategist": "Strategist",
+      "commander": "Commander",
+      "legend": "Legend",
+      "shotcaller": "Shotcaller"
+    },
+    "ladder": "Ranks",
+    "stats": {
+      "matches": "Matches",
+      "record": "{wins} W · {losses} L · {draws} D",
+      "winRate": "Win rate",
+      "streak": "Streak",
+      "noStreak": "—",
+      "winStreak": "{n} win | {n} wins",
+      "lossStreak": "{n} loss | {n} losses",
+      "bestStreak": "Best: {n}",
+      "fastestWin": "Fastest win",
+      "rounds": "{n} round | {n} rounds",
+      "thrones": "Thrones broken",
+      "thronesHint": "Wins before the round limit",
+      "peak": "Peak rating",
+      "kills": "Hero kills",
+      "perMatch": "{n} per match"
+    },
+    "heroes": {
+      "title": "Most played heroes",
+      "hero": "Hero",
+      "matches": "Matches",
+      "winRate": "Win rate",
+      "kd": "K / D",
+      "damage": "Damage per match",
+      "empty": "Heroes you field will show up here."
+    },
+    "synergies": {
+      "title": "Favourite synergies",
+      "matches": "{n} match | {n} matches",
+      "empty": "Synergies from your final lineups will show up here."
+    },
+    "history": {
+      "title": "Recent matches",
+      "throne": "Throne destroyed",
+      "roundLimit": "Round limit",
+      "mvp": "Best hero",
+      "rounds": "{won}–{lost} in rounds"
+    },
+    "empty": {
+      "title": "No matches yet",
+      "text": "Finish a match and your rank, favourite heroes and history will show up here.",
+      "play": "New match"
+    },
+    "progress": {
+      "rating": "Rating",
+      "xp": "XP",
+      "rankUp": "New rank",
+      "levelUp": "Level up",
+      "open": "Open profile"
+    }
   }
 }

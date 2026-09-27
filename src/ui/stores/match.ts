@@ -22,6 +22,7 @@ import type { DomainError } from '@/domain/errors'
 import type { Match } from '@/domain/match/Match'
 import type { RosterSlot } from '@/domain/roster/Roster'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
+import { useProfileStore } from './profile'
 
 export type BattleSpeed = 1 | 2 | 4
 export type ShopTab = 'heroes' | 'items'
@@ -67,6 +68,7 @@ export function locateHero(player: PlayerView, uid: string) {
 export const useMatchStore = defineStore('match', () => {
   const repository = new LocalStorageMatchRepository()
   const optimizer = new LaneOptimizer()
+  const profile = useProfileStore()
   let match: Match | null = null
   let session: BattleSession | null = null
   let liveCountdown = 0
@@ -409,6 +411,10 @@ export const useMatchStore = defineStore('match', () => {
 
     live.value = toLiveBattleView(session.simulation)
     apply(match.finishBattle(session.simulation.outcome()))
+
+    if (match.phase === 'finished') {
+      profile.record(match)
+    }
   }
 
   function nextRound() {
