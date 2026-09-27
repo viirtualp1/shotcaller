@@ -2,6 +2,7 @@
 import { TooltipProvider } from 'reka-ui'
 import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
+import SignInDialog from './components/dialogs/SignInDialog.vue'
 import SettingsDialog from './components/dialogs/SettingsDialog.vue'
 import GameScreen from './screens/GameScreen.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
@@ -30,6 +31,10 @@ const cloud = useCloudStore()
 
     <SettingsDialog />
     <NewMatchDialog />
-    <CloudConflictDialog v-if="cloud.enabled" />
+
+    <template v-if="cloud.enabled">
+      <SignInDialog />
+      <CloudConflictDialog />
+    </template>
   </TooltipProvider>
 </template>

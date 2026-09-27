@@ -115,19 +115,15 @@ export class SupabaseCloud implements CloudStore {
   }
 
   /** Leaves the page for Google and comes back signed in. */
-  async google(mode: AccountMode) {
-    const options = { redirectTo: this.redirectTo() }
-
-    const { error } =
-      mode === 'link'
-        ? await this.client.auth.linkIdentity({
-            provider: 'google',
-            options,
-          })
-        : await this.client.auth.signInWithOAuth({
-            provider: 'google',
-            options,
-          })
+  /**
+   * Signs in or up with Google. A new Google account starts empty, and the sync then moves this device's
+   * progress into it; an existing one asks which progress to keep. No identity linking is needed for that.
+   */
+  async google() {
+    const { error } = await this.client.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: this.redirectTo() },
+    })
 
     if (error) {
       throw error

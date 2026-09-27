@@ -1,28 +1,48 @@
 <script setup lang="ts">
-import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import { computed, ref } from 'vue'
+import { useIntervalFn } from '@vueuse/core'
+import { Mail } from 'lucide-vue-next'
+import {
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from 'reka-ui'
+import { computed, ref, watch } from 'vue'
 import { accountProblem, type AccountProblem } from '@/application/cloud/accountProblem'
 import type { AccountMode } from '@/application/cloud/CloudStore'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
 
-const props = defineProps<{ mode: AccountMode }>()
-const open = defineModel<boolean>('open', { required: true })
+/** Supabase lets one address get a new code about once a minute. */
+const RESEND_AFTER_S = 60
 
 const cloud = useCloudStore()
 const { t } = useGameText()
 
-/** Starts as asked, but can switch: signing in with an unused email offers to link it instead, and back. */
-const mode = ref<AccountMode>(props.mode)
 const step = ref<'email' | 'code'>('email')
 const email = ref('')
 const code = ref('')
+/** Which code went out: a sign-in one for a known address, a confirmation one for a new address. */
+const mode = ref<AccountMode>('signIn')
 const busy = ref(false)
 const problem = ref<AccountProblem | null>(null)
 const rawError = ref('')
+const resendIn = ref(0)
 
-const title = computed(() => t(mode.value === 'link' ? 'cloud.email.linkTitle' : 'cloud.email.signInTitle'))
-const intro = computed(() => t(mode.value === 'link' ? 'cloud.email.linkText' : 'cloud.email.signInText'))
+const { pause, resume } = useIntervalFn(
+  () => {
+    resendIn.value = Math.max(0, resendIn.value - 1)
+
+    if (resendIn.value === 0) {
+      pause()
+    }
+  },
+  1000,
+  { immediate: false },
+)
 
 const failure = computed(() => {
   if (!problem.value) {
@@ -34,14 +54,16 @@ const failure = computed(() => {
     : t(`cloud.email.problems.${problem.value}`)
 })
 
-/** The mode that fixes the problem, if switching would. */
-const switchTo = computed<AccountMode | null>(() => {
-  if (problem.value === 'noAccount' && mode.value === 'signIn') {
-    return 'link'
-  }
-
-  return problem.value === 'emailTaken' && mode.value === 'link' ? 'signIn' : null
-})
+watch(
+  () => cloud.signInOpen,
+  (open) => {
+    if (open) {
+      step.value = 'email'
+      code.value = ''
+      problem.value = null
+    }
+  },
+)
 
 async function run(action: () => Promise<void>) {
   busy.value = true
@@ -59,38 +81,28 @@ async function run(action: () => Promise<void>) {
 
 const send = () =>
   run(async () => {
-    await cloud.sendEmail(email.value, mode.value)
+    mode.value = await cloud.sendCode(email.value)
     step.value = 'code'
+    code.value = ''
+    resendIn.value = RESEND_AFTER_S
+    resume()
   })
 
-const verify = () =>
-  run(async () => {
-    await cloud.verifyEmail(email.value, code.value, mode.value)
-    open.value = false
-  })
+const verify = () => run(() => cloud.verifyCode(email.value, code.value, mode.value))
 
-function switchMode() {
-  if (!switchTo.value) {
-    return
-  }
-
-  mode.value = switchTo.value
-  code.value = ''
-  step.value = 'email'
-  void send()
-}
+const google = () => run(() => cloud.signInWithGoogle())
 </script>
 
 <template>
-  <DialogRoot v-model:open="open">
+  <DialogRoot v-model:open="cloud.signInOpen">
     <DialogPortal>
       <DialogOverlay class="overlay" />
 
-      <DialogContent class="sheet email" :aria-describedby="undefined">
-        <DialogTitle class="title hand">{{ title }}</DialogTitle>
+      <DialogContent class="sheet sign-in">
+        <DialogTitle class="title hand">{{ t('cloud.email.title') }}</DialogTitle>
 
         <form v-if="step === 'email'" class="form" @submit.prevent="send">
-          <p class="intro">{{ intro }}</p>
+          <DialogDescription class="intro">{{ t('cloud.email.text') }}</DialogDescription>
 
           <label class="field">
             <span>{{ t('cloud.email.address') }}</span>
@@ -98,12 +110,23 @@ function switchMode() {
           </label>
 
           <button type="submit" class="btn primary big block" :disabled="busy">
-            {{ t('cloud.email.send') }}
+            <Mail :size="17" /> {{ t('cloud.email.send') }}
           </button>
+
+          <template v-if="cloud.google">
+            <span class="or">{{ t('cloud.email.or') }}</span>
+
+            <button type="button" class="btn big block" :disabled="busy" @click="google">
+              <span class="g" aria-hidden="true">G</span> {{ t('cloud.signInGoogle') }}
+            </button>
+          </template>
         </form>
 
         <form v-else class="form" @submit.prevent="verify">
-          <p class="intro">{{ t('cloud.email.sent', { email }) }}</p>
+          <DialogDescription class="intro">
+            {{ t(mode === 'link' ? 'cloud.email.sentSignUp' : 'cloud.email.sentSignIn', { email }) }}
+            {{ t('cloud.email.codeHint') }}
+          </DialogDescription>
 
           <label class="field">
             <span>{{ t('cloud.email.code') }}</span>
@@ -123,17 +146,18 @@ function switchMode() {
             {{ t('cloud.email.verify') }}
           </button>
 
-          <button type="button" class="btn ghost block" @click="step = 'email'">
-            {{ t('cloud.email.back') }}
-          </button>
+          <div class="row">
+            <button type="button" class="btn ghost" :disabled="busy || resendIn > 0" @click="send">
+              {{ resendIn > 0 ? t('cloud.email.resendIn', { s: resendIn }) : t('cloud.email.resend') }}
+            </button>
+
+            <button type="button" class="btn ghost" @click="step = 'email'">
+              {{ t('cloud.email.back') }}
+            </button>
+          </div>
         </form>
 
         <p v-if="failure" class="failure" role="alert">{{ failure }}</p>
-
-        <button v-if="switchTo" type="button" class="btn block" :disabled="busy" @click="switchMode">
-          {{ t(switchTo === 'link' ? 'cloud.email.linkInstead' : 'cloud.email.signInInstead') }}
-        </button>
-
         <DialogClose class="btn ghost block">{{ t('cloud.email.cancel') }}</DialogClose>
       </DialogContent>
     </DialogPortal>
@@ -141,7 +165,7 @@ function switchMode() {
 </template>
 
 <style scoped>
-.email {
+.sign-in {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -195,6 +219,34 @@ function switchMode() {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.3em !important;
   text-align: center;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--chalk-faint);
+}
+
+.or::before,
+.or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--edge);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.g {
+  font-weight: 800;
+  color: #8ab4f8;
 }
 
 .failure {

@@ -1,36 +1,16 @@
 <script setup lang="ts">
-import { CloudAlert, CloudCheck, CloudOff, CloudUpload, LogIn, LogOut, Mail, RotateCw } from 'lucide-vue-next'
+import { LogOut, Mail, RotateCw } from 'lucide-vue-next'
 import { useIntervalFn, useNow } from '@vueuse/core'
-import { computed, ref, type Component } from 'vue'
-import type { AccountMode } from '@/application/cloud/CloudStore'
+import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
-import { useCloudStore, type CloudStatus } from '../../stores/cloud'
+import { useCloudStore } from '../../stores/cloud'
 import { useSettingsStore } from '../../stores/settings'
-import EmailDialog from './EmailDialog.vue'
+import { CLOUD_ICONS, maskEmail } from './cloudStatus'
 import { relativeTime } from './format'
-
-const ICONS: Readonly<Record<Exclude<CloudStatus, 'off'>, Component>> = {
-  local: CloudUpload,
-  syncing: RotateCw,
-  synced: CloudCheck,
-  offline: CloudOff,
-  error: CloudAlert,
-}
 
 const cloud = useCloudStore()
 const settings = useSettingsStore()
 const { t } = useGameText()
-const emailMode = ref<AccountMode | null>(null)
-
-const emailOpen = computed({
-  get: () => emailMode.value !== null,
-  set: (open: boolean) => {
-    if (!open) {
-      emailMode.value = null
-    }
-  },
-})
-
 /** Keeps "saved 5 minutes ago" moving while the page stays open. */
 const now = useNow({ scheduler: (tick) => useIntervalFn(tick, 30_000) })
 
@@ -48,12 +28,7 @@ const statusText = computed(() => {
   return cloud.status === 'off' ? '' : t(`cloud.status.${cloud.status}`)
 })
 
-/** Shows just enough of the address to recognise it: `ni•••@mail.ru`. */
-const maskedEmail = computed(() => {
-  const email = cloud.account?.email ?? ''
-  const [name = '', domain = ''] = email.split('@')
-  return `${name.slice(0, 2)}•••@${domain}`
-})
+const maskedEmail = computed(() => maskEmail(cloud.account?.email ?? ''))
 
 function signOut() {
   if (globalThis.confirm(t('cloud.signOutConfirm'))) {
@@ -65,20 +40,16 @@ function signOut() {
 <template>
   <section v-if="cloud.enabled" class="cloud" :data-status="cloud.status">
     <span class="icon">
-      <component
-        :is="cloud.status === 'off' ? CloudOff : ICONS[cloud.status]"
-        :size="20"
-        :class="{ spin: cloud.busy }"
-      />
+      <component :is="CLOUD_ICONS[cloud.status]" :size="20" :class="{ spin: cloud.busy }" />
     </span>
 
     <div class="text">
       <strong>{{ t('cloud.title') }}</strong>
       <span class="status">{{ statusText }}</span>
       <span v-if="cloud.conflict" class="note warn">{{ t('cloud.conflict.pending') }}</span>
-      <span v-else-if="!cloud.account" class="note">{{ t('cloud.noAccount') }}</span>
-      <span v-else-if="cloud.account.anonymous" class="note">{{ t('cloud.guest') }}</span>
-      <span v-else class="note">{{ t('cloud.signedIn', { email: maskedEmail }) }}</span>
+      <span v-else-if="cloud.signedIn" class="note">{{ t('cloud.signedIn', { email: maskedEmail }) }}</span>
+      <span v-else-if="cloud.account" class="note">{{ t('cloud.guest') }}</span>
+      <span v-else class="note">{{ t('cloud.pitch') }}</span>
     </div>
 
     <div class="actions">
@@ -86,37 +57,9 @@ function signOut() {
         {{ t('cloud.conflict.choose') }}
       </button>
 
-      <template v-else-if="!cloud.account || cloud.account.anonymous">
-        <button v-if="cloud.account" type="button" class="btn" @click="emailMode = 'link'">
-          <Mail :size="15" /> {{ t('cloud.linkEmail') }}
-        </button>
-
-        <button
-          v-if="cloud.account && cloud.google"
-          type="button"
-          class="btn"
-          @click="cloud.signInWithGoogle('link')"
-        >
-          <span class="g" aria-hidden="true">G</span> {{ t('cloud.linkGoogle') }}
-        </button>
-
-        <span class="sign-in">
-          <span class="muted">{{ t('cloud.signInHint') }}</span>
-
-          <button type="button" class="btn ghost" @click="emailMode = 'signIn'">
-            <LogIn :size="15" /> {{ t('cloud.signIn') }}
-          </button>
-
-          <button
-            v-if="cloud.google"
-            type="button"
-            class="btn ghost"
-            @click="cloud.signInWithGoogle('signIn')"
-          >
-            <span class="g" aria-hidden="true">G</span> {{ t('cloud.signInGoogle') }}
-          </button>
-        </span>
-      </template>
+      <button v-else-if="!cloud.signedIn" type="button" class="btn primary" @click="cloud.signInOpen = true">
+        <Mail :size="15" /> {{ t('cloud.signInEmail') }}
+      </button>
 
       <button v-else type="button" class="btn ghost" @click="signOut">
         <LogOut :size="15" /> {{ t('cloud.signOut') }}
@@ -131,8 +74,6 @@ function signOut() {
         <RotateCw :size="15" /> {{ t('cloud.retry') }}
       </button>
     </div>
-
-    <EmailDialog v-if="emailMode" v-model:open="emailOpen" :mode="emailMode" />
   </section>
 </template>
 
@@ -200,23 +141,6 @@ function signOut() {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-.sign-in {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-}
-
-.muted {
-  font-size: 12.5px;
-  color: var(--chalk-faint);
-}
-
-.g {
-  font-weight: 800;
-  color: #8ab4f8;
 }
 
 @keyframes spin {

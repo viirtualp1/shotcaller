@@ -71,8 +71,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Регистрация не нужна: **гостевой аккаунт** создаётся, как только появляется что сохранить.',
       },
       {
-        en: 'To play on another device, link an **email** (a one-time code from the letter) or **Google** and sign in with it there.',
-        ru: 'Чтобы играть на другом устройстве, привяжи **почту** (одноразовый код из письма) или **Google** и войди с ними там.',
+        en: 'Sign in with your **email**: enter it, type the one-time code from the letter, done. A new address creates an account and keeps this device’s progress, a known one signs you in. Google sign-in works too where it is switched on.',
+        ru: 'Вход по **почте**: вводишь адрес, вписываешь одноразовый код из письма — готово. Новая почта создаёт аккаунт и сохраняет в нём прогресс с этого устройства, знакомая просто входит. Там, где включён Google, можно войти и через него.',
       },
       {
         en: 'The game still works offline. Progress is saved on the device first and reaches the cloud once the connection is back.',
@@ -93,12 +93,16 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     ],
     interface: [
       {
-        en: 'The profile page has a **Cloud save** card: save status, guest or signed-in account, linking an email or Google, signing in and out.',
-        ru: 'На странице профиля появилась карточка **«Облачное сохранение»**: статус сохранения, гостевой аккаунт или вход, привязка почты или Google, вход и выход.',
+        en: 'A **cloud button** sits next to the profile card on the start screen: sign in right from there. Once you are in, it shows whether your progress is saved.',
+        ru: 'Справа от карточки профиля на главном экране появилась **кнопка облака**: войти можно прямо оттуда. После входа она показывает, сохранён ли прогресс.',
       },
       {
-        en: 'The profile card on the start screen shows a small cloud once progress is saved, and a warning when saving failed or there is no connection.',
-        ru: 'На карточке профиля на главном экране маленькое облачко показывает, что прогресс сохранён, а предупреждение — что сохранить не удалось или нет связи.',
+        en: 'The profile page has a **Cloud save** card with the save status, a Sign in with email button and, once signed in, Sign out.',
+        ru: 'На странице профиля появилась карточка **«Облачное сохранение»**: статус сохранения, кнопка «Войти по почте», а после входа — «Выйти».',
+      },
+      {
+        en: 'Sign-in problems are explained in plain words: a wrong or expired code, too many attempts, no connection.',
+        ru: 'Проблемы со входом объясняются по-человечески: неверный или устаревший код, слишком много попыток, нет связи.',
       },
       {
         en: 'Signing out takes the profile off this device; it stays in your account.',

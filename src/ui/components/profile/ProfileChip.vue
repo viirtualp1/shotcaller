@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { CloudAlert, CloudCheck, CloudOff } from 'lucide-vue-next'
 import { useGameText } from '../../composables/useGameText'
-import { useCloudStore } from '../../stores/cloud'
 import { useProfileStore } from '../../stores/profile'
 import CoachAvatar from './CoachAvatar.vue'
 import RankMedal from './RankMedal.vue'
 
 const profile = useProfileStore()
-const cloud = useCloudStore()
 const { t } = useGameText()
 </script>
 
@@ -18,25 +15,7 @@ const { t } = useGameText()
     <span class="who">
       <strong class="name">{{ profile.profile.name || t('profile.defaultName') }}</strong>
 
-      <span class="rank">
-        {{ t(`profile.ranks.${profile.rank.tier}`) }}
-
-        <span
-          v-if="cloud.conflict || cloud.status === 'error'"
-          class="cloud warn"
-          :title="t('cloud.status.error')"
-        >
-          <CloudAlert :size="13" />
-        </span>
-
-        <span v-else-if="cloud.status === 'offline'" class="cloud warn" :title="t('cloud.status.offline')">
-          <CloudOff :size="13" />
-        </span>
-
-        <span v-else-if="cloud.status === 'synced'" class="cloud" :title="t('cloud.title')">
-          <CloudCheck :size="13" />
-        </span>
-      </span>
+      <span class="rank">{{ t(`profile.ranks.${profile.rank.tier}`) }}</span>
     </span>
 
     <RankMedal :tier="profile.rank.tier" :stars="profile.rank.stars" :size="38" />
@@ -79,17 +58,6 @@ const { t } = useGameText()
   font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cloud {
-  display: inline-flex;
-  vertical-align: -2px;
-  margin-left: 4px;
-  color: var(--heal);
-}
-
-.cloud.warn {
-  color: var(--gold);
 }
 
 .rank {

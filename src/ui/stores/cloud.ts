@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import type { AccountMode, CloudAccount, CloudProfile } from '@/application/cloud/CloudStore'
 import { cloudConfig } from '@/application/cloud/config'
+import { sendEmailCode } from '@/application/cloud/emailSignIn'
 import { isBlank, ProfileSync } from '@/application/cloud/ProfileSync'
 import type { SupabaseCloud } from '@/application/cloud/SupabaseCloud'
 import type { Profile } from '@/domain/profile/Profile'
@@ -38,6 +39,8 @@ export const useCloudStore = defineStore('cloud', () => {
   /** The player closed the conflict dialog to decide later. */
   const conflictDeferred = ref(false)
   const syncedAt = ref<number | null>(null)
+  /** The sign-in dialog, opened from the start screen or the profile. */
+  const signInOpen = ref(false)
 
   let client: Promise<SupabaseCloud> | null = null
   let running = false
@@ -143,30 +146,26 @@ export const useCloudStore = defineStore('cloud', () => {
     }
   }
 
-  /** Linking needs an account to link to, so a guest one is made first if there is none. */
-  async function sendEmail(email: string, mode: AccountMode) {
+  /** Sends a code to sign in, or to sign up when the address is new; returns which one, for `verifyCode`. */
+  async function sendCode(email: string) {
     const cloud = await connect()
-    if (mode === 'link') {
-      account.value = await cloud.ensureAccount()
-    }
+    const mode = await sendEmailCode(cloud, email.trim())
+    account.value = await cloud.account()
 
-    await cloud.sendEmail(email.trim(), mode)
+    return mode
   }
 
-  async function verifyEmail(email: string, code: string, mode: AccountMode) {
+  async function verifyCode(email: string, code: string, mode: AccountMode) {
     const cloud = await connect()
     await cloud.verifyEmail(email.trim(), code.trim(), mode)
     account.value = await cloud.account()
+    signInOpen.value = false
     void syncNow()
   }
 
-  async function google(mode: AccountMode) {
+  async function signInWithGoogle() {
     const cloud = await connect()
-    if (mode === 'link') {
-      await cloud.ensureAccount()
-    }
-
-    await cloud.google(mode)
+    await cloud.google()
   }
 
   /** The profile belongs to the account, so it leaves with it; the next save starts a new guest. */
@@ -223,9 +222,11 @@ export const useCloudStore = defineStore('cloud', () => {
     busy: computed(() => status.value === 'syncing'),
     syncNow,
     resolve,
-    sendEmail,
-    verifyEmail,
-    signInWithGoogle: google,
+    signInOpen,
+    signedIn: computed(() => account.value !== null && !account.value.anonymous),
+    sendCode,
+    verifyCode,
+    signInWithGoogle,
     signOut,
   }
 })
