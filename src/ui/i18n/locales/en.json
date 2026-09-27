@@ -409,5 +409,38 @@
       "xpBought": "XP purchases",
       "level": "Coach level"
     }
+  },
+  "patchNotes": {
+    "title": "Patch notes",
+    "back": "Main menu",
+    "patch": "Patch {version}",
+    "choose": "Choose a patch",
+    "latest": "Latest update",
+    "new": "New",
+    "read": "Read patch notes",
+    "jump": "Sections",
+    "nav": {
+      "general": "General",
+      "items": "Items",
+      "roles": "Roles",
+      "heroes": "Heroes",
+      "interface": "Interface"
+    },
+    "sections": {
+      "general": "General updates",
+      "items": "Item updates",
+      "roles": "Role updates",
+      "heroes": "Hero updates",
+      "interface": "Interface"
+    },
+    "badges": {
+      "new": "New",
+      "reworked": "Reworked",
+      "buffed": "Buffed",
+      "nerfed": "Nerfed"
+    },
+    "innate": "Innate",
+    "ability": "Ability",
+    "roleHeroes": "Heroes with this role"
   }
 }

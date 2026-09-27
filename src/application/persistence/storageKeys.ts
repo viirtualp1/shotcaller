@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   locale: `${PREFIX}/locale`,
   difficulty: `${PREFIX}/difficulty`,
   tutorialCompleted: `${PREFIX}/tutorial-completed`,
+  patchNotesSeen: `${PREFIX}/patch-notes-seen`,
 } as const
 
 type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>

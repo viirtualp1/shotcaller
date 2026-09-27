@@ -2,6 +2,7 @@
 import { Play, Swords } from 'lucide-vue-next'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
+import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import { useGameText } from '../composables/useGameText'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
@@ -45,11 +46,14 @@ const { t } = useGameText()
         <BoardPreview :key="settings.locale" />
       </BoardFrame>
     </section>
+
+    <LatestPatchCard class="news" />
   </main>
 </template>
 
 <style scoped>
 .start {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   align-items: center;
@@ -99,6 +103,13 @@ h1 {
   min-width: 0;
 }
 
+.news {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 1;
+}
+
 @media (max-width: 860px) {
   .start {
     grid-template-columns: minmax(0, 1fr);
@@ -108,6 +119,12 @@ h1 {
 
   .menu {
     max-width: none;
+  }
+
+  .news {
+    position: relative;
+    inset: auto;
+    width: auto;
   }
 }
 </style>
