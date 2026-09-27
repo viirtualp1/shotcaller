@@ -6,7 +6,7 @@ import { findPatch, LATEST_PATCH } from '../patchNotes/notes'
 
 const HASH = /^#\/patches(?:\/([\w.]+))?\/?$/
 
-/** The version named in the URL hash, like `#/patches/2.1`; `null` when the page is closed. */
+/** The version named in the URL hash, like `#/patches/3.0`; `null` when the page is closed. */
 function versionFromHash() {
   const match = HASH.exec(globalThis.location?.hash ?? '')
   if (!match) {

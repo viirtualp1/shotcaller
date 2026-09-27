@@ -49,7 +49,7 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
-    version: '2.1',
+    version: '3.0',
     date: '2026-09-27',
     title: {
       en: 'Crits, bashes and evasion',
