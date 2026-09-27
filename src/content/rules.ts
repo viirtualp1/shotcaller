@@ -59,7 +59,7 @@ export type Difficulty = 'relaxed' | 'standard'
 /** Planning time limit per difficulty; null means the player starts the fight manually. */
 export const DIFFICULTIES: Readonly<Record<Difficulty, { readonly planningSeconds: number | null }>> = {
   relaxed: { planningSeconds: null },
-  standard: { planningSeconds: 35 },
+  standard: { planningSeconds: 60 },
 }
 
 /** How the computer opponent spends its gold. */

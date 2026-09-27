@@ -124,6 +124,7 @@ const heroStats = z.object({
 const matchStats = z.object({
   rounds: amount,
   draws: amount,
+  winners: z.array(team.nullable()).readonly().default([]),
   teams: pair(teamStats),
   heroes: z.array(heroStats).readonly(),
 })

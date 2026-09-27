@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { createMatch } from '@/application/createMatch'
 import { parseSnapshot, serializeSnapshot } from '@/application/persistence/snapshot'
+import { toMatchView } from '@/application/views'
 import { sequentialIds } from '@/core/ids'
 import { createRng } from '@/core/random/rng'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
+import { verdictFor } from '@/domain/match/judge'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
 const FULL_MATCH_TIMEOUT = 15_000
 
-function playOut(seed: string) {
+function playOut(seed: string, rounds = Infinity) {
   const match = createMatch({
     seed,
     ids: sequentialIds(),
@@ -16,7 +18,7 @@ function playOut(seed: string) {
 
   const coach = new GreedyCoach()
   const rng = createRng(`${seed}-coach`)
-  while (match.phase !== 'finished') {
+  while (match.phase !== 'finished' && match.stats.rounds < rounds) {
     coach.playTurn(match.human, {
       round: match.round,
       rng,
@@ -62,6 +64,24 @@ describe('match statistics', () => {
       expect(player.ledger.heroesBought).toBeGreaterThan(0)
       expect(player.ledger.goldSpent).toBeGreaterThan(0)
     }
+  })
+
+  it('remembers who took each round, in order', () => {
+    const match = playOut('history', 4)
+    const { winners, teams, draws } = match.stats
+
+    expect(winners).toHaveLength(4)
+    expect(winners.filter((w) => w === 0)).toHaveLength(teams[0].roundsWon)
+    expect(winners.filter((w) => w === null)).toHaveLength(draws)
+    expect(toMatchView(match).history).toEqual(winners.map((w) => verdictFor(0, w)))
+  })
+
+  it('loads saves made before round history was kept', () => {
+    const match = playOut('old-save', 1)
+    const saved = JSON.parse(serializeSnapshot(match.snapshot()))
+    delete saved.state.stats.winners
+
+    expect(parseSnapshot(JSON.stringify(saved))?.stats.winners).toEqual([])
   })
 
   it('survives a save and load', () => {

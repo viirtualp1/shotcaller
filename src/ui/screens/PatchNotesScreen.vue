@@ -113,11 +113,9 @@ watch(
     <Transition name="fade" mode="out-in">
       <main :key="patch.version" class="page">
         <section class="masthead">
-          <p class="eyebrow kicker">{{ t('app.title') }} · {{ t('patchNotes.title') }}</p>
           <h1 class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
           <time :datetime="patch.date" class="date">{{ date }}</time>
-          <p class="summary"><NoteLine :text="patch.summary" /></p>
         </section>
 
         <section v-if="patch.general?.length" id="patch-general" class="section">
@@ -226,10 +224,6 @@ watch(
                   <template v-if="ability.kind === 'ability'">{{ ABILITY_NAMES[ability.id] }}</template>
                   <NoteLine v-else :text="ability.name" />
                 </h4>
-
-                <span class="ability-kind">
-                  {{ t(ability.kind === 'ability' ? 'patchNotes.ability' : 'patchNotes.innate') }}
-                </span>
 
                 <NoteBadge v-if="ability.badge" :badge="ability.badge" class="entry-badge" />
               </header>
@@ -340,16 +334,16 @@ watch(
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 48px 0 36px;
-  border-bottom: 1px solid var(--edge);
+  padding: 48px 0 0;
 }
 
 .kicker {
   color: var(--gold);
 }
 
+/* Caveat digits carry a wide left bearing; pull them back so the ink lines up with the headline. */
 .version {
-  margin: 4px 0 2px;
+  margin: 4px 0 2px -0.13em;
   font-size: clamp(96px, 18vw, 168px);
   line-height: 0.85;
   color: var(--gold);
@@ -372,14 +366,6 @@ watch(
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--chalk-faint);
-}
-
-.summary {
-  max-width: 62ch;
-  margin: 18px 0 0;
-  font-size: 16.5px;
-  line-height: 1.55;
-  color: var(--chalk-dim);
 }
 
 .section {

@@ -148,6 +148,12 @@
     "settings": "Settings",
     "respawnIn": "{hero} respawns in {s} s"
   },
+  "dock": {
+    "label": "Planning",
+    "shop": "Shop",
+    "heroes": "Heroes",
+    "lanes": "Lanes"
+  },
   "tracker": {
     "anyHero": "any hero",
     "vs": "VS",
@@ -468,8 +474,6 @@
       "buffed": "Buffed",
       "nerfed": "Nerfed"
     },
-    "innate": "Innate",
-    "ability": "Ability",
     "roleHeroes": "Heroes with this role"
   },
   "profile": {

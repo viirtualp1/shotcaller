@@ -40,7 +40,6 @@ export interface PatchNote {
   /** ISO date, `YYYY-MM-DD`. */
   readonly date: string
   readonly title: NoteText
-  readonly summary: NoteText
   readonly general?: readonly NoteText[]
   readonly items?: readonly ItemNote[]
   readonly roles?: readonly RoleNote[]
@@ -51,15 +50,49 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '6.1',
+    date: '2026-09-28',
+    title: {
+      en: 'Phones and tablets',
+      ru: 'Телефоны и планшеты',
+    },
+    general: [
+      {
+        en: 'Planning time: **35** → **60** s',
+        ru: 'Время на подготовку: **35** → **60** с',
+      },
+    ],
+    interface: [
+      {
+        en: 'Phones and tablets: the map stays on screen, shop, heroes and lanes are tabs in a dock under it (on the right in landscape).',
+        ru: 'Телефоны и планшеты: карта всегда на экране, магазин, герои и линии — вкладки в доке под ней (справа в альбомной ориентации).',
+      },
+      {
+        en: 'The scoreboard shows who took each round.',
+        ru: 'Табло показывает, кто взял каждый раунд.',
+      },
+      {
+        en: 'The latest update card is marked **New** for **3** days after release.',
+        ru: 'Карточка последнего обновления помечена **Новое** **3** дня после выхода.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The game menu button is back on phones.',
+        ru: 'На телефонах вернулась кнопка меню.',
+      },
+      {
+        en: 'The patch number lines up with the headline.',
+        ru: 'Номер патча выровнен по заголовку.',
+      },
+    ],
+  },
+  {
     version: '6.0.2',
     date: '2026-09-28',
     title: {
       en: 'Balance',
       ru: 'Баланс',
-    },
-    summary: {
-      en: 'Meat Hook no longer reaches across lanes. Pyromancer, Engineer, Acolyte and Frost Witch are toned down, Oracle is stronger.',
-      ru: 'Meat Hook больше не достаёт через полкарты. Pyromancer, Engineer, Acolyte и Frost Witch ослаблены, Oracle усилен.',
     },
     heroes: [
       {
@@ -226,10 +259,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Lane fixes',
       ru: 'Исправления на линиях',
     },
-    summary: {
-      en: 'Towers, creeps and crits behave the way they should.',
-      ru: 'Вышки, крипы и криты работают как надо.',
-    },
     general: [
       {
         en: 'Critical strikes no longer work against buildings.',
@@ -288,10 +317,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Cloud saves',
       ru: 'Облачные сохранения',
     },
-    summary: {
-      en: 'Your coach profile now lives in the cloud: carry on from another device and never lose your rank, level and match history.',
-      ru: 'Профиль тренера теперь хранится в облаке: продолжай с другого устройства и не теряй ранг, уровень и историю матчей.',
-    },
     general: [
       {
         en: 'New **cloud save** for the coach profile: rank, level, statistics and match history go to your account after every finished match.',
@@ -348,10 +373,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'The map stays put',
       ru: 'Карта на месте',
     },
-    summary: {
-      en: 'A fix for the map drifting off or shrinking while the window changes size.',
-      ru: 'Исправлено: пока меняется размер окна, карта больше не уезжает в сторону и не становится маленькой.',
-    },
     fixes: [
       {
         en: 'Resizing the window no longer throws the map off: it always fits between the side panels, even while you drag the window edge.',
@@ -370,10 +391,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Language on the start screen',
       ru: 'Язык на главном экране',
     },
-    summary: {
-      en: 'Pick Russian or English right on the start screen, without opening a new match or the settings.',
-      ru: 'Русский или английский теперь выбираются прямо на главном экране, без нового матча и настроек.',
-    },
     interface: [
       {
         en: 'The start screen has a **RU / EN** switch in the bottom-left corner, at the bottom of the page on phones. The language changes at once and is remembered.',
@@ -391,10 +408,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     title: {
       en: 'Defend the throne',
       ru: 'Защита трона',
-    },
-    summary: {
-      en: 'Heroes fight back, rush home when the throne is under attack and heal next to it. The opponent now plays to the difficulty, and heroes, items and synergies read the way they do in Dota.',
-      ru: 'Герои дают сдачи, бегут домой, когда бьют трон, и лечатся рядом с ним. Соперник играет под выбранную сложность, а герои, предметы и связки читаются как в доте.',
     },
     general: [
       {
@@ -512,10 +525,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Coach profile',
       ru: 'Профиль тренера',
     },
-    summary: {
-      en: 'Every finished match now counts: climb seven ranks, level up your coach and look back at your heroes, synergies and recent games.',
-      ru: 'Теперь каждый доигранный матч идёт в зачёт: поднимайся по семи рангам, качай уровень тренера и смотри, какие герои, связки и матчи у тебя были.',
-    },
     general: [
       {
         en: 'New **coach profile**. Open it from the card in the top-left corner of the start screen: your name, avatar, rank and level.',
@@ -607,10 +616,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     title: {
       en: 'Crits, bashes and evasion',
       ru: 'Криты, оглушения и уклонение',
-    },
-    summary: {
-      en: 'Chance-based effects arrive, and they roll the way Dota rolls them: crits in a row and long waits for a bash are now much rarer.',
-      ru: 'В игре появились эффекты с шансом, и работают они как в доте: криты подряд и долгое ожидание оглушения теперь случаются намного реже.',
     },
     general: [
       {
@@ -715,10 +720,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Lanes, top bar and match statistics',
       ru: 'Линии, верхняя панель и статистика матча',
     },
-    summary: {
-      en: 'An interface overhaul: the whole match reads at a glance, and after it you can dig into the numbers.',
-      ru: 'Обновление интерфейса: весь матч читается с одного взгляда, а после него можно разобрать цифры.',
-    },
     interface: [
       {
         en: 'The Synergies panel is now **Lanes**: every lane shows your heroes against the enemy’s and the synergies active on both sides.',
@@ -745,6 +746,11 @@ export const PATCH_NOTES: readonly PatchNote[] = [
 ]
 
 export const LATEST_PATCH = PATCH_NOTES[0]!
+
+/** How long after its release date a patch is advertised as new. */
+const FRESH_FOR_MS = 3 * 24 * 60 * 60 * 1000
+
+export const isFresh = (patch: PatchNote, now = Date.now()) => now - Date.parse(patch.date) < FRESH_FOR_MS
 
 export const findPatch = (version: string | null | undefined) =>
   PATCH_NOTES.find((patch) => patch.version === version)

@@ -13,8 +13,8 @@ import type { CoachStrategy } from '../coach/CoachStrategy'
 import { HeroPool, type PoolState } from '../economy/HeroPool'
 import { computeIncome, type IncomeBreakdown } from '../economy/income'
 import type { DomainError } from '../errors'
-import { Player, type PlayerState, type RoundVerdict } from '../player/Player'
-import { judgeMatch, judgeRound, totalStructureDamage, type MatchResult } from './judge'
+import { Player, type PlayerState } from '../player/Player'
+import { judgeMatch, judgeRound, totalStructureDamage, verdictFor, type MatchResult } from './judge'
 import { addRound, emptyMatchStats, type MatchStats } from './matchStats'
 import { freshStructures } from './structures'
 
@@ -51,9 +51,6 @@ export interface MatchState {
   readonly battle: BattleSetup | null
   readonly stats: MatchStats
 }
-
-const verdictFor = (team: TeamId, winner: TeamId | null): RoundVerdict =>
-  winner === null ? 'draw' : winner === team ? 'win' : 'loss'
 
 const copyStructures = (s: PerTeam<StructureState>): [StructureState, StructureState] => [
   { ...s[0] },

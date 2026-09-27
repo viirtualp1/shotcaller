@@ -36,6 +36,13 @@ const progress = computed(() => {
 })
 
 const showProgress = computed(() => store.phase === 'battle' || planningLeft.value !== null)
+
+const history = computed(() =>
+  view.value.history.map((verdict, i) => ({
+    verdict,
+    round: i + 1,
+  })),
+)
 </script>
 
 <template>
@@ -68,6 +75,16 @@ const showProgress = computed(() => store.phase === 'battle' || planningLeft.val
       <span class="progress" :class="{ visible: showProgress, planning: store.isPlanning, urgent }">
         <i :style="{ width: `${progress * 100}%` }" />
       </span>
+
+      <TransitionGroup v-if="history.length" name="pop" tag="ol" class="history">
+        <li
+          v-for="entry in history"
+          :key="entry.round"
+          class="pip"
+          :class="entry.verdict"
+          :title="t(`summary.${entry.verdict}`, { round: entry.round })"
+        />
+      </TransitionGroup>
     </div>
 
     <BaseStatus :team="1" :structures="structures[1]" />
@@ -152,6 +169,35 @@ const showProgress = computed(() => store.phase === 'battle' || planningLeft.val
   background: var(--theirs);
 }
 
+.history {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 210px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--chalk-faint);
+  opacity: 0.6;
+}
+
+.pip.win {
+  background: var(--ours);
+  opacity: 1;
+}
+
+.pip.loss {
+  background: var(--theirs);
+  opacity: 1;
+}
+
 .phase.urgent {
   color: var(--theirs);
   animation: urgent 1s ease-in-out infinite;
@@ -196,6 +242,33 @@ const showProgress = computed(() => store.phase === 'battle' || planningLeft.val
 
   .scoreboard :deep(.who) {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .scoreboard {
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .scoreboard :deep(.base) {
+    gap: 6px;
+  }
+
+  .scoreboard :deep(.towers) {
+    gap: 3px;
+  }
+
+  .center {
+    min-width: 0;
+  }
+
+  .phase {
+    font-size: 20px;
+  }
+
+  .history {
+    max-width: 150px;
   }
 }
 </style>

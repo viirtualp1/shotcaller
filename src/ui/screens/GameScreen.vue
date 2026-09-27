@@ -10,6 +10,7 @@ import GameMenuDialog from '../components/dialogs/GameMenuDialog.vue'
 import HelpDrawer from '../components/dialogs/HelpDrawer.vue'
 import MatchReportDialog from '../components/dialogs/report/MatchReportDialog.vue'
 import RoundSummaryDialog from '../components/dialogs/RoundSummaryDialog.vue'
+import CompactDock from '../components/hud/CompactDock.vue'
 import DragLayer from '../components/hud/DragLayer.vue'
 import GameMenu from '../components/hud/GameMenu.vue'
 import NoticeToast from '../components/hud/NoticeToast.vue'
@@ -49,11 +50,15 @@ const tour = useTutorial()
 const top = ref<HTMLElement | null>(null)
 const left = ref<HTMLElement | null>(null)
 const right = ref<HTMLElement | null>(null)
+const dock = ref<InstanceType<typeof CompactDock> | null>(null)
 const wide = useMediaQuery('(min-width: 1100px)')
+/** Phones and tablets on their side keep the dock on the right, so the map stays square. */
+const landscape = useMediaQuery('(orientation: landscape)')
 const { width: viewportWidth, height: viewportHeight } = useWindowSize()
 const topBox = useElementBounding(top)
 const leftBox = useElementBounding(left)
 const rightBox = useElementBounding(right)
+const dockBox = useElementBounding(dock)
 /** During a battle the planning tools slide away and the map takes their space. */
 const battling = computed(() => store.phase === 'battle')
 
@@ -62,28 +67,26 @@ const sideInset = computed(() =>
   Math.max(battling.value ? 0 : leftBox.right.value, viewportWidth.value - rightBox.left.value),
 )
 
-const insets = computed<Insets>(() =>
-  wide.value
-    ? {
-        top: topBox.bottom.value,
-        left: sideInset.value,
-        right: sideInset.value,
-        bottom: 0,
-      }
-    : {
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      },
-)
+const insets = computed<Insets>(() => {
+  if (wide.value) {
+    return {
+      top: topBox.bottom.value,
+      left: sideInset.value,
+      right: sideInset.value,
+      bottom: 0,
+    }
+  }
+
+  return {
+    top: topBox.bottom.value,
+    left: 0,
+    right: landscape.value ? Math.max(0, viewportWidth.value - dockBox.left.value) : 0,
+    bottom: landscape.value ? 0 : Math.max(0, viewportHeight.value - dockBox.top.value),
+  }
+})
 
 /** An invisible box over the map so the tutorial can spotlight it. */
 const mapAnchor = computed(() => {
-  if (!wide.value) {
-    return null
-  }
-
   const { top: t0, left: l0, right: r0, bottom: b0 } = insets.value
   const width = viewportWidth.value - l0 - r0 - MAP_MARGIN * 2
   const height = viewportHeight.value - t0 - b0 - MAP_MARGIN * 2
@@ -157,7 +160,7 @@ watch(
 </script>
 
 <template>
-  <div class="game" :class="{ wide }">
+  <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait', { battling }]">
     <div class="board-layer">
       <BoardView :key="settings.locale" :insets="insets" />
     </div>
@@ -175,20 +178,24 @@ watch(
       <span class="corner" />
     </header>
 
-    <aside ref="left" class="hud-left" :class="{ collapsed: battling }" :inert="battling">
-      <SynergyTracker />
-      <BenchGrid />
-      <StashGrid />
-    </aside>
+    <template v-if="wide">
+      <aside ref="left" class="hud-left" :class="{ collapsed: battling }" :inert="battling">
+        <SynergyTracker />
+        <BenchGrid />
+        <StashGrid />
+      </aside>
 
-    <aside ref="right" class="hud-right">
-      <FightButton class="fight-dock" />
+      <aside ref="right" class="hud-right">
+        <FightButton class="fight-dock" />
 
-      <Transition name="swap" mode="out-in">
-        <BattlePanel v-if="store.phase === 'battle'" key="battle" />
-        <ShopPanel v-else key="shop" class="shop-fill" />
-      </Transition>
-    </aside>
+        <Transition name="swap" mode="out-in">
+          <BattlePanel v-if="store.phase === 'battle'" key="battle" />
+          <ShopPanel v-else key="shop" class="shop-fill" />
+        </Transition>
+      </aside>
+    </template>
+
+    <CompactDock v-else ref="dock" class="dock" />
 
     <div class="hud-bottom">
       <Transition name="fade">
@@ -214,24 +221,30 @@ watch(
 <style scoped>
 .game {
   --gutter: 14px;
-  position: relative;
-  min-height: 100%;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
 }
 
 .board-layer {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  max-width: 720px;
-  margin: 0 auto;
+  position: absolute;
+  inset: 0;
 }
 
 .hud-top {
+  position: absolute;
+  inset: 0 0 auto;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   gap: 12px;
   padding: 0 var(--gutter);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-top > * {
+  pointer-events: auto;
 }
 
 .top-center {
@@ -256,7 +269,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px var(--gutter);
 }
 
 .hud-bottom {
@@ -298,28 +310,10 @@ watch(
 /* Desktop: the board fills the window and the HUD sits on its edges. */
 .game.wide {
   --side: clamp(290px, 22vw, 420px);
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-}
-
-.wide .board-layer {
-  position: absolute;
-  inset: 0;
-  max-width: none;
-  aspect-ratio: auto;
 }
 
 .wide .hud-top {
-  position: absolute;
-  inset: 0 0 auto;
   justify-content: space-between;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.wide .hud-top > * {
-  pointer-events: auto;
 }
 
 .wide .hud-top .corner {
@@ -353,10 +347,6 @@ watch(
   opacity: 0;
 }
 
-.game:not(.wide) .hud-left.collapsed {
-  display: none;
-}
-
 .wide .hud-right {
   right: var(--gutter);
   width: var(--side);
@@ -370,6 +360,63 @@ watch(
 .shop-fill {
   flex: 1;
   min-height: 0;
+}
+
+/* Phones and tablets: the map stays in view and the planning panels share one dock. */
+.compact {
+  --dock-height: clamp(240px, 44dvh, 480px);
+  --dock-width: clamp(290px, 40vw, 400px);
+}
+
+.compact.battling {
+  --dock-height: clamp(150px, 26dvh, 280px);
+}
+
+.compact .hud-top {
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.compact .hud-top .corner:first-child {
+  display: flex;
+  padding-top: 8px;
+}
+
+.compact .hud-top :deep(.brand) {
+  display: none;
+}
+
+.dock {
+  position: absolute;
+  z-index: 10;
+  transition:
+    height 0.35s ease-in-out,
+    width 0.35s ease-in-out;
+}
+
+.portrait .dock {
+  inset: auto 0 0;
+  height: var(--dock-height);
+}
+
+.landscape .hud-top {
+  right: var(--dock-width);
+}
+
+.landscape .dock {
+  inset: 0 0 0 auto;
+  width: var(--dock-width);
+  border-top: 0;
+  border-left: 1px solid var(--edge);
+}
+
+/* The hero card covers the dock, never the map, so a lane stays one tap away. */
+.landscape .hud-bottom {
+  left: calc(100% - var(--dock-width) / 2);
+}
+
+.landscape .hud-bottom :deep(.hero-card) {
+  width: calc(var(--dock-width) - 20px);
 }
 
 .swap-enter-active,

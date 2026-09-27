@@ -30,6 +30,8 @@ export interface HeroMatchStats {
 export interface MatchStats {
   readonly rounds: number
   readonly draws: number
+  /** Who took each round so far, in order; null is a draw. */
+  readonly winners: readonly (TeamId | null)[]
   readonly teams: PerTeam<TeamMatchStats>
   readonly heroes: readonly HeroMatchStats[]
 }
@@ -53,6 +55,7 @@ const emptyTeam = (): TeamMatchStats => ({
 export const emptyMatchStats = (): MatchStats => ({
   rounds: 0,
   draws: 0,
+  winners: [],
   teams: [emptyTeam(), emptyTeam()],
   heroes: [],
 })
@@ -109,6 +112,7 @@ export function addRound(
   return {
     rounds: stats.rounds + 1,
     draws: stats.draws + (winner === null ? 1 : 0),
+    winners: [...stats.winners, winner],
     teams: teams as [TeamMatchStats, TeamMatchStats],
     heroes: [...heroes.values()],
   }

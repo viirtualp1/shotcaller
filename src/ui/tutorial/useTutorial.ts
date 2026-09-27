@@ -4,6 +4,7 @@ import 'driver.js/dist/driver.css'
 import { useI18n } from 'vue-i18n'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import type { MessageSchema } from '../i18n'
+import { useDockStore, type DockTab } from '../stores/dock'
 import { useMatchStore } from '../stores/match'
 import { usePauseStore } from '../stores/pause'
 
@@ -21,7 +22,19 @@ interface TourStop {
     | 'fight'
   readonly target?: string
   readonly side?: Side
-  readonly before?: () => void
+  /** On phones and tablets the widget lives in this tab of the dock. */
+  readonly dock?: DockTab
+}
+
+/** Tab switches render on the next frames; wait for the widget so the spotlight lands on it. */
+const APPEAR_TIMEOUT_MS = 800
+
+async function appeared(selector: string | undefined) {
+  const deadline = performance.now() + APPEAR_TIMEOUT_MS
+
+  while (selector && !document.querySelector(selector) && performance.now() < deadline) {
+    await new Promise(requestAnimationFrame)
+  }
 }
 
 /**
@@ -32,6 +45,7 @@ export function useTutorial() {
   const { t } = useI18n<{ message: MessageSchema }>()
   const store = useMatchStore()
   const pause = usePauseStore()
+  const dock = useDockStore()
   const completed = useLocalStorage(STORAGE_KEYS.tutorialCompleted, false)
 
   const stops: readonly TourStop[] = [
@@ -45,17 +59,19 @@ export function useTutorial() {
       key: 'shop',
       target: '[data-tour="shop"]',
       side: 'left',
-      before: () => (store.shopTab = 'heroes'),
+      dock: 'shop',
     },
     {
       key: 'economy',
       target: '[data-tour="economy"]',
       side: 'left',
+      dock: 'shop',
     },
     {
       key: 'bench',
       target: '[data-tour="bench"]',
       side: 'right',
+      dock: 'heroes',
     },
     {
       key: 'place',
@@ -66,11 +82,13 @@ export function useTutorial() {
       key: 'tracker',
       target: '[data-tour="tracker"]',
       side: 'right',
+      dock: 'lanes',
     },
     {
       key: 'items',
       target: '[data-tour="shop-items"]',
       side: 'left',
+      dock: 'shop',
     },
     {
       key: 'scoreboard',
@@ -87,7 +105,6 @@ export function useTutorial() {
   function toStep(stop: TourStop) {
     return {
       ...(stop.target ? { element: stop.target } : {}),
-      ...(stop.before ? { onHighlightStarted: stop.before } : {}),
       popover: {
         title: t(`tutorial.${stop.key}.title`),
         description: t(`tutorial.${stop.key}.text`),
@@ -99,6 +116,22 @@ export function useTutorial() {
           : {}),
       },
     }
+  }
+
+  /** Opens the panel the next stop points at before driver.js looks for it. */
+  async function goTo(index: number, move: () => void) {
+    const stop = stops[index]
+
+    if (stop?.dock) {
+      dock.tab = stop.dock
+    }
+
+    if (stop?.key === 'shop') {
+      store.shopTab = 'heroes'
+    }
+
+    await appeared(stop?.target)
+    move()
   }
 
   function start() {
@@ -122,6 +155,10 @@ export function useTutorial() {
       stageRadius: 12,
       smoothScroll: true,
       overlayClickBehavior: () => undefined,
+      onNextClick: (_element, _step, { driver: tour }) =>
+        goTo((tour.getActiveIndex() ?? 0) + 1, tour.moveNext),
+      onPrevClick: (_element, _step, { driver: tour }) =>
+        goTo((tour.getActiveIndex() ?? 0) - 1, tour.movePrevious),
       onDestroyed: () => {
         completed.value = true
         pause.set('tutorial', false)

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ArrowRight, ScrollText } from 'lucide-vue-next'
 import { useGameText } from '../../composables/useGameText'
-import { LATEST_PATCH } from '../../patchNotes/notes'
+import { isFresh, LATEST_PATCH } from '../../patchNotes/notes'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import NoteLine from './NoteLine.vue'
 
 const notes = usePatchNotesStore()
 const { t } = useGameText()
+const fresh = isFresh(LATEST_PATCH)
 </script>
 
 <template>
@@ -28,7 +29,7 @@ const { t } = useGameText()
       </span>
     </span>
 
-    <span v-if="notes.unseen" class="new">{{ t('patchNotes.new') }}</span>
+    <span v-if="fresh" class="new">{{ t('patchNotes.new') }}</span>
   </a>
 </template>
 

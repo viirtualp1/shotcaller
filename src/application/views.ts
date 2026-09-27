@@ -13,11 +13,11 @@ import { ITEMS, ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { COPIES_PER_STAR, MATCH, MERGE_COUNT, ROSTER, SHOP_ODDS } from '@/content/rules'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { findRecruit } from '@/domain/coach/recruit'
-import type { MatchResult } from '@/domain/match/judge'
+import { verdictFor, type MatchResult } from '@/domain/match/judge'
 import type { Match, MatchPhase, RoundSummary } from '@/domain/match/Match'
 import type { HeroMatchStats, TeamMatchStats } from '@/domain/match/matchStats'
 import type { Ledger } from '@/domain/player/ledger'
-import { itemSellValue, sellValue, type Player } from '@/domain/player/Player'
+import { itemSellValue, sellValue, type Player, type RoundVerdict } from '@/domain/player/Player'
 import { wouldPromote } from '@/domain/roster/promotion'
 import type { OwnedHero } from '@/domain/roster/Roster'
 import { resolveLane, type LaneReport, type SynergySuggestion } from '@/domain/synergy/resolveLane'
@@ -113,6 +113,8 @@ export interface MatchView {
   readonly human: PlayerView
   readonly opponent: PlayerView
   readonly summary: RoundSummary | null
+  /** Rounds played so far, as the human player saw them. */
+  readonly history: readonly RoundVerdict[]
   readonly result: MatchResult | null
   readonly report: MatchReportView | null
 }
@@ -242,6 +244,7 @@ export function toMatchView(match: Match): MatchView {
     human: toPlayerView(match.human),
     opponent: toPlayerView(match.opponent),
     summary: match.lastSummary,
+    history: match.stats.winners.map((winner) => verdictFor(match.human.team, winner)),
     result: match.result,
     report: match.phase === 'finished' ? toMatchReport(match) : null,
   }

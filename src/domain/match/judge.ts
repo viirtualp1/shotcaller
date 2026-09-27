@@ -1,6 +1,7 @@
 import type { TeamId } from '@/content/ids'
 import { MATCH } from '@/content/rules'
 import type { BattleOutcome, PerTeam, StructureState, TeamBattleStats } from '../battle/contracts'
+import type { RoundVerdict } from '../player/Player'
 import { STRUCTURE_SLOTS, totalStructureHp } from './structures'
 
 export interface MatchResult {
@@ -10,6 +11,9 @@ export interface MatchResult {
 
 export const totalStructureDamage = (stats: TeamBattleStats) =>
   STRUCTURE_SLOTS.reduce((sum, slot) => sum + stats.structureDamage[slot], 0)
+
+export const verdictFor = (team: TeamId, winner: TeamId | null): RoundVerdict =>
+  winner === null ? 'draw' : winner === team ? 'win' : 'loss'
 
 export function judgeRound(outcome: BattleOutcome) {
   if (outcome.throneFell !== null) {
