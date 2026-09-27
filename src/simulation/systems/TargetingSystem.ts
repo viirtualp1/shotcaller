@@ -135,15 +135,15 @@ export class TargetingSystem implements System {
   private find(unit: Unit) {
     const aggro = unit.targeting?.aggroRange ?? 0
 
-    const candidates = this.ctx.index.near(
-      unit.position,
-      aggro,
-      (u) => u.team !== unit.team && isAlive(u) && withinLaneBand(this.ctx.map, unit, u.position),
-    )
+    const candidates = this.ctx.index.near(unit.position, aggro, (u) => u.team !== unit.team && isAlive(u))
 
     let best: Unit | null = null
     let bestScore = Infinity
     for (const candidate of candidates) {
+      if (!withinLaneBand(this.ctx.map, unit, candidate.position)) {
+        continue
+      }
+
       const score = this.score(unit, candidate)
       if (score < bestScore) {
         bestScore = score

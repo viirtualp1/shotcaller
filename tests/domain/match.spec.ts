@@ -5,6 +5,8 @@ import { GreedyCoach } from '@/domain/coach/GreedyCoach'
 import { createRng } from '@/core/random/rng'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
+const FULL_MATCH_TIMEOUT = 15_000
+
 describe('Match', () => {
   it('refuses to start a battle with an empty board', () => {
     const match = createMatch({
@@ -50,7 +52,9 @@ describe('Match', () => {
     expect(match.phase).toBe('planning')
   })
 
-  it('always finishes within the round limit', () => {
+  // Plays a whole match: since thrones are defended (v5) this seed goes all 20 rounds instead of ending
+  // in round 12, which takes about as long as vitest's default 5 s timeout.
+  it('always finishes within the round limit', { timeout: FULL_MATCH_TIMEOUT }, () => {
     const match = createMatch({
       seed: 'limit',
       ids: sequentialIds(),
