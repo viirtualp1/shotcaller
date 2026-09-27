@@ -1,0 +1,349 @@
+{
+  "app": {
+    "title": "Shotcaller"
+  },
+  "start": {
+    "lede": "You are the coach. Draft a team of up to five heroes, send them down the lanes and watch the match play itself. Break the enemy throne before they break yours.",
+    "steps": {
+      "shop": "Buy heroes in the shop. Three copies of a hero merge into one with an extra star.",
+      "lanes": "Drag heroes to top, mid and bot. Synergies only work between heroes on the same lane.",
+      "fight": "Press Fight and watch the lanes push. Damage to towers and the throne carries over for the rest of the match.",
+      "grow": "Save gold, buy experience and items: every level lets one more hero onto the map."
+    },
+    "newMatch": "New match",
+    "continue": "Continue · round {round}"
+  },
+  "phase": {
+    "planning": "Planning",
+    "battle": "Battle",
+    "summary": "Results",
+    "finished": "Match over"
+  },
+  "lanes": {
+    "top": "Top",
+    "mid": "Mid",
+    "bot": "Bot",
+    "throne": "Throne"
+  },
+  "teams": {
+    "ours": "Us",
+    "theirs": "Enemy",
+    "ourBase": "our base",
+    "theirBase": "enemy base"
+  },
+  "roles": {
+    "carry": {
+      "name": "Carry",
+      "passive": "Farm: +{perHit}% damage per last hit this round, up to +{max}%."
+    },
+    "support": {
+      "name": "Support",
+      "passive": "Aura: nearby allied heroes regenerate {percent}% health per second."
+    },
+    "mage": {
+      "name": "Mage",
+      "passive": "Gains mana {mult} times faster."
+    },
+    "initiator": {
+      "name": "Initiator",
+      "passive": "Starts each round and respawns with {percent}% mana."
+    },
+    "pusher": {
+      "name": "Pusher",
+      "passive": "Deals {mult} times more damage to structures. Creeps on its lane deal +{bonus}% damage."
+    },
+    "ganker": {
+      "name": "Ganker",
+      "passive": "Roams the whole map and hunts wounded heroes on any lane. {speed}% faster."
+    }
+  },
+  "abilities": {
+    "charge": "Leaps to the farthest enemy within {radius}: {damage} damage and a {stun} s stun.",
+    "volley": "{arrows} arrows at the nearest enemies, {damage} damage each.",
+    "prayer": "Heals the most wounded nearby allied hero for {heal}.",
+    "barrel": "Explosion dealing {damage} area damage. Structures take {structureBonus} times more.",
+    "chainLightning": "Lightning jumps between {bounces} enemies: {damage} damage to the first, {falloff}% less to each next one.",
+    "poisonDagger": "Dagger at the most wounded hero: {damage} damage, then {poison} poison every {tick} s for {duration} s and a {slow}% slow.",
+    "backstab": "Appears behind the most wounded hero within {radius} and hits for {damage}.",
+    "fireball": "Fireball into the densest group of enemies: {damage} area damage.",
+    "roots": "Roots enemies around the target for {duration} s and deals {damage} damage. Heals nearby allies for {heal}.",
+    "whirl": "Spins for {duration} s, hitting everyone nearby for {damage} every {tick} s.",
+    "leap": "Jumps into the enemy crowd: {damage} damage and a {stun} s stun to everyone nearby.",
+    "raiseDead": "Summons {count} skeletons for {lifetime} s. Each has {hp} health and hits for {damage}.",
+    "blizzard": "Storm for {duration} s: {damage} damage every {tick} s and a {slow}% slow.",
+    "quake": "Stuns every enemy nearby for {stun} s and deals {damage} damage.",
+    "turret": "Deploys a turret for {lifetime} s with {hp} health and {damage} damage per shot. It hits structures too.",
+    "hook": "Pulls the farthest hero within {radius}: {damage} damage and a {stun} s stun.",
+    "assassinate": "Shoots the most wounded hero within {radius} for {damage} damage.",
+    "shield": "Gives the most wounded ally a shield that absorbs {absorb} damage for {duration} s."
+  },
+  "synergies": {
+    "guardian": {
+      "name": "Guardian",
+      "effect": "The carry attacks {attackSpeed}% faster."
+    },
+    "setup": {
+      "name": "Setup",
+      "effect": "Mage abilities deal {spellPower}% more damage."
+    },
+    "soloMid": {
+      "name": "Solo mid",
+      "effect": "+{damage}% damage and {manaGainMult} times more mana."
+    },
+    "trilane": {
+      "name": "Trilane",
+      "effect": "+{maxHp}% health for every hero on the lane."
+    },
+    "siege": {
+      "name": "Siege",
+      "effect": "Heroes on the lane deal {structureDamage}% more damage to structures."
+    },
+    "hunt": {
+      "name": "Hunt",
+      "effect": "The ganker and the initiator deal {damage}% more damage."
+    },
+    "arcane": {
+      "name": "Arcane",
+      "effect": "Mage abilities are {spellPower}% stronger and mana builds {manaGain}% faster."
+    },
+    "bulwark": {
+      "name": "Bulwark",
+      "effect": "+{maxHp}% health and {damageTaken}% less damage taken for the whole lane."
+    }
+  },
+  "synergyNeeds": {
+    "guardian": "Carry + support",
+    "setup": "Initiator + mage",
+    "soloMid": "Exactly one hero in mid",
+    "trilane": "Three heroes on one lane",
+    "siege": "Pusher + carry",
+    "hunt": "Ganker + initiator",
+    "arcane": "Two mages",
+    "bulwark": "Support + initiator"
+  },
+  "items": {
+    "broadsword": "+{damage}% damage",
+    "gloves": "+{attackSpeed}% attack speed",
+    "chainmail": "{damageTaken}% less damage taken",
+    "vitality": "+{maxHp}% health",
+    "boots": "+{speed}% movement speed",
+    "staff": "+{spellPower}% ability power",
+    "manaStone": "Mana builds {manaGain}% faster",
+    "vampireFang": "Heals for {lifesteal}% of damage dealt",
+    "thornMail": "Returns {thorns}% of attack damage to the attacker",
+    "aegis": "Once per round prevents death and restores {revive}% health"
+  },
+  "hud": {
+    "round": "Round {round} of {max}",
+    "menu": "Menu",
+    "newMatch": "New match",
+    "toMenu": "Back to main menu",
+    "tutorial": "Tutorial",
+    "help": "Help",
+    "saved": "The game saves automatically",
+    "towers": "Towers",
+    "throne": "Throne",
+    "settings": "Settings"
+  },
+  "tracker": {
+    "title": "Synergies",
+    "emptyLane": "Empty: the enemy walks in unopposed",
+    "add": "+ {who}",
+    "anyHero": "any hero",
+    "or": " or "
+  },
+  "bench": {
+    "title": "Bench",
+    "count": "{count}/{size}",
+    "onBoard": "On map {count} of {capacity}"
+  },
+  "stash": {
+    "title": "Items",
+    "hint": "Drag onto a hero"
+  },
+  "shop": {
+    "heroes": "Heroes",
+    "items": "Items",
+    "reroll": "Reroll",
+    "buyXp": "+{xp} XP",
+    "level": "Level {level}",
+    "xp": "{xp}/{next} XP",
+    "maxLevel": "Team is full",
+    "fight": "Fight",
+    "autoArrange": "Auto place",
+    "owned": "own {n}",
+    "completes": "★★ on buy",
+    "sellZone": "Drop to sell",
+    "odds": "Odds by cost"
+  },
+  "card": {
+    "sell": "Sell for {gold}",
+    "toBench": "To bench",
+    "items": "Items",
+    "noItems": "Drag an item from your stash onto the hero",
+    "unequip": "Remove",
+    "hp": "Health",
+    "damage": "Damage",
+    "melee": "Melee",
+    "range": "Range {range}",
+    "close": "Close",
+    "enemy": "Opponent"
+  },
+  "battle": {
+    "speed": "Speed",
+    "skip": "Skip",
+    "timeLeft": "{s} s",
+    "damage": "Hero damage",
+    "feed": "Events",
+    "towerFell": "Tower down: {lane}",
+    "throneFell": "Throne destroyed",
+    "placeHint": "Click a lane to place the hero",
+    "itemHint": "Click a hero to give the item"
+  },
+  "banner": {
+    "planning": "Round {round}",
+    "planningSub": "Planning",
+    "battle": "Fight!",
+    "battleSub": "Round {round}"
+  },
+  "killers": {
+    "creep": "Creeps",
+    "structure": "Tower",
+    "turret": "Turret",
+    "hero": "Hero"
+  },
+  "summary": {
+    "win": "Round {round} won",
+    "loss": "Round {round} lost",
+    "draw": "Round {round}: draw",
+    "kills": "Hero kills: {ours} to {theirs}",
+    "base": "Base",
+    "interest": "Interest",
+    "farm": "Farm",
+    "winBonus": "Win",
+    "total": "Total",
+    "next": "Back to the shop",
+    "structures": "Towers and throne after the round",
+    "heroes": "Hero damage",
+    "heroDamage": "Damage",
+    "heroKills": "Kills",
+    "heroDeaths": "Deaths",
+    "untouched": "Nobody reached the towers this round",
+    "destroyed": "destroyed",
+    "enemiesKilled": "Enemies killed",
+    "ourLosses": "Our losses",
+    "noLosses": "Nobody died"
+  },
+  "result": {
+    "win": "Victory",
+    "loss": "Defeat",
+    "draw": "Draw",
+    "throneWin": "The enemy throne fell in round {round}.",
+    "throneLoss": "Our throne fell in round {round}.",
+    "roundLimit": "{max} rounds have passed. The side with sturdier structures wins.",
+    "again": "New match",
+    "menu": "Main menu"
+  },
+  "help": {
+    "title": "Help",
+    "how": "How to play",
+    "roles": "Roles",
+    "synergies": "Lane synergies",
+    "items": "Items",
+    "stars": "Stars",
+    "starsText": "Three copies of the same hero merge into one with an extra star. ★★ is about 1.8 times stronger, ★★★ about 3.2 times. Items move to the upgraded hero.",
+    "economy": "Economy",
+    "economyText": "After each round: 5 gold, 1 per 10 saved (up to 3), up to 6 from farming and 1 for winning the round. Every round also grants 1 XP.",
+    "close": "Close",
+    "hotkeys": "D — reroll · F — experience · E — sell · Esc — menu · Space — fight"
+  },
+  "errors": {
+    "notEnoughGold": "Not enough gold",
+    "benchFull": "The bench is full. Sell someone first",
+    "boardFull": "There is already {capacity} hero on the map. Buy XP to field more | There are already {capacity} heroes on the map. Buy XP to field more",
+    "slotEmpty": "That card is already sold",
+    "maxLevel": "The team is already full",
+    "heroNotFound": "Hero not found",
+    "emptyBoard": "Place at least one hero on a lane",
+    "wrongPhase": "You can't do that right now",
+    "stashFull": "The item stash is full",
+    "itemSlotsFull": "This hero already carries two items",
+    "itemNotFound": "Item not found"
+  },
+  "notices": {
+    "promoted": "{hero} is now {stars}",
+    "itemBought": "{item} is in your stash. Drag it onto a hero",
+    "timeUp": "Time's up, the battle has started",
+    "arranged": "Team placed",
+    "alreadyArranged": "Your team is already placed optimally"
+  },
+  "tutorial": {
+    "next": "Next",
+    "prev": "Back",
+    "done": "Got it",
+    "progress": "{current} of {total}",
+    "welcome": {
+      "title": "Welcome, coach",
+      "text": "A few quick steps to show you around. Close the tour with the cross and reopen it any time from the menu."
+    },
+    "board": {
+      "title": "The map",
+      "text": "Three lanes: top, mid and bot. Your base is bottom left, the enemy base is top right. Each lane has a tower with the throne behind them. Destroy the enemy throne to win."
+    },
+    "shop": {
+      "title": "Hero shop",
+      "text": "Click a card to buy the hero. The price is in the top right corner. When a card shows “★★ on buy”, buying it upgrades your hero right away."
+    },
+    "economy": {
+      "title": "Gold and level",
+      "text": "Reroll gives new cards for 2 gold. XP raises your team level: each level lets one more hero onto the map."
+    },
+    "bench": {
+      "title": "Bench",
+      "text": "Heroes you buy land here. Drag them straight onto a lane on the map."
+    },
+    "place": {
+      "title": "Placing heroes",
+      "text": "Drag a hero onto a lane, or click the hero and then the lane. Heroes on the same lane give each other synergies."
+    },
+    "tracker": {
+      "title": "Synergies",
+      "text": "Shows which synergies are active on every lane and who is missing for the next one. An empty lane is a gift to the enemy."
+    },
+    "items": {
+      "title": "Items",
+      "text": "The Items tab sells upgrades. Drag a bought item onto a hero: every hero has two slots."
+    },
+    "scoreboard": {
+      "title": "Score",
+      "text": "Health of both sides' towers and thrones. Structure damage carries over between rounds."
+    },
+    "fight": {
+      "title": "Fight",
+      "text": "When your team is ready, press Fight. The battle plays itself; you can speed it up or skip it. Good luck!"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "close": "Done",
+    "difficulty": "Difficulty",
+    "difficulties": {
+      "relaxed": "Relaxed",
+      "standard": "Standard"
+    },
+    "difficultyHint": {
+      "relaxed": "No timer: the battle starts when you press Fight.",
+      "standard": "{s} s to plan. When time runs out, the battle starts on its own."
+    }
+  },
+  "menu": {
+    "resume": "Resume"
+  },
+  "newMatch": {
+    "title": "New match",
+    "tutorial": "Show the tutorial",
+    "start": "Start",
+    "cancel": "Cancel"
+  }
+}

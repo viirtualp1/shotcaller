@@ -1,0 +1,117 @@
+<script setup lang="ts">
+import { Play, RotateCcw, Settings } from 'lucide-vue-next'
+import BoardFrame from '../components/board/BoardFrame.vue'
+import BoardPreview from '../components/board/BoardPreview.vue'
+import { useGameText } from '../composables/useGameText'
+import { useMatchStore } from '../stores/match'
+import { useMenuStore } from '../stores/menu'
+import { useSettingsStore } from '../stores/settings'
+
+const store = useMatchStore()
+const menu = useMenuStore()
+const settings = useSettingsStore()
+const { t } = useGameText()
+</script>
+
+<template>
+  <main class="start">
+    <section class="copy">
+      <h1 class="hand">{{ t('app.title') }}</h1>
+      <p class="lede">{{ t('start.lede') }}</p>
+      <nav class="menu">
+        <button
+          v-if="store.savedRound"
+          type="button"
+          class="btn primary block big"
+          @click="store.continueMatch()"
+        >
+          <Play :size="18" /> {{ t('start.continue', { round: store.savedRound }) }}
+        </button>
+        <button
+          type="button"
+          class="btn block big"
+          :class="{ primary: !store.savedRound }"
+          @click="menu.newMatch = true"
+        >
+          <RotateCcw :size="18" /> {{ t('start.newMatch') }}
+        </button>
+        <button type="button" class="btn ghost block big" @click="menu.settings = true">
+          <Settings :size="18" /> {{ t('hud.settings') }}
+        </button>
+      </nav>
+    </section>
+    <section class="preview">
+      <BoardFrame>
+        <BoardPreview :key="settings.locale" />
+      </BoardFrame>
+    </section>
+  </main>
+</template>
+
+<style scoped>
+.start {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 40px;
+  max-width: 1200px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 30rem;
+}
+
+h1 {
+  font-size: clamp(64px, 10vw, 112px);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+}
+
+.lede {
+  margin: 0;
+  font-size: 17px;
+  color: var(--chalk-dim);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  max-width: 340px;
+}
+
+.menu .btn {
+  animation: slide-in 0.34s ease-out both;
+}
+
+.menu .btn:nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.menu .btn:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.preview {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .start {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px 16px;
+    gap: 24px;
+  }
+
+  .menu {
+    max-width: none;
+  }
+}
+</style>

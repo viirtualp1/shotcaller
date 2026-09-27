@@ -1,0 +1,101 @@
+<script setup lang="ts">
+import { FastForward, SkipForward } from 'lucide-vue-next'
+import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
+import { computed } from 'vue'
+import { useGameText } from '../../composables/useGameText'
+import { useMatchStore, type BattleSpeed } from '../../stores/match'
+import HudPanel from '../common/HudPanel.vue'
+import DamageMeter from './DamageMeter.vue'
+import KillFeed from './KillFeed.vue'
+
+const SPEEDS: readonly BattleSpeed[] = [1, 2, 4]
+
+const store = useMatchStore()
+const { t } = useGameText()
+const speedModel = computed({
+  get: () => String(store.speed),
+  set: (value: string | undefined) => {
+    if (value) store.speed = Number(value) as BattleSpeed
+  },
+})
+</script>
+
+<template>
+  <div class="battle">
+    <HudPanel>
+      <div class="controls">
+        <FastForward :size="16" class="icon" />
+        <ToggleGroupRoot v-model="speedModel" type="single" class="speeds" :aria-label="t('battle.speed')">
+          <ToggleGroupItem v-for="s in SPEEDS" :key="s" :value="String(s)" class="speed"
+            >×{{ s }}</ToggleGroupItem
+          >
+        </ToggleGroupRoot>
+        <button
+          type="button"
+          class="btn skip"
+          :disabled="store.phase !== 'battle'"
+          @click="store.skipBattle()"
+        >
+          <SkipForward :size="14" /> {{ t('battle.skip') }}
+        </button>
+      </div>
+    </HudPanel>
+    <HudPanel :title="t('battle.damage')">
+      <DamageMeter />
+    </HudPanel>
+    <HudPanel v-if="store.feed.length" :title="t('battle.feed')">
+      <KillFeed />
+    </HudPanel>
+  </div>
+</template>
+
+<style scoped>
+.battle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  color: var(--chalk-dim);
+}
+
+.speeds {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.speed {
+  min-width: 40px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.15s;
+}
+
+.speed[data-state='on'] {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.skip {
+  margin-left: auto;
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+</style>
