@@ -597,7 +597,19 @@
       "verify": "Confirm",
       "back": "Use another email",
       "failed": "That did not work. {reason}",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "linkInstead": "Link this email here",
+      "signInInstead": "Sign in with this email",
+      "problems": {
+        "noAccount": "No coach uses this email yet. Link it to the progress on this device, or link it first on the device you usually play on.",
+        "emailTaken": "This email already belongs to another coach. Sign in with it to switch to that coach.",
+        "badCode": "The code is wrong or has expired. Check the latest letter or send a new code.",
+        "tooMany": "Too many attempts. Wait a minute and try again.",
+        "invalidEmail": "That does not look like an email address.",
+        "notAuthorized": "The game's mail service cannot write to this address yet: custom SMTP has to be set up in Supabase.",
+        "disabled": "This way of signing in is switched off in the game's Supabase project.",
+        "offline": "No connection. Check the internet and try again."
+      }
     },
     "conflict": {
       "title": "Which progress to keep?",

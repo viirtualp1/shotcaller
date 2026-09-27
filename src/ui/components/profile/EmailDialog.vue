@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed, ref } from 'vue'
+import { accountProblem, type AccountProblem } from '@/application/cloud/accountProblem'
 import type { AccountMode } from '@/application/cloud/CloudStore'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
@@ -11,23 +12,46 @@ const open = defineModel<boolean>('open', { required: true })
 const cloud = useCloudStore()
 const { t } = useGameText()
 
+/** Starts as asked, but can switch: signing in with an unused email offers to link it instead, and back. */
+const mode = ref<AccountMode>(props.mode)
 const step = ref<'email' | 'code'>('email')
 const email = ref('')
 const code = ref('')
 const busy = ref(false)
-const failure = ref<string | null>(null)
+const problem = ref<AccountProblem | null>(null)
+const rawError = ref('')
 
-const title = computed(() => t(props.mode === 'link' ? 'cloud.email.linkTitle' : 'cloud.email.signInTitle'))
-const intro = computed(() => t(props.mode === 'link' ? 'cloud.email.linkText' : 'cloud.email.signInText'))
+const title = computed(() => t(mode.value === 'link' ? 'cloud.email.linkTitle' : 'cloud.email.signInTitle'))
+const intro = computed(() => t(mode.value === 'link' ? 'cloud.email.linkText' : 'cloud.email.signInText'))
+
+const failure = computed(() => {
+  if (!problem.value) {
+    return null
+  }
+
+  return problem.value === 'unknown'
+    ? t('cloud.email.failed', { reason: rawError.value })
+    : t(`cloud.email.problems.${problem.value}`)
+})
+
+/** The mode that fixes the problem, if switching would. */
+const switchTo = computed<AccountMode | null>(() => {
+  if (problem.value === 'noAccount' && mode.value === 'signIn') {
+    return 'link'
+  }
+
+  return problem.value === 'emailTaken' && mode.value === 'link' ? 'signIn' : null
+})
 
 async function run(action: () => Promise<void>) {
   busy.value = true
-  failure.value = null
+  problem.value = null
 
   try {
     await action()
   } catch (error) {
-    failure.value = t('cloud.email.failed', { reason: error instanceof Error ? error.message : '' })
+    problem.value = accountProblem(error)
+    rawError.value = error instanceof Error ? error.message : ''
   } finally {
     busy.value = false
   }
@@ -35,15 +59,26 @@ async function run(action: () => Promise<void>) {
 
 const send = () =>
   run(async () => {
-    await cloud.sendEmail(email.value, props.mode)
+    await cloud.sendEmail(email.value, mode.value)
     step.value = 'code'
   })
 
 const verify = () =>
   run(async () => {
-    await cloud.verifyEmail(email.value, code.value, props.mode)
+    await cloud.verifyEmail(email.value, code.value, mode.value)
     open.value = false
   })
+
+function switchMode() {
+  if (!switchTo.value) {
+    return
+  }
+
+  mode.value = switchTo.value
+  code.value = ''
+  step.value = 'email'
+  void send()
+}
 </script>
 
 <template>
@@ -94,6 +129,11 @@ const verify = () =>
         </form>
 
         <p v-if="failure" class="failure" role="alert">{{ failure }}</p>
+
+        <button v-if="switchTo" type="button" class="btn block" :disabled="busy" @click="switchMode">
+          {{ t(switchTo === 'link' ? 'cloud.email.linkInstead' : 'cloud.email.signInInstead') }}
+        </button>
+
         <DialogClose class="btn ghost block">{{ t('cloud.email.cancel') }}</DialogClose>
       </DialogContent>
     </DialogPortal>
