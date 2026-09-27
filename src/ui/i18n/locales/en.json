@@ -585,8 +585,7 @@
     "retry": "Try again",
     "button": {
       "signIn": "Sign in",
-      "hint": "Sign in to keep your progress in the cloud",
-      "status": "Cloud save · {status}"
+      "hint": "Sign in to keep your progress in the cloud"
     },
     "email": {
       "title": "Sign in",

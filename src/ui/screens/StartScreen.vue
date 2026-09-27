@@ -3,8 +3,8 @@ import { Play, Swords } from 'lucide-vue-next'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
-import CloudButton from '../components/profile/CloudButton.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
+import SignInButton from '../components/profile/SignInButton.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useGameText } from '../composables/useGameText'
 import { useMatchStore } from '../stores/match'
@@ -21,7 +21,7 @@ const { t } = useGameText()
   <main class="start">
     <div class="coach">
       <ProfileChip />
-      <CloudButton />
+      <SignInButton />
     </div>
 
     <section class="copy">

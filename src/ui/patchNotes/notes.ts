@@ -93,8 +93,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     ],
     interface: [
       {
-        en: 'A **cloud button** sits next to the profile card on the start screen: sign in right from there. Once you are in, it shows whether your progress is saved.',
-        ru: 'Справа от карточки профиля на главном экране появилась **кнопка облака**: войти можно прямо оттуда. После входа она показывает, сохранён ли прогресс.',
+        en: 'Until you sign in, a **Sign in** button sits next to the profile card on the start screen, so you can sign in right from there.',
+        ru: 'Пока ты не вошёл, справа от карточки профиля на главном экране стоит кнопка **«Войти»**: войти можно прямо оттуда.',
       },
       {
         en: 'The profile page shows how your progress is kept: **Local save** until you sign in, **Cloud save** after, with the save status on the same line.',
