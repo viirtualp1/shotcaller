@@ -1,4 +1,4 @@
-import { useDocumentVisibility, useEventListener, useLocalStorage } from '@vueuse/core'
+import { StorageSerializers, useDocumentVisibility, useEventListener, useLocalStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import type { AccountMode, CloudAccount, CloudProfile } from '@/application/cloud/CloudStore'
@@ -40,8 +40,12 @@ export const useCloudStore = defineStore('cloud', () => {
   /** The player closed the conflict dialog to decide later. */
   const conflictDeferred = ref(false)
   const syncedAt = ref<number | null>(null)
+
   /** When progress last actually moved between this device and the account; background checks leave it alone. */
-  const savedAt = useLocalStorage<number | null>(STORAGE_KEYS.cloudSavedAt, null)
+  const savedAt = useLocalStorage<number | null>(STORAGE_KEYS.cloudSavedAt, null, {
+    serializer: StorageSerializers.number,
+  })
+
   /** The sign-in dialog, opened from the start screen or the profile. */
   const signInOpen = ref(false)
 

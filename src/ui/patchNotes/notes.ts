@@ -50,6 +50,20 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '6.1.1',
+    date: '2026-09-28',
+    title: {
+      en: 'Profile fix',
+      ru: 'Исправление профиля',
+    },
+    fixes: [
+      {
+        en: 'The profile no longer breaks a minute after a cloud save.',
+        ru: 'Профиль больше не ломается через минуту после облачного сохранения.',
+      },
+    ],
+  },
+  {
     version: '6.1',
     date: '2026-09-28',
     title: {
