@@ -163,8 +163,7 @@ watch(
         <TavernStrip class="tavern" />
       </div>
 
-      <FightButton v-if="wide" class="corner fight-corner" />
-      <span v-else class="corner" />
+      <span class="corner" />
     </header>
 
     <aside ref="left" class="hud-left">
@@ -174,7 +173,7 @@ watch(
     </aside>
 
     <aside ref="right" class="hud-right">
-      <FightButton v-if="!wide" />
+      <FightButton class="fight-dock" />
 
       <Transition name="swap" mode="out-in">
         <BattlePanel v-if="store.phase === 'battle'" key="battle" />
@@ -319,14 +318,6 @@ watch(
   padding-top: 12px;
 }
 
-.wide .hud-top .fight-corner {
-  justify-content: flex-end;
-}
-
-.wide .fight-corner :deep(.fight) {
-  width: 312px;
-}
-
 .wide .hud-left,
 .wide .hud-right {
   position: absolute;
@@ -346,6 +337,11 @@ watch(
 .wide .hud-right {
   right: var(--gutter);
   width: 312px;
+}
+
+/* On desktop the fight button sits in the bottom-right corner, under the shop. */
+.wide .fight-dock {
+  order: 1;
 }
 
 .shop-fill {

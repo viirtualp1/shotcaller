@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Play, RotateCcw, Settings } from 'lucide-vue-next'
+import { Play, Swords } from 'lucide-vue-next'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
 import { useGameText } from '../composables/useGameText'
@@ -35,11 +35,7 @@ const { t } = useGameText()
           :class="{ primary: !store.savedRound }"
           @click="menu.newMatch = true"
         >
-          <RotateCcw :size="18" /> {{ t('start.newMatch') }}
-        </button>
-
-        <button type="button" class="btn ghost block big" @click="menu.settings = true">
-          <Settings :size="18" /> {{ t('hud.settings') }}
+          <Swords :size="18" /> {{ t('start.newMatch') }}
         </button>
       </nav>
     </section>
@@ -97,10 +93,6 @@ h1 {
 
 .menu .btn:nth-child(2) {
   animation-delay: 50ms;
-}
-
-.menu .btn:nth-child(3) {
-  animation-delay: 100ms;
 }
 
 .preview {
