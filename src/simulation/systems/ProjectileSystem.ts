@@ -30,6 +30,8 @@ export class ProjectileSystem implements System {
           radius: projectile.splash,
           color: entity.color ?? 0xffffff,
         })
+      } else if (projectile.attack) {
+        combat.landAttack(projectile.source, target, projectile.damage)
       } else {
         combat.dealDamage(projectile.source, target, projectile.damage, projectile.damageType)
 

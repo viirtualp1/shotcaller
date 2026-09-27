@@ -10,6 +10,8 @@ export interface RoleDefinition {
   readonly startingManaRatio?: number
   readonly laneCreepDamageBonus?: number
   readonly roams?: boolean
+  /** Nominal chance to dodge an attack; the battle rolls it with a pseudo-random distribution. */
+  readonly evasion?: number
 }
 
 export const ROLES: Readonly<Record<RoleId, RoleDefinition>> = {
@@ -54,5 +56,6 @@ export const ROLES: Readonly<Record<RoleId, RoleDefinition>> = {
     color: 0xff86b0,
     modifiers: { speed: 1.15 },
     roams: true,
+    evasion: 0.2,
   },
 }

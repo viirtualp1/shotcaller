@@ -10,7 +10,9 @@ export type SimulationEvents = {
   structureDestroyed: { structure: Unit; attackerTeam: TeamId }
   abilityCast: { caster: HeroUnit; ability: AbilityId }
   attacked: { attacker: Unit; target: Unit }
-  damaged: { target: Unit; source: Unit; amount: number; type: DamageType }
+  damaged: { target: Unit; source: Unit; amount: number; type: DamageType; crit: boolean }
+  evaded: { target: Unit; source: Unit }
+  bashed: { target: Unit; source: Unit; stun: number }
   died: { unit: Unit }
   revived: { hero: HeroUnit; byItem: boolean }
   dash: { from: Vec2; to: Vec2; color: number }

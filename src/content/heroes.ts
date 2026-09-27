@@ -11,6 +11,12 @@ export interface HeroStats {
   readonly mana: number
 }
 
+/** Innate on-attack stun; the battle rolls the chance with a pseudo-random distribution. */
+export interface HeroBash {
+  readonly chance: number
+  readonly stun: number
+}
+
 export interface HeroDefinition {
   readonly id: HeroId
   /** Proper names stay in English in every language, like hero names in Dota. */
@@ -21,6 +27,7 @@ export interface HeroDefinition {
   readonly color: number
   readonly ability: AbilityId
   readonly stats: HeroStats
+  readonly bash?: HeroBash
 }
 
 type Row = [string, string, Tier, RoleId, number, AbilityId, HeroStats]
@@ -80,6 +87,13 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
   oracle: ['Oracle', 'Or', 3, 'support', 0xe4d6ff, 'shield', stats(560, 30, 1.2, 150, 90, 0.08, 90)],
 }
 
+const BASHERS: Partial<Record<HeroId, HeroBash>> = {
+  giant: {
+    chance: 0.2,
+    stun: 0.8,
+  },
+}
+
 export const HEROES: Readonly<Record<HeroId, HeroDefinition>> = Object.fromEntries(
   Object.entries(TABLE).map(([id, [name, glyph, tier, role, color, ability, heroStats]]) => [
     id,
@@ -92,6 +106,7 @@ export const HEROES: Readonly<Record<HeroId, HeroDefinition>> = Object.fromEntri
       color,
       ability,
       stats: heroStats,
+      bash: BASHERS[id as HeroId],
     },
   ]),
 ) as Record<HeroId, HeroDefinition>

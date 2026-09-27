@@ -116,6 +116,46 @@ describe('BattleSimulation', () => {
     expect(revivals).toBeLessThanOrEqual(1)
   })
 
+  it('rolls crits, bashes and evasion only where they belong', () => {
+    const base = lineup('a', {
+      mid: ['giant'],
+      bot: ['archer'],
+    })
+
+    const armed: Lineup = {
+      ...base,
+      bot: base.bot.map((h) => ({
+        ...h,
+        items: ['broadsword'],
+      })),
+    }
+
+    const sim = new BattleSimulation(
+      setup(
+        'procs',
+        armed,
+        lineup('b', {
+          mid: ['rogue'],
+          bot: ['shade'],
+        }),
+        5,
+      ),
+    )
+
+    const crits = new Set<string>()
+    const bashed: string[] = []
+    const evaders = new Set<string>()
+    sim.events.on('damaged', ({ source, crit }) => crit && crits.add(source.hero?.heroId ?? 'none'))
+    sim.events.on('bashed', ({ source, target }) => bashed.push(`${source.hero?.heroId}>${target.kind}`))
+    sim.events.on('evaded', ({ target }) => evaders.add(target.hero?.heroId ?? 'none'))
+    sim.runToEnd()
+
+    expect([...crits]).toEqual(['archer'])
+    expect(bashed.length).toBeGreaterThan(0)
+    expect(bashed.every((b) => b.startsWith('giant>') && b !== 'giant>structure')).toBe(true)
+    expect([...evaders].sort()).toEqual(['rogue', 'shade'])
+  })
+
   it('ends when a throne falls', () => {
     const structures = freshStructures()
 

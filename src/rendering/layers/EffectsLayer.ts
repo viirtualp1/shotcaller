@@ -4,6 +4,7 @@ import { ABILITY_NAMES } from '@/content/abilities'
 import { ITEMS } from '@/content/items'
 import type { Vec2 } from '@/core/math/vec2'
 import type { SimulationEmitter, SimulationEvents } from '@/simulation/events'
+import type { BoardLabels } from '../labels'
 import { FONTS, PALETTE, TEAM_COLORS } from '../theme'
 import { TOKEN_RADIUS } from '../views/HeroToken'
 
@@ -19,7 +20,10 @@ export class EffectsLayer extends Container {
   private detachers: (() => void)[] = []
   private budget = EFFECTS_PER_FRAME
 
-  constructor(private readonly shake: (strength: number) => void) {
+  constructor(
+    private readonly labels: BoardLabels,
+    private readonly shake: (strength: number) => void,
+  ) {
     super()
   }
 
@@ -39,13 +43,35 @@ export class EffectsLayer extends Container {
       this.ring(victim.position, 34, TEAM_COLORS[killer.team], 0.5)
     })
 
-    this.listen(events, 'damaged', ({ target, amount, type }) => {
+    this.listen(events, 'damaged', ({ target, amount, type, crit }) => {
+      if (crit && amount > 0) {
+        this.floatText(`${Math.round(amount)}!`, jitter(target.position), PALETTE.gold, 17, FONTS.ui, -4)
+
+        return
+      }
+
       if (target.kind !== 'hero' || amount < MIN_HERO_DAMAGE_TO_SHOW) {
         return
       }
 
       const color = type === 'magical' ? 0xc6b3ff : PALETTE.chalk
       this.floatText(String(Math.round(amount)), jitter(target.position), color, 13, FONTS.ui, -4)
+    })
+
+    this.listen(events, 'evaded', ({ target }) =>
+      this.floatText(
+        this.labels.combatText('miss'),
+        jitter(target.position),
+        PALETTE.chalkDim,
+        13,
+        FONTS.ui,
+        -4,
+      ),
+    )
+
+    this.listen(events, 'bashed', ({ target }) => {
+      this.ring(target.position, 22, PALETTE.gold, 0.35)
+      this.floatText(this.labels.combatText('bash'), target.position, PALETTE.gold, 16, FONTS.hand, -20)
     })
 
     this.listen(events, 'healed', ({ target, amount }) => {

@@ -17,6 +17,7 @@ export interface DamageOptions {
   readonly structureBonus?: number
   /** Reflected damage never reflects again. */
   readonly reflected?: boolean
+  readonly crit?: boolean
 }
 
 export interface SplashOptions extends DamageOptions {
@@ -34,6 +35,41 @@ export class CombatService {
     private readonly index: SpatialIndex,
     private readonly structureScale: number,
   ) {}
+
+  /** A basic attack landing: the target may evade it, then the attacker may crit and bash. */
+  landAttack(source: Unit, target: Unit, amount: number) {
+    if (!isAlive(target)) {
+      return 0
+    }
+
+    if (target.evasion?.prd.roll()) {
+      this.events.emit('evaded', {
+        target,
+        source,
+      })
+
+      return 0
+    }
+
+    const crit = source.crit?.prd.roll() ? source.crit : null
+
+    const dealt = this.dealDamage(source, target, amount * (crit?.multiplier ?? 1), 'physical', {
+      crit: crit !== null,
+    })
+
+    const bash = source.bash
+    if (bash && target.kind !== 'structure' && isAlive(target) && bash.prd.roll()) {
+      target.status.stun = Math.max(target.status.stun, bash.stun)
+
+      this.events.emit('bashed', {
+        target,
+        source,
+        stun: bash.stun,
+      })
+    }
+
+    return dealt
+  }
 
   dealDamage(source: Unit, target: Unit, amount: number, type: DamageType, options: DamageOptions = {}) {
     if (!isAlive(target)) {
@@ -72,6 +108,7 @@ export class CombatService {
       source,
       amount: value,
       type,
+      crit: options.crit ?? false,
     })
 
     if (target.kind === 'structure') {
