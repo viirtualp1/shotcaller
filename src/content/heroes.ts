@@ -67,7 +67,7 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
   engineer: ['Engineer', 3, 'pusher', 0xe0b43c, 'turret', stats(560, 42, 1.1, 150, 88, 0.1, 80)],
   butcher: ['Butcher', 3, 'ganker', 0xc4506a, 'hook', stats(1050, 64, 1.2, 0, 102, 0.18, 75)],
   sniper: ['Sniper', 3, 'carry', 0xc7b27a, 'assassinate', stats(480, 52, 1.1, 230, 86, 0.05, 100)],
-  oracle: ['Oracle', 3, 'support', 0xe4d6ff, 'shield', stats(560, 30, 1.2, 150, 90, 0.08, 90)],
+  oracle: ['Oracle', 3, 'support', 0xe4d6ff, 'shield', stats(560, 40, 1.1, 150, 90, 0.08, 70)],
 }
 
 const BASHERS: Partial<Record<HeroId, HeroBash>> = {

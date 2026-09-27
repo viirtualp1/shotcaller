@@ -51,6 +51,175 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '6.0.2',
+    date: '2026-09-28',
+    title: {
+      en: 'Balance',
+      ru: 'Баланс',
+    },
+    summary: {
+      en: 'Meat Hook no longer reaches across lanes. Pyromancer, Engineer, Acolyte and Frost Witch are toned down, Oracle is stronger.',
+      ru: 'Meat Hook больше не достаёт через полкарты. Pyromancer, Engineer, Acolyte и Frost Witch ослаблены, Oracle усилен.',
+    },
+    heroes: [
+      {
+        id: 'butcher',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'hook',
+            badge: 'reworked',
+            changes: [
+              {
+                en: 'Range: **380** → **260**',
+                ru: 'Дальность: **380** → **260**',
+              },
+              {
+                en: 'Damage: **170** → **210**',
+                ru: 'Урон: **170** → **210**',
+              },
+              {
+                en: 'Stun: **1.2** → **1.5** s',
+                ru: 'Оглушение: **1,2** → **1,5** с',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'pyromancer',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'fireball',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Damage: **155** → **125**',
+                ru: 'Урон: **155** → **125**',
+              },
+              {
+                en: 'Cast range bonus: **100** → **60**',
+                ru: 'Бонус к дальности: **100** → **60**',
+              },
+              {
+                en: 'Explosion radius: **80** → **70**',
+                ru: 'Радиус взрыва: **80** → **70**',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'engineer',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'turret',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Turret health: **420** → **320**',
+                ru: 'Здоровье турели: **420** → **320**',
+              },
+              {
+                en: 'Turret damage: **34** → **28**',
+                ru: 'Урон турели: **34** → **28**',
+              },
+              {
+                en: 'Duration: **12** → **10** s',
+                ru: 'Длительность: **12** → **10** с',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'acolyte',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'prayer',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Heal: **180** → **130**',
+                ru: 'Лечение: **180** → **130**',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'frostWitch',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'blizzard',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Damage per tick: **25** → **16**',
+                ru: 'Урон за тик: **25** → **16**',
+              },
+              {
+                en: 'Radius: **100** → **90**',
+                ru: 'Радиус: **100** → **90**',
+              },
+              {
+                en: 'Cast range bonus: **120** → **100**',
+                ru: 'Бонус к дальности: **120** → **100**',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'oracle',
+        changes: [
+          {
+            en: 'Damage: **30** → **40**',
+            ru: 'Урон: **30** → **40**',
+          },
+          {
+            en: 'Attack interval: **1.2** → **1.1** s',
+            ru: 'Интервал атаки: **1,2** → **1,1** с',
+          },
+          {
+            en: 'Mana to cast: **90** → **70**',
+            ru: 'Мана на каст: **90** → **70**',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'shield',
+            badge: 'buffed',
+            changes: [
+              {
+                en: 'Shields **2** allies (was **1**)',
+                ru: 'Щит на **2** союзников (было **1**)',
+              },
+              {
+                en: 'Absorb: **260** → **380**',
+                ru: 'Поглощение: **260** → **380**',
+              },
+              {
+                en: 'Duration: **5** → **6** s',
+                ru: 'Длительность: **5** → **6** с',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
     version: '6.0.1',
     date: '2026-09-28',
     title: {

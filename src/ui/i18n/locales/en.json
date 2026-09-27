@@ -78,7 +78,7 @@
     "turret": "Deploys a turret for {lifetime} s with {hp} health and {damage} damage per shot. It hits structures too.",
     "hook": "Pulls the farthest hero within {radius}: {damage} damage and a {stun} s stun.",
     "assassinate": "Shoots the most wounded hero within {radius} for {damage} damage.",
-    "shield": "Gives the most wounded ally a shield that absorbs {absorb} damage for {duration} s."
+    "shield": "Gives up to {targets} most wounded allies a shield that absorbs {absorb} damage for {duration} s."
   },
   "synergies": {
     "guardian": {

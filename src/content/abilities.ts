@@ -12,7 +12,7 @@ export const ABILITY_PARAMS = {
   },
   prayer: {
     radius: 280,
-    heal: 180,
+    heal: 130,
     hpThreshold: 0.8,
   },
   barrel: {
@@ -42,9 +42,9 @@ export const ABILITY_PARAMS = {
     damage: 190,
   },
   fireball: {
-    rangeBonus: 100,
-    radius: 80,
-    damage: 155,
+    rangeBonus: 60,
+    radius: 70,
+    damage: 125,
     speed: 380,
   },
   roots: {
@@ -76,11 +76,11 @@ export const ABILITY_PARAMS = {
     lifetime: 12,
   },
   blizzard: {
-    rangeBonus: 120,
-    radius: 100,
+    rangeBonus: 100,
+    radius: 90,
     duration: 4,
     tick: 0.5,
-    damage: 25,
+    damage: 16,
     slow: 0.4,
   },
   quake: {
@@ -91,17 +91,17 @@ export const ABILITY_PARAMS = {
   },
   turret: {
     triggerRadius: 300,
-    hp: 420,
-    damage: 34,
+    hp: 320,
+    damage: 28,
     range: 150,
     attackInterval: 0.8,
-    lifetime: 12,
+    lifetime: 10,
   },
   hook: {
-    radius: 380,
+    radius: 260,
     minDistance: 70,
-    damage: 170,
-    stun: 1.2,
+    damage: 210,
+    stun: 1.5,
   },
   assassinate: {
     radius: 480,
@@ -110,8 +110,9 @@ export const ABILITY_PARAMS = {
   },
   shield: {
     radius: 300,
-    absorb: 260,
-    duration: 5,
+    absorb: 380,
+    duration: 6,
+    targets: 2,
   },
 } as const
 

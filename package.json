@@ -1,7 +1,7 @@
 {
   "name": "shotcaller",
   "private": true,
-  "version": "6.0.1",
+  "version": "6.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "format": "prettier --write src tests scripts",
     "format:check": "prettier --check src tests scripts",
-    "balance": "tsx --tsconfig tsconfig.node.json scripts/balance.ts"
+    "balance": "tsx --tsconfig tsconfig.node.json scripts/balance.ts",
+    "balance:ab": "tsx --tsconfig tsconfig.node.json scripts/abTest.ts"
   },
   "dependencies": {
     "@floating-ui/vue": "^1.1.11",
