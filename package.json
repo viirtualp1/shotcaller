@@ -1,7 +1,7 @@
 {
   "name": "shotcaller",
   "private": true,
-  "version": "5.1.1",
+  "version": "6.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@floating-ui/vue": "^1.1.11",
+    "@supabase/supabase-js": "^2.117.2",
     "@vueuse/core": "^15.0.0",
     "check2d": "^9.36.4",
     "driver.js": "^1.8.0",

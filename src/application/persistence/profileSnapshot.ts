@@ -54,6 +54,8 @@ const matchRecord = z.object({
     }),
   ),
   mvp: heroId.nullable(),
+  /** Added with cloud saves; older records fall back to zero. */
+  heroKills: count.default(0),
   towersDestroyed: count,
   goldEarned: amount,
   ratingBefore: amount,
@@ -90,13 +92,22 @@ const envelope = z.object({
   profile,
 })
 
-export const serializeProfile = (value: Profile) =>
-  JSON.stringify({
-    version: PROFILE_VERSION,
-    profile: value,
-  })
+/** The profile as stored locally and in the cloud: versioned, so a newer game can migrate it. */
+export const toProfileEnvelope = (value: Profile) => ({
+  version: PROFILE_VERSION,
+  profile: value,
+})
 
 /** Returns null for anything that is not a profile this version of the game can read. */
+export function fromProfileEnvelope(json: unknown): Profile | null {
+  const parsed = envelope.safeParse(json)
+  return parsed.success ? parsed.data.profile : null
+}
+
+export const matchRecordSchema = matchRecord
+
+export const serializeProfile = (value: Profile) => JSON.stringify(toProfileEnvelope(value))
+
 export function parseProfile(raw: string): Profile | null {
   let json: unknown
   try {
@@ -105,6 +116,5 @@ export function parseProfile(raw: string): Profile | null {
     return null
   }
 
-  const parsed = envelope.safeParse(json)
-  return parsed.success ? parsed.data.profile : null
+  return fromProfileEnvelope(json)
 }

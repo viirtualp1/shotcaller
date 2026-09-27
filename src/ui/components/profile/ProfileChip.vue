@@ -14,6 +14,7 @@ const { t } = useGameText()
 
     <span class="who">
       <strong class="name">{{ profile.profile.name || t('profile.defaultName') }}</strong>
+
       <span class="rank">{{ t(`profile.ranks.${profile.rank.tier}`) }}</span>
     </span>
 

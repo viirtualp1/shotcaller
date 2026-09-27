@@ -60,6 +60,8 @@ export interface MatchRecord {
   readonly synergies: readonly SynergyId[]
   readonly heroes: readonly MatchHeroLine[]
   readonly mvp: HeroId | null
+  /** Hero kills by the whole team, towers and creeps included. */
+  readonly heroKills: number
   readonly towersDestroyed: number
   readonly goldEarned: number
   readonly ratingBefore: number
@@ -163,13 +165,9 @@ const add = <K extends string, V>(
   [key]: update(records[key]),
 })
 
-export function recordMatch(
-  profile: Profile,
-  finished: FinishedMatch,
-  meta: { id: string; playedAt: string },
-) {
+/** Turns a finished match into a history entry; the rating fields are filled in by `applyRecord`. */
+export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playedAt: string }): MatchRecord {
   const verdict = verdictOf(finished.result)
-  const won = verdict === 'win'
   const { stats } = finished
   const roundsWon = stats.teams[0].roundsWon
 
@@ -205,10 +203,7 @@ export function recordMatch(
       damage: h.damageDealt,
     }))
 
-  const rating = Math.max(0, profile.rating + ratingChange(finished.result, finished.difficulty))
-  const xp = matchXp(verdict, roundsWon)
-
-  const record: MatchRecord = {
+  return {
     ...meta,
     difficulty: finished.difficulty,
     verdict,
@@ -220,11 +215,33 @@ export function recordMatch(
     synergies,
     heroes,
     mvp: heroes[0]?.heroId ?? null,
+    heroKills: stats.teams[0].heroKills,
     towersDestroyed: finished.towersDestroyed,
     goldEarned: stats.teams[0].income.total,
+    ratingBefore: 0,
+    ratingAfter: 0,
+    xp: matchXp(verdict, roundsWon),
+  }
+}
+
+const resultOf = (record: MatchRecord): MatchResult => ({
+  winner: record.verdict === 'win' ? 0 : record.verdict === 'loss' ? 1 : null,
+  reason: record.reason,
+})
+
+/**
+ * Adds one match to the profile. It only needs the record, so matches played on another device
+ * can be replayed on top of a newer profile; the rating fields are recomputed from the profile's rating.
+ */
+export function applyRecord(profile: Profile, played: MatchRecord) {
+  const { verdict } = played
+  const won = verdict === 'win'
+  const rating = Math.max(0, profile.rating + ratingChange(resultOf(played), played.difficulty))
+
+  const record: MatchRecord = {
+    ...played,
     ratingBefore: profile.rating,
     ratingAfter: rating,
-    xp,
   }
 
   const before = profile.totals
@@ -241,15 +258,15 @@ export function recordMatch(
     losses: before.losses + (verdict === 'loss' ? 1 : 0),
     draws: before.draws + (verdict === 'draw' ? 1 : 0),
     throneWins: before.throneWins + (won && record.reason === 'throne' ? 1 : 0),
-    roundsPlayed: before.roundsPlayed + stats.rounds,
-    heroKills: before.heroKills + stats.teams[0].heroKills,
+    roundsPlayed: before.roundsPlayed + record.rounds,
+    heroKills: before.heroKills + record.heroKills,
     streak,
     bestWinStreak: Math.max(before.bestWinStreak, streak),
-    fastestWin: won ? Math.min(before.fastestWin ?? Infinity, stats.rounds) : before.fastestWin,
+    fastestWin: won ? Math.min(before.fastestWin ?? Infinity, record.rounds) : before.fastestWin,
   }
 
   let heroRecords = profile.heroes
-  for (const line of heroes) {
+  for (const line of record.heroes) {
     heroRecords = add(heroRecords, line.heroId, (h) => ({
       matches: (h?.matches ?? 0) + 1,
       wins: (h?.wins ?? 0) + (won ? 1 : 0),
@@ -261,7 +278,7 @@ export function recordMatch(
   }
 
   let synergyRecords = profile.synergies
-  for (const id of synergies) {
+  for (const id of record.synergies) {
     synergyRecords = add(synergyRecords, id, (s) => ({
       matches: (s?.matches ?? 0) + 1,
       wins: (s?.wins ?? 0) + (won ? 1 : 0),
@@ -274,7 +291,7 @@ export function recordMatch(
       ...profile,
       rating,
       peakRating: Math.max(profile.peakRating, rating),
-      xp: profile.xp + xp,
+      xp: profile.xp + record.xp,
       totals,
       heroes: heroRecords,
       synergies: synergyRecords,
@@ -282,3 +299,9 @@ export function recordMatch(
     } satisfies Profile,
   }
 }
+
+export const recordMatch = (
+  profile: Profile,
+  finished: FinishedMatch,
+  meta: { id: string; playedAt: string },
+) => applyRecord(profile, matchRecordOf(finished, meta))

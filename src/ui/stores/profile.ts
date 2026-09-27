@@ -40,10 +40,11 @@ export const useProfileStore = defineStore('profile', () => {
     repository.save(next)
   }
 
+  /** Returns the new history entry, so the cloud sync can queue it. */
   function record(match: Match) {
     const finished = finishedMatch(match, settings.difficulty)
     if (!finished) {
-      return
+      return null
     }
 
     const result = recordMatch(profile.value, finished, {
@@ -53,6 +54,19 @@ export const useProfileStore = defineStore('profile', () => {
 
     lastRecord.value = result.record
     update(result.profile)
+
+    return result.record
+  }
+
+  /** Takes a profile the cloud settled on; unlike the other actions it is not queued for sync. */
+  function replace(next: Profile) {
+    update(next)
+  }
+
+  /** A fresh profile, for signing out of an account. */
+  function reset() {
+    lastRecord.value = null
+    update(createProfile(new Date().toISOString()))
   }
 
   function rename(name: string) {
@@ -79,6 +93,8 @@ export const useProfileStore = defineStore('profile', () => {
     open: () => page.open(true),
     close: page.close,
     record,
+    replace,
+    reset,
     rename,
     setAvatar,
   }

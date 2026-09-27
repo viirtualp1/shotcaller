@@ -563,5 +563,68 @@
     "text": "You have empty lanes. Start the round anyway?",
     "cancel": "Cancel",
     "confirm": "Start round"
+  },
+  "cloud": {
+    "title": "Cloud save",
+    "localTitle": "Local save",
+    "status": {
+      "local": "Saved on this device",
+      "syncing": "Saving…",
+      "synced": "Saved {time}",
+      "justNow": "just now",
+      "offline": "No connection, will save later",
+      "error": "Could not save"
+    },
+    "pitch": "Sign in to keep your progress online and play on any device.",
+    "signedIn": "Signed in as {email}",
+    "signIn": "Sign in",
+    "signInEmail": "Sign in with email",
+    "signInGoogle": "Continue with Google",
+    "signOut": "Sign out",
+    "signOutConfirm": "Sign out? The profile leaves this device but stays in your account.",
+    "retry": "Try again",
+    "button": {
+      "signIn": "Sign in",
+      "hint": "Sign in to keep your progress in the cloud"
+    },
+    "email": {
+      "title": "Sign in",
+      "text": "Enter your email and we will send a code. No account yet? We will create one and keep this device's progress in it.",
+      "address": "Email",
+      "send": "Get a code",
+      "sentSignIn": "We sent a sign-in code to {email}.",
+      "sentSignUp": "{email} is new here: we sent a code to confirm it, and this device's progress goes into the new account.",
+      "codeHint": "Enter the code from the letter, or open its link on this device.",
+      "code": "Code",
+      "verify": "Sign in",
+      "resend": "Send again",
+      "resendIn": "Send again in {s} s",
+      "back": "Use another email",
+      "or": "or",
+      "failed": "That did not work. {reason}",
+      "cancel": "Cancel",
+      "problems": {
+        "noAccount": "No coach uses this email yet. Link it to the progress on this device, or link it first on the device you usually play on.",
+        "emailTaken": "This email already belongs to another coach. Sign in with it to switch to that coach.",
+        "badCode": "The code is wrong or has expired. Check the latest letter or send a new code.",
+        "tooMany": "Too many attempts. Wait a minute and try again.",
+        "invalidEmail": "That does not look like an email address.",
+        "notAuthorized": "The game's mail service cannot write to this address yet: custom SMTP has to be set up in Supabase.",
+        "disabled": "This way of signing in is switched off in the game's Supabase project.",
+        "offline": "No connection. Check the internet and try again."
+      }
+    },
+    "conflict": {
+      "title": "Which progress to keep?",
+      "text": "This device and your account both have progress. Pick one: the other is replaced.",
+      "cloud": "In the account",
+      "device": "On this device",
+      "matches": "{n} match | {n} matches",
+      "keepCloud": "Keep the account's",
+      "keepDevice": "Keep this device's",
+      "later": "Decide later",
+      "pending": "Progress here differs from your account.",
+      "choose": "Choose"
+    }
   }
 }

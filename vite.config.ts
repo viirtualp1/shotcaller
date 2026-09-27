@@ -33,6 +33,11 @@ export default defineConfig({
               test: /node_modules[\\/](@vue|vue|pinia|vue-i18n|@intlify|reka-ui|@vueuse|@floating-ui|vue-draggable-plus|sortablejs)/,
             },
             {
+              /* Only fetched when cloud saves are configured. */
+              name: 'supabase',
+              test: /node_modules[\\/](@supabase|iceberg-js|tslib)[\\/]/,
+            },
+            {
               name: 'vendor',
               test: /node_modules/,
             },

@@ -4,6 +4,7 @@ import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
+import SignInButton from '../components/profile/SignInButton.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useGameText } from '../composables/useGameText'
 import { useMatchStore } from '../stores/match'
@@ -18,7 +19,10 @@ const { t } = useGameText()
 
 <template>
   <main class="start">
-    <ProfileChip class="coach" />
+    <div class="coach">
+      <ProfileChip />
+      <SignInButton />
+    </div>
 
     <section class="copy">
       <h1 class="hand">{{ t('app.title') }}</h1>
@@ -120,6 +124,9 @@ h1 {
   top: 24px;
   left: 24px;
   z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
 }
 
 .language {
