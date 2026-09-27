@@ -35,6 +35,7 @@ export interface HeroNote extends Changes {
 }
 
 export interface PatchNote {
+  /** `major.minor` for a release, `major.minor.patch` for a fix on top of one. */
   readonly version: string
   /** ISO date, `YYYY-MM-DD`. */
   readonly date: string
@@ -45,9 +46,32 @@ export interface PatchNote {
   readonly roles?: readonly RoleNote[]
   readonly heroes?: readonly HeroNote[]
   readonly interface?: readonly NoteText[]
+  readonly fixes?: readonly NoteText[]
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '5.1.1',
+    date: '2026-09-27',
+    title: {
+      en: 'The map stays put',
+      ru: 'Карта на месте',
+    },
+    summary: {
+      en: 'A fix for the map drifting off or shrinking while the window changes size.',
+      ru: 'Исправлено: пока меняется размер окна, карта больше не уезжает в сторону и не становится маленькой.',
+    },
+    fixes: [
+      {
+        en: 'Resizing the window no longer throws the map off: it always fits between the side panels, even while you drag the window edge.',
+        ru: 'Ресайз окна больше не сбивает карту: она всегда вписывается между боковыми панелями, даже пока тянешь край окна.',
+      },
+      {
+        en: 'The map also follows size changes that come without a window resize, for example a scrollbar appearing on narrow screens.',
+        ru: 'Карта подстраивается и под изменения размера без ресайза окна, например когда на узком экране появляется полоса прокрутки.',
+      },
+    ],
+  },
   {
     version: '5.1',
     date: '2026-09-27',

@@ -7,6 +7,7 @@ import {
   Swords,
   Users,
   WandSparkles,
+  Wrench,
   Zap,
 } from 'lucide-vue-next'
 import { computed, watch, type Component } from 'vue'
@@ -27,7 +28,7 @@ import type { PatchNote } from '../patchNotes/notes'
 import { usePatchNotesStore } from '../stores/patchNotes'
 import { useSettingsStore } from '../stores/settings'
 
-type SectionId = 'general' | 'items' | 'roles' | 'heroes' | 'interface'
+type SectionId = 'general' | 'items' | 'roles' | 'heroes' | 'interface' | 'fixes'
 
 const SECTIONS: readonly { id: SectionId; icon: Component }[] = [
   {
@@ -49,6 +50,10 @@ const SECTIONS: readonly { id: SectionId; icon: Component }[] = [
   {
     id: 'interface',
     icon: LayoutPanelTop,
+  },
+  {
+    id: 'fixes',
+    icon: Wrench,
   },
 ]
 
@@ -243,6 +248,14 @@ watch(
 
           <ul class="bullets">
             <li v-for="(line, i) in patch.interface" :key="i"><NoteLine :text="line" /></li>
+          </ul>
+        </section>
+
+        <section v-if="patch.fixes?.length" id="patch-fixes" class="section">
+          <h2 class="section-title"><Wrench :size="18" /> {{ t('patchNotes.sections.fixes') }}</h2>
+
+          <ul class="bullets">
+            <li v-for="(line, i) in patch.fixes" :key="i"><NoteLine :text="line" /></li>
           </ul>
         </section>
       </main>
