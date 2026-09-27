@@ -51,6 +51,62 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '6.0',
+    date: '2026-09-27',
+    title: {
+      en: 'Cloud saves',
+      ru: 'Облачные сохранения',
+    },
+    summary: {
+      en: 'Your coach profile now lives in the cloud: carry on from another device and never lose your rank, level and match history.',
+      ru: 'Профиль тренера теперь хранится в облаке: продолжай с другого устройства и не теряй ранг, уровень и историю матчей.',
+    },
+    general: [
+      {
+        en: 'New **cloud save** for the coach profile: rank, level, statistics and match history go to your account after every finished match.',
+        ru: 'Новое **облачное сохранение** профиля тренера: ранг, уровень, статистика и история матчей уходят в аккаунт после каждого доигранного матча.',
+      },
+      {
+        en: 'No sign-up needed: a **guest account** is created the first time there is something to save.',
+        ru: 'Регистрация не нужна: **гостевой аккаунт** создаётся, как только появляется что сохранить.',
+      },
+      {
+        en: 'To play on another device, link an **email** (a one-time code from the letter) or **Google** and sign in with it there.',
+        ru: 'Чтобы играть на другом устройстве, привяжи **почту** (одноразовый код из письма) или **Google** и войди с ними там.',
+      },
+      {
+        en: 'The game still works offline. Progress is saved on the device first and reaches the cloud once the connection is back.',
+        ru: 'Игра по-прежнему работает без интернета. Прогресс сначала сохраняется на устройстве и уходит в облако, когда связь вернётся.',
+      },
+      {
+        en: 'Matches played on two devices **add up** instead of one overwriting the other.',
+        ru: 'Матчи, сыгранные на двух устройствах, **складываются**, а не затирают друг друга.',
+      },
+      {
+        en: 'Signing in on a device that already has its own progress asks which one to keep: the account’s or this device’s.',
+        ru: 'Если войти на устройстве, где уже есть свой прогресс, игра спросит, какой оставить: из аккаунта или с устройства.',
+      },
+      {
+        en: 'Only the coach name, avatar and statistics are stored. Your email stays with the sign-in service and is never saved with the profile.',
+        ru: 'Хранятся только имя тренера, аватар и статистика. Почта остаётся в сервисе входа и в профиль не попадает.',
+      },
+    ],
+    interface: [
+      {
+        en: 'The profile page has a **Cloud save** card: save status, guest or signed-in account, linking an email or Google, signing in and out.',
+        ru: 'На странице профиля появилась карточка **«Облачное сохранение»**: статус сохранения, гостевой аккаунт или вход, привязка почты или Google, вход и выход.',
+      },
+      {
+        en: 'The profile card on the start screen shows a small cloud once progress is saved, and a warning when saving failed or there is no connection.',
+        ru: 'На карточке профиля на главном экране маленькое облачко показывает, что прогресс сохранён, а предупреждение — что сохранить не удалось или нет связи.',
+      },
+      {
+        en: 'Signing out takes the profile off this device; it stays in your account.',
+        ru: 'После выхода профиль пропадает с этого устройства, но остаётся в аккаунте.',
+      },
+    ],
+  },
+  {
     version: '5.1.1',
     date: '2026-09-27',
     title: {
