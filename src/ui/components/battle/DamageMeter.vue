@@ -10,7 +10,10 @@ const text = useGameText()
 const rows = computed(() => {
   const heroes = [...(store.live?.heroes.values() ?? [])].sort((a, b) => b.damageDealt - a.damageDealt)
   const top = Math.max(1, heroes[0]?.damageDealt ?? 1)
-  return heroes.map((h) => ({ ...h, share: h.damageDealt / top }))
+  return heroes.map((h) => ({
+    ...h,
+    share: h.damageDealt / top,
+  }))
 })
 </script>
 
@@ -23,10 +26,12 @@ const rows = computed(() => {
       :class="[row.team === 0 ? 'ours' : 'theirs', { dead: row.dead }]"
     >
       <HeroAvatar :hero-id="row.heroId" :team="row.team" :size="22" />
+
       <span class="bar">
         <i :style="{ width: `${row.share * 100}%` }" />
         <span class="label">{{ text.heroName(row.heroId) }}</span>
       </span>
+
       <span class="value">{{ row.damageDealt }}</span>
     </li>
   </TransitionGroup>
@@ -36,7 +41,7 @@ const rows = computed(() => {
 .meter {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 9px;
   margin: 0;
   padding: 0;
   list-style: none;

@@ -19,17 +19,22 @@ const enemy = computed(() => !store.selected && store.inspected !== null)
   <Transition name="rise">
     <aside v-if="located" :key="located.hero.uid" class="card" :class="{ enemy }" aria-live="polite">
       <HeroAvatar :hero-id="located.hero.heroId" :stars="located.hero.stars" :size="52" class="portrait" />
+
       <div class="body">
         <span v-if="enemy" class="side">{{ t('card.enemy') }}</span>
+
         <HeroDetails
           v-if="enemy"
           :hero-id="located.hero.heroId"
           :stars="located.hero.stars"
           :items="located.hero.items"
         />
+
         <HeroDetails v-else :hero-id="located.hero.heroId" :stars="located.hero.stars" />
+
         <div v-if="!enemy" class="items">
           <span class="label">{{ t('card.items') }}</span>
+
           <button
             v-for="(item, i) in located.hero.items"
             :key="`${item}-${i}`"
@@ -42,8 +47,10 @@ const enemy = computed(() => !store.selected && store.inspected !== null)
             <ItemIcon :item-id="item" :size="26" />
             <span>{{ t('card.unequip') }}</span>
           </button>
+
           <span v-if="!located.hero.items.length" class="hint">{{ t('card.noItems') }}</span>
         </div>
+
         <div v-if="!enemy" class="actions">
           <button
             v-if="located.slot !== 'bench'"
@@ -54,6 +61,7 @@ const enemy = computed(() => !store.selected && store.inspected !== null)
           >
             {{ t('card.toBench') }}
           </button>
+
           <button
             type="button"
             class="btn danger"
@@ -64,6 +72,7 @@ const enemy = computed(() => !store.selected && store.inspected !== null)
           </button>
         </div>
       </div>
+
       <button
         type="button"
         class="close icon-btn"

@@ -13,7 +13,11 @@ function memoryStorage(entries: Record<string, string>) {
 
 describe('migrateLegacyStorage', () => {
   it('moves values saved under the old game name', () => {
-    const storage = memoryStorage({ 'tri-linii/match': '{"round":4}', 'tri-linii/locale': 'en' })
+    const storage = memoryStorage({
+      'tri-linii/match': '{"round":4}',
+      'tri-linii/locale': 'en',
+    })
+
     migrateLegacyStorage(storage)
     expect(storage.data.get(STORAGE_KEYS.match)).toBe('{"round":4}')
     expect(storage.data.get(STORAGE_KEYS.locale)).toBe('en')
@@ -21,7 +25,11 @@ describe('migrateLegacyStorage', () => {
   })
 
   it('keeps values already saved under the new name', () => {
-    const storage = memoryStorage({ 'tri-linii/locale': 'en', [STORAGE_KEYS.locale]: 'ru' })
+    const storage = memoryStorage({
+      'tri-linii/locale': 'en',
+      [STORAGE_KEYS.locale]: 'ru',
+    })
+
     migrateLegacyStorage(storage)
     expect(storage.data.get(STORAGE_KEYS.locale)).toBe('ru')
     expect(storage.data.has('tri-linii/locale')).toBe(false)

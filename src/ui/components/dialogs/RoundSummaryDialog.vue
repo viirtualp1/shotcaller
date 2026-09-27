@@ -22,36 +22,59 @@ const text = useGameText()
 const { t } = text
 
 const summary = computed(() => store.view?.summary ?? null)
+
 const open = computed({
   get: () => store.phase === 'summary' && summary.value !== null,
   set: (value) => {
-    if (!value) store.nextRound()
+    if (!value) {
+      store.nextRound()
+    }
   },
 })
+
 const verdict = computed(() => {
   const winner = summary.value?.winner
   return winner === 0 ? 'win' : winner === 1 ? 'loss' : 'draw'
 })
+
 /** Health after the round, plus how much each side lost this round. */
 const structureRows = computed(() => {
   const view = store.view
-  if (!view || !summary.value) return []
+  if (!view || !summary.value) {
+    return []
+  }
+
   return ([...LANE_IDS, 'throne'] as StructureSlot[]).map((slot) => {
     const max = slot === 'throne' ? STRUCTURES.throne.hp : STRUCTURES.tower.hp
     const side = (team: 0 | 1) => {
       const hp = Math.round(view.structures[team][slot])
       const lost = Math.round(summary.value!.laneDamage[slot][team === 0 ? 1 : 0])
-      return { hp, ratio: hp / max, lost }
+      return {
+        hp,
+        ratio: hp / max,
+        lost,
+      }
     }
-    return { slot, ours: side(0), theirs: side(1) }
+
+    return {
+      slot,
+      ours: side(0),
+      theirs: side(1),
+    }
   })
 })
+
 const untouched = computed(() => structureRows.value.every((r) => !r.ours.lost && !r.theirs.lost))
+
 const heroRows = computed(() => {
   const heroes = summary.value?.heroes ?? []
   const top = Math.max(1, heroes[0]?.damageDealt ?? 1)
-  return heroes.map((hero) => ({ ...hero, share: hero.damageDealt / top }))
+  return heroes.map((hero) => ({
+    ...hero,
+    share: hero.damageDealt / top,
+  }))
 })
+
 const fallen = computed(() => {
   const heroes = (summary.value?.heroes ?? []).filter((h) => h.deaths > 0)
   return {
@@ -59,15 +82,32 @@ const fallen = computed(() => {
     ours: heroes.filter((h) => h.team === 0),
   }
 })
+
 const income = computed(() => summary.value?.income[0])
+
 const incomeRows = computed(() => {
   const value = income.value
-  if (!value) return []
+  if (!value) {
+    return []
+  }
+
   return [
-    { key: 'base', amount: value.base },
-    { key: 'interest', amount: value.interest },
-    { key: 'farm', amount: value.farm },
-    { key: 'winBonus', amount: value.win },
+    {
+      key: 'base',
+      amount: value.base,
+    },
+    {
+      key: 'interest',
+      amount: value.interest,
+    },
+    {
+      key: 'farm',
+      amount: value.farm,
+    },
+    {
+      key: 'winBonus',
+      amount: value.win,
+    },
   ]
 })
 </script>
@@ -76,10 +116,12 @@ const incomeRows = computed(() => {
   <DialogRoot v-model:open="open">
     <DialogPortal>
       <DialogOverlay class="overlay" />
+
       <DialogContent v-if="summary && income" class="sheet summary">
         <DialogTitle class="title hand" :data-verdict="verdict">
           {{ t(`summary.${verdict}`, { round: summary.round }) }}
         </DialogTitle>
+
         <DialogDescription class="visually-hidden">
           {{ t('summary.kills', { ours: summary.heroKills[0], theirs: summary.heroKills[1] }) }}
         </DialogDescription>
@@ -90,6 +132,7 @@ const incomeRows = computed(() => {
               {{ t(side === 'theirs' ? 'summary.enemiesKilled' : 'summary.ourLosses') }} ·
               {{ side === 'theirs' ? summary.heroKills[0] : summary.heroKills[1] }}
             </h3>
+
             <ul v-if="fallen[side].length" class="graves">
               <li
                 v-for="(hero, i) in fallen[side]"
@@ -102,15 +145,18 @@ const incomeRows = computed(() => {
                   <span class="skull" aria-hidden="true">💀</span>
                   <span v-if="hero.deaths > 1" class="times">×{{ hero.deaths }}</span>
                 </span>
+
                 <span class="name">{{ text.heroName(hero.heroId) }}</span>
               </li>
             </ul>
+
             <p v-else class="none">{{ t('summary.noLosses') }}</p>
           </div>
         </section>
 
         <section>
           <h3 class="eyebrow">{{ t('summary.heroes') }}</h3>
+
           <ol class="heroes">
             <li
               v-for="(hero, i) in heroRows"
@@ -120,13 +166,16 @@ const incomeRows = computed(() => {
               :style="{ '--i': i }"
             >
               <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="24" />
+
               <span class="bar">
                 <i :style="{ width: `${hero.share * 100}%` }" />
                 <span class="label">{{ text.heroName(hero.heroId) }} {{ starsLabel(hero.stars) }}</span>
               </span>
+
               <span class="num damage" :title="t('summary.heroDamage')">{{
                 text.number(hero.damageDealt)
               }}</span>
+
               <span class="num kd" :title="`${t('summary.heroKills')} / ${t('summary.heroDeaths')}`">
                 {{ hero.kills }}/{{ hero.deaths }}
               </span>
@@ -137,6 +186,7 @@ const incomeRows = computed(() => {
         <section>
           <h3 class="eyebrow">{{ t('summary.structures') }}</h3>
           <p v-if="untouched" class="note">{{ t('summary.untouched') }}</p>
+
           <ul class="structures">
             <li v-for="row in structureRows" :key="row.slot" class="structure">
               <span class="side ours" :class="{ down: !row.ours.hp }">
@@ -144,11 +194,14 @@ const incomeRows = computed(() => {
                 <span class="meter"><i :style="{ width: `${row.ours.ratio * 100}%` }" /></span>
                 <span class="hp">{{ row.ours.hp ? text.number(row.ours.hp) : t('summary.destroyed') }}</span>
               </span>
+
               <span class="slot">{{ text.slotName(row.slot) }}</span>
+
               <span class="side theirs" :class="{ down: !row.theirs.hp }">
                 <span class="hp">{{
                   row.theirs.hp ? text.number(row.theirs.hp) : t('summary.destroyed')
                 }}</span>
+
                 <span class="meter"><i :style="{ width: `${row.theirs.ratio * 100}%` }" /></span>
                 <span v-if="row.theirs.lost" class="lost">−{{ text.number(row.theirs.lost) }}</span>
               </span>
@@ -167,8 +220,10 @@ const incomeRows = computed(() => {
             <span>{{ t(`summary.${row.key}`) }}</span>
             <span class="amount">+{{ row.amount }} <span class="coin" /></span>
           </li>
+
           <li class="income-row total" :style="{ animationDelay: `${incomeRows.length * INCOME_STEP_MS}ms` }">
             <span>{{ t('summary.total') }}</span>
+
             <span class="amount">
               <span
                 >+<AnimatedNumber
@@ -177,6 +232,7 @@ const incomeRows = computed(() => {
                   :delay="incomeRows.length * INCOME_STEP_MS"
                   :duration="700"
               /></span>
+
               <span class="coin" />
             </span>
           </li>

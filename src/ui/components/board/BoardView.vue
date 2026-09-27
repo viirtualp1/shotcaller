@@ -23,12 +23,16 @@ let shownSimulation: BattleSimulation | null = null
 
 function planningModel(): PlanningModel | null {
   const view = store.view
-  if (!view) return null
+  if (!view) {
+    return null
+  }
+
   const lineup = (lanes: typeof view.human.lanes) => ({
     top: lanes.top.heroes,
     mid: lanes.mid.heroes,
     bot: lanes.bot.heroes,
   })
+
   return {
     lineups: [lineup(view.human.lanes), lineup(view.opponent.lanes)],
     structures: view.structures,
@@ -45,16 +49,26 @@ watch(
   [renderer, () => store.view, () => store.selectedUid, () => store.inspectedUid, () => store.simulation],
   () => {
     const board = renderer.value
-    if (!board) return
-    const simulation = store.simulation
-    if (simulation) {
-      if (simulation !== shownSimulation) board.showBattle(simulation)
-      shownSimulation = simulation
+    if (!board) {
       return
     }
+
+    const simulation = store.simulation
+    if (simulation) {
+      if (simulation !== shownSimulation) {
+        board.showBattle(simulation)
+      }
+
+      shownSimulation = simulation
+
+      return
+    }
+
     shownSimulation = null
     const model = planningModel()
-    if (model) board.showPlanning(model, store.selectedUid !== null)
+    if (model) {
+      board.showPlanning(model, store.selectedUid !== null)
+    }
   },
   { immediate: true },
 )
@@ -62,24 +76,34 @@ watch(
 watch(
   renderer,
   (board, _, onCleanup) => {
-    if (!board) return
+    if (!board) {
+      return
+    }
+
     const onLane = (lane: LaneId) => store.placeSelected(lane)
     const onHero = ({ uid, clientX, clientY }: { uid: string; clientX: number; clientY: number }) => {
       const located = store.view ? locateHero(store.view.human, uid) : null
       if (located) {
         drag.press(
-          { kind: 'hero', uid, heroId: located.hero.heroId, stars: located.hero.stars },
+          {
+            kind: 'hero',
+            uid,
+            heroId: located.hero.heroId,
+            stars: located.hero.stars,
+          },
           clientX,
           clientY,
         )
       }
     }
+
     const onHover = (hit: HeroHit | null) => (hovered.value = hit)
     const onTap = (hit: HeroHit) => (hit.team === 0 ? store.select(hit.uid) : store.inspect(hit.uid))
     board.events.on('lanePicked', onLane)
     board.events.on('heroPressed', onHero)
     board.events.on('heroHovered', onHover)
     board.events.on('heroTapped', onTap)
+
     onCleanup(() => {
       board.events.off('lanePicked', onLane)
       board.events.off('heroPressed', onHero)

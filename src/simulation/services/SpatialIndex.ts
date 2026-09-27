@@ -11,57 +11,78 @@ export class SpatialIndex {
   private readonly unsubscribe: (() => void)[] = []
 
   constructor(private readonly units: Query<Unit>) {
-    for (const unit of units) this.insert(unit)
+    for (const unit of units) {
+      this.insert(unit)
+    }
+
     this.unsubscribe.push(
       units.onEntityAdded.subscribe((unit) => this.insert(unit)),
       units.onEntityRemoved.subscribe((unit) => this.remove(unit)),
     )
   }
 
-  sync(): void {
-    for (const unit of this.units) unit.body?.setPosition(unit.position.x, unit.position.y, false)
+  sync() {
+    for (const unit of this.units) {
+      unit.body?.setPosition(unit.position.x, unit.position.y, false)
+    }
+
     this.system.update()
   }
 
-  separate(): void {
+  separate() {
     this.system.separate()
+
     for (const unit of this.units) {
-      if (!unit.body || unit.body.isStatic) continue
+      if (!unit.body || unit.body.isStatic) {
+        continue
+      }
+
       unit.position.x = unit.body.x
       unit.position.y = unit.body.y
     }
   }
 
-  near(center: Vec2, radius: number, predicate: (unit: Unit) => boolean = () => true): Unit[] {
+  near(center: Vec2, radius: number, predicate: (unit: Unit) => boolean = () => true) {
     const hits = this.system.search({
       minX: center.x - radius,
       minY: center.y - radius,
       maxX: center.x + radius,
       maxY: center.y + radius,
     })
+
     const result: Unit[] = []
     for (const body of hits) {
       const unit = body.userData
-      if (unit && distance(center, unit.position) - unit.radius <= radius && predicate(unit))
+      if (unit && distance(center, unit.position) - unit.radius <= radius && predicate(unit)) {
         result.push(unit)
+      }
     }
+
     return result
   }
 
-  dispose(): void {
-    for (const off of this.unsubscribe) off()
+  dispose() {
+    for (const off of this.unsubscribe) {
+      off()
+    }
   }
 
-  private insert(unit: Unit): void {
-    if (unit.body) return
+  private insert(unit: Unit) {
+    if (unit.body) {
+      return
+    }
+
     unit.body = this.system.createCircle(unit.position, unit.radius * BODY_SCALE, {
       isStatic: !unit.speed,
       userData: unit,
     }) as Circle<Unit>
   }
 
-  private remove(unit: Unit): void {
-    if (!unit.body) return
+  private remove(unit: Unit) {
+    if (!unit.body) {
+      return
+    }
+
     this.system.remove(unit.body)
     delete unit.body
   }

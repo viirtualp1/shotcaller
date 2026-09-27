@@ -12,6 +12,7 @@ const { t } = useGameText()
   <DialogRoot v-model:open="menu.settings">
     <DialogPortal>
       <DialogOverlay class="overlay" />
+
       <DialogContent class="sheet settings" :aria-describedby="undefined">
         <DialogTitle class="title hand">{{ t('settings.title') }}</DialogTitle>
         <SettingsFields />

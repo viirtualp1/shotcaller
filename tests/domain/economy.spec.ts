@@ -15,10 +15,20 @@ const initialTotal = HERO_IDS.reduce((sum, id) => sum + POOL_COPIES[HEROES[id].t
 describe('shop and pool', () => {
   it('conserves hero copies across rerolls, purchases and sales', () => {
     const pool = new HeroPool()
-    const player = new Player(0, { pool, rng: createRng('pool'), ids: sequentialIds() })
+
+    const player = new Player(0, {
+      pool,
+      rng: createRng('pool'),
+      ids: sequentialIds(),
+    })
+
     player.wallet.earn(100)
     player.shop.restock(player.level)
-    for (let i = 0; i < 10; i++) player.reroll()
+
+    for (let i = 0; i < 10; i++) {
+      player.reroll()
+    }
+
     const purchase = player.buy(player.shop.slots.findIndex((id) => id !== null))._unsafeUnwrap()
 
     const offered = player.shop.slots.filter((id) => id !== null).length
@@ -30,7 +40,12 @@ describe('shop and pool', () => {
   })
 
   it('refuses purchases the player cannot afford', () => {
-    const player = new Player(0, { pool: new HeroPool(), rng: createRng('poor'), ids: sequentialIds() })
+    const player = new Player(0, {
+      pool: new HeroPool(),
+      rng: createRng('poor'),
+      ids: sequentialIds(),
+    })
+
     player.shop.restock(player.level)
     player.wallet.spend(player.wallet.gold)
     expect(player.buy(0)._unsafeUnwrapErr().code).toBe('notEnoughGold')
@@ -39,7 +54,12 @@ describe('shop and pool', () => {
 
 describe('income', () => {
   it('adds interest, farm and a win bonus', () => {
-    const stats = { heroKills: 2, creepKills: 17, structureDamage: freshStructures() }
+    const stats = {
+      heroKills: 2,
+      creepKills: 17,
+      structureDamage: freshStructures(),
+    }
+
     const income = computeIncome(27, stats, true)
     expect(income).toEqual({
       base: ECONOMY.baseIncome,
@@ -51,7 +71,12 @@ describe('income', () => {
   })
 
   it('caps interest and farm', () => {
-    const stats = { heroKills: 20, creepKills: 200, structureDamage: freshStructures() }
+    const stats = {
+      heroKills: 20,
+      creepKills: 200,
+      structureDamage: freshStructures(),
+    }
+
     const income = computeIncome(500, stats, false)
     expect(income.interest).toBe(ECONOMY.maxInterest)
     expect(income.farm).toBe(ECONOMY.maxFarmIncome)

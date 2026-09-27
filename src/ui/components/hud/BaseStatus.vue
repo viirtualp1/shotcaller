@@ -1,36 +1,52 @@
 <script setup lang="ts">
+import { Crown } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { LANE_IDS, type TeamId } from '@/content/ids'
 import { STRUCTURES } from '@/content/units'
 import type { StructureState } from '@/domain/battle/contracts'
-import AnimatedNumber from '../common/AnimatedNumber.vue'
 import { useGameText } from '../../composables/useGameText'
 
 const props = defineProps<{ team: TeamId; structures: StructureState }>()
+
 const text = useGameText()
 const { t } = text
 
 const throneRatio = computed(() => props.structures.throne / STRUCTURES.throne.hp)
+
+const throneTitle = computed(
+  () => `${t('hud.throne')}: ${text.number(props.structures.throne)} / ${text.number(STRUCTURES.throne.hp)}`,
+)
+
 const towers = computed(() =>
-  LANE_IDS.map((lane) => ({ lane, ratio: props.structures[lane] / STRUCTURES.tower.hp })),
+  LANE_IDS.map((lane) => ({
+    lane,
+    ratio: props.structures[lane] / STRUCTURES.tower.hp,
+  })),
 )
 </script>
 
 <template>
   <div class="base" :class="team === 0 ? 'ours' : 'theirs'">
     <span class="who">{{ team === 0 ? t('teams.ours') : t('teams.theirs') }}</span>
+
     <span class="towers" :aria-label="t('hud.towers')">
       <i
         v-for="tower in towers"
         :key="tower.lane"
-        :title="`${text.slotName(tower.lane)}: ${structures[tower.lane]}`"
+        :title="`${text.slotName(tower.lane)}: ${text.number(structures[tower.lane])}`"
         :class="{ down: tower.ratio <= 0 }"
         :style="{ '--fill': `${tower.ratio * 100}%` }"
       />
     </span>
-    <span class="throne" :title="`${t('hud.throne')}: ${structures.throne}`">
-      <span class="bar"><i :style="{ width: `${throneRatio * 100}%` }" /></span>
-      <AnimatedNumber class="hp" :value="structures.throne" />
+
+    <span
+      class="throne"
+      :class="{ hurt: throneRatio < 1 }"
+      :title="throneTitle"
+      :aria-label="throneTitle"
+      :style="{ '--fill': `${throneRatio * 100}%` }"
+    >
+      <Crown :size="15" />
     </span>
   </div>
 </template>
@@ -45,10 +61,6 @@ const towers = computed(() =>
 
 .theirs {
   --team: var(--theirs);
-  flex-direction: row-reverse;
-}
-
-.theirs .throne {
   flex-direction: row-reverse;
 }
 
@@ -77,29 +89,28 @@ const towers = computed(() =>
 }
 
 .throne {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.bar {
-  width: 92px;
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-
-.bar i {
-  display: block;
-  height: 100%;
-  background: var(--team);
-  transition: width 0.4s ease-out;
-}
-
-.hp {
-  min-width: 2.6em;
-  font-size: 13px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1.5px solid var(--team);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--team) 45%, transparent) var(--fill),
+    transparent var(--fill)
+  );
   color: var(--chalk);
+  transition: background 0.4s ease-out;
+}
+
+.throne.hurt {
+  animation: throne-hurt 1.6s ease-in-out infinite;
+}
+
+@keyframes throne-hurt {
+  50% {
+    box-shadow: 0 0 10px color-mix(in srgb, var(--team) 60%, transparent);
+  }
 }
 </style>

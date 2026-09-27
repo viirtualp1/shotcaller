@@ -4,6 +4,7 @@ import { useGameText } from '../../composables/useGameText'
 import ItemIcon from '../common/ItemIcon.vue'
 
 defineProps<{ offer: ItemOfferView; disabled: boolean; index: number }>()
+
 defineEmits<{ buy: [itemId: ItemOfferView['itemId']] }>()
 const text = useGameText()
 </script>
@@ -18,10 +19,12 @@ const text = useGameText()
     @click="$emit('buy', offer.itemId)"
   >
     <ItemIcon :item-id="offer.itemId" :size="32" />
+
     <span class="info">
       <span class="name">{{ text.itemName(offer.itemId) }}</span>
       <span class="desc">{{ text.itemDescription(offer.itemId) }}</span>
     </span>
+
     <span class="cost"><span class="coin" /> {{ offer.cost }}</span>
   </button>
 </template>

@@ -10,16 +10,19 @@ const isDifficulty = (value: unknown): value is Difficulty =>
 
 export const useSettingsStore = defineStore('settings', () => {
   const storedLocale = useLocalStorage<string>(STORAGE_KEYS.locale, detectLocale())
+
   const locale = computed<Locale>({
     get: () => (isLocale(storedLocale.value) ? storedLocale.value : detectLocale()),
     set: (value) => (storedLocale.value = value),
   })
 
   const storedDifficulty = useLocalStorage<string>(STORAGE_KEYS.difficulty, 'standard')
+
   const difficulty = computed<Difficulty>({
     get: () => (isDifficulty(storedDifficulty.value) ? storedDifficulty.value : 'standard'),
     set: (value) => (storedDifficulty.value = value),
   })
+
   const planningSeconds = computed(() => DIFFICULTIES[difficulty.value].planningSeconds)
 
   watch(
@@ -32,5 +35,9 @@ export const useSettingsStore = defineStore('settings', () => {
     { immediate: true },
   )
 
-  return { locale, difficulty, planningSeconds }
+  return {
+    locale,
+    difficulty,
+    planningSeconds,
+  }
 })

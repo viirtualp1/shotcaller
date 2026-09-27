@@ -5,7 +5,7 @@ import { BoardRenderer } from '@/rendering/BoardRenderer'
 import { FONTS } from '@/rendering/theme'
 import type { MessageSchema } from '../i18n'
 
-async function loadFonts(): Promise<void> {
+async function loadFonts() {
   const faces = [`700 32px ${FONTS.hand}`, `700 11px ${FONTS.ui}`]
   await Promise.all(faces.map((face) => document.fonts.load(face))).catch(() => undefined)
 }
@@ -25,10 +25,17 @@ export function useBoardRenderer(host: Ref<HTMLElement | null>) {
 
   onMounted(async () => {
     await loadFonts()
-    if (disposed || !host.value) return
+
+    if (disposed || !host.value) {
+      return
+    }
+
     const created = await BoardRenderer.create(host.value, labels)
-    if (disposed) created.destroy()
-    else renderer.value = markRaw(created)
+    if (disposed) {
+      created.destroy()
+    } else {
+      renderer.value = markRaw(created)
+    }
   })
 
   onBeforeUnmount(() => {

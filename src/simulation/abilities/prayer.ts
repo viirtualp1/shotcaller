@@ -10,8 +10,13 @@ export const prayer: Ability = {
     const target = weakest(
       alliedHeroesAround(ctx, caster, P.radius).filter((u) => healthRatio(u) < P.hpThreshold),
     )
-    if (!target) return false
-    ctx.combat.heal(target, P.heal * caster.caster.power)
+
+    if (!target) {
+      return false
+    }
+
+    ctx.combat.heal(target, P.heal * caster.caster.power, caster)
+
     return true
   },
 }

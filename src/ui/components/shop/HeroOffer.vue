@@ -12,6 +12,7 @@ import HeroDetails from '../common/HeroDetails.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
 const props = defineProps<{ offer: ShopOfferView & { heroId: HeroId }; disabled: boolean; index: number }>()
+
 defineEmits<{ buy: [slot: number] }>()
 
 const text = useGameText()
@@ -30,21 +31,26 @@ const hero = computed(() => HEROES[props.offer.heroId])
       @click="$emit('buy', offer.slot)"
     >
       <HeroAvatar :hero-id="offer.heroId" :size="36" />
+
       <span class="info">
         <span class="name">{{ text.heroName(offer.heroId) }}</span>
+
         <span class="role">
           <component :is="ROLE_ICONS[hero.role]" :size="12" />
           {{ text.roleName(hero.role) }} · {{ text.abilityName(hero.ability) }}
         </span>
       </span>
+
       <span class="side">
         <span class="cost"><span class="coin" /> {{ hero.tier }}</span>
         <span v-if="offer.completesSet" class="badge up">{{ t('shop.completes') }}</span>
+
         <span v-else-if="offer.ownedCopies" class="badge">{{
           t('shop.owned', { n: offer.ownedCopies })
         }}</span>
       </span>
     </button>
+
     <template #content>
       <HeroDetails :hero-id="offer.heroId" :stars="1" />
     </template>

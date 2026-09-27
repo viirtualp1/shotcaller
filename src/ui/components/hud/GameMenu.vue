@@ -18,6 +18,7 @@ const { t } = useGameText()
     >
       <Menu :size="18" />
     </button>
+
     <span class="brand hand">{{ t('app.title') }}</span>
   </div>
 </template>

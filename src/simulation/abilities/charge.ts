@@ -9,13 +9,23 @@ export const charge: Ability = {
   cast(caster, ctx) {
     const candidates = enemiesAround(ctx, caster, caster.position, P.radius, { excludeProtected: true })
     const target = farthest(caster.position, heroesFirst(candidates))
-    if (!target) return false
+    if (!target) {
+      return false
+    }
+
     const from = { ...caster.position }
     Object.assign(caster.position, contactPoint(caster, target, caster.position))
-    ctx.events.emit('dash', { from, to: { ...caster.position }, color: caster.color ?? 0xffffff })
+
+    ctx.events.emit('dash', {
+      from,
+      to: { ...caster.position },
+      color: caster.color ?? 0xffffff,
+    })
+
     ctx.combat.dealDamage(caster, target, P.damage * caster.caster.power, 'magical')
     stun(target, P.stun)
     caster.targeting.target = target
+
     return true
   },
 }

@@ -13,7 +13,11 @@ export const chainLightning: Ability = {
       caster.position,
       enemiesAround(ctx, caster, caster.position, caster.attack.range + P.rangeBonus),
     )
-    if (!first) return false
+
+    if (!first) {
+      return false
+    }
+
     const struck = new Set<Unit>()
     const points: Vec2[] = [{ ...caster.position }]
     let damage = P.damage * caster.caster.power
@@ -28,7 +32,12 @@ export const chainLightning: Ability = {
         enemiesAround(ctx, caster, from.position, P.bounceRange).filter((u) => !struck.has(u)),
       )
     }
-    ctx.events.emit('chain', { points, color: caster.color ?? 0x6fb3ff })
+
+    ctx.events.emit('chain', {
+      points,
+      color: caster.color ?? 0x6fb3ff,
+    })
+
     return true
   },
 }

@@ -16,7 +16,10 @@ const levelUp = ref(false)
 watch(
   () => human.value.level,
   (level, previous) => {
-    if (previous === undefined || level <= previous) return
+    if (previous === undefined || level <= previous) {
+      return
+    }
+
     levelUp.value = false
     requestAnimationFrame(() => (levelUp.value = true))
   },
@@ -27,14 +30,17 @@ watch(
   <div class="economy" data-tour="economy">
     <div class="stats">
       <span class="gold"><span class="coin" /> <AnimatedNumber :value="human.gold" /></span>
+
       <span class="level" :class="{ levelUp }" @animationend="levelUp = false">
         <span class="label">{{ t('shop.level', { level: human.level }) }}</span>
         <span class="xp"><i :style="{ width: `${xpRatio * 100}%` }" /></span>
+
         <span class="hint">
           {{ human.isMaxLevel ? t('shop.maxLevel') : t('shop.xp', { xp: human.xp, next: human.xpToNext }) }}
         </span>
       </span>
     </div>
+
     <div class="buttons">
       <button
         type="button"
@@ -47,6 +53,7 @@ watch(
         {{ t('shop.reroll') }}
         <span class="price"><span class="coin" /> {{ ECONOMY.rerollCost }}</span>
       </button>
+
       <button
         type="button"
         class="btn"

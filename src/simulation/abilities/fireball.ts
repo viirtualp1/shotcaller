@@ -8,7 +8,10 @@ export const fireball: Ability = {
   id: 'fireball',
   cast(caster, ctx) {
     const target = densest(ctx, caster, caster.attack.range + P.rangeBonus, P.radius)
-    if (!target) return false
+    if (!target) {
+      return false
+    }
+
     ctx.factory.projectile(
       {
         source: caster,
@@ -21,6 +24,7 @@ export const fireball: Ability = {
       },
       0xff7a3d,
     )
+
     return true
   },
 }

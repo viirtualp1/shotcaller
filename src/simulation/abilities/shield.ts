@@ -11,8 +11,13 @@ export const shield: Ability = {
     const target = weakest(
       alliedHeroesAround(ctx, caster, P.radius).filter((u) => healthRatio(u) < WORTH_SHIELDING && !u.shield),
     )
-    if (!target) return false
+
+    if (!target) {
+      return false
+    }
+
     ctx.combat.grantShield(target, P.absorb * caster.caster.power, P.duration)
+
     return true
   },
 }

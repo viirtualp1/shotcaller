@@ -23,6 +23,10 @@ export interface HeroBattleReport {
   readonly heroId: HeroId
   readonly stars: StarLevel
   readonly damageDealt: number
+  readonly damageReceived: number
+  readonly structureDamage: number
+  readonly healing: number
+  readonly lastHits: number
   readonly kills: number
   readonly deaths: number
 }

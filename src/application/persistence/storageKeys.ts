@@ -12,15 +12,21 @@ export const STORAGE_KEYS = {
 
 type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
-export function migrateLegacyStorage(storage: KeyValueStorage = globalThis.localStorage): void {
+export function migrateLegacyStorage(storage: KeyValueStorage = globalThis.localStorage) {
   try {
     for (const key of Object.values(STORAGE_KEYS)) {
       const name = key.slice(PREFIX.length)
       for (const legacy of LEGACY_PREFIXES) {
         const legacyKey = `${legacy}${name}`
         const value = storage.getItem(legacyKey)
-        if (value === null) continue
-        if (storage.getItem(key) === null) storage.setItem(key, value)
+        if (value === null) {
+          continue
+        }
+
+        if (storage.getItem(key) === null) {
+          storage.setItem(key, value)
+        }
+
         storage.removeItem(legacyKey)
       }
     }

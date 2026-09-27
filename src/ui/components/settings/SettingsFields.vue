@@ -15,14 +15,18 @@ const { t } = useGameText()
 const language = computed({
   get: () => settings.locale,
   set: (value: string | undefined) => {
-    if (isLocale(value)) settings.locale = value
+    if (isLocale(value)) {
+      settings.locale = value
+    }
   },
 })
 
 const difficulty = computed({
   get: () => settings.difficulty,
   set: (value: string | undefined) => {
-    if (value && value in DIFFICULTIES) settings.difficulty = value as Difficulty
+    if (value && value in DIFFICULTIES) {
+      settings.difficulty = value as Difficulty
+    }
   },
 })
 
@@ -38,6 +42,7 @@ const difficultyHint = computed(() => {
   <div class="fields">
     <section class="field">
       <h3 class="label"><Gauge :size="16" /> {{ t('settings.difficulty') }}</h3>
+
       <ToggleGroupRoot
         v-model="difficulty"
         type="single"
@@ -48,10 +53,13 @@ const difficultyHint = computed(() => {
           {{ t(`settings.difficulties.${id}`) }}
         </ToggleGroupItem>
       </ToggleGroupRoot>
+
       <p class="hint">{{ difficultyHint }}</p>
     </section>
+
     <section class="field">
       <h3 class="label"><Languages :size="16" /> {{ t('settings.language') }}</h3>
+
       <ToggleGroupRoot v-model="language" type="single" class="choices" :aria-label="t('settings.language')">
         <ToggleGroupItem v-for="locale in LOCALES" :key="locale" :value="locale" class="choice">
           {{ LOCALE_LABELS[locale] }}

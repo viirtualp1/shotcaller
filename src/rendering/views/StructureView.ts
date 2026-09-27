@@ -30,55 +30,112 @@ export class StructureView extends EntityView {
     this.body.addChild(this.shape, this.muzzle, this.bar)
   }
 
-  show(health: number, maxHealth: number, showRange: boolean): void {
+  show(health: number, maxHealth: number, showRange: boolean) {
     const destroyed = health <= 0
-    if (destroyed !== this.rubble) this.drawShape(destroyed)
-    if (health < this.lastHealth - 1 && this.lastHealth !== Infinity) this.shake()
+    if (destroyed !== this.rubble) {
+      this.drawShape(destroyed)
+    }
+
+    if (health < this.lastHealth - 1 && this.lastHealth !== Infinity) {
+      this.shake()
+    }
+
     this.lastHealth = health
     this.bar.clear()
+
     if (!destroyed) {
       const width = this.type === 'throne' ? 52 : 36
       const y = -STRUCTURES[this.type].radius - 11
-      drawBar(this.bar, { y, width, height: 4.5, ratio: health / maxHealth, color: TEAM_COLORS[this.team] })
+      drawBar(this.bar, {
+        y,
+        width,
+        height: 4.5,
+        ratio: health / maxHealth,
+        color: TEAM_COLORS[this.team],
+      })
     }
-    if (!showRange || destroyed) this.range.clear()
+
+    if (!showRange || destroyed) {
+      this.range.clear()
+    }
   }
 
   /** Lights up the attack radius while the structure is shooting at something. */
-  setAggro(active: boolean): void {
-    if (active === this.aggro || this.rubble) return
+  setAggro(active: boolean) {
+    if (active === this.aggro || this.rubble) {
+      return
+    }
+
     this.aggro = active
     const { range } = STRUCTURES[this.type]
     const color = TEAM_COLORS[this.team]
     const g = this.range.clear()
     if (!active) {
-      g.circle(0, 0, range).stroke({ width: 1, color, alpha: 0.16 })
+      g.circle(0, 0, range).stroke({
+        width: 1,
+        color,
+        alpha: 0.16,
+      })
+
       return
     }
-    g.circle(0, 0, range).fill({ color, alpha: 0.06 })
+
+    g.circle(0, 0, range).fill({
+      color,
+      alpha: 0.06,
+    })
+
     for (let i = 0; i < RANGE_DASHES; i++) {
       const a = (i / RANGE_DASHES) * Math.PI * 2
-      strokeArc(g, range, a, a + (Math.PI / RANGE_DASHES) * 1.1, { width: 2, color, alpha: 0.7 })
+      strokeArc(g, range, a, a + (Math.PI / RANGE_DASHES) * 1.1, {
+        width: 2,
+        color,
+        alpha: 0.7,
+      })
     }
   }
 
-  fire(): void {
+  fire() {
     gsap.killTweensOf(this.muzzle)
-    gsap.fromTo(this.muzzle, { alpha: 0.9 }, { alpha: 0, duration: 0.25, ease: 'power2.out' })
+
+    gsap.fromTo(
+      this.muzzle,
+      { alpha: 0.9 },
+      {
+        alpha: 0,
+        duration: 0.25,
+        ease: 'power2.out',
+      },
+    )
+
     this.pop(1.12)
   }
 
-  sync(entity: Entity): void {
-    if (entity.health) this.show(entity.dead ? 0 : entity.health.current, entity.health.max, true)
+  sync(entity: Entity) {
+    if (entity.health) {
+      this.show(entity.dead ? 0 : entity.health.current, entity.health.max, true)
+    }
+
     this.setAggro(Boolean(entity.targeting?.target) && !entity.dead)
   }
 
-  private shake(): void {
-    if (gsap.isTweening(this.shape)) return
-    gsap.fromTo(this.shape, { x: -1.5 }, { x: 0, duration: 0.12, ease: 'elastic.out(3, 0.3)' })
+  private shake() {
+    if (gsap.isTweening(this.shape)) {
+      return
+    }
+
+    gsap.fromTo(
+      this.shape,
+      { x: -1.5 },
+      {
+        x: 0,
+        duration: 0.12,
+        ease: 'elastic.out(3, 0.3)',
+      },
+    )
   }
 
-  private drawShape(destroyed: boolean): void {
+  private drawShape(destroyed: boolean) {
     const wasStanding = this.rubble === false
     this.rubble = destroyed
     const g = this.shape.clear()
@@ -87,31 +144,50 @@ export class StructureView extends EntityView {
     if (destroyed) {
       this.range.clear()
       const r = radius * 0.8
-      g.moveTo(-r, -r)
-        .lineTo(r, r)
-        .moveTo(r, -r)
-        .lineTo(-r, r)
-        .stroke({ width: 2.5, color: PALETTE.chalkDim, alpha: 0.7 })
-      if (wasStanding) this.pop(1.8)
+      g.moveTo(-r, -r).lineTo(r, r).moveTo(r, -r).lineTo(-r, r).stroke({
+        width: 2.5,
+        color: PALETTE.chalkDim,
+        alpha: 0.7,
+      })
+
+      if (wasStanding) {
+        this.pop(1.8)
+      }
+
       return
     }
+
     if (this.type === 'tower') {
-      g.poly([0, -radius, radius, 0, 0, radius, -radius, 0]).fill(PALETTE.ink).stroke({ width: 2.5, color })
+      g.poly([0, -radius, radius, 0, 0, radius, -radius, 0]).fill(PALETTE.ink).stroke({
+        width: 2.5,
+        color,
+      })
+
       g.poly([0, -radius * 0.45, radius * 0.45, 0, 0, radius * 0.45, -radius * 0.45, 0]).fill({
         color,
         alpha: 0.7,
       })
+
       return
     }
+
     const hex = Array.from({ length: 6 }, (_, i) => {
       const a = Math.PI / 6 + (i * Math.PI) / 3
       return [Math.cos(a) * radius, Math.sin(a) * radius]
     }).flat()
-    g.poly(hex).fill(PALETTE.ink).stroke({ width: 3, color })
-    g.circle(0, 0, radius * 0.45).fill({ color, alpha: 0.75 })
+
+    g.poly(hex).fill(PALETTE.ink).stroke({
+      width: 3,
+      color,
+    })
+
+    g.circle(0, 0, radius * 0.45).fill({
+      color,
+      alpha: 0.75,
+    })
   }
 
-  override destroy(options?: Parameters<EntityView['destroy']>[0]): void {
+  override destroy(options?: Parameters<EntityView['destroy']>[0]) {
     gsap.killTweensOf(this.shape)
     gsap.killTweensOf(this.muzzle)
     super.destroy(options)

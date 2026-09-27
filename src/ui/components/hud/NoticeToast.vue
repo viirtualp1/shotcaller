@@ -13,20 +13,39 @@ const { start } = useTimeoutFn(() => (visible.value = false), VISIBLE_MS, { imme
 
 const message = computed(() => {
   const notice = store.notice
-  if (!notice) return ''
-  if (notice.kind === 'error') return text.errorText(notice.error)
-  if (notice.kind === 'timeUp') return text.t('notices.timeUp')
-  if (notice.kind === 'arranged')
+  if (!notice) {
+    return ''
+  }
+
+  if (notice.kind === 'error') {
+    return text.errorText(notice.error)
+  }
+
+  if (notice.kind === 'timeUp') {
+    return text.t('notices.timeUp')
+  }
+
+  if (notice.kind === 'arranged') {
     return text.t(notice.changed ? 'notices.arranged' : 'notices.alreadyArranged')
-  if (notice.kind === 'itemBought')
+  }
+
+  if (notice.kind === 'itemBought') {
     return text.t('notices.itemBought', { item: text.itemName(notice.itemId) })
-  return text.t('notices.promoted', { hero: text.heroName(notice.heroId), stars: starsLabel(notice.stars) })
+  }
+
+  return text.t('notices.promoted', {
+    hero: text.heroName(notice.heroId),
+    stars: starsLabel(notice.stars),
+  })
 })
 
 watch(
   () => store.notice?.id,
   (id) => {
-    if (id === undefined) return
+    if (id === undefined) {
+      return
+    }
+
     visible.value = true
     start()
   },

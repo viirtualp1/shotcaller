@@ -7,10 +7,11 @@ const EDGE = 8
 export class CollisionSystem implements System {
   constructor(private readonly ctx: SimulationContext) {}
 
-  update(): void {
+  update() {
     const { index, queries } = this.ctx
     index.sync()
     index.separate()
+
     for (const unit of queries.units) {
       unit.position.x = clamp(unit.position.x, EDGE, BATTLE.worldSize - EDGE)
       unit.position.y = clamp(unit.position.y, EDGE, BATTLE.worldSize - EDGE)

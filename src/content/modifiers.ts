@@ -21,12 +21,13 @@ export const NEUTRAL_MODIFIERS: Readonly<StatModifiers> = Object.freeze({
   damageTaken: 1,
 })
 
-export function combineModifiers(...parts: Partial<StatModifiers>[]): StatModifiers {
+export function combineModifiers(...parts: Partial<StatModifiers>[]) {
   const result: StatModifiers = { ...NEUTRAL_MODIFIERS }
   for (const part of parts) {
     for (const key of Object.keys(part) as (keyof StatModifiers)[]) {
       result[key] *= part[key] ?? 1
     }
   }
+
   return result
 }

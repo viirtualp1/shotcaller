@@ -15,6 +15,7 @@ const store = useMatchStore()
       <GameScreen v-if="store.view" />
       <StartScreen v-else />
     </Transition>
+
     <SettingsDialog />
     <NewMatchDialog />
   </TooltipProvider>

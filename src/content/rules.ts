@@ -19,7 +19,12 @@ export const ROSTER = {
   shopSize: 5,
   startLevel: 2 as CoachLevel,
   maxLevel: 5 as CoachLevel,
-  xpToNext: { 2: 4, 3: 8, 4: 14, 5: Infinity } satisfies Record<CoachLevel, number>,
+  xpToNext: {
+    2: 4,
+    3: 8,
+    4: 14,
+    5: Infinity,
+  } satisfies Record<CoachLevel, number>,
 } as const
 
 export const SHOP_ODDS: Readonly<Record<CoachLevel, readonly [number, number, number]>> = {
@@ -29,9 +34,24 @@ export const SHOP_ODDS: Readonly<Record<CoachLevel, readonly [number, number, nu
   5: [0.3, 0.4, 0.3],
 }
 
-export const POOL_COPIES: Readonly<Record<Tier, number>> = { 1: 12, 2: 9, 3: 6 }
-export const STAR_POWER: Readonly<Record<StarLevel, number>> = { 1: 1, 2: 1.8, 3: 3.2 }
-export const COPIES_PER_STAR: Readonly<Record<StarLevel, number>> = { 1: 1, 2: 3, 3: 9 }
+export const POOL_COPIES: Readonly<Record<Tier, number>> = {
+  1: 12,
+  2: 9,
+  3: 6,
+}
+
+export const STAR_POWER: Readonly<Record<StarLevel, number>> = {
+  1: 1,
+  2: 1.8,
+  3: 3.2,
+}
+
+export const COPIES_PER_STAR: Readonly<Record<StarLevel, number>> = {
+  1: 1,
+  2: 3,
+  3: 9,
+}
+
 export const MERGE_COUNT = 3
 
 export type Difficulty = 'relaxed' | 'standard'
@@ -59,7 +79,11 @@ export const BATTLE = {
   creepScalePerRound: 0.07,
   structureScalePerRound: 0.08,
   megaCreepMultiplier: 1.5,
-  respawn: { base: 4, perRound: 0.5, max: 12 },
+  respawn: {
+    base: 4,
+    perRound: 0.5,
+    max: 12,
+  },
   hero: {
     aggroRange: 190,
     aggroRangeBonus: 60,
@@ -73,8 +97,16 @@ export const BATTLE = {
   targetLeash: 1.25,
   manaPerAttack: 10,
   manaPerDamageTaken: 40,
-  projectileSpeed: { unit: 520, structure: 420 },
-  gank: { thinkInterval: 1.2, supportRadius: 320, hpThreshold: 0.5, minOwnHealth: 0.35 },
+  projectileSpeed: {
+    unit: 520,
+    structure: 420,
+  },
+  gank: {
+    thinkInterval: 1.2,
+    supportRadius: 320,
+    hpThreshold: 0.5,
+    minOwnHealth: 0.35,
+  },
   auraInterval: 1,
   worldSize: 1000,
 } as const

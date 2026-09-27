@@ -4,21 +4,25 @@ import type { DomainError } from '../errors'
 export class Wallet {
   constructor(private amount: number) {}
 
-  get gold(): number {
+  get gold() {
     return this.amount
   }
 
   spend(cost: number): Result<void, DomainError> {
-    if (cost > this.amount) return err({ code: 'notEnoughGold' })
+    if (cost > this.amount) {
+      return err({ code: 'notEnoughGold' })
+    }
+
     this.amount -= cost
+
     return ok(undefined)
   }
 
-  earn(gold: number): void {
+  earn(gold: number) {
     this.amount += gold
   }
 
-  restore(gold: number): void {
+  restore(gold: number) {
     this.amount = gold
   }
 }

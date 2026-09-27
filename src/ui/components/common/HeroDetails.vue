@@ -12,10 +12,12 @@ import ItemIcon from './ItemIcon.vue'
 const props = withDefaults(defineProps<{ heroId: HeroId; stars: StarLevel; items?: readonly ItemId[] }>(), {
   items: () => [],
 })
+
 const text = useGameText()
 const { t } = text
 const hero = computed(() => HEROES[props.heroId])
 const power = computed(() => STAR_POWER[props.stars])
+
 const stats = computed(() => ({
   hp: text.number(Math.round(hero.value.stats.hp * power.value)),
   damage: text.number(Math.round(hero.value.stats.damage * power.value)),
@@ -28,29 +30,36 @@ const stats = computed(() => ({
     <div class="heading">
       <strong>{{ text.heroName(heroId) }}</strong>
       <span class="stars">{{ starsLabel(stars) }}</span>
+
       <span class="role" :style="{ color: cssColor(ROLES[hero.role].color) }">
         <component :is="ROLE_ICONS[hero.role]" :size="13" />
         {{ text.roleName(hero.role) }}
       </span>
     </div>
+
     <dl class="stats">
       <div>
         <dt>{{ t('card.hp') }}</dt>
         <dd>{{ stats.hp }}</dd>
       </div>
+
       <div>
         <dt>{{ t('card.damage') }}</dt>
         <dd>{{ stats.damage }}</dd>
       </div>
+
       <div>
         <dd>{{ stats.reach }}</dd>
       </div>
     </dl>
+
     <p class="ability">
       <b>{{ text.abilityName(hero.ability) }}.</b>
       {{ text.abilityDescription(hero.ability, power) }}
     </p>
+
     <p class="passive">{{ text.rolePassive(hero.role) }}</p>
+
     <ul v-if="items.length" class="items">
       <li v-for="(item, i) in items" :key="`${item}-${i}`">
         <ItemIcon :item-id="item" :size="22" />

@@ -15,7 +15,7 @@ export interface MatchRepository {
 export class LocalStorageMatchRepository implements MatchRepository {
   constructor(private readonly key: string = STORAGE_KEYS.match) {}
 
-  load(): MatchState | null {
+  load() {
     try {
       const raw = globalThis.localStorage.getItem(this.key)
       return raw ? parseSnapshot(raw) : null
@@ -24,7 +24,7 @@ export class LocalStorageMatchRepository implements MatchRepository {
     }
   }
 
-  save(state: MatchState): void {
+  save(state: MatchState) {
     try {
       globalThis.localStorage.setItem(this.key, serializeSnapshot(state))
     } catch {
@@ -32,7 +32,7 @@ export class LocalStorageMatchRepository implements MatchRepository {
     }
   }
 
-  clear(): void {
+  clear() {
     try {
       globalThis.localStorage.removeItem(this.key)
     } catch {

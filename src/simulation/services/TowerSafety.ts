@@ -20,36 +20,45 @@ export class TowerSafety {
     private readonly index: SpatialIndex,
   ) {}
 
-  reset(): void {
+  reset() {
     this.tankedCache.clear()
   }
 
-  isTanked(structure: Unit, team: TeamId): boolean {
+  isTanked(structure: Unit, team: TeamId) {
     const cached = this.tankedCache.get(structure) ?? [undefined, undefined]
     const known = cached[team]
-    if (known !== undefined) return known
+    if (known !== undefined) {
+      return known
+    }
+
     const range = (structure.attack?.range ?? 0) + TANK_MARGIN
+
     const tanked =
       this.index.near(
         structure.position,
         range,
         (u) => u.team === team && isAlive(u) && (u.kind === 'creep' || u.kind === 'turret'),
       ).length > 0
+
     cached[team] = tanked
     this.tankedCache.set(structure, cached)
+
     return tanked
   }
 
-  isProtected(target: Unit, attackerTeam: TeamId): boolean {
+  isProtected(target: Unit, attackerTeam: TeamId) {
     return this.threatAt(target.position, attackerTeam, PROTECTION_MARGIN)
   }
 
-  isUnsafe(team: TeamId, point: Vec2): boolean {
+  isUnsafe(team: TeamId, point: Vec2) {
     return this.threatAt(point, team, BATTLE.towerSafetyMargin)
   }
 
-  canHitStructure(hero: Unit, structure: Unit): boolean {
-    if (this.isTanked(structure, hero.team)) return true
+  canHitStructure(hero: Unit, structure: Unit) {
+    if (this.isTanked(structure, hero.team)) {
+      return true
+    }
+
     const { finishStructureBelow, finishStructureIfHealthAbove } = BATTLE.hero
     return (
       structure.health.current / structure.health.max < finishStructureBelow &&
@@ -57,12 +66,18 @@ export class TowerSafety {
     )
   }
 
-  private threatAt(point: Vec2, team: TeamId, margin: number): boolean {
+  private threatAt(point: Vec2, team: TeamId, margin: number) {
     for (const structure of this.queries.structures) {
-      if (structure.team === team || !isAlive(structure)) continue
+      if (structure.team === team || !isAlive(structure)) {
+        continue
+      }
+
       const range = (structure.attack?.range ?? 0) + margin
-      if (distance(structure.position, point) <= range && !this.isTanked(structure, team)) return true
+      if (distance(structure.position, point) <= range && !this.isTanked(structure, team)) {
+        return true
+      }
     }
+
     return false
   }
 }

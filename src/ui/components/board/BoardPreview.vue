@@ -7,23 +7,77 @@ import { useBoardRenderer } from '../../composables/useBoardRenderer'
 const DEMO: PlanningModel = {
   lineups: [
     {
-      top: [{ uid: 'demo-1', heroId: 'giant', stars: 2, items: [] }],
-      mid: [{ uid: 'demo-2', heroId: 'pyromancer', stars: 1, items: [] }],
+      top: [
+        {
+          uid: 'demo-1',
+          heroId: 'giant',
+          stars: 2,
+          items: [],
+        },
+      ],
+      mid: [
+        {
+          uid: 'demo-2',
+          heroId: 'pyromancer',
+          stars: 1,
+          items: [],
+        },
+      ],
       bot: [
-        { uid: 'demo-3', heroId: 'archer', stars: 2, items: [] },
-        { uid: 'demo-4', heroId: 'acolyte', stars: 1, items: [] },
+        {
+          uid: 'demo-3',
+          heroId: 'archer',
+          stars: 2,
+          items: [],
+        },
+        {
+          uid: 'demo-4',
+          heroId: 'acolyte',
+          stars: 1,
+          items: [],
+        },
       ],
     },
     {
       top: [
-        { uid: 'demo-5', heroId: 'blademaster', stars: 1, items: [] },
-        { uid: 'demo-6', heroId: 'warden', stars: 1, items: [] },
+        {
+          uid: 'demo-5',
+          heroId: 'blademaster',
+          stars: 1,
+          items: [],
+        },
+        {
+          uid: 'demo-6',
+          heroId: 'warden',
+          stars: 1,
+          items: [],
+        },
       ],
-      mid: [{ uid: 'demo-7', heroId: 'frostWitch', stars: 1, items: [] }],
-      bot: [{ uid: 'demo-8', heroId: 'butcher', stars: 1, items: [] }],
+      mid: [
+        {
+          uid: 'demo-7',
+          heroId: 'frostWitch',
+          stars: 1,
+          items: [],
+        },
+      ],
+      bot: [
+        {
+          uid: 'demo-8',
+          heroId: 'butcher',
+          stars: 1,
+          items: [],
+        },
+      ],
     },
   ],
-  structures: [freshStructures(), { ...freshStructures(), bot: 620 }],
+  structures: [
+    freshStructures(),
+    {
+      ...freshStructures(),
+      bot: 620,
+    },
+  ],
   selectedUid: null,
   inspectedUid: null,
 }

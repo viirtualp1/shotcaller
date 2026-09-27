@@ -33,7 +33,15 @@ const stats = (
   speed: number,
   armor: number,
   mana: number,
-): HeroStats => ({ hp, damage, attackInterval, range, speed, armor, mana })
+) => ({
+  hp,
+  damage,
+  attackInterval,
+  range,
+  speed,
+  armor,
+  mana,
+})
 
 const TABLE: Readonly<Record<HeroId, Row>> = {
   spearman: ['Spearman', 'Sp', 1, 'initiator', 0xc9824a, 'charge', stats(650, 36, 1.1, 0, 95, 0.15, 80)],
@@ -75,6 +83,15 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
 export const HEROES: Readonly<Record<HeroId, HeroDefinition>> = Object.fromEntries(
   Object.entries(TABLE).map(([id, [name, glyph, tier, role, color, ability, heroStats]]) => [
     id,
-    { id: id as HeroId, name, glyph, tier, role, color, ability, stats: heroStats },
+    {
+      id: id as HeroId,
+      name,
+      glyph,
+      tier,
+      role,
+      color,
+      ability,
+      stats: heroStats,
+    },
   ]),
 ) as Record<HeroId, HeroDefinition>

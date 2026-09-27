@@ -4,10 +4,11 @@ import type { Player } from '../player/Player'
 import type { OwnedHero } from '../roster/Roster'
 import { heroPower, type LaneOptimizer } from './LaneOptimizer'
 
-export function arrangeStrongestLineup(player: Player, optimizer: LaneOptimizer, rng?: Rng): void {
+export function arrangeStrongestLineup(player: Player, optimizer: LaneOptimizer, rng?: Rng) {
   const team = [...player.roster.all()]
     .sort((a, b) => heroPower(b) - heroPower(a))
     .slice(0, player.boardCapacity)
+
   const lanes = optimizer.assign(team, rng)
   const board = new Map<OwnedHero, LaneId>(team.map((hero, i) => [hero, lanes[i]!]))
   player.roster.arrange(board)

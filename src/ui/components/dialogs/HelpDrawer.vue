@@ -15,6 +15,7 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
   <DialogRoot v-model:open="open">
     <DialogPortal>
       <DialogOverlay class="overlay" />
+
       <DialogContent class="drawer" :aria-describedby="undefined">
         <header>
           <DialogTitle class="hand title">{{ t('help.title') }}</DialogTitle>
@@ -23,6 +24,7 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
 
         <section>
           <h3>{{ t('help.how') }}</h3>
+
           <ol class="steps">
             <li v-for="step in STEPS" :key="step">{{ t(`start.steps.${step}`) }}</li>
           </ol>
@@ -30,11 +32,13 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
 
         <section>
           <h3>{{ t('help.synergies') }}</h3>
+
           <dl>
             <template v-for="id in SYNERGY_IDS" :key="id">
               <dt>
                 {{ text.synergyName(id) }} <span>{{ text.synergyNeed(id) }}</span>
               </dt>
+
               <dd>{{ text.synergyEffect(id) }}</dd>
             </template>
           </dl>
@@ -42,6 +46,7 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
 
         <section>
           <h3>{{ t('help.roles') }}</h3>
+
           <dl>
             <template v-for="role in ROLE_IDS" :key="role">
               <dt>{{ text.roleName(role) }}</dt>
@@ -52,9 +57,11 @@ const STEPS = ['shop', 'lanes', 'fight', 'grow'] as const
 
         <section>
           <h3>{{ t('help.items') }}</h3>
+
           <ul class="item-list">
             <li v-for="id in ITEM_IDS" :key="id">
               <ItemIcon :item-id="id" :size="26" />
+
               <span>
                 <b>{{ text.itemName(id) }}</b> ·
                 <span class="cost"><span class="coin" /> {{ ITEMS[id].cost }}</span>

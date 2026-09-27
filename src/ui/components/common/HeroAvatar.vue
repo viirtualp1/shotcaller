@@ -13,7 +13,9 @@ const props = withDefaults(
     size: 32,
   },
 )
+
 const text = useGameText()
+
 const style = computed(() => ({
   '--hero': cssColor(HEROES[props.heroId].color),
   '--size': `${props.size}px`,

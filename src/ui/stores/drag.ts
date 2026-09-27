@@ -21,15 +21,36 @@ const LANE_IDS = new Set<string>(['top', 'mid', 'bot'])
 /** Parses `data-drop` attributes: "bench", "sell", "hero:<uid>" or "lane:<id>". */
 function parseDropAttribute(value: string): DropTarget | null {
   const [kind, id] = value.split(':')
-  if (kind === 'bench') return { kind: 'bench' }
-  if (kind === 'sell') return { kind: 'sell' }
-  if (kind === 'hero' && id) return { kind: 'hero', uid: id }
-  if (kind === 'lane' && id && LANE_IDS.has(id)) return { kind: 'lane', lane: id as LaneId }
+  if (kind === 'bench') {
+    return { kind: 'bench' }
+  }
+
+  if (kind === 'sell') {
+    return { kind: 'sell' }
+  }
+
+  if (kind === 'hero' && id) {
+    return {
+      kind: 'hero',
+      uid: id,
+    }
+  }
+
+  if (kind === 'lane' && id && LANE_IDS.has(id)) {
+    return {
+      kind: 'lane',
+      lane: id as LaneId,
+    }
+  }
+
   return null
 }
 
-function accepts(payload: DragPayload, target: DropTarget): boolean {
-  if (payload.kind === 'hero') return target.kind !== 'hero'
+function accepts(payload: DragPayload, target: DropTarget) {
+  if (payload.kind === 'hero') {
+    return target.kind !== 'hero'
+  }
+
   return target.kind === 'hero' || target.kind === 'sell'
 }
 
@@ -43,20 +64,40 @@ export const useDragStore = defineStore('drag', () => {
   const payload = shallowRef<DragPayload | null>(null)
   const target = shallowRef<DropTarget | null>(null)
   const active = ref(false)
-  const pointer = reactive({ x: 0, y: 0 })
-  let origin = { x: 0, y: 0 }
+
+  const pointer = reactive({
+    x: 0,
+    y: 0,
+  })
+
+  let origin = {
+    x: 0,
+    y: 0,
+  }
+
   let stops: (() => void)[] = []
 
-  function press(next: DragPayload, clientX: number, clientY: number): void {
+  function press(next: DragPayload, clientX: number, clientY: number) {
     end()
+
     if (!match.isPlanning) {
-      if (next.kind === 'hero') match.select(next.uid)
+      if (next.kind === 'hero') {
+        match.select(next.uid)
+      }
+
       return
     }
+
     payload.value = next
-    origin = { x: clientX, y: clientY }
+
+    origin = {
+      x: clientX,
+      y: clientY,
+    }
+
     pointer.x = clientX
     pointer.y = clientY
+
     stops = [
       useEventListener(window, 'pointermove', onMove),
       useEventListener(window, 'pointerup', onUp),
@@ -64,10 +105,14 @@ export const useDragStore = defineStore('drag', () => {
     ]
   }
 
-  function onMove(e: PointerEvent): void {
+  function onMove(e: PointerEvent) {
     pointer.x = e.clientX
     pointer.y = e.clientY
-    if (!active.value && Math.hypot(e.clientX - origin.x, e.clientY - origin.y) < DRAG_THRESHOLD) return
+
+    if (!active.value && Math.hypot(e.clientX - origin.x, e.clientY - origin.y) < DRAG_THRESHOLD) {
+      return
+    }
+
     active.value = true
     target.value = resolve(e.clientX, e.clientY)
     const current = payload.value
@@ -75,17 +120,24 @@ export const useDragStore = defineStore('drag', () => {
     board.renderer?.setDrag(current?.kind === 'hero' ? current.uid : null, true, lane)
   }
 
-  function onUp(): void {
+  function onUp() {
     const current = payload.value
     if (current) {
-      if (active.value) drop(current, target.value)
-      else click(current)
+      if (active.value) {
+        drop(current, target.value)
+      } else {
+        click(current)
+      }
     }
+
     end()
   }
 
-  function end(): void {
-    for (const stop of stops) stop()
+  function end() {
+    for (const stop of stops) {
+      stop()
+    }
+
     stops = []
     payload.value = null
     target.value = null
@@ -95,38 +147,81 @@ export const useDragStore = defineStore('drag', () => {
 
   function resolve(x: number, y: number): DropTarget | null {
     const current = payload.value
-    if (!current) return null
+    if (!current) {
+      return null
+    }
+
     const element = document
       .elementsFromPoint(x, y)
       .find((el): el is HTMLElement => el instanceof HTMLElement && el.dataset.drop !== undefined)
+
     const fromDom = element ? parseDropAttribute(element.dataset.drop ?? '') : null
-    if (fromDom) return accepts(current, fromDom) ? fromDom : null
+    if (fromDom) {
+      return accepts(current, fromDom) ? fromDom : null
+    }
+
     const renderer = board.renderer
-    if (!renderer) return null
+    if (!renderer) {
+      return null
+    }
+
     if (current.kind === 'item') {
       const uid = renderer.tokenAtClient(x, y)
-      return uid ? { kind: 'hero', uid } : null
+      return uid
+        ? {
+            kind: 'hero',
+            uid,
+          }
+        : null
     }
+
     const lane = renderer.laneAtClient(x, y)
-    return lane ? { kind: 'lane', lane } : null
+    return lane
+      ? {
+          kind: 'lane',
+          lane,
+        }
+      : null
   }
 
-  function drop(current: DragPayload, where: DropTarget | null): void {
-    if (!where) return
-    if (current.kind === 'hero') {
-      if (where.kind === 'lane') match.move(current.uid, where.lane)
-      else if (where.kind === 'bench') match.move(current.uid, 'bench')
-      else if (where.kind === 'sell') match.sell(current.uid)
+  function drop(current: DragPayload, where: DropTarget | null) {
+    if (!where) {
       return
     }
-    if (where.kind === 'hero') match.equip(current.index, where.uid)
-    else if (where.kind === 'sell') match.sellItem(current.index)
+
+    if (current.kind === 'hero') {
+      if (where.kind === 'lane') {
+        match.move(current.uid, where.lane)
+      } else if (where.kind === 'bench') {
+        match.move(current.uid, 'bench')
+      } else if (where.kind === 'sell') {
+        match.sell(current.uid)
+      }
+
+      return
+    }
+
+    if (where.kind === 'hero') {
+      match.equip(current.index, where.uid)
+    } else if (where.kind === 'sell') {
+      match.sellItem(current.index)
+    }
   }
 
-  function click(current: DragPayload): void {
-    if (current.kind === 'hero') match.select(current.uid)
-    else match.selectItem(current.index)
+  function click(current: DragPayload) {
+    if (current.kind === 'hero') {
+      match.select(current.uid)
+    } else {
+      match.selectItem(current.index)
+    }
   }
 
-  return { payload, target, active, pointer, press, end }
+  return {
+    payload,
+    target,
+    active,
+    pointer,
+    press,
+    end,
+  }
 })

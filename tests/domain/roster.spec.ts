@@ -5,7 +5,8 @@ import { promoteDuplicates, wouldPromote } from '@/domain/roster/promotion'
 import { Roster, type OwnedHero } from '@/domain/roster/Roster'
 
 const ids = sequentialIds('hero')
-const hero = (heroId: HeroId, stars: OwnedHero['stars'] = 1): OwnedHero => ({
+
+const hero = (heroId: HeroId, stars: OwnedHero['stars'] = 1) => ({
   uid: ids(),
   heroId,
   stars,
@@ -15,12 +16,17 @@ const hero = (heroId: HeroId, stars: OwnedHero['stars'] = 1): OwnedHero => ({
 describe('Roster', () => {
   it('limits the board to the coach capacity', () => {
     const roster = new Roster(8)
+
     const [a, b, c] = [hero('archer'), hero('giant'), hero('sapper')]
+
     ;[a, b, c].forEach((h) => roster.add(h))
     expect(roster.move(a.uid, 'mid', 2).isOk()).toBe(true)
     expect(roster.move(b.uid, 'top', 2).isOk()).toBe(true)
     const blocked = roster.move(c.uid, 'bot', 2)
-    expect(blocked._unsafeUnwrapErr()).toEqual({ code: 'boardFull', capacity: 2 })
+    expect(blocked._unsafeUnwrapErr()).toEqual({
+      code: 'boardFull',
+      capacity: 2,
+    })
   })
 
   it('allows moving between lanes when the board is full', () => {
@@ -63,8 +69,13 @@ describe('promotion', () => {
 
   it('chains promotions up to three stars', () => {
     const roster = new Roster(12)
-    for (let i = 0; i < 2; i++) roster.add(hero('pyromancer', 2))
-    for (let i = 0; i < 3; i++) roster.add(hero('pyromancer'))
+    for (let i = 0; i < 2; i++) {
+      roster.add(hero('pyromancer', 2))
+    }
+
+    for (let i = 0; i < 3; i++) {
+      roster.add(hero('pyromancer'))
+    }
 
     promoteDuplicates(roster)
 
@@ -73,10 +84,29 @@ describe('promotion', () => {
 
   it('moves items from consumed copies onto the promoted hero and frees the overflow', () => {
     const roster = new Roster(8)
-    const keeper: OwnedHero = { uid: 'k', heroId: 'archer', stars: 1, items: ['broadsword'] }
+
+    const keeper: OwnedHero = {
+      uid: 'k',
+      heroId: 'archer',
+      stars: 1,
+      items: ['broadsword'],
+    }
+
     roster.add(keeper)
-    roster.add({ uid: 'a', heroId: 'archer', stars: 1, items: ['gloves', 'boots'] })
-    roster.add({ uid: 'b', heroId: 'archer', stars: 1, items: ['staff'] })
+
+    roster.add({
+      uid: 'a',
+      heroId: 'archer',
+      stars: 1,
+      items: ['gloves', 'boots'],
+    })
+
+    roster.add({
+      uid: 'b',
+      heroId: 'archer',
+      stars: 1,
+      items: ['staff'],
+    })
 
     const { freedItems } = promoteDuplicates(roster)
 

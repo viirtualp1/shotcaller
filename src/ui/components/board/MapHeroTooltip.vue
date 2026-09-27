@@ -14,6 +14,7 @@ const { t } = useGameText()
 const floating = ref<HTMLElement | null>(null)
 
 let lastBounds = new DOMRect()
+
 const anchor = computed<VirtualElement>(() => {
   const { renderer, hit } = props
   return { getBoundingClientRect: () => (lastBounds = renderer.heroBounds(hit.uid) ?? lastBounds) }
@@ -28,9 +29,13 @@ const { floatingStyles } = useFloating(anchor, floating, {
 })
 
 const enemy = computed(() => props.hit.team === 1)
+
 const located = computed(() => {
   const view = store.view
-  if (!view) return null
+  if (!view) {
+    return null
+  }
+
   return locateHero(enemy.value ? view.opponent : view.human, props.hit.uid)
 })
 </script>

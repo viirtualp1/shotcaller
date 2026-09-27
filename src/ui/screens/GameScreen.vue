@@ -7,13 +7,15 @@ import BattlePanel from '../components/battle/BattlePanel.vue'
 import BoardView from '../components/board/BoardView.vue'
 import GameMenuDialog from '../components/dialogs/GameMenuDialog.vue'
 import HelpDrawer from '../components/dialogs/HelpDrawer.vue'
-import MatchResultDialog from '../components/dialogs/MatchResultDialog.vue'
+import MatchReportDialog from '../components/dialogs/report/MatchReportDialog.vue'
 import RoundSummaryDialog from '../components/dialogs/RoundSummaryDialog.vue'
 import DragLayer from '../components/hud/DragLayer.vue'
 import GameMenu from '../components/hud/GameMenu.vue'
 import NoticeToast from '../components/hud/NoticeToast.vue'
 import PhaseBanner from '../components/hud/PhaseBanner.vue'
 import MatchScoreboard from '../components/hud/MatchScoreboard.vue'
+import FightButton from '../components/hud/FightButton.vue'
+import TavernStrip from '../components/hud/TavernStrip.vue'
 import SynergyTracker from '../components/lanes/SynergyTracker.vue'
 import BenchGrid from '../components/roster/BenchGrid.vue'
 import HeroCard from '../components/roster/HeroCard.vue'
@@ -59,12 +61,20 @@ const insets = computed<Insets>(() =>
         right: viewportWidth.value - rightBox.left.value,
         bottom: 0,
       }
-    : { top: 0, left: 0, right: 0, bottom: 0 },
+    : {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
 )
 
 /** An invisible box over the map so the tutorial can spotlight it. */
 const mapAnchor = computed(() => {
-  if (!wide.value) return null
+  if (!wide.value) {
+    return null
+  }
+
   const { top: t0, left: l0, right: r0, bottom: b0 } = insets.value
   const width = viewportWidth.value - l0 - r0 - MAP_MARGIN * 2
   const height = viewportHeight.value - t0 - b0 - MAP_MARGIN * 2
@@ -78,23 +88,39 @@ const mapAnchor = computed(() => {
 })
 
 const placementHint = computed(() => {
-  if (!store.isPlanning) return null
-  if (store.selectedItem !== null) return t('battle.itemHint')
-  if (store.selectedUid !== null) return t('battle.placeHint')
+  if (!store.isPlanning) {
+    return null
+  }
+
+  if (store.selectedItem !== null) {
+    return t('battle.itemHint')
+  }
+
+  if (store.selectedUid !== null) {
+    return t('battle.placeHint')
+  }
+
   return null
 })
 
 useRafFn(({ delta }) => {
-  if (pause.paused) return
+  if (pause.paused) {
+    return
+  }
+
   store.tick(delta / 1000)
   timer.tick(delta / 1000)
 })
 
 /** Esc backs out of the current action first and opens the menu when there is nothing to cancel. */
-function escape(): void {
-  if (drag.payload) drag.end()
-  else if (store.hasSelection) store.clearSelection()
-  else menu.gameMenu = true
+function escape() {
+  if (drag.payload) {
+    drag.end()
+  } else if (store.hasSelection) {
+    store.clearSelection()
+  } else {
+    menu.gameMenu = true
+  }
 }
 
 useHotkeys({
@@ -105,13 +131,15 @@ useHotkeys({
   cancel: escape,
 })
 
-const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, {
-  immediate: false,
-})
+const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, { immediate: false })
+
 watch(
   () => menu.tutorialPending,
   (pending) => {
-    if (!pending) return
+    if (!pending) {
+      return
+    }
+
     menu.tutorialPending = false
     startTutorialSoon()
   },
@@ -124,12 +152,19 @@ watch(
     <div class="board-layer">
       <BoardView :key="settings.locale" :insets="insets" />
     </div>
+
     <div v-if="mapAnchor" class="map-anchor" :style="mapAnchor" data-tour="board" aria-hidden="true" />
 
     <header ref="top" class="hud-top">
       <GameMenu class="corner" />
-      <MatchScoreboard />
-      <span class="corner" />
+
+      <div class="top-center">
+        <MatchScoreboard />
+        <TavernStrip class="tavern" />
+      </div>
+
+      <FightButton v-if="wide" class="corner fight-corner" />
+      <span v-else class="corner" />
     </header>
 
     <aside ref="left" class="hud-left">
@@ -139,6 +174,8 @@ watch(
     </aside>
 
     <aside ref="right" class="hud-right">
+      <FightButton v-if="!wide" />
+
       <Transition name="swap" mode="out-in">
         <BattlePanel v-if="store.phase === 'battle'" key="battle" />
         <ShopPanel v-else key="shop" class="shop-fill" />
@@ -151,13 +188,14 @@ watch(
           <MousePointerClick :size="15" /> {{ placementHint }}
         </p>
       </Transition>
+
       <HeroCard />
     </div>
 
     <PhaseBanner />
     <DragLayer />
     <RoundSummaryDialog />
-    <MatchResultDialog />
+    <MatchReportDialog />
     <HelpDrawer v-model:open="menu.help" />
     <GameMenuDialog />
     <NoticeToast />
@@ -185,6 +223,19 @@ watch(
   align-items: flex-start;
   gap: 12px;
   padding: 0 var(--gutter);
+}
+
+.top-center {
+  position: relative;
+}
+
+.tavern {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  translate: -50% 0;
+  width: max-content;
+  min-width: 100%;
 }
 
 .hud-top .corner {
@@ -263,8 +314,17 @@ watch(
 
 .wide .hud-top .corner {
   display: flex;
+  flex: 1 1 0;
   min-width: 200px;
   padding-top: 12px;
+}
+
+.wide .hud-top .fight-corner {
+  justify-content: flex-end;
+}
+
+.wide .fight-corner :deep(.fight) {
+  width: 312px;
 }
 
 .wide .hud-left,

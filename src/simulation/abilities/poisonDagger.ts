@@ -11,7 +11,11 @@ export const poisonDagger: Ability = {
     const target =
       weakest(enemiesAround(ctx, caster, caster.position, P.radius, { heroesOnly: true })) ??
       nearest(caster.position, enemiesAround(ctx, caster, caster.position, P.radius))
-    if (!target) return false
+
+    if (!target) {
+      return false
+    }
+
     const power = caster.caster.power
     ctx.factory.projectile(
       {
@@ -22,10 +26,16 @@ export const poisonDagger: Ability = {
         damageType: 'physical',
         splash: 0,
         visual: 'dagger',
-        poison: { damage: P.poison * power, tick: P.tick, duration: P.duration, slow: P.slow },
+        poison: {
+          damage: P.poison * power,
+          tick: P.tick,
+          duration: P.duration,
+          slow: P.slow,
+        },
       },
       caster.color,
     )
+
     return true
   },
 }

@@ -11,19 +11,32 @@ export const hook: Ability = {
     const candidates = enemiesAround(ctx, caster, caster.position, P.radius, { heroesOnly: true }).filter(
       (u) => distance(caster.position, u.position) > P.minDistance,
     )
+
     const target = farthest(caster.position, candidates)
-    if (!target) return false
+    if (!target) {
+      return false
+    }
+
     const from = { ...target.position }
+
     const landing = offset(
       caster.position,
       direction(caster.position, target.position),
       caster.radius + target.radius + 2,
     )
+
     Object.assign(target.position, landing)
-    ctx.events.emit('hook', { from: { ...caster.position }, to: from, color: caster.color ?? 0xffffff })
+
+    ctx.events.emit('hook', {
+      from: { ...caster.position },
+      to: from,
+      color: caster.color ?? 0xffffff,
+    })
+
     ctx.combat.dealDamage(caster, target, P.damage * caster.caster.power, 'magical')
     stun(target, P.stun)
     caster.targeting.target = target
+
     return true
   },
 }

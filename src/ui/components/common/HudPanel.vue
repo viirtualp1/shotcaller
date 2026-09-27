@@ -9,6 +9,7 @@ defineProps<{ title?: string; meta?: string }>()
       <span v-if="meta" class="meta">{{ meta }}</span>
       <slot name="actions" />
     </header>
+
     <slot />
   </section>
 </template>

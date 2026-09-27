@@ -28,6 +28,7 @@ const tab = computed({
 const heroOffers = computed(() =>
   human.value.shop.filter((o): o is ShopOfferView & { heroId: HeroId } => o.heroId !== null),
 )
+
 const soldCount = computed(() => human.value.shop.length - heroOffers.value.length)
 </script>
 
@@ -40,6 +41,7 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
         <TabsTrigger value="heroes" class="tab" data-tour="shop-heroes">
           <Swords :size="14" /> {{ t('shop.heroes') }}
         </TabsTrigger>
+
         <TabsTrigger value="items" class="tab" data-tour="shop-items">
           <Wand2 :size="14" /> {{ t('shop.items') }}
         </TabsTrigger>
@@ -55,6 +57,7 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
             :disabled="locked"
             @buy="store.buy"
           />
+
           <div v-for="n in soldCount" :key="`sold-${n}`" class="sold" aria-hidden="true" />
         </div>
       </TabsContent>
@@ -72,18 +75,6 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
         </div>
       </TabsContent>
     </TabsRoot>
-
-    <div class="actions">
-      <button
-        type="button"
-        class="btn primary block fight"
-        :disabled="locked"
-        data-tour="fight"
-        @click="store.startBattle()"
-      >
-        {{ t('shop.fight') }}
-      </button>
-    </div>
 
     <Transition name="fade">
       <div v-if="selling" class="sell-zone" :class="{ hovered: sellHovered }">{{ t('shop.sellZone') }}</div>
@@ -154,21 +145,6 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
   border: 1px dashed var(--edge);
 }
 
-.actions {
-  display: flex;
-}
-
-.fight {
-  min-height: 48px;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-.fight:not(:disabled) {
-  animation: breathe 2.4s ease-in-out infinite;
-}
-
 .sell-zone {
   position: absolute;
   inset: 0;
@@ -189,11 +165,5 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 .sell-zone.hovered {
   border-color: var(--theirs);
   background: rgba(70, 20, 16, 0.92);
-}
-
-@keyframes breathe {
-  50% {
-    box-shadow: 0 0 22px rgba(244, 197, 91, 0.45);
-  }
 }
 </style>

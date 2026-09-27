@@ -7,33 +7,40 @@ export class CoachProgression {
     private currentXp = 0,
   ) {}
 
-  get level(): CoachLevel {
+  get level() {
     return this.currentLevel
   }
 
-  get xp(): number {
+  get xp() {
     return this.currentXp
   }
 
-  get xpToNext(): number {
+  get xpToNext() {
     return ROSTER.xpToNext[this.currentLevel]
   }
 
-  get isMaxLevel(): boolean {
+  get isMaxLevel() {
     return this.currentLevel >= ROSTER.maxLevel
   }
 
-  gain(xp: number): void {
-    if (this.isMaxLevel) return
+  gain(xp: number) {
+    if (this.isMaxLevel) {
+      return
+    }
+
     this.currentXp += xp
+
     while (!this.isMaxLevel && this.currentXp >= this.xpToNext) {
       this.currentXp -= this.xpToNext
       this.currentLevel = (this.currentLevel + 1) as CoachLevel
     }
-    if (this.isMaxLevel) this.currentXp = 0
+
+    if (this.isMaxLevel) {
+      this.currentXp = 0
+    }
   }
 
-  restore(level: CoachLevel, xp: number): void {
+  restore(level: CoachLevel, xp: number) {
     this.currentLevel = level
     this.currentXp = xp
   }

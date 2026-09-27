@@ -9,6 +9,7 @@ export const barrel: Ability = {
   id: 'barrel',
   cast(caster, ctx) {
     const current = caster.targeting.target
+
     const target =
       current && isAlive(current)
         ? current
@@ -18,13 +19,23 @@ export const barrel: Ability = {
               includeStructures: true,
             }),
           )
-    if (!target) return false
+
+    if (!target) {
+      return false
+    }
+
     const at = { ...target.position }
     ctx.combat.splash(caster, at, P.radius, P.damage * caster.caster.power, 'magical', {
       includeStructures: true,
       structureBonus: P.structureBonus,
     })
-    ctx.events.emit('burst', { at, radius: P.radius, color: 0xf4a64b })
+
+    ctx.events.emit('burst', {
+      at,
+      radius: P.radius,
+      color: 0xf4a64b,
+    })
+
     return true
   },
 }

@@ -12,6 +12,7 @@ const FORMATION: readonly (readonly [CreepVariant, number])[] = [
   ['melee', 10],
   ['ranged', -22],
 ]
+
 const SIEGE_OFFSET = -40
 
 export class WaveSpawnSystem implements System {
@@ -25,27 +26,47 @@ export class WaveSpawnSystem implements System {
         (sum, h) => sum + (ROLES[HEROES[h.heroId].role].laneCreepDamageBonus ?? 0),
         0,
       )
+
     this.creepDamageBonus = {
-      0: { top: bonusFor(0, 'top'), mid: bonusFor(0, 'mid'), bot: bonusFor(0, 'bot') },
-      1: { top: bonusFor(1, 'top'), mid: bonusFor(1, 'mid'), bot: bonusFor(1, 'bot') },
+      0: {
+        top: bonusFor(0, 'top'),
+        mid: bonusFor(0, 'mid'),
+        bot: bonusFor(0, 'bot'),
+      },
+      1: {
+        top: bonusFor(1, 'top'),
+        mid: bonusFor(1, 'mid'),
+        bot: bonusFor(1, 'bot'),
+      },
     }
   }
 
-  update(): void {
-    if (this.ctx.clock.elapsed < this.nextWaveAt) return
+  update() {
+    if (this.ctx.clock.elapsed < this.nextWaveAt) {
+      return
+    }
+
     this.nextWaveAt += BATTLE.waveInterval
-    for (const team of TEAM_IDS) for (const lane of LANE_IDS) this.spawnWave(team, lane)
+
+    for (const team of TEAM_IDS) {
+      for (const lane of LANE_IDS) {
+        this.spawnWave(team, lane)
+      }
+    }
+
     this.wave++
   }
 
-  private spawnWave(team: TeamId, lane: LaneId): void {
+  private spawnWave(team: TeamId, lane: LaneId) {
     const round = this.ctx.setup.round
     const mega = this.towerDown(opponentOf(team), lane)
     const strength = (1 + BATTLE.creepScalePerRound * (round - 1)) * (mega ? BATTLE.megaCreepMultiplier : 1)
     const path = this.ctx.map.path(team, lane)
     const spawnAlong = path.length * BATTLE.creepSpawnFraction
+
     const withSiege =
       round >= BATTLE.siegeFromRound && (round >= BATTLE.siegeEveryWaveFromRound || this.wave % 2 === 1)
+
     const formation = withSiege ? [...FORMATION, ['siege', SIEGE_OFFSET] as const] : FORMATION
     for (const [variant, offset] of formation) {
       this.ctx.factory.creep({
@@ -60,7 +81,7 @@ export class WaveSpawnSystem implements System {
     }
   }
 
-  private towerDown(team: TeamId, lane: LaneId): boolean {
+  private towerDown(team: TeamId, lane: LaneId) {
     return !this.ctx.queries.structures.entities.some(
       (s) => s.team === team && s.structure.lane === lane && isAlive(s),
     )

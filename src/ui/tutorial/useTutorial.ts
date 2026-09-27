@@ -1,5 +1,5 @@
 import { useLocalStorage } from '@vueuse/core'
-import { driver, type DriveStep, type Side } from 'driver.js'
+import { driver, type Side } from 'driver.js'
 import 'driver.js/dist/driver.css'
 import { useI18n } from 'vue-i18n'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
@@ -36,36 +36,82 @@ export function useTutorial() {
 
   const stops: readonly TourStop[] = [
     { key: 'welcome' },
-    { key: 'board', target: '[data-tour="board"]', side: 'right' },
-    { key: 'shop', target: '[data-tour="shop"]', side: 'left', before: () => (store.shopTab = 'heroes') },
-    { key: 'economy', target: '[data-tour="economy"]', side: 'left' },
-    { key: 'bench', target: '[data-tour="bench"]', side: 'right' },
-    { key: 'place', target: '[data-tour="board"]', side: 'right' },
-    { key: 'tracker', target: '[data-tour="tracker"]', side: 'right' },
-    { key: 'items', target: '[data-tour="shop-items"]', side: 'left' },
-    { key: 'scoreboard', target: '[data-tour="scoreboard"]', side: 'bottom' },
-    { key: 'fight', target: '[data-tour="fight"]', side: 'left' },
+    {
+      key: 'board',
+      target: '[data-tour="board"]',
+      side: 'right',
+    },
+    {
+      key: 'shop',
+      target: '[data-tour="shop"]',
+      side: 'left',
+      before: () => (store.shopTab = 'heroes'),
+    },
+    {
+      key: 'economy',
+      target: '[data-tour="economy"]',
+      side: 'left',
+    },
+    {
+      key: 'bench',
+      target: '[data-tour="bench"]',
+      side: 'right',
+    },
+    {
+      key: 'place',
+      target: '[data-tour="board"]',
+      side: 'right',
+    },
+    {
+      key: 'tracker',
+      target: '[data-tour="tracker"]',
+      side: 'right',
+    },
+    {
+      key: 'items',
+      target: '[data-tour="shop-items"]',
+      side: 'left',
+    },
+    {
+      key: 'scoreboard',
+      target: '[data-tour="scoreboard"]',
+      side: 'bottom',
+    },
+    {
+      key: 'fight',
+      target: '[data-tour="fight"]',
+      side: 'bottom',
+    },
   ]
 
-  function toStep(stop: TourStop): DriveStep {
+  function toStep(stop: TourStop) {
     return {
       ...(stop.target ? { element: stop.target } : {}),
       ...(stop.before ? { onHighlightStarted: stop.before } : {}),
       popover: {
         title: t(`tutorial.${stop.key}.title`),
         description: t(`tutorial.${stop.key}.text`),
-        ...(stop.side ? { side: stop.side, align: 'start' as const } : {}),
+        ...(stop.side
+          ? {
+              side: stop.side,
+              align: 'start' as const,
+            }
+          : {}),
       },
     }
   }
 
-  function start(): void {
+  function start() {
     store.clearSelection()
     pause.set('tutorial', true)
+
     const tour = driver({
       steps: stops.map(toStep),
       showProgress: true,
-      progressText: t('tutorial.progress', { current: '{{current}}', total: '{{total}}' }),
+      progressText: t('tutorial.progress', {
+        current: '{{current}}',
+        total: '{{total}}',
+      }),
       nextBtnText: t('tutorial.next'),
       prevBtnText: t('tutorial.prev'),
       doneBtnText: t('tutorial.done'),
@@ -80,8 +126,12 @@ export function useTutorial() {
         pause.set('tutorial', false)
       },
     })
+
     tour.drive()
   }
 
-  return { start, completed }
+  return {
+    start,
+    completed,
+  }
 }

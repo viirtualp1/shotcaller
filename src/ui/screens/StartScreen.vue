@@ -18,6 +18,7 @@ const { t } = useGameText()
     <section class="copy">
       <h1 class="hand">{{ t('app.title') }}</h1>
       <p class="lede">{{ t('start.lede') }}</p>
+
       <nav class="menu">
         <button
           v-if="store.savedRound"
@@ -27,6 +28,7 @@ const { t } = useGameText()
         >
           <Play :size="18" /> {{ t('start.continue', { round: store.savedRound }) }}
         </button>
+
         <button
           type="button"
           class="btn block big"
@@ -35,11 +37,13 @@ const { t } = useGameText()
         >
           <RotateCcw :size="18" /> {{ t('start.newMatch') }}
         </button>
+
         <button type="button" class="btn ghost block big" @click="menu.settings = true">
           <Settings :size="18" /> {{ t('hud.settings') }}
         </button>
       </nav>
     </section>
+
     <section class="preview">
       <BoardFrame>
         <BoardPreview :key="settings.locale" />

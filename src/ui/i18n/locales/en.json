@@ -143,14 +143,17 @@
     "saved": "The game saves automatically",
     "towers": "Towers",
     "throne": "Throne",
-    "settings": "Settings"
+    "settings": "Settings",
+    "respawnIn": "{hero} respawns in {s} s"
   },
   "tracker": {
-    "title": "Synergies",
+    "title": "Lanes",
     "emptyLane": "Empty: the enemy walks in unopposed",
     "add": "+ {who}",
     "anyHero": "any hero",
-    "or": " or "
+    "or": " or ",
+    "vs": "VS",
+    "recruit": "Click to send in {hero}"
   },
   "bench": {
     "title": "Bench",
@@ -194,9 +197,6 @@
     "skip": "Skip",
     "timeLeft": "{s} s",
     "damage": "Hero damage",
-    "feed": "Events",
-    "towerFell": "Tower down: {lane}",
-    "throneFell": "Throne destroyed",
     "placeHint": "Click a lane to place the hero",
     "itemHint": "Click a hero to give the item"
   },
@@ -238,9 +238,6 @@
     "win": "Victory",
     "loss": "Defeat",
     "draw": "Draw",
-    "throneWin": "The enemy throne fell in round {round}.",
-    "throneLoss": "Our throne fell in round {round}.",
-    "roundLimit": "{max} rounds have passed. The side with sturdier structures wins.",
     "again": "New match",
     "menu": "Main menu"
   },
@@ -307,8 +304,8 @@
       "text": "Drag a hero onto a lane, or click the hero and then the lane. Heroes on the same lane give each other synergies."
     },
     "tracker": {
-      "title": "Synergies",
-      "text": "Shows which synergies are active on every lane and who is missing for the next one. An empty lane is a gift to the enemy."
+      "title": "Lanes",
+      "text": "Each lane shows your heroes against the enemy’s and which synergies are active on both sides. Dashed badges show who you need for the next synergy. An empty lane is a gift to the enemy."
     },
     "items": {
       "title": "Items",
@@ -345,5 +342,67 @@
     "tutorial": "Show the tutorial",
     "start": "Start",
     "cancel": "Cancel"
+  },
+  "report": {
+    "title": "Match statistics",
+    "ours": "Our team",
+    "theirs": "Opponent",
+    "mvp": "Best hero",
+    "mvpDamage": "{damage} damage",
+    "noHeroes": "No heroes",
+    "draws": "Draws: {n}",
+    "tabs": {
+      "heroes": "Heroes",
+      "combat": "Combat",
+      "economy": "Economy"
+    },
+    "columns": {
+      "hero": "Hero",
+      "rounds": "Rounds",
+      "kills": "K",
+      "deaths": "D",
+      "lastHits": "Creeps",
+      "damageDealt": "Damage",
+      "structureDamage": "Buildings",
+      "damageReceived": "Taken",
+      "healing": "Healing"
+    },
+    "hints": {
+      "rounds": "Rounds this hero spent on the map",
+      "kills": "Hero kills",
+      "deaths": "Deaths",
+      "lastHits": "Creeps finished off",
+      "damageDealt": "All damage dealt",
+      "structureDamage": "Damage to towers and the throne",
+      "damageReceived": "Damage taken",
+      "healing": "Health restored to allies"
+    },
+    "combat": {
+      "roundsWon": "Rounds won",
+      "heroKills": "Hero kills",
+      "creepKills": "Creeps killed",
+      "heroDamage": "Hero damage",
+      "damageReceived": "Damage taken",
+      "healing": "Healing",
+      "towersDestroyed": "Towers destroyed",
+      "slotDamage": "Building damage: {slot}"
+    },
+    "economy": {
+      "goldEarned": "Gold earned",
+      "base": "Base income",
+      "interest": "Interest",
+      "farm": "Farm",
+      "winBonus": "Win bonuses",
+      "goldFromSales": "Gold from sales",
+      "goldSpent": "Gold spent",
+      "heroesBought": "Heroes bought",
+      "heroesSold": "Heroes sold",
+      "promotions": "Star upgrades",
+      "itemsBought": "Items bought",
+      "itemsSold": "Items sold",
+      "rerolls": "Shop rerolls",
+      "xpBought": "XP purchases",
+      "level": "Coach level"
+    }
   }
 }

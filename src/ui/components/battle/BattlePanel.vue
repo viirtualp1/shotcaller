@@ -6,16 +6,18 @@ import { useGameText } from '../../composables/useGameText'
 import { useMatchStore, type BattleSpeed } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
 import DamageMeter from './DamageMeter.vue'
-import KillFeed from './KillFeed.vue'
 
 const SPEEDS: readonly BattleSpeed[] = [1, 2, 4]
 
 const store = useMatchStore()
 const { t } = useGameText()
+
 const speedModel = computed({
   get: () => String(store.speed),
   set: (value: string | undefined) => {
-    if (value) store.speed = Number(value) as BattleSpeed
+    if (value) {
+      store.speed = Number(value) as BattleSpeed
+    }
   },
 })
 </script>
@@ -25,11 +27,13 @@ const speedModel = computed({
     <HudPanel>
       <div class="controls">
         <FastForward :size="16" class="icon" />
+
         <ToggleGroupRoot v-model="speedModel" type="single" class="speeds" :aria-label="t('battle.speed')">
           <ToggleGroupItem v-for="s in SPEEDS" :key="s" :value="String(s)" class="speed"
             >×{{ s }}</ToggleGroupItem
           >
         </ToggleGroupRoot>
+
         <button
           type="button"
           class="btn skip"
@@ -40,11 +44,9 @@ const speedModel = computed({
         </button>
       </div>
     </HudPanel>
+
     <HudPanel :title="t('battle.damage')">
       <DamageMeter />
-    </HudPanel>
-    <HudPanel v-if="store.feed.length" :title="t('battle.feed')">
-      <KillFeed />
     </HudPanel>
   </div>
 </template>

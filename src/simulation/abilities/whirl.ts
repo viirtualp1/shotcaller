@@ -7,7 +7,10 @@ const P = ABILITY_PARAMS.whirl
 export const whirl: Ability = {
   id: 'whirl',
   cast(caster, ctx) {
-    if (caster.spin || !enemiesAround(ctx, caster, caster.position, P.triggerRadius).length) return false
+    if (caster.spin || !enemiesAround(ctx, caster, caster.position, P.triggerRadius).length) {
+      return false
+    }
+
     ctx.world.addComponent(caster, 'spin', {
       remaining: P.duration,
       tickTimer: 0,
@@ -15,6 +18,7 @@ export const whirl: Ability = {
       damage: P.damage * caster.caster.power,
       radius: P.radius,
     })
+
     return true
   },
 }

@@ -16,14 +16,17 @@ export const PALETTE = {
   treeFill: 0x3c6446,
 } as const
 
-export const TEAM_COLORS: Readonly<Record<TeamId, number>> = { 0: 0x6cc4ff, 1: 0xff7060 }
+export const TEAM_COLORS: Readonly<Record<TeamId, number>> = {
+  0: 0x6cc4ff,
+  1: 0xff7060,
+}
 
 export const FONTS = {
   hand: 'Caveat, "Segoe Print", "Comic Sans MS", cursive',
   ui: 'Onest, "Segoe UI", system-ui, sans-serif',
 } as const
 
-export const cssColor = (value: number, alpha = 1): string => {
+export const cssColor = (value: number, alpha = 1) => {
   const r = (value >> 16) & 0xff
   const g = (value >> 8) & 0xff
   const b = value & 0xff

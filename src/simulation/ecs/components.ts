@@ -64,6 +64,10 @@ export interface HeroData {
   kills: number
   deaths: number
   damageDealt: number
+  damageReceived: number
+  structureDamage: number
+  healing: number
+  lastHits: number
 }
 
 export interface Roamer {
@@ -182,7 +186,7 @@ export interface Entity {
 export type Unit = With<Entity, 'kind' | 'health' | 'radius' | 'armor' | 'status'>
 export type HeroUnit = With<Unit, 'hero' | 'mana' | 'caster' | 'attack' | 'targeting' | 'speed'>
 
-export const isAlive = (e: Entity): boolean => !e.dead && (e.health?.current ?? 1) > 0
+export const isAlive = (e: Entity) => !e.dead && (e.health?.current ?? 1) > 0
 export const isHero = (e: Entity): e is HeroUnit => e.kind === 'hero'
-export const isStructure = (e: Entity): boolean => e.kind === 'structure'
-export const isDisabled = (e: Unit): boolean => e.status.stun > 0
+export const isStructure = (e: Entity) => e.kind === 'structure'
+export const isDisabled = (e: Unit) => e.status.stun > 0

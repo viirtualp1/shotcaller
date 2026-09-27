@@ -29,27 +29,34 @@ const REDUCTION_PARAMS = new Set(['falloff'])
 const percentGain = (format: Format, multiplier: number) => format(Math.round((multiplier - 1) * 100))
 const percentCut = (format: Format, multiplier: number) => format(Math.round((1 - multiplier) * 100))
 
-function abilityParams(format: Format, id: AbilityId, power: number): Params {
+function abilityParams(format: Format, id: AbilityId, power: number) {
   const params: Params = {}
   for (const [key, value] of Object.entries(ABILITY_PARAMS[id])) {
-    if (SCALED_PARAMS.has(key)) params[key] = format(Math.round(value * power))
-    else if (PERCENT_PARAMS.has(key)) params[key] = format(Math.round(value * 100))
-    else if (REDUCTION_PARAMS.has(key)) params[key] = percentCut(format, value)
-    else params[key] = format(value)
+    if (SCALED_PARAMS.has(key)) {
+      params[key] = format(Math.round(value * power))
+    } else if (PERCENT_PARAMS.has(key)) {
+      params[key] = format(Math.round(value * 100))
+    } else if (REDUCTION_PARAMS.has(key)) {
+      params[key] = percentCut(format, value)
+    } else {
+      params[key] = format(value)
+    }
   }
+
   return params
 }
 
-function modifierParams(format: Format, modifiers: Partial<StatModifiers>): Params {
+function modifierParams(format: Format, modifiers: Partial<StatModifiers>) {
   const params: Params = {}
   for (const [key, value] of Object.entries(modifiers) as [keyof StatModifiers, number][]) {
     params[key] = key === 'damageTaken' ? percentCut(format, value) : percentGain(format, value)
     params[`${key}Mult`] = format(value)
   }
+
   return params
 }
 
-function roleParams(format: Format, role: RoleId): Params {
+function roleParams(format: Format, role: RoleId) {
   const definition = ROLES[role]
   return {
     perHit: format((definition.farm?.perLastHit ?? 0) * 100),
@@ -65,14 +72,17 @@ function roleParams(format: Format, role: RoleId): Params {
   }
 }
 
-function itemParams(format: Format, id: ItemId): Params {
+function itemParams(format: Format, id: ItemId) {
   const { modifiers, effects } = ITEMS[id]
   const params = modifierParams(format, modifiers)
-  for (const [key, value] of Object.entries(effects)) params[key] = format(Math.round(value * 100))
+  for (const [key, value] of Object.entries(effects)) {
+    params[key] = format(Math.round(value * 100))
+  }
+
   return params
 }
 
-export const starsLabel = (stars: StarLevel): string => '★'.repeat(stars)
+export const starsLabel = (stars: StarLevel) => '★'.repeat(stars)
 
 /** Localised game text. Hero, ability and item names are proper names and come from content untranslated. */
 export function useGameText() {

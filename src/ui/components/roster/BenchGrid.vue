@@ -18,13 +18,27 @@ const empties = computed(() => Math.max(0, human.value.benchSize - human.value.b
 const dropping = computed(() => drag.active && drag.payload?.kind === 'hero')
 const hovered = computed(() => drag.target?.kind === 'bench')
 
-function press(hero: HeroCardView, e: PointerEvent): void {
-  if (e.button !== 0) return
-  drag.press({ kind: 'hero', uid: hero.uid, heroId: hero.heroId, stars: hero.stars }, e.clientX, e.clientY)
+function press(hero: HeroCardView, e: PointerEvent) {
+  if (e.button !== 0) {
+    return
+  }
+
+  drag.press(
+    {
+      kind: 'hero',
+      uid: hero.uid,
+      heroId: hero.heroId,
+      stars: hero.stars,
+    },
+    e.clientX,
+    e.clientY,
+  )
 }
 
-function onPanelClick(): void {
-  if (store.selected && store.selected.slot !== 'bench') store.placeSelected('bench')
+function onPanelClick() {
+  if (store.selected && store.selected.slot !== 'bench') {
+    store.placeSelected('bench')
+  }
 }
 </script>
 
@@ -48,16 +62,20 @@ function onPanelClick(): void {
           @keydown.enter="store.select(hero.uid)"
         >
           <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" :size="34" />
+
           <span v-if="hero.items.length" class="pips">
             <i v-for="(item, i) in hero.items" :key="`${item}-${i}`" />
           </span>
         </button>
+
         <template #content>
           <HeroDetails :hero-id="hero.heroId" :stars="hero.stars" :items="hero.items" />
         </template>
       </InfoTooltip>
+
       <span v-for="n in empties" :key="`empty-${n}`" class="slot empty" aria-hidden="true" />
     </div>
+
     <button
       type="button"
       class="btn block auto"

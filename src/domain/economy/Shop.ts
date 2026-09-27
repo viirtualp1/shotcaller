@@ -16,51 +16,68 @@ export class Shop {
     private readonly size: number = ROSTER.shopSize,
   ) {}
 
-  get slots(): readonly ShopSlot[] {
+  get slots() {
     return this.offers
   }
 
-  offerAt(slot: number): ShopSlot {
+  offerAt(slot: number) {
     return this.offers[slot] ?? null
   }
 
-  restock(level: CoachLevel): void {
-    for (const id of this.offers) if (id) this.pool.release(id)
+  restock(level: CoachLevel) {
+    for (const id of this.offers) {
+      if (id) {
+        this.pool.release(id)
+      }
+    }
+
     this.offers = Array.from({ length: this.size }, () => this.drawOffer(level))
   }
 
-  claim(slot: number): HeroId | null {
+  claim(slot: number) {
     const id = this.offerAt(slot)
-    if (id) this.offers[slot] = null
+    if (id) {
+      this.offers[slot] = null
+    }
+
     return id
   }
 
-  restore(offers: readonly ShopSlot[]): void {
+  restore(offers: readonly ShopSlot[]) {
     this.offers = [...offers]
   }
 
-  private drawOffer(level: CoachLevel): ShopSlot {
+  private drawOffer(level: CoachLevel) {
     const rolled = this.rollTier(level)
+
     const fallbackOrder = [
       rolled,
       ...TIERS.filter((t) => t < rolled).reverse(),
       ...TIERS.filter((t) => t > rolled),
     ]
+
     for (const tier of fallbackOrder) {
       const id = this.pool.draw(tier, this.rng)
-      if (id) return id
+      if (id) {
+        return id
+      }
     }
+
     return null
   }
 
-  private rollTier(level: CoachLevel): Tier {
+  private rollTier(level: CoachLevel) {
     let roll = this.rng.next()
     const odds = SHOP_ODDS[level]
     for (const tier of TIERS) {
       const chance = odds[tier - 1] ?? 0
-      if (roll < chance) return tier
+      if (roll < chance) {
+        return tier
+      }
+
       roll -= chance
     }
+
     return 1
   }
 }

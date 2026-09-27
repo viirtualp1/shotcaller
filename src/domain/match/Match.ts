@@ -15,6 +15,7 @@ import { computeIncome, type IncomeBreakdown } from '../economy/income'
 import type { DomainError } from '../errors'
 import { Player, type PlayerState, type RoundVerdict } from '../player/Player'
 import { judgeMatch, judgeRound, totalStructureDamage, type MatchResult } from './judge'
+import { addRound, emptyMatchStats, type MatchStats } from './matchStats'
 import { freshStructures } from './structures'
 
 export type MatchPhase = 'planning' | 'battle' | 'summary' | 'finished'
@@ -48,6 +49,7 @@ export interface MatchState {
   readonly summary: RoundSummary | null
   readonly result: MatchResult | null
   readonly battle: BattleSetup | null
+  readonly stats: MatchStats
 }
 
 const verdictFor = (team: TeamId, winner: TeamId | null): RoundVerdict =>
@@ -67,89 +69,128 @@ export class Match {
   private summary: RoundSummary | null = null
   private matchResult: MatchResult | null = null
   private battle: BattleSetup | null = null
+  private matchStats: MatchStats = emptyMatchStats()
 
   constructor(
     private readonly deps: MatchDependencies,
     state?: MatchState,
   ) {
-    const playerDeps = { pool: this.pool, rng: deps.rng, ids: deps.ids }
+    const playerDeps = {
+      pool: this.pool,
+      rng: deps.rng,
+      ids: deps.ids,
+    }
+
     this.players = [new Player(0, playerDeps), new Player(1, playerDeps)]
+
     if (state) {
       this.restore(state)
+
       return
     }
-    for (const player of this.players) player.shop.restock(player.level)
+
+    for (const player of this.players) {
+      player.shop.restock(player.level)
+    }
+
     this.planOpponent()
   }
 
-  get human(): Player {
+  get human() {
     return this.players[0]
   }
 
-  get opponent(): Player {
+  get opponent() {
     return this.players[1]
   }
 
-  get round(): number {
+  get round() {
     return this.currentRound
   }
 
-  get phase(): MatchPhase {
+  get phase() {
     return this.currentPhase
   }
 
-  get structures(): PerTeam<StructureState> {
+  get structures() {
     return this.structureState
   }
 
-  get lastSummary(): RoundSummary | null {
+  get lastSummary() {
     return this.summary
   }
 
-  get result(): MatchResult | null {
+  get result() {
     return this.matchResult
   }
 
-  get pendingBattle(): BattleSetup | null {
+  get pendingBattle() {
     return this.battle
+  }
+
+  get stats() {
+    return this.matchStats
   }
 
   /** `allowEmptyBoard` is for a planning timer running out: the round starts even with nobody placed. */
   startBattle({ allowEmptyBoard = false } = {}): Result<BattleSetup, DomainError> {
-    if (this.currentPhase !== 'planning') return err({ code: 'wrongPhase' })
-    if (this.human.roster.boardCount === 0 && !allowEmptyBoard) return err({ code: 'emptyBoard' })
+    if (this.currentPhase !== 'planning') {
+      return err({ code: 'wrongPhase' })
+    }
+
+    if (this.human.roster.boardCount === 0 && !allowEmptyBoard) {
+      return err({ code: 'emptyBoard' })
+    }
+
     this.currentPhase = 'battle'
+
     this.battle = {
       round: this.currentRound,
       seed: this.deps.rng.next().toString(36).slice(2),
       lineups: [this.human.roster.lineup(), this.opponent.roster.lineup()],
       structures: copyStructures(this.structureState),
     }
+
     return ok(this.battle)
   }
 
   finishBattle(outcome: BattleOutcome): Result<RoundSummary, DomainError> {
-    if (this.currentPhase !== 'battle') return err({ code: 'wrongPhase' })
+    if (this.currentPhase !== 'battle') {
+      return err({ code: 'wrongPhase' })
+    }
+
     const winner = judgeRound(outcome)
+
     const income = TEAM_IDS.map((team) =>
       computeIncome(this.players[team].wallet.gold, outcome.stats[team], winner === team),
     ) as [IncomeBreakdown, IncomeBreakdown]
+
     TEAM_IDS.forEach((team) => this.players[team].recordRound(verdictFor(team, winner), income[team].total))
 
     this.battle = null
     this.structureState = copyStructures(outcome.structures)
     this.summary = this.summarize(outcome, winner, income)
+    this.matchStats = addRound(this.matchStats, outcome, winner, income)
     this.matchResult = judgeMatch(this.structureState, this.currentRound)
     this.currentPhase = this.matchResult ? 'finished' : 'summary'
+
     return ok(this.summary)
   }
 
   nextRound(): Result<void, DomainError> {
-    if (this.currentPhase !== 'summary') return err({ code: 'wrongPhase' })
+    if (this.currentPhase !== 'summary') {
+      return err({ code: 'wrongPhase' })
+    }
+
     this.currentRound++
-    for (const player of this.players) player.prepareRound()
+
+    for (const player of this.players) {
+      player.prepareRound()
+    }
+
     this.planOpponent()
     this.currentPhase = 'planning'
+
     return ok(undefined)
   }
 
@@ -164,10 +205,11 @@ export class Match {
       summary: this.summary,
       result: this.matchResult,
       battle: this.battle,
+      stats: this.matchStats,
     }
   }
 
-  private restore(state: MatchState): void {
+  private restore(state: MatchState) {
     this.currentRound = state.round
     this.currentPhase = state.phase
     this.pool.restore(state.pool)
@@ -176,10 +218,14 @@ export class Match {
     this.summary = state.summary
     this.matchResult = state.result
     this.battle = state.battle
+    this.matchStats = state.stats
   }
 
-  private planOpponent(): void {
-    this.deps.opponentCoach.playTurn(this.opponent, { round: this.currentRound, rng: this.deps.rng })
+  private planOpponent() {
+    this.deps.opponentCoach.playTurn(this.opponent, {
+      round: this.currentRound,
+      rng: this.deps.rng,
+    })
   }
 
   private summarize(
@@ -188,12 +234,15 @@ export class Match {
     income: PerTeam<IncomeBreakdown>,
   ): RoundSummary {
     const [ours, theirs] = outcome.stats
+
     const damageAt = (slot: StructureSlot): PerTeam<number> => [
       ours.structureDamage[slot],
       theirs.structureDamage[slot],
     ]
+
     const mvp =
       outcome.heroes.filter((h) => h.team === 0).sort((a, b) => b.damageDealt - a.damageDealt)[0] ?? null
+
     return {
       round: this.currentRound,
       winner,

@@ -10,29 +10,36 @@ export class HeroPool {
   private readonly remaining = new Map<HeroId, number>()
 
   constructor(copies: Readonly<Record<Tier, number>> = POOL_COPIES) {
-    for (const id of HERO_IDS) this.remaining.set(id, copies[HEROES[id].tier])
+    for (const id of HERO_IDS) {
+      this.remaining.set(id, copies[HEROES[id].tier])
+    }
   }
 
-  available(id: HeroId): number {
+  available(id: HeroId) {
     return this.remaining.get(id) ?? 0
   }
 
-  release(id: HeroId, count = 1): void {
+  release(id: HeroId, count = 1) {
     this.remaining.set(id, this.available(id) + count)
   }
 
-  draw(tier: Tier, rng: Rng): HeroId | undefined {
+  draw(tier: Tier, rng: Rng) {
     const candidates = HERO_IDS.filter((id) => HEROES[id].tier === tier && this.available(id) > 0)
     const picked = weightedPick(rng, candidates, (id) => this.available(id))
-    if (picked) this.remaining.set(picked, this.available(picked) - 1)
+    if (picked) {
+      this.remaining.set(picked, this.available(picked) - 1)
+    }
+
     return picked
   }
 
-  snapshot(): PoolState {
+  snapshot() {
     return Object.fromEntries(HERO_IDS.map((id) => [id, this.available(id)])) as PoolState
   }
 
-  restore(state: PoolState): void {
-    for (const id of HERO_IDS) this.remaining.set(id, state[id])
+  restore(state: PoolState) {
+    for (const id of HERO_IDS) {
+      this.remaining.set(id, state[id])
+    }
   }
 }

@@ -8,28 +8,36 @@ export class Stash {
 
   constructor(readonly size: number = STASH_SIZE) {}
 
-  get items(): readonly ItemId[] {
+  get items() {
     return this.stored
   }
 
-  get isFull(): boolean {
+  get isFull() {
     return this.stored.length >= this.size
   }
 
   put(item: ItemId): Result<void, DomainError> {
-    if (this.isFull) return err({ code: 'stashFull' })
+    if (this.isFull) {
+      return err({ code: 'stashFull' })
+    }
+
     this.stored.push(item)
+
     return ok(undefined)
   }
 
   take(index: number): Result<ItemId, DomainError> {
     const item = this.stored[index]
-    if (!item) return err({ code: 'itemNotFound' })
+    if (!item) {
+      return err({ code: 'itemNotFound' })
+    }
+
     this.stored.splice(index, 1)
+
     return ok(item)
   }
 
-  restore(items: readonly ItemId[]): void {
+  restore(items: readonly ItemId[]) {
     this.stored = items.slice(0, this.size)
   }
 }

@@ -7,7 +7,6 @@ import {
   isHero,
   type DamageType,
   type Entity,
-  type HeroUnit,
   type PoisonPayload,
   type Unit,
 } from '../ecs/components'
@@ -24,7 +23,7 @@ export interface SplashOptions extends DamageOptions {
   readonly includeStructures?: boolean
 }
 
-export const creditedHero = (source: Entity): HeroUnit | null =>
+export const creditedHero = (source: Entity) =>
   isHero(source) ? source : source.owner && isHero(source.owner) ? source.owner : null
 
 /** Applies damage and healing; deaths are only flagged here and resolved by DeathSystem at the end of a step. */
@@ -36,58 +35,110 @@ export class CombatService {
     private readonly structureScale: number,
   ) {}
 
-  dealDamage(
-    source: Unit,
-    target: Unit,
-    amount: number,
-    type: DamageType,
-    options: DamageOptions = {},
-  ): number {
-    if (!isAlive(target)) return 0
+  dealDamage(source: Unit, target: Unit, amount: number, type: DamageType, options: DamageOptions = {}) {
+    if (!isAlive(target)) {
+      return 0
+    }
+
     let value = amount * (target.damageTaken ?? 1)
     if (target.kind === 'structure') {
       value *= (source.structureDamage ?? 1) * this.structureScale * (options.structureBonus ?? 1)
     }
-    if (type === 'physical') value *= 1 - target.armor
+
+    if (type === 'physical') {
+      value *= 1 - target.armor
+    }
+
     value = this.absorb(target, value)
     value = Math.min(value, target.health.current)
     target.health.current -= value
 
     this.gainManaFromHit(target, value)
     const hero = creditedHero(source)
-    if (hero) hero.hero.damageDealt += value
-    this.events.emit('damaged', { target, source, amount: value, type })
-    if (target.kind === 'structure') {
-      this.events.emit('structureDamaged', { structure: target, amount: value, attackerTeam: source.team })
+    if (hero) {
+      hero.hero.damageDealt += value
+
+      if (target.kind === 'structure') {
+        hero.hero.structureDamage += value
+      }
     }
+
+    if (target.hero) {
+      target.hero.damageReceived += value
+    }
+
+    this.events.emit('damaged', {
+      target,
+      source,
+      amount: value,
+      type,
+    })
+
+    if (target.kind === 'structure') {
+      this.events.emit('structureDamaged', {
+        structure: target,
+        amount: value,
+        attackerTeam: source.team,
+      })
+    }
+
     this.applyItemReactions(source, target, value, type, options)
-    if (target.health.current <= 0 && !this.tryRevive(target)) this.onKilled(target, source)
+
+    if (target.health.current <= 0 && !this.tryRevive(target)) {
+      this.onKilled(target, source)
+    }
+
     return value
   }
 
-  heal(target: Unit, amount: number): number {
-    if (!isAlive(target)) return 0
+  heal(target: Unit, amount: number, healer: Entity) {
+    if (!isAlive(target)) {
+      return 0
+    }
+
     const before = target.health.current
     target.health.current = Math.min(target.health.max, before + amount)
     const healed = target.health.current - before
-    if (healed > 0) this.events.emit('healed', { target, amount: healed })
+    const hero = creditedHero(healer)
+    if (hero) {
+      hero.hero.healing += healed
+    }
+
+    if (healed > 0) {
+      this.events.emit('healed', {
+        target,
+        amount: healed,
+      })
+    }
+
     return healed
   }
 
-  grantShield(target: Unit, amount: number, duration: number): void {
+  grantShield(target: Unit, amount: number, duration: number) {
     if (target.shield) {
       target.shield.amount = Math.max(amount, target.shield.amount)
       target.shield.remaining = duration
     } else {
-      this.world.addComponent(target, 'shield', { amount, remaining: duration })
+      this.world.addComponent(target, 'shield', {
+        amount,
+        remaining: duration,
+      })
     }
-    this.events.emit('shielded', { target, amount })
+
+    this.events.emit('shielded', {
+      target,
+      amount,
+    })
   }
 
-  poison(source: Unit, target: Unit, payload: PoisonPayload): void {
-    if (!isAlive(target)) return
+  poison(source: Unit, target: Unit, payload: PoisonPayload) {
+    if (!isAlive(target)) {
+      return
+    }
+
     target.status.slow = Math.max(target.status.slow, payload.duration / 2)
     target.status.slowFactor = Math.max(target.status.slowFactor, payload.slow)
+
     const dot = {
       source,
       damage: payload.damage,
@@ -95,8 +146,12 @@ export class CombatService {
       tickTimer: payload.tick,
       remaining: payload.duration,
     }
-    if (target.dot) Object.assign(target.dot, dot)
-    else this.world.addComponent(target, 'dot', dot)
+
+    if (target.dot) {
+      Object.assign(target.dot, dot)
+    } else {
+      this.world.addComponent(target, 'dot', dot)
+    }
   }
 
   splash(
@@ -112,20 +167,31 @@ export class CombatService {
       radius,
       (u) => u.team !== source.team && isAlive(u) && (options.includeStructures || u.kind !== 'structure'),
     )
-    for (const victim of victims) this.dealDamage(source, victim, damage, type, options)
+
+    for (const victim of victims) {
+      this.dealDamage(source, victim, damage, type, options)
+    }
+
     return victims
   }
 
-  private absorb(target: Unit, value: number): number {
+  private absorb(target: Unit, value: number) {
     const shield = target.shield
-    if (!shield || shield.amount <= 0) return value
+    if (!shield || shield.amount <= 0) {
+      return value
+    }
+
     const absorbed = Math.min(shield.amount, value)
     shield.amount -= absorbed
+
     return value - absorbed
   }
 
-  private gainManaFromHit(target: Unit, value: number): void {
-    if (!target.mana || !target.hero) return
+  private gainManaFromHit(target: Unit, value: number) {
+    if (!target.mana || !target.hero) {
+      return
+    }
+
     const gained = (value / target.health.max) * BATTLE.manaPerDamageTaken * target.mana.gain
     target.mana.current = Math.min(target.mana.max, target.mana.current + gained)
   }
@@ -136,39 +202,72 @@ export class CombatService {
     value: number,
     type: DamageType,
     options: DamageOptions,
-  ): void {
+  ) {
     const lifesteal = source.itemEffects?.lifesteal ?? 0
-    if (lifesteal > 0 && value > 0) this.heal(source, value * lifesteal)
+    if (lifesteal > 0 && value > 0) {
+      this.heal(source, value * lifesteal, source)
+    }
+
     const thorns = target.itemEffects?.thorns ?? 0
     if (thorns > 0 && type === 'physical' && !options.reflected && source.kind !== 'structure') {
       this.dealDamage(target, source, value * thorns, 'magical', { reflected: true })
     }
   }
 
-  private tryRevive(target: Unit): boolean {
+  private tryRevive(target: Unit) {
     const revive = target.itemEffects?.revive ?? 0
-    if (!isHero(target) || revive <= 0 || !target.itemEffects) return false
+    if (!isHero(target) || revive <= 0 || !target.itemEffects) {
+      return false
+    }
+
     target.itemEffects.revive = 0
     target.health.current = target.health.max * revive
-    this.events.emit('revived', { hero: target, byItem: true })
+
+    this.events.emit('revived', {
+      hero: target,
+      byItem: true,
+    })
+
     return true
   }
 
-  private onKilled(target: Unit, killer: Unit): void {
+  private onKilled(target: Unit, killer: Unit) {
     const hero = creditedHero(killer)
     const farm = hero ? ROLES[hero.hero.role].farm : undefined
     if (isHero(target)) {
       target.hero.deaths++
+
       if (hero) {
         hero.hero.kills++
-        if (farm) hero.hero.farmStacks += farm.perHeroKill
+
+        if (farm) {
+          hero.hero.farmStacks += farm.perHeroKill
+        }
       }
-      this.events.emit('heroKilled', { victim: target, killer, creditedHero: hero })
+
+      this.events.emit('heroKilled', {
+        victim: target,
+        killer,
+        creditedHero: hero,
+      })
     } else if (target.kind === 'creep') {
-      if (hero && farm) hero.hero.farmStacks++
-      this.events.emit('creepKilled', { victim: target, killer })
+      if (hero) {
+        hero.hero.lastHits++
+      }
+
+      if (hero && farm) {
+        hero.hero.farmStacks++
+      }
+
+      this.events.emit('creepKilled', {
+        victim: target,
+        killer,
+      })
     } else if (target.kind === 'structure') {
-      this.events.emit('structureDestroyed', { structure: target, attackerTeam: killer.team })
+      this.events.emit('structureDestroyed', {
+        structure: target,
+        attackerTeam: killer.team,
+      })
     }
   }
 }

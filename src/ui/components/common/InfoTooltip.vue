@@ -12,6 +12,7 @@ withDefaults(defineProps<{ side?: 'top' | 'right' | 'bottom' | 'left'; disabled?
     <TooltipTrigger as-child>
       <slot />
     </TooltipTrigger>
+
     <TooltipPortal>
       <TooltipContent class="tooltip" :side="side" :side-offset="8" :collision-padding="12">
         <slot name="content" />

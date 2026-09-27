@@ -8,7 +8,10 @@ export const blizzard: Ability = {
   id: 'blizzard',
   cast(caster, ctx) {
     const center = densest(ctx, caster, caster.attack.range + P.rangeBonus, P.radius)
-    if (!center) return false
+    if (!center) {
+      return false
+    }
+
     ctx.factory.zone(
       center.position,
       {
@@ -22,6 +25,7 @@ export const blizzard: Ability = {
       },
       0x8fd6ff,
     )
+
     return true
   },
 }

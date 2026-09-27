@@ -7,20 +7,36 @@ import { headlessResolver } from '@/simulation/BattleSimulation'
 
 describe('Match', () => {
   it('refuses to start a battle with an empty board', () => {
-    const match = createMatch({ seed: 'empty', ids: sequentialIds() })
+    const match = createMatch({
+      seed: 'empty',
+      ids: sequentialIds(),
+    })
+
     expect(match.startBattle()._unsafeUnwrapErr().code).toBe('emptyBoard')
     expect(match.phase).toBe('planning')
   })
 
   it('starts with an empty board when the planning timer forces it', () => {
-    const match = createMatch({ seed: 'forced', ids: sequentialIds() })
+    const match = createMatch({
+      seed: 'forced',
+      ids: sequentialIds(),
+    })
+
     expect(match.startBattle({ allowEmptyBoard: true }).isOk()).toBe(true)
     expect(match.phase).toBe('battle')
   })
 
   it('walks through planning, battle and summary', () => {
-    const match = createMatch({ seed: 'flow', ids: sequentialIds() })
-    new GreedyCoach().playTurn(match.human, { round: 1, rng: createRng('coach') })
+    const match = createMatch({
+      seed: 'flow',
+      ids: sequentialIds(),
+    })
+
+    new GreedyCoach().playTurn(match.human, {
+      round: 1,
+      rng: createRng('coach'),
+    })
+
     const goldBefore = match.human.wallet.gold
 
     const setup = match.startBattle()._unsafeUnwrap()
@@ -35,14 +51,23 @@ describe('Match', () => {
   })
 
   it('always finishes within the round limit', () => {
-    const match = createMatch({ seed: 'limit', ids: sequentialIds() })
+    const match = createMatch({
+      seed: 'limit',
+      ids: sequentialIds(),
+    })
+
     const coach = new GreedyCoach()
     const rng = createRng('limit-coach')
     while (match.phase !== 'finished') {
-      coach.playTurn(match.human, { round: match.round, rng })
+      coach.playTurn(match.human, {
+        round: match.round,
+        rng,
+      })
+
       match.finishBattle(headlessResolver.resolve(match.startBattle()._unsafeUnwrap()))
       match.nextRound()
     }
+
     expect(match.result).not.toBeNull()
     expect(match.round).toBeLessThanOrEqual(20)
   })

@@ -17,9 +17,16 @@ export const useMenuStore = defineStore('menu', () => {
   watch(help, (open) => pause.set('help', open))
   watch(newMatch, (open) => pause.set('newMatch', open))
 
-  function requestTutorial(): void {
+  function requestTutorial() {
     tutorialPending.value = true
   }
 
-  return { gameMenu, settings, help, newMatch, tutorialPending, requestTutorial }
+  return {
+    gameMenu,
+    settings,
+    help,
+    newMatch,
+    tutorialPending,
+    requestTutorial,
+  }
 })

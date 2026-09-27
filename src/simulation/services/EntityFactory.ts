@@ -11,14 +11,19 @@ import type { Vec2 } from '@/core/math/vec2'
 import type { Rng } from '@/core/random/rng'
 import type { OwnedHero } from '@/domain/roster/Roster'
 import type { LaneReport } from '@/domain/synergy/resolveLane'
-import type { Entity, HeroUnit, ItemEffectsState, Projectile, Status, Unit, Zone } from '../ecs/components'
+import type { Entity, HeroUnit, ItemEffectsState, Projectile, Unit, Zone } from '../ecs/components'
 import type { LaneMap } from '../map/LaneMap'
 
 const SPAWN_JITTER = 4
 
-const freshStatus = (): Status => ({ stun: 0, root: 0, slow: 0, slowFactor: 0 })
+const freshStatus = () => ({
+  stun: 0,
+  root: 0,
+  slow: 0,
+  slowFactor: 0,
+})
 
-function itemEffects(items: readonly ItemId[]): ItemEffectsState {
+function itemEffects(items: readonly ItemId[]) {
   return items.reduce<ItemEffectsState>(
     (acc, id) => {
       const effects = ITEMS[id].effects
@@ -28,7 +33,11 @@ function itemEffects(items: readonly ItemId[]): ItemEffectsState {
         revive: Math.max(acc.revive, effects.revive ?? 0),
       }
     },
-    { lifesteal: 0, thorns: 0, revive: 0 },
+    {
+      lifesteal: 0,
+      thorns: 0,
+      revive: 0,
+    },
   )
 }
 
@@ -49,7 +58,7 @@ export class EntityFactory {
     private readonly rng: Rng,
   ) {}
 
-  structure(team: TeamId, type: StructureType, lane: LaneId | null, hp: number): Unit {
+  structure(team: TeamId, type: StructureType, lane: LaneId | null, hp: number) {
     const stats = STRUCTURES[type]
     const position = lane ? this.map.towerPosition(team, lane) : this.map.base(team)
     return this.world.add({
@@ -57,7 +66,10 @@ export class EntityFactory {
       kind: 'structure',
       position,
       radius: stats.radius,
-      health: { current: hp, max: stats.hp },
+      health: {
+        current: hp,
+        max: stats.hp,
+      },
       armor: stats.armor,
       status: freshStatus(),
       attack: {
@@ -67,29 +79,45 @@ export class EntityFactory {
         range: stats.range,
         ranged: true,
       },
-      targeting: { aggroRange: stats.range, target: null, chasing: false, prefersStructures: false },
-      structure: { type, lane },
+      targeting: {
+        aggroRange: stats.range,
+        target: null,
+        chasing: false,
+        prefersStructures: false,
+      },
+      structure: {
+        type,
+        lane,
+      },
     }) as Unit
   }
 
-  hero(owned: OwnedHero, team: TeamId, lane: LaneId, report: LaneReport, slot: number): HeroUnit {
+  hero(owned: OwnedHero, team: TeamId, lane: LaneId, report: LaneReport, slot: number) {
     const definition = HEROES[owned.heroId]
     const role = ROLES[definition.role]
     const stats = definition.stats
     const star = STAR_POWER[owned.stars]
+
     const mods = combineModifiers(
       report.modifiersFor(definition.role),
       ...owned.items.map((item) => ITEMS[item].modifiers),
     )
+
     const maxHp = stats.hp * star * mods.maxHp
     const base = this.map.base(team)
     return this.world.add({
       team,
       kind: 'hero',
-      position: { x: base.x + (slot - 1) * 16, y: base.y + (slot % 2 ? 10 : -10) },
+      position: {
+        x: base.x + (slot - 1) * 16,
+        y: base.y + (slot % 2 ? 10 : -10),
+      },
       color: definition.color,
       radius: BATTLE.hero.radius,
-      health: { current: maxHp, max: maxHp },
+      health: {
+        current: maxHp,
+        max: maxHp,
+      },
       armor: stats.armor,
       damageTaken: mods.damageTaken,
       itemEffects: itemEffects(owned.items),
@@ -109,9 +137,20 @@ export class EntityFactory {
         chasing: false,
         prefersStructures: false,
       },
-      laneFollower: { path: this.map.path(team, lane), waypoint: 1, avoidsTowers: true },
-      mana: { current: stats.mana * (role.startingManaRatio ?? 0), max: stats.mana, gain: mods.manaGain },
-      caster: { ability: definition.ability, power: star * mods.spellPower },
+      laneFollower: {
+        path: this.map.path(team, lane),
+        waypoint: 1,
+        avoidsTowers: true,
+      },
+      mana: {
+        current: stats.mana * (role.startingManaRatio ?? 0),
+        max: stats.mana,
+        gain: mods.manaGain,
+      },
+      caster: {
+        ability: definition.ability,
+        power: star * mods.spellPower,
+      },
       hero: {
         uid: owned.uid,
         heroId: owned.heroId,
@@ -123,13 +162,31 @@ export class EntityFactory {
         kills: 0,
         deaths: 0,
         damageDealt: 0,
+        damageReceived: 0,
+        structureDamage: 0,
+        healing: 0,
+        lastHits: 0,
       },
-      ...(role.roams ? { roamer: { thinkTimer: 0, quarry: null } } : {}),
-      ...(role.healAura ? { healAura: { ...role.healAura, timer: BATTLE.auraInterval } } : {}),
+      ...(role.roams
+        ? {
+            roamer: {
+              thinkTimer: 0,
+              quarry: null,
+            },
+          }
+        : {}),
+      ...(role.healAura
+        ? {
+            healAura: {
+              ...role.healAura,
+              timer: BATTLE.auraInterval,
+            },
+          }
+        : {}),
     }) as HeroUnit
   }
 
-  creep(spawn: CreepSpawn): Unit {
+  creep(spawn: CreepSpawn) {
     const stats = CREEPS[spawn.variant]
     const path = this.map.path(spawn.team, spawn.lane)
     const point = this.map.pointAt(path, spawn.along)
@@ -142,7 +199,10 @@ export class EntityFactory {
         y: point.y + this.rng.range(-SPAWN_JITTER, SPAWN_JITTER),
       },
       radius: stats.radius,
-      health: { current: hp, max: hp },
+      health: {
+        current: hp,
+        max: hp,
+      },
       armor: stats.armor,
       structureDamage: stats.structureDamage,
       speed: stats.speed,
@@ -160,12 +220,19 @@ export class EntityFactory {
         chasing: false,
         prefersStructures: stats.prefersStructures,
       },
-      laneFollower: { path, waypoint: this.map.segmentAt(path, spawn.along) + 1, avoidsTowers: false },
-      creep: { variant: spawn.variant, mega: spawn.mega },
+      laneFollower: {
+        path,
+        waypoint: this.map.segmentAt(path, spawn.along) + 1,
+        avoidsTowers: false,
+      },
+      creep: {
+        variant: spawn.variant,
+        mega: spawn.mega,
+      },
     }) as Unit
   }
 
-  turret(owner: HeroUnit, position: Vec2): Unit {
+  turret(owner: HeroUnit, position: Vec2) {
     const p = ABILITY_PARAMS.turret
     const power = owner.caster.power
     return this.world.add({
@@ -174,7 +241,10 @@ export class EntityFactory {
       position,
       ...(owner.color !== undefined ? { color: owner.color } : {}),
       radius: 8,
-      health: { current: p.hp * power, max: p.hp * power },
+      health: {
+        current: p.hp * power,
+        max: p.hp * power,
+      },
       armor: 0.2,
       structureDamage: 1.5,
       status: freshStatus(),
@@ -185,13 +255,18 @@ export class EntityFactory {
         range: p.range,
         ranged: true,
       },
-      targeting: { aggroRange: p.range, target: null, chasing: false, prefersStructures: false },
+      targeting: {
+        aggroRange: p.range,
+        target: null,
+        chasing: false,
+        prefersStructures: false,
+      },
       owner,
       lifetime: p.lifetime,
     }) as Unit
   }
 
-  skeleton(owner: HeroUnit, position: Vec2): Unit {
+  skeleton(owner: HeroUnit, position: Vec2) {
     const p = ABILITY_PARAMS.raiseDead
     const power = owner.caster.power
     const path = this.map.path(owner.team, owner.hero.lane)
@@ -202,21 +277,43 @@ export class EntityFactory {
       position: { ...position },
       ...(owner.color !== undefined ? { color: owner.color } : {}),
       radius: 7,
-      health: { current: p.hp * power, max: p.hp * power },
+      health: {
+        current: p.hp * power,
+        max: p.hp * power,
+      },
       armor: 0.1,
       structureDamage: 1.2,
       speed: 80,
       status: freshStatus(),
-      attack: { damage: p.damage * power, interval: 1, cooldown: 0, range: 0, ranged: false },
-      targeting: { aggroRange: 140, target: null, chasing: false, prefersStructures: false },
-      laneFollower: { path, waypoint: Math.min(segment + 1, path.points.length - 1), avoidsTowers: false },
-      creep: { variant: 'melee', mega: false, summoned: true },
+      attack: {
+        damage: p.damage * power,
+        interval: 1,
+        cooldown: 0,
+        range: 0,
+        ranged: false,
+      },
+      targeting: {
+        aggroRange: 140,
+        target: null,
+        chasing: false,
+        prefersStructures: false,
+      },
+      laneFollower: {
+        path,
+        waypoint: Math.min(segment + 1, path.points.length - 1),
+        avoidsTowers: false,
+      },
+      creep: {
+        variant: 'melee',
+        mega: false,
+        summoned: true,
+      },
       owner,
       lifetime: p.lifetime,
     }) as Unit
   }
 
-  projectile(spec: Projectile, color?: number): Entity {
+  projectile(spec: Projectile, color?: number) {
     return this.world.add({
       team: spec.source.team,
       position: { ...spec.source.position },
@@ -225,7 +322,12 @@ export class EntityFactory {
     })
   }
 
-  zone(center: Vec2, spec: Zone, color: number): Entity {
-    return this.world.add({ team: spec.source.team, position: { ...center }, color, zone: spec })
+  zone(center: Vec2, spec: Zone, color: number) {
+    return this.world.add({
+      team: spec.source.team,
+      position: { ...center },
+      color,
+      zone: spec,
+    })
   }
 }

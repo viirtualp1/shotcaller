@@ -15,7 +15,7 @@ export function enemiesAround(
   center: Vec2,
   radius: number,
   filter: EnemyFilter = {},
-): Unit[] {
+) {
   return ctx.index.near(
     center,
     radius,
@@ -29,7 +29,7 @@ export function enemiesAround(
   )
 }
 
-export function alliedHeroesAround(ctx: SimulationContext, caster: Unit, radius: number): Unit[] {
+export function alliedHeroesAround(ctx: SimulationContext, caster: Unit, radius: number) {
   return ctx.index.near(
     caster.position,
     radius,
@@ -40,15 +40,13 @@ export function alliedHeroesAround(ctx: SimulationContext, caster: Unit, radius:
 export const byDistance = (from: Vec2) => (a: Unit, b: Unit) =>
   distance(from, a.position) - distance(from, b.position)
 
-export const nearest = (from: Vec2, units: readonly Unit[]): Unit | undefined =>
-  [...units].sort(byDistance(from))[0]
+export const nearest = (from: Vec2, units: readonly Unit[]) => [...units].sort(byDistance(from))[0]
 
-export const farthest = (from: Vec2, units: readonly Unit[]): Unit | undefined =>
-  [...units].sort(byDistance(from)).at(-1)
+export const farthest = (from: Vec2, units: readonly Unit[]) => [...units].sort(byDistance(from)).at(-1)
 
-export const healthRatio = (u: Unit): number => u.health.current / u.health.max
+export const healthRatio = (u: Unit) => u.health.current / u.health.max
 
-export const weakest = (units: readonly Unit[]): Unit | undefined =>
+export const weakest = (units: readonly Unit[]) =>
   [...units].sort((a, b) => healthRatio(a) - healthRatio(b))[0]
 
 export function densest(ctx: SimulationContext, caster: Unit, searchRadius: number, clusterRadius: number) {
@@ -59,24 +57,26 @@ export function densest(ctx: SimulationContext, caster: Unit, searchRadius: numb
     const score =
       candidates.filter((o) => distance(o.position, c.position) <= clusterRadius).length +
       (c.kind === 'hero' ? 1 : 0)
+
     if (score > bestScore) {
       bestScore = score
       best = c
     }
   }
+
   return best
 }
 
-export const heroesFirst = (units: readonly Unit[]): readonly Unit[] => {
+export const heroesFirst = (units: readonly Unit[]) => {
   const heroes = units.filter((u) => u.kind === 'hero')
   return heroes.length ? heroes : units
 }
 
 /** Places the caster touching the target, on the side given by `from`. */
-export function contactPoint(caster: HeroUnit, target: Unit, from: Vec2): Vec2 {
+export function contactPoint(caster: HeroUnit, target: Unit, from: Vec2) {
   return offset(target.position, direction(target.position, from), caster.radius + target.radius + 2)
 }
 
-export function stun(target: Unit, seconds: number): void {
+export function stun(target: Unit, seconds: number) {
   target.status.stun = Math.max(target.status.stun, seconds)
 }

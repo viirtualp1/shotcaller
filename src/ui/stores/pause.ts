@@ -8,10 +8,16 @@ export const usePauseStore = defineStore('pause', () => {
   const reasons = reactive(new Set<PauseReason>())
   const paused = computed(() => reasons.size > 0)
 
-  function set(reason: PauseReason, value: boolean): void {
-    if (value) reasons.add(reason)
-    else reasons.delete(reason)
+  function set(reason: PauseReason, value: boolean) {
+    if (value) {
+      reasons.add(reason)
+    } else {
+      reasons.delete(reason)
+    }
   }
 
-  return { paused, set }
+  return {
+    paused,
+    set,
+  }
 })

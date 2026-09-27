@@ -7,7 +7,7 @@ import type { SimulationEvents } from '@/simulation/events'
 import { PALETTE, TEAM_COLORS } from '../theme'
 import { CreepView } from '../views/CreepView'
 import type { EntityView } from '../views/EntityView'
-import { HeroToken, isOverToken, type HeroHit } from '../views/HeroToken'
+import { HeroToken, isOverToken } from '../views/HeroToken'
 import { ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
 import { StructureView } from '../views/StructureView'
 
@@ -29,21 +29,32 @@ export class BattleLayer extends Container {
     this.addChild(this.zones, this.structures, this.creeps, this.heroes, this.projectiles)
   }
 
-  attach(simulation: BattleSimulation): void {
+  attach(simulation: BattleSimulation) {
     this.detach()
     const { world, events } = simulation
-    for (const entity of world) this.add(entity, false)
+    for (const entity of world) {
+      this.add(entity, false)
+    }
+
     const onAttack = ({ attacker, target }: SimulationEvents['attacked']) => {
       const view = this.views.get(attacker)
-      if (view instanceof StructureView) view.fire()
-      else if (view) view.lunge(target.position, attacker.attack?.ranged ? RANGED_RECOIL : MELEE_LUNGE)
+      if (view instanceof StructureView) {
+        view.fire()
+      } else if (view) {
+        view.lunge(target.position, attacker.attack?.ranged ? RANGED_RECOIL : MELEE_LUNGE)
+      }
     }
+
     const onDamage = ({ target }: SimulationEvents['damaged']) => {
       const view = this.views.get(target)
-      if (view instanceof HeroToken) view.flash()
+      if (view instanceof HeroToken) {
+        view.flash()
+      }
     }
+
     events.on('attacked', onAttack)
     events.on('damaged', onDamage)
+
     this.subscriptions = [
       world.onEntityAdded.subscribe((entity) => this.add(entity, true)),
       world.onEntityRemoved.subscribe((entity) => this.remove(entity, true)),
@@ -52,61 +63,100 @@ export class BattleLayer extends Container {
     ]
   }
 
-  detach(): void {
-    for (const off of this.subscriptions) off()
+  detach() {
+    for (const off of this.subscriptions) {
+      off()
+    }
+
     this.subscriptions = []
-    for (const entity of [...this.views.keys()]) this.remove(entity, false)
+
+    for (const entity of [...this.views.keys()]) {
+      this.remove(entity, false)
+    }
   }
 
-  update(dt: number, time: number): void {
+  update(dt: number, time: number) {
     for (const [entity, view] of this.views) {
       view.follow(entity.position, entity.projectile ? Infinity : dt)
-      if (view instanceof HeroToken) view.setHovered(entity.hero?.uid === this.hoveredUid)
+
+      if (view instanceof HeroToken) {
+        view.setHovered(entity.hero?.uid === this.hoveredUid)
+      }
+
       view.sync(entity, time)
     }
   }
 
-  setHovered(uid: string | null): void {
+  setHovered(uid: string | null) {
     this.hoveredUid = uid
   }
 
-  heroAt(point: Vec2): HeroHit | null {
+  heroAt(point: Vec2) {
     for (const [entity, view] of this.views) {
       if (entity.hero && isAlive(entity) && isOverToken(view.position, point)) {
-        return { uid: entity.hero.uid, team: entity.team }
+        return {
+          uid: entity.hero.uid,
+          team: entity.team,
+        }
       }
     }
+
     return null
   }
 
-  heroPosition(uid: string): Vec2 | null {
+  heroPosition(uid: string) {
     for (const [entity, view] of this.views) {
-      if (entity.hero?.uid === uid && isAlive(entity)) return { x: view.x, y: view.y }
+      if (entity.hero?.uid === uid && isAlive(entity)) {
+        return {
+          x: view.x,
+          y: view.y,
+        }
+      }
     }
+
     return null
   }
 
-  private add(entity: Entity, animate: boolean): void {
-    if (this.views.has(entity)) return
+  private add(entity: Entity, animate: boolean) {
+    if (this.views.has(entity)) {
+      return
+    }
+
     const created = this.createView(entity)
-    if (!created) return
+    if (!created) {
+      return
+    }
+
     const [view, parent] = created
     view.follow(entity.position, Infinity)
     view.sync(entity, 0)
     parent.addChild(view)
     this.views.set(entity, view)
-    if (animate && !entity.projectile) view.appear()
+
+    if (animate && !entity.projectile) {
+      view.appear()
+    }
   }
 
-  private remove(entity: Entity, animate: boolean): void {
+  private remove(entity: Entity, animate: boolean) {
     const view = this.views.get(entity)
-    if (!view) return
-    this.views.delete(entity)
-    const dispose = () => {
-      if (!view.destroyed) view.destroy({ children: true })
+    if (!view) {
+      return
     }
-    if (animate && !entity.projectile) view.vanish(dispose)
-    else dispose()
+
+    this.views.delete(entity)
+
+    const dispose = () => {
+      if (!view.destroyed) {
+        view.destroy({ children: true })
+      }
+    }
+
+    if (animate && !entity.projectile) {
+      view.vanish(dispose)
+    } else {
+      dispose()
+    }
   }
 
   private createView(entity: Entity): [EntityView, Container] | null {
@@ -118,21 +168,33 @@ export class BattleLayer extends Container {
         stars: entity.hero.stars,
         items: entity.hero.items,
       })
+
       return [token, this.heroes]
     }
+
     if (entity.creep && entity.radius) {
       return [new CreepView(entity.team, entity.creep, entity.radius, entity.color), this.creeps]
     }
-    if (entity.structure) return [new StructureView(entity.team, entity.structure.type), this.structures]
-    if (entity.kind === 'turret')
+
+    if (entity.structure) {
+      return [new StructureView(entity.team, entity.structure.type), this.structures]
+    }
+
+    if (entity.kind === 'turret') {
       return [new TurretView(entity.color ?? TEAM_COLORS[entity.team]), this.creeps]
+    }
+
     if (entity.projectile) {
       return [
         new ProjectileView(entity.projectile.visual, entity.color ?? TEAM_COLORS[entity.team]),
         this.projectiles,
       ]
     }
-    if (entity.zone) return [new ZoneView(entity.zone.radius, entity.color ?? PALETTE.frost), this.zones]
+
+    if (entity.zone) {
+      return [new ZoneView(entity.zone.radius, entity.color ?? PALETTE.frost), this.zones]
+    }
+
     return null
   }
 }

@@ -3,7 +3,6 @@ import type { Result } from 'neverthrow'
 import { defineStore } from 'pinia'
 import { computed, markRaw, ref, shallowRef } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
-import { subscribeFeed, type FeedEntry } from '@/application/battleFeed'
 import { createMatch, restoreMatch } from '@/application/createMatch'
 import { LocalStorageMatchRepository } from '@/application/persistence/MatchRepository'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
@@ -37,20 +36,31 @@ type NoticeInput =
 export type Notice = NoticeInput & { readonly id: number }
 
 const LIVE_REFRESH_SECONDS = 0.15
-const FEED_LENGTH = 6
 
 export interface LocatedHero {
   readonly hero: HeroCardView
   readonly slot: RosterSlot
 }
 
-export function locateHero(player: PlayerView, uid: string): LocatedHero | null {
+export function locateHero(player: PlayerView, uid: string) {
   const onBench = player.bench.find((h) => h.uid === uid)
-  if (onBench) return { hero: onBench, slot: 'bench' }
+  if (onBench) {
+    return {
+      hero: onBench,
+      slot: 'bench',
+    }
+  }
+
   for (const lane of LANE_IDS) {
     const hero = player.lanes[lane].heroes.find((h) => h.uid === uid)
-    if (hero) return { hero, slot: lane }
+    if (hero) {
+      return {
+        hero,
+        slot: lane,
+      }
+    }
   }
+
   return null
 }
 
@@ -59,13 +69,11 @@ export const useMatchStore = defineStore('match', () => {
   const optimizer = new LaneOptimizer()
   let match: Match | null = null
   let session: BattleSession | null = null
-  let stopFeed: (() => void) | null = null
   let liveCountdown = 0
   let noticeSeq = 0
 
   const view = shallowRef<MatchView | null>(null)
   const live = shallowRef<LiveBattleView | null>(null)
-  const feed = shallowRef<readonly FeedEntry[]>([])
   const simulation = shallowRef<BattleSimulation | null>(null)
   const notice = shallowRef<Notice | null>(null)
   const savedRound = ref<number | null>(repository.load()?.round ?? null)
@@ -79,53 +87,82 @@ export const useMatchStore = defineStore('match', () => {
 
   const phase = computed(() => view.value?.phase ?? null)
   const isPlanning = computed(() => phase.value === 'planning')
+
   const selected = computed(() =>
     view.value && selectedUid.value ? locateHero(view.value.human, selectedUid.value) : null,
   )
+
   const inspected = computed(() =>
     view.value && inspectedUid.value ? locateHero(view.value.opponent, inspectedUid.value) : null,
   )
+
   const hasSelection = computed(
     () => selectedUid.value !== null || selectedItem.value !== null || inspectedUid.value !== null,
   )
 
-  function refresh(): void {
+  function refresh() {
     view.value = match ? toMatchView(match) : null
-    if (selectedUid.value && !selected.value) selectedUid.value = null
-    if (inspectedUid.value && !inspected.value) inspectedUid.value = null
-    if (selectedItem.value !== null && !view.value?.human.stash[selectedItem.value]) selectedItem.value = null
+
+    if (selectedUid.value && !selected.value) {
+      selectedUid.value = null
+    }
+
+    if (inspectedUid.value && !inspected.value) {
+      inspectedUid.value = null
+    }
+
+    if (selectedItem.value !== null && !view.value?.human.stash[selectedItem.value]) {
+      selectedItem.value = null
+    }
+
     persist()
   }
 
-  function persist(): void {
-    if (!match) return
+  function persist() {
+    if (!match) {
+      return
+    }
+
     if (match.phase === 'finished') {
       repository.clear()
       savedRound.value = null
+
       return
     }
+
     repository.save(match.snapshot())
     savedRound.value = match.round
   }
 
-  function notify(input: NoticeInput): void {
-    notice.value = { ...input, id: ++noticeSeq }
+  function notify(input: NoticeInput) {
+    notice.value = {
+      ...input,
+      id: ++noticeSeq,
+    }
   }
 
-  function apply<T>(result: Result<T, DomainError>): T | undefined {
+  function apply<T>(result: Result<T, DomainError>) {
     refresh()
-    if (result.isOk()) return result.value
-    notify({ kind: 'error', error: result.error })
+
+    if (result.isOk()) {
+      return result.value
+    }
+
+    notify({
+      kind: 'error',
+      error: result.error,
+    })
+
     return undefined
   }
 
-  function clearSelection(): void {
+  function clearSelection() {
     selectedUid.value = null
     selectedItem.value = null
     inspectedUid.value = null
   }
 
-  function newMatch(): void {
+  function newMatch() {
     disposeBattle()
     match = createMatch()
     clearSelection()
@@ -133,68 +170,117 @@ export const useMatchStore = defineStore('match', () => {
     refresh()
   }
 
-  function continueMatch(): void {
+  function continueMatch() {
     const state = repository.load()
-    if (!state) return newMatch()
+    if (!state) {
+      return newMatch()
+    }
+
     disposeBattle()
     match = restoreMatch(state)
     clearSelection()
     refresh()
-    if (match.phase === 'battle' && match.pendingBattle) launchBattle(match.pendingBattle)
+
+    if (match.phase === 'battle' && match.pendingBattle) {
+      launchBattle(match.pendingBattle)
+    }
   }
 
-  function buy(slot: number): void {
-    if (!match || !isPlanning.value) return
+  function buy(slot: number) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
     const purchase = apply(match.human.buy(slot))
-    for (const hero of purchase?.promoted ?? [])
-      notify({ kind: 'promoted', heroId: hero.heroId, stars: hero.stars })
+    for (const hero of purchase?.promoted ?? []) {
+      notify({
+        kind: 'promoted',
+        heroId: hero.heroId,
+        stars: hero.stars,
+      })
+    }
   }
 
-  function buyItem(itemId: ItemId): void {
-    if (!match || !isPlanning.value) return
-    if (apply(match.human.buyItem(itemId)) !== undefined) notify({ kind: 'itemBought', itemId })
+  function buyItem(itemId: ItemId) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    if (apply(match.human.buyItem(itemId)) !== undefined) {
+      notify({
+        kind: 'itemBought',
+        itemId,
+      })
+    }
   }
 
-  function sell(uid: string): void {
-    if (!match || !isPlanning.value) return
-    if (selectedUid.value === uid) selectedUid.value = null
+  function sell(uid: string) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    if (selectedUid.value === uid) {
+      selectedUid.value = null
+    }
+
     apply(match.human.sell(uid))
   }
 
-  function sellItem(index: number): void {
-    if (!match || !isPlanning.value) return
+  function sellItem(index: number) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
     selectedItem.value = null
     apply(match.human.sellItem(index))
   }
 
-  function equip(index: number, uid: string): void {
-    if (!match || !isPlanning.value) return
+  function equip(index: number, uid: string) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
     selectedItem.value = null
     apply(match.human.equip(index, uid))
   }
 
-  function unequip(uid: string, itemIndex: number): void {
-    if (match && isPlanning.value) apply(match.human.unequip(uid, itemIndex))
+  function unequip(uid: string, itemIndex: number) {
+    if (match && isPlanning.value) {
+      apply(match.human.unequip(uid, itemIndex))
+    }
   }
 
-  function reroll(): void {
-    if (!match || !isPlanning.value) return
-    if (apply(match.human.reroll()) !== undefined) rerolls.value++
+  function reroll() {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    if (apply(match.human.reroll()) !== undefined) {
+      rerolls.value++
+    }
   }
 
-  function buyXp(): void {
-    if (match && isPlanning.value) apply(match.human.buyXp())
+  function buyXp() {
+    if (match && isPlanning.value) {
+      apply(match.human.buyXp())
+    }
   }
 
-  function move(uid: string, slot: RosterSlot): void {
-    if (!match || !isPlanning.value) return
+  function move(uid: string, slot: RosterSlot) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
     selectedUid.value = null
     apply(match.human.move(uid, slot))
   }
 
   /** Clicking a hero equips the selected item, swaps with the selected hero or toggles selection. */
-  function select(uid: string): void {
-    if (selectedItem.value !== null) return equip(selectedItem.value, uid)
+  function select(uid: string) {
+    if (selectedItem.value !== null) {
+      return equip(selectedItem.value, uid)
+    }
+
     inspectedUid.value = null
     const current = selected.value
     const human = view.value?.human
@@ -209,113 +295,148 @@ export const useMatchStore = defineStore('match', () => {
     ) {
       selectedUid.value = null
       apply(match.human.swap(current.hero.uid, uid))
+
       return
     }
+
     selectedUid.value = selectedUid.value === uid ? null : uid
   }
 
-  function inspect(uid: string): void {
+  function inspect(uid: string) {
     selectedUid.value = null
     selectedItem.value = null
     inspectedUid.value = inspectedUid.value === uid ? null : uid
   }
 
-  function selectItem(index: number): void {
+  function selectItem(index: number) {
     selectedUid.value = null
     inspectedUid.value = null
     selectedItem.value = selectedItem.value === index ? null : index
   }
 
-  function placeSelected(slot: RosterSlot): void {
-    if (selectedUid.value) move(selectedUid.value, slot)
+  function placeSelected(slot: RosterSlot) {
+    if (selectedUid.value) {
+      move(selectedUid.value, slot)
+    }
   }
 
-  function autoArrange(): void {
-    if (!match || !isPlanning.value) return
+  function autoArrange() {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
     const layout = () => JSON.stringify(match!.human.roster.lineup())
     const before = layout()
     arrangeStrongestLineup(match.human, optimizer)
     clearSelection()
     refresh()
-    notify({ kind: 'arranged', changed: layout() !== before })
+
+    notify({
+      kind: 'arranged',
+      changed: layout() !== before,
+    })
   }
 
-  function startBattle(): void {
-    if (!match) return
+  function startBattle() {
+    if (!match) {
+      return
+    }
+
     const setup = apply(match.startBattle())
-    if (setup) launchBattle(setup)
+    if (setup) {
+      launchBattle(setup)
+    }
   }
 
   /** The planning timer ran out: place whoever is on the bench if the map is empty and fight anyway. */
-  function startBattleOnTimeout(): void {
-    if (!match || !isPlanning.value) return
-    if (match.human.roster.boardCount === 0) arrangeStrongestLineup(match.human, optimizer)
+  function startBattleOnTimeout() {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    if (match.human.roster.boardCount === 0) {
+      arrangeStrongestLineup(match.human, optimizer)
+    }
+
     const setup = apply(match.startBattle({ allowEmptyBoard: true }))
-    if (!setup) return
+    if (!setup) {
+      return
+    }
+
     notify({ kind: 'timeUp' })
     launchBattle(setup)
   }
 
-  function launchBattle(setup: BattleSetup): void {
+  function launchBattle(setup: BattleSetup) {
     const sim = markRaw(new BattleSimulation(setup))
     session = new BattleSession(sim)
     simulation.value = sim
     clearSelection()
-    feed.value = []
-    stopFeed = subscribeFeed(sim.events, (entry) => (feed.value = [...feed.value, entry].slice(-FEED_LENGTH)))
     live.value = toLiveBattleView(sim)
   }
 
-  function tick(realSeconds: number): void {
-    if (!session || phase.value !== 'battle') return
+  function tick(realSeconds: number) {
+    if (!session || phase.value !== 'battle') {
+      return
+    }
+
     session.advance(realSeconds, speed.value)
     liveCountdown -= realSeconds
+
     if (liveCountdown <= 0 || session.isOver) {
       liveCountdown = LIVE_REFRESH_SECONDS
       live.value = toLiveBattleView(session.simulation)
     }
-    if (session.isOver) finishBattle()
+
+    if (session.isOver) {
+      finishBattle()
+    }
   }
 
-  function skipBattle(): void {
-    if (!session || phase.value !== 'battle') return
+  function skipBattle() {
+    if (!session || phase.value !== 'battle') {
+      return
+    }
+
     session.finish()
     finishBattle()
   }
 
-  function finishBattle(): void {
-    if (!match || !session) return
+  function finishBattle() {
+    if (!match || !session) {
+      return
+    }
+
     live.value = toLiveBattleView(session.simulation)
     apply(match.finishBattle(session.simulation.outcome()))
   }
 
-  function nextRound(): void {
-    if (!match) return
+  function nextRound() {
+    if (!match) {
+      return
+    }
+
     disposeBattle()
     apply(match.nextRound())
   }
 
-  function leaveToMenu(): void {
+  function leaveToMenu() {
     disposeBattle()
     match = null
     view.value = null
     savedRound.value = repository.load()?.round ?? null
   }
 
-  function disposeBattle(): void {
-    stopFeed?.()
-    stopFeed = null
+  function disposeBattle() {
     session?.dispose()
     session = null
     simulation.value = null
     live.value = null
-    feed.value = []
   }
 
   return {
     view,
     live,
-    feed,
     simulation,
     notice,
     savedRound,

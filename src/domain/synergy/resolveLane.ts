@@ -20,13 +20,26 @@ export interface LaneReport {
 
 export function resolveLane(lane: LaneId, heroIds: readonly HeroId[]): LaneReport {
   const roles = heroIds.map((id) => HEROES[id].role)
-  const active = SYNERGIES.filter((s) => s.isActive({ lane, roles }))
+
+  const active = SYNERGIES.filter((s) =>
+    s.isActive({
+      lane,
+      roles,
+    }),
+  )
+
   const suggestions = SYNERGIES.filter((s) => !active.includes(s))
     .map((s) => ({
       synergy: s.id,
-      roles: ROLE_IDS.filter((role) => s.isActive({ lane, roles: [...roles, role] })),
+      roles: ROLE_IDS.filter((role) =>
+        s.isActive({
+          lane,
+          roles: [...roles, role],
+        }),
+      ),
     }))
     .filter((s) => s.roles.length > 0)
+
   const synergyModifiersFor = (role: RoleId) =>
     combineModifiers(
       ...active
@@ -34,6 +47,7 @@ export function resolveLane(lane: LaneId, heroIds: readonly HeroId[]): LaneRepor
         .filter((e) => e.appliesTo === 'all' || e.appliesTo === role)
         .map((e) => e.modifiers),
     )
+
   return {
     lane,
     synergies: active.map((s) => s.id),

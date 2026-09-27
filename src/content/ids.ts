@@ -3,7 +3,7 @@ export type LaneId = (typeof LANE_IDS)[number]
 
 export type TeamId = 0 | 1
 export const TEAM_IDS: readonly TeamId[] = [0, 1]
-export const opponentOf = (team: TeamId): TeamId => (team === 0 ? 1 : 0)
+export const opponentOf = (team: TeamId) => (team === 0 ? 1 : 0)
 
 export const ROLE_IDS = ['carry', 'support', 'mage', 'initiator', 'pusher', 'ganker'] as const
 export type RoleId = (typeof ROLE_IDS)[number]
@@ -28,6 +28,7 @@ export const HERO_IDS = [
   'sniper',
   'oracle',
 ] as const
+
 export type HeroId = (typeof HERO_IDS)[number]
 
 export const ABILITY_IDS = [
@@ -50,6 +51,7 @@ export const ABILITY_IDS = [
   'assassinate',
   'shield',
 ] as const
+
 export type AbilityId = (typeof ABILITY_IDS)[number]
 
 export const SYNERGY_IDS = [
@@ -62,6 +64,7 @@ export const SYNERGY_IDS = [
   'arcane',
   'bulwark',
 ] as const
+
 export type SynergyId = (typeof SYNERGY_IDS)[number]
 
 export const ITEM_IDS = [
@@ -76,6 +79,7 @@ export const ITEM_IDS = [
   'thornMail',
   'aegis',
 ] as const
+
 export type ItemId = (typeof ITEM_IDS)[number]
 
 export type Tier = 1 | 2 | 3

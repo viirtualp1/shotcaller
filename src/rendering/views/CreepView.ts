@@ -19,10 +19,18 @@ export class CreepView extends EntityView {
     const shape = new Graphics()
     const r = radius * 1.15
     if (creep.summoned) {
-      shape.circle(0, 0, r).fill({ color: ownerColor ?? color, alpha: 0.85 })
+      shape.circle(0, 0, r).fill({
+        color: ownerColor ?? color,
+        alpha: 0.85,
+      })
+
       shape.circle(-r * 0.35, -r * 0.1, r * 0.22).fill(PALETTE.ink)
       shape.circle(r * 0.35, -r * 0.1, r * 0.22).fill(PALETTE.ink)
-      shape.circle(0, 0, r).stroke({ width: 1.4, color })
+
+      shape.circle(0, 0, r).stroke({
+        width: 1.4,
+        color,
+      })
     } else {
       switch (creep.variant) {
         case 'melee':
@@ -35,15 +43,34 @@ export class CreepView extends EntityView {
           shape.roundRect(-r, -r * 0.8, r * 2, r * 1.6, 2)
           break
       }
-      shape.fill({ color, alpha: 0.9 }).stroke({ width: 1, color: PALETTE.ink, alpha: 0.8 })
+
+      shape
+        .fill({
+          color,
+          alpha: 0.9,
+        })
+        .stroke({
+          width: 1,
+          color: PALETTE.ink,
+          alpha: 0.8,
+        })
     }
-    if (creep.mega) shape.circle(0, 0, r + 2.5).stroke({ width: 1.3, color: PALETTE.gold, alpha: 0.9 })
+
+    if (creep.mega) {
+      shape.circle(0, 0, r + 2.5).stroke({
+        width: 1.3,
+        color: PALETTE.gold,
+        alpha: 0.9,
+      })
+    }
+
     this.body.addChild(shape, this.bar)
   }
 
-  sync(entity: Entity): void {
+  sync(entity: Entity) {
     const health = entity.health
     this.bar.clear()
+
     if (health && health.current < health.max) {
       drawBar(this.bar, {
         y: -this.radius - 6,

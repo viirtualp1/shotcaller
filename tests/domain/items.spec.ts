@@ -6,9 +6,15 @@ import { HeroPool } from '@/domain/economy/HeroPool'
 import { itemSellValue, Player } from '@/domain/player/Player'
 
 function richPlayer() {
-  const player = new Player(0, { pool: new HeroPool(), rng: createRng('items'), ids: sequentialIds() })
+  const player = new Player(0, {
+    pool: new HeroPool(),
+    rng: createRng('items'),
+    ids: sequentialIds(),
+  })
+
   player.wallet.earn(200)
   player.shop.restock(player.level)
+
   return player
 }
 
@@ -33,10 +39,14 @@ describe('items', () => {
       player.buyItem('boots')
       player.equip(0, hero.uid)
     }
+
     player.buyItem('boots')
     expect(player.equip(0, hero.uid)._unsafeUnwrapErr().code).toBe('itemSlotsFull')
 
-    for (let i = player.stash.items.length; i < STASH_SIZE; i++) player.buyItem('boots')
+    for (let i = player.stash.items.length; i < STASH_SIZE; i++) {
+      player.buyItem('boots')
+    }
+
     expect(player.buyItem('boots')._unsafeUnwrapErr().code).toBe('stashFull')
   })
 

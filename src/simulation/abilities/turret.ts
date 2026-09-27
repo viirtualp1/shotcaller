@@ -13,11 +13,16 @@ export const turret: Ability = {
       caster.position,
       enemiesAround(ctx, caster, caster.position, P.triggerRadius, { includeStructures: true }),
     )
-    if (!target) return false
+
+    if (!target) {
+      return false
+    }
+
     ctx.factory.turret(
       caster,
       offset(caster.position, direction(caster.position, target.position), DEPLOY_DISTANCE),
     )
+
     return true
   },
 }

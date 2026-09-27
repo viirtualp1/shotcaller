@@ -24,7 +24,13 @@ function buildPath(lane: LaneId, points: readonly Vec2[]): LanePath {
     const b = points[i]!
     cumulative.push(cumulative[i - 1]! + Math.hypot(b.x - a.x, b.y - a.y))
   }
-  return { lane, points, cumulative, length: cumulative[cumulative.length - 1]! }
+
+  return {
+    lane,
+    points,
+    cumulative,
+    length: cumulative[cumulative.length - 1]!,
+  }
 }
 
 export class LaneMap {
@@ -32,6 +38,7 @@ export class LaneMap {
 
   constructor() {
     const forward = (lane: LaneId) => LANE_WAYPOINTS[lane].map(([x, y]) => vec2(x, y))
+
     const build = (team: TeamId) =>
       Object.fromEntries(
         LANE_IDS.map((lane) => {
@@ -39,26 +46,33 @@ export class LaneMap {
           return [lane, buildPath(lane, team === 0 ? points : [...points].reverse())]
         }),
       ) as Record<LaneId, LanePath>
-    this.paths = { 0: build(0), 1: build(1) }
+
+    this.paths = {
+      0: build(0),
+      1: build(1),
+    }
   }
 
-  base(team: TeamId): Vec2 {
+  base(team: TeamId) {
     const [x, y] = BASES[team]
     return vec2(x, y)
   }
 
   /** Path from the team's own base to the enemy base. */
-  path(team: TeamId, lane: LaneId): LanePath {
+  path(team: TeamId, lane: LaneId) {
     return this.paths[team][lane]
   }
 
-  segmentAt(path: LanePath, along: number): number {
+  segmentAt(path: LanePath, along: number) {
     let i = 0
-    while (i < path.points.length - 2 && path.cumulative[i + 1]! < along) i++
+    while (i < path.points.length - 2 && path.cumulative[i + 1]! < along) {
+      i++
+    }
+
     return i
   }
 
-  pointAt(path: LanePath, along: number): Vec2 {
+  pointAt(path: LanePath, along: number) {
     const s = Math.max(0, Math.min(path.length, along))
     const i = this.segmentAt(path, s)
     const a = path.points[i]!
@@ -69,15 +83,21 @@ export class LaneMap {
     return vec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
   }
 
-  tangentAt(path: LanePath, along: number): Vec2 {
+  tangentAt(path: LanePath, along: number) {
     const a = this.pointAt(path, along)
     const b = this.pointAt(path, along + 1)
     const d = Math.hypot(b.x - a.x, b.y - a.y) || 1
     return vec2((b.x - a.x) / d, (b.y - a.y) / d)
   }
 
-  project(path: LanePath, p: Vec2): PathProjection {
-    let best: PathProjection = { distance: Infinity, segment: 0, along: 0, point: p }
+  project(path: LanePath, p: Vec2) {
+    let best: PathProjection = {
+      distance: Infinity,
+      segment: 0,
+      along: 0,
+      point: p,
+    }
+
     for (let i = 0; i < path.points.length - 1; i++) {
       const a = path.points[i]!
       const b = path.points[i + 1]!
@@ -88,22 +108,28 @@ export class LaneMap {
       const point = vec2(a.x + vx * t, a.y + vy * t)
       const distance = Math.hypot(p.x - point.x, p.y - point.y)
       if (distance < best.distance) {
-        best = { distance, segment: i, along: path.cumulative[i]! + Math.sqrt(lengthSq) * t, point }
+        best = {
+          distance,
+          segment: i,
+          along: path.cumulative[i]! + Math.sqrt(lengthSq) * t,
+          point,
+        }
       }
     }
+
     return best
   }
 
-  towerAlong(path: LanePath): number {
+  towerAlong(path: LanePath) {
     return path.length * BATTLE.towerFraction
   }
 
-  towerPosition(team: TeamId, lane: LaneId): Vec2 {
+  towerPosition(team: TeamId, lane: LaneId) {
     const path = this.path(team, lane)
     return this.pointAt(path, this.towerAlong(path))
   }
 
-  nearestLane(p: Vec2, maxDistance = Infinity): LaneId | null {
+  nearestLane(p: Vec2, maxDistance = Infinity) {
     let best: LaneId | null = null
     let bestDistance = maxDistance
     for (const lane of LANE_IDS) {
@@ -113,10 +139,11 @@ export class LaneMap {
         best = lane
       }
     }
+
     return best
   }
 
-  allPaths(): LanePath[] {
+  allPaths() {
     return TEAM_IDS.flatMap((team) => LANE_IDS.map((lane) => this.path(team, lane)))
   }
 }

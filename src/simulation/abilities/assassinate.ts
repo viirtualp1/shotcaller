@@ -8,7 +8,10 @@ export const assassinate: Ability = {
   id: 'assassinate',
   cast(caster, ctx) {
     const target = weakest(enemiesAround(ctx, caster, caster.position, P.radius, { heroesOnly: true }))
-    if (!target) return false
+    if (!target) {
+      return false
+    }
+
     ctx.factory.projectile(
       {
         source: caster,
@@ -21,6 +24,7 @@ export const assassinate: Ability = {
       },
       caster.color,
     )
+
     return true
   },
 }

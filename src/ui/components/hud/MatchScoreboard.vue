@@ -12,30 +12,44 @@ const timer = usePlanningTimerStore()
 const { t } = useGameText()
 const view = computed(() => store.view!)
 const structures = computed(() => store.live?.structures ?? view.value.structures)
+
 const secondsLeft = computed(() =>
   store.live ? Math.max(0, Math.ceil(store.live.duration - store.live.elapsed)) : null,
 )
+
 const planningLeft = computed(() =>
   store.isPlanning && timer.remaining !== null ? Math.ceil(timer.remaining) : null,
 )
+
 const urgent = computed(() => planningLeft.value !== null && planningLeft.value <= URGENT_SECONDS)
+
 const progress = computed(() => {
-  if (store.live && store.phase === 'battle') return Math.min(1, store.live.elapsed / store.live.duration)
-  if (timer.remaining !== null && timer.total) return timer.remaining / timer.total
+  if (store.live && store.phase === 'battle') {
+    return Math.min(1, store.live.elapsed / store.live.duration)
+  }
+
+  if (timer.remaining !== null && timer.total) {
+    return timer.remaining / timer.total
+  }
+
   return 0
 })
+
 const showProgress = computed(() => store.phase === 'battle' || planningLeft.value !== null)
 </script>
 
 <template>
   <div class="scoreboard" data-tour="scoreboard">
     <BaseStatus :team="0" :structures="structures[0]" />
+
     <div class="center">
       <span class="round">{{ t('hud.round', { round: view.round, max: view.maxRounds }) }}</span>
+
       <Transition name="phase" mode="out-in">
         <span v-if="store.phase === 'battle' && secondsLeft !== null" key="timer" class="phase battle">
           {{ t('battle.timeLeft', { s: secondsLeft }) }}
         </span>
+
         <span
           v-else-if="planningLeft !== null"
           key="planning"
@@ -45,14 +59,17 @@ const showProgress = computed(() => store.phase === 'battle' || planningLeft.val
         >
           {{ t('phase.planning') }} · {{ t('battle.timeLeft', { s: planningLeft }) }}
         </span>
+
         <span v-else :key="view.phase" class="phase" :data-phase="view.phase">{{
           t(`phase.${view.phase}`)
         }}</span>
       </Transition>
+
       <span class="progress" :class="{ visible: showProgress, planning: store.isPlanning, urgent }">
         <i :style="{ width: `${progress * 100}%` }" />
       </span>
     </div>
+
     <BaseStatus :team="1" :structures="structures[1]" />
   </div>
 </template>

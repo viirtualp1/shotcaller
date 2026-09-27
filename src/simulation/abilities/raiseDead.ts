@@ -11,6 +11,7 @@ export const raiseDead: Ability = {
     if (!enemiesAround(ctx, caster, caster.position, P.triggerRadius, { includeStructures: true }).length) {
       return false
     }
+
     for (let i = 0; i < P.count; i++) {
       const angle = (i / P.count) * Math.PI * 2
       ctx.factory.skeleton(caster, {
@@ -18,7 +19,13 @@ export const raiseDead: Ability = {
         y: caster.position.y + Math.sin(angle) * SPREAD,
       })
     }
-    ctx.events.emit('burst', { at: { ...caster.position }, radius: 40, color: 0x9fd0a0 })
+
+    ctx.events.emit('burst', {
+      at: { ...caster.position },
+      radius: 40,
+      color: 0x9fd0a0,
+    })
+
     return true
   },
 }

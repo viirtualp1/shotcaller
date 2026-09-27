@@ -8,14 +8,27 @@ export class AbilitySystem implements System {
     private readonly abilities: AbilityRegistry,
   ) {}
 
-  update(): void {
+  update() {
     for (const caster of this.ctx.queries.casters) {
-      if (!isHero(caster) || !isAlive(caster) || isDisabled(caster)) continue
-      if (caster.mana.current < caster.mana.max) continue
+      if (!isHero(caster) || !isAlive(caster) || isDisabled(caster)) {
+        continue
+      }
+
+      if (caster.mana.current < caster.mana.max) {
+        continue
+      }
+
       const ability = this.abilities[caster.caster.ability]
-      if (!ability.cast(caster, this.ctx)) continue
+      if (!ability.cast(caster, this.ctx)) {
+        continue
+      }
+
       caster.mana.current = 0
-      this.ctx.events.emit('abilityCast', { caster, ability: ability.id })
+
+      this.ctx.events.emit('abilityCast', {
+        caster,
+        ability: ability.id,
+      })
     }
   }
 }

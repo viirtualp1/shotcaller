@@ -1,3 +1,4 @@
+import stylistic from '@stylistic/eslint-plugin'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import type { Linter } from 'eslint'
 import prettier from 'eslint-config-prettier/flat'
@@ -6,9 +7,134 @@ import pluginVue from 'eslint-plugin-vue'
 const layer = (files: string[], forbidden: string[], message: string): Linter.Config => ({
   files,
   rules: {
-    'no-restricted-imports': ['error', { patterns: [{ group: forbidden, message }] }],
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            group: forbidden,
+            message,
+          },
+        ],
+      },
+    ],
   },
 })
+
+/** Statements that close a thought: they get a blank line around them. */
+const CHUNKS = [
+  'block-like',
+  'multiline-const',
+  'multiline-let',
+  'multiline-expression',
+  'multiline-export',
+  'multiline-type',
+  'interface',
+  'class',
+]
+
+/** Formatting that Prettier leaves open; it runs after Prettier and never contradicts it. */
+const codeStyle: Linter.Config = {
+  plugins: { '@stylistic': stylistic },
+  rules: {
+    curly: ['error', 'all'],
+    '@stylistic/padding-line-between-statements': [
+      'error',
+      {
+        blankLine: 'always',
+        prev: '*',
+        next: ['return', 'throw', ...CHUNKS],
+      },
+      {
+        blankLine: 'any',
+        prev: ['singleline-const', 'singleline-let'],
+        next: ['return', 'throw', 'block-like', 'multiline-expression'],
+      },
+      {
+        blankLine: 'always',
+        prev: CHUNKS,
+        next: '*',
+      },
+      {
+        blankLine: 'always',
+        prev: 'import',
+        next: '*',
+      },
+      {
+        blankLine: 'any',
+        prev: 'import',
+        next: 'import',
+      },
+    ],
+    '@stylistic/lines-between-class-members': [
+      'error',
+      {
+        enforce: [
+          {
+            blankLine: 'always',
+            prev: 'method',
+            next: '*',
+          },
+          {
+            blankLine: 'always',
+            prev: '*',
+            next: 'method',
+          },
+        ],
+      },
+    ],
+    '@stylistic/object-curly-newline': [
+      'error',
+      {
+        ObjectExpression: {
+          multiline: true,
+          minProperties: 2,
+          consistent: true,
+        },
+        ObjectPattern: {
+          multiline: true,
+          consistent: true,
+        },
+        ImportDeclaration: {
+          multiline: true,
+          consistent: true,
+        },
+        ExportDeclaration: {
+          multiline: true,
+          consistent: true,
+        },
+      },
+    ],
+    '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
+    'vue/padding-line-between-tags': [
+      'error',
+      [
+        {
+          blankLine: 'consistent',
+          prev: '*',
+          next: '*',
+        },
+        {
+          blankLine: 'always',
+          prev: '*:multi-line',
+          next: '*',
+        },
+        {
+          blankLine: 'always',
+          prev: '*',
+          next: '*:multi-line',
+        },
+      ],
+    ],
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: ':function > TSTypeAnnotation.returnType > TSVoidKeyword',
+        message: 'Leave void return types to inference.',
+      },
+    ],
+  },
+}
 
 export default defineConfigWithVueTs(
   { ignores: ['dist/**', 'node_modules/**'] },
@@ -31,4 +157,5 @@ export default defineConfigWithVueTs(
   ),
   layer(['src/rendering/**'], ['@/application/*', '@/ui/*', 'vue'], 'rendering must not depend on the UI'),
   prettier,
+  codeStyle,
 )

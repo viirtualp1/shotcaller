@@ -9,13 +9,21 @@ export interface IncomeBreakdown {
   readonly total: number
 }
 
-export function computeIncome(currentGold: number, stats: TeamBattleStats, won: boolean): IncomeBreakdown {
+export function computeIncome(currentGold: number, stats: TeamBattleStats, won: boolean) {
   const base = ECONOMY.baseIncome
   const interest = Math.min(Math.floor(currentGold / ECONOMY.goldPerInterest), ECONOMY.maxInterest)
+
   const farm = Math.min(
     Math.floor(stats.creepKills / ECONOMY.creepKillsPerGold) + stats.heroKills,
     ECONOMY.maxFarmIncome,
   )
+
   const win = won ? ECONOMY.winBonus : 0
-  return { base, interest, farm, win, total: base + interest + farm + win }
+  return {
+    base,
+    interest,
+    farm,
+    win,
+    total: base + interest + farm + win,
+  }
 }

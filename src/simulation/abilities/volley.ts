@@ -10,6 +10,7 @@ export const volley: Ability = {
     const targets = enemiesAround(ctx, caster, caster.position, caster.attack.range + P.rangeBonus)
       .sort(byDistance(caster.position))
       .slice(0, P.arrows)
+
     for (const target of targets) {
       ctx.factory.projectile(
         {
@@ -24,6 +25,7 @@ export const volley: Ability = {
         caster.color ?? 0xffffff,
       )
     }
+
     return targets.length > 0
   },
 }

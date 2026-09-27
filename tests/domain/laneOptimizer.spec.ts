@@ -4,7 +4,12 @@ import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
 import { resolveLane } from '@/domain/synergy/resolveLane'
 
 const team = (...ids: HeroId[]) =>
-  ids.map((heroId, i) => ({ uid: `u${i}`, heroId, stars: 1 as const, items: [] }))
+  ids.map((heroId, i) => ({
+    uid: `u${i}`,
+    heroId,
+    stars: 1 as const,
+    items: [],
+  }))
 
 describe('resolveLane', () => {
   it('activates guardian for a carry with a support', () => {

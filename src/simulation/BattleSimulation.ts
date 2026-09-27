@@ -3,13 +3,7 @@ import mitt from 'mitt'
 import { LANE_IDS, TEAM_IDS, type HeroId, type StarLevel, type TeamId } from '@/content/ids'
 import { BATTLE } from '@/content/rules'
 import { createRng } from '@/core/random/rng'
-import type {
-  BattleOutcome,
-  BattleResolver,
-  BattleSetup,
-  PerTeam,
-  StructureState,
-} from '@/domain/battle/contracts'
+import type { BattleOutcome, BattleResolver, BattleSetup, StructureState } from '@/domain/battle/contracts'
 import { emptyStructureState } from '@/domain/match/structures'
 import { resolveLane } from '@/domain/synergy/resolveLane'
 import { ABILITIES, type AbilityRegistry } from './abilities/registry'
@@ -90,10 +84,15 @@ export class BattleSimulation {
       combat: new CombatService(this.world, this.events, index, structureScale),
       factory: new EntityFactory(this.world, this.map, rng),
     }
+
     this.recorder = new BattleStatsRecorder(this.events)
+
     this.events.on('structureDestroyed', ({ structure }) => {
-      if (structure.structure?.type === 'throne') this.fallenThrone = structure.team
+      if (structure.structure?.type === 'throne') {
+        this.fallenThrone = structure.team
+      }
     })
+
     this.spawnStartingUnits()
 
     const ctx = this.ctx
@@ -116,28 +115,37 @@ export class BattleSimulation {
     ]
   }
 
-  get elapsed(): number {
+  get elapsed() {
     return this.clock.elapsed
   }
 
-  get duration(): number {
+  get duration() {
     return BATTLE.duration
   }
 
-  get isOver(): boolean {
+  get isOver() {
     return this.fallenThrone !== null || this.clock.elapsed >= BATTLE.duration
   }
 
-  step(dt: number = BATTLE.step): void {
-    if (this.isOver) return
+  step(dt: number = BATTLE.step) {
+    if (this.isOver) {
+      return
+    }
+
     this.clock.elapsed += dt
     this.ctx.safety.reset()
     this.ctx.index.sync()
-    for (const system of this.systems) system.update(dt)
+
+    for (const system of this.systems) {
+      system.update(dt)
+    }
   }
 
-  runToEnd(): BattleOutcome {
-    while (!this.isOver) this.step()
+  runToEnd() {
+    while (!this.isOver) {
+      this.step()
+    }
+
     return this.outcome()
   }
 
@@ -152,21 +160,26 @@ export class BattleSimulation {
         heroId: h.hero.heroId,
         stars: h.hero.stars,
         damageDealt: Math.round(h.hero.damageDealt),
+        damageReceived: Math.round(h.hero.damageReceived),
+        structureDamage: Math.round(h.hero.structureDamage),
+        healing: Math.round(h.hero.healing),
+        lastHits: h.hero.lastHits,
         kills: h.hero.kills,
         deaths: h.hero.deaths,
       })),
     }
   }
 
-  structureHealth(): PerTeam<StructureState> {
+  structureHealth() {
     const result: [StructureState, StructureState] = [emptyStructureState(), emptyStructureState()]
     for (const s of this.queries.structures) {
       result[s.team][s.structure.lane ?? 'throne'] = Math.max(0, Math.round(s.health.current))
     }
+
     return result
   }
 
-  heroStatus(): ReadonlyMap<string, HeroStatus> {
+  heroStatus() {
     const status = new Map<string, HeroStatus>()
     for (const h of this.queries.heroes) {
       status.set(h.hero.uid, {
@@ -182,34 +195,40 @@ export class BattleSimulation {
         kills: h.hero.kills,
       })
     }
+
     return status
   }
 
-  dispose(): void {
+  dispose() {
     this.events.all.clear()
     this.ctx.index.dispose()
     this.world.clear()
   }
 
-  private spawnStartingUnits(): void {
+  private spawnStartingUnits() {
     const { factory } = this.ctx
     for (const team of TEAM_IDS) {
       const structures = this.setup.structures[team]
-      for (const lane of LANE_IDS)
-        if (structures[lane] > 0) factory.structure(team, 'tower', lane, structures[lane])
+      for (const lane of LANE_IDS) {
+        if (structures[lane] > 0) {
+          factory.structure(team, 'tower', lane, structures[lane])
+        }
+      }
+
       factory.structure(team, 'throne', null, structures.throne)
+
       for (const lane of LANE_IDS) {
         const lineup = this.setup.lineups[team][lane]
+
         const report = resolveLane(
           lane,
           lineup.map((h) => h.heroId),
         )
+
         lineup.forEach((owned, slot) => factory.hero(owned, team, lane, report, slot))
       }
     }
   }
 }
 
-export const headlessResolver: BattleResolver = {
-  resolve: (setup) => new BattleSimulation(setup).runToEnd(),
-}
+export const headlessResolver: BattleResolver = { resolve: (setup) => new BattleSimulation(setup).runToEnd() }

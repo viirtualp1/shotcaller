@@ -17,9 +17,7 @@ export default defineConfig({
     }),
   ],
   base: './',
-  resolve: {
-    alias: { '@': src('') },
-  },
+  resolve: { alias: { '@': src('') } },
   build: {
     chunkSizeWarningLimit: 600,
     rolldownOptions: {
@@ -34,7 +32,10 @@ export default defineConfig({
               name: 'vue',
               test: /node_modules[\\/](@vue|vue|pinia|vue-i18n|@intlify|reka-ui|@vueuse|@floating-ui|vue-draggable-plus|sortablejs)/,
             },
-            { name: 'vendor', test: /node_modules/ },
+            {
+              name: 'vendor',
+              test: /node_modules/,
+            },
           ],
         },
       },

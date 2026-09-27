@@ -10,6 +10,7 @@ import { Shop, type ShopSlot } from '../economy/Shop'
 import { Wallet } from '../economy/Wallet'
 import type { DomainError } from '../errors'
 import { Stash } from '../items/Stash'
+import { emptyLedger, type Ledger } from './ledger'
 import { CoachProgression } from '../progression/CoachProgression'
 import { promoteDuplicates, wouldPromote } from '../roster/promotion'
 import { Roster, type OwnedHero, type RosterSlot, type RosterState } from '../roster/Roster'
@@ -33,12 +34,13 @@ export interface PlayerState {
   readonly roster: RosterState
   readonly shop: readonly ShopSlot[]
   readonly stash: readonly ItemId[]
+  readonly ledger: Ledger
 }
 
 export type RoundVerdict = 'win' | 'loss' | 'draw'
 
-export const sellValue = (hero: OwnedHero): number => HEROES[hero.heroId].tier * COPIES_PER_STAR[hero.stars]
-export const itemSellValue = (item: ItemId): number => Math.floor(ITEMS[item].cost * ITEM_SELL_RATIO)
+export const sellValue = (hero: OwnedHero) => HEROES[hero.heroId].tier * COPIES_PER_STAR[hero.stars]
+export const itemSellValue = (item: ItemId) => Math.floor(ITEMS[item].cost * ITEM_SELL_RATIO)
 
 export class Player {
   readonly wallet = new Wallet(ECONOMY.startGold)
@@ -47,6 +49,7 @@ export class Player {
   readonly stash = new Stash()
   readonly shop: Shop
   private winStreak = 0
+  private readonly books: Ledger = emptyLedger()
 
   constructor(
     readonly team: TeamId,
@@ -55,76 +58,143 @@ export class Player {
     this.shop = new Shop(deps.pool, deps.rng)
   }
 
-  get level(): CoachLevel {
+  get level() {
     return this.progression.level
   }
 
-  get boardCapacity(): number {
+  get boardCapacity() {
     return this.progression.level
   }
 
-  get streak(): number {
+  get streak() {
     return this.winStreak
+  }
+
+  get ledger(): Readonly<Ledger> {
+    return this.books
   }
 
   buy(slot: number): Result<Purchase, DomainError> {
     const heroId = this.shop.offerAt(slot)
-    if (!heroId) return err({ code: 'slotEmpty' })
-    if (!this.roster.hasBenchSpace && !wouldPromote(this.roster, heroId)) return err({ code: 'benchFull' })
-    return this.wallet.spend(HEROES[heroId].tier).map(() => {
+    if (!heroId) {
+      return err({ code: 'slotEmpty' })
+    }
+
+    if (!this.roster.hasBenchSpace && !wouldPromote(this.roster, heroId)) {
+      return err({ code: 'benchFull' })
+    }
+
+    const cost = HEROES[heroId].tier
+
+    return this.wallet.spend(cost).map(() => {
       this.shop.claim(slot)
-      const hero: OwnedHero = { uid: this.deps.ids(), heroId, stars: 1, items: [] }
+      this.books.heroesBought++
+      this.books.goldSpent += cost
+
+      const hero: OwnedHero = {
+        uid: this.deps.ids(),
+        heroId,
+        stars: 1,
+        items: [],
+      }
+
       this.roster.add(hero)
       const { promoted, freedItems } = promoteDuplicates(this.roster)
       this.storeOrRefund(freedItems)
-      return { hero, promoted }
+      this.books.promotions += promoted.length
+
+      return {
+        hero,
+        promoted,
+      }
     })
   }
 
   sell(uid: string): Result<number, DomainError> {
     const hero = this.roster.remove(uid)
-    if (!hero) return err({ code: 'heroNotFound' })
+    if (!hero) {
+      return err({ code: 'heroNotFound' })
+    }
+
     const value = sellValue(hero)
     this.wallet.earn(value)
+    this.books.heroesSold++
+    this.books.goldFromSales += value
     this.deps.pool.release(hero.heroId, COPIES_PER_STAR[hero.stars])
     this.storeOrRefund(hero.items)
+
     return ok(value)
   }
 
   reroll(): Result<void, DomainError> {
-    return this.wallet.spend(ECONOMY.rerollCost).map(() => this.shop.restock(this.level))
+    return this.wallet.spend(ECONOMY.rerollCost).map(() => {
+      this.books.rerolls++
+      this.books.goldSpent += ECONOMY.rerollCost
+      this.shop.restock(this.level)
+    })
   }
 
   buyXp(): Result<void, DomainError> {
-    if (this.progression.isMaxLevel) return err({ code: 'maxLevel' })
-    return this.wallet.spend(ECONOMY.xpCost).map(() => this.progression.gain(ECONOMY.xpPerPurchase))
+    if (this.progression.isMaxLevel) {
+      return err({ code: 'maxLevel' })
+    }
+
+    return this.wallet.spend(ECONOMY.xpCost).map(() => {
+      this.books.xpBought++
+      this.books.goldSpent += ECONOMY.xpCost
+      this.progression.gain(ECONOMY.xpPerPurchase)
+    })
   }
 
   buyItem(item: ItemId): Result<void, DomainError> {
-    if (this.stash.isFull) return err({ code: 'stashFull' })
-    return this.wallet.spend(ITEMS[item].cost).andThen(() => this.stash.put(item))
+    if (this.stash.isFull) {
+      return err({ code: 'stashFull' })
+    }
+
+    return this.wallet
+      .spend(ITEMS[item].cost)
+      .andThen(() => this.stash.put(item))
+      .map(() => {
+        this.books.itemsBought++
+        this.books.goldSpent += ITEMS[item].cost
+      })
   }
 
   sellItem(index: number): Result<number, DomainError> {
     return this.stash.take(index).map((item) => {
       const value = itemSellValue(item)
       this.wallet.earn(value)
+      this.books.itemsSold++
+      this.books.goldFromSales += value
+
       return value
     })
   }
 
   equip(stashIndex: number, uid: string): Result<void, DomainError> {
     const location = this.roster.locate(uid)
-    if (!location) return err({ code: 'heroNotFound' })
-    if (location.hero.items.length >= ITEM_SLOTS) return err({ code: 'itemSlotsFull' })
+    if (!location) {
+      return err({ code: 'heroNotFound' })
+    }
+
+    if (location.hero.items.length >= ITEM_SLOTS) {
+      return err({ code: 'itemSlotsFull' })
+    }
+
     return this.stash.take(stashIndex).map((item) => void location.hero.items.push(item))
   }
 
   unequip(uid: string, itemIndex: number): Result<void, DomainError> {
     const hero = this.roster.locate(uid)?.hero
-    if (!hero) return err({ code: 'heroNotFound' })
+    if (!hero) {
+      return err({ code: 'heroNotFound' })
+    }
+
     const item = hero.items[itemIndex]
-    if (!item) return err({ code: 'itemNotFound' })
+    if (!item) {
+      return err({ code: 'itemNotFound' })
+    }
+
     return this.stash.put(item).map(() => void hero.items.splice(itemIndex, 1))
   }
 
@@ -136,19 +206,24 @@ export class Player {
     return this.roster.swap(a, b)
   }
 
-  prepareRound(): void {
+  prepareRound() {
     this.progression.gain(ECONOMY.passiveXpPerRound)
     this.shop.restock(this.level)
   }
 
-  recordRound(verdict: RoundVerdict, income: number): void {
+  recordRound(verdict: RoundVerdict, income: number) {
     this.wallet.earn(income)
-    if (verdict === 'draw') this.winStreak = 0
-    else if (verdict === 'win') this.winStreak = Math.max(1, this.winStreak + 1)
-    else this.winStreak = Math.min(-1, this.winStreak - 1)
+
+    if (verdict === 'draw') {
+      this.winStreak = 0
+    } else if (verdict === 'win') {
+      this.winStreak = Math.max(1, this.winStreak + 1)
+    } else {
+      this.winStreak = Math.min(-1, this.winStreak - 1)
+    }
   }
 
-  snapshot(): PlayerState {
+  snapshot() {
     return {
       gold: this.wallet.gold,
       level: this.progression.level,
@@ -157,22 +232,26 @@ export class Player {
       roster: this.roster.snapshot(),
       shop: [...this.shop.slots],
       stash: [...this.stash.items],
+      ledger: { ...this.books },
     }
   }
 
-  restore(state: PlayerState): void {
+  restore(state: PlayerState) {
     this.wallet.restore(state.gold)
     this.progression.restore(state.level, state.xp)
     this.winStreak = state.streak
     this.roster.restore(state.roster)
     this.shop.restore(state.shop)
     this.stash.restore(state.stash)
+    Object.assign(this.books, state.ledger)
   }
 
   /** Items with nowhere to go are sold rather than silently lost. */
-  private storeOrRefund(items: readonly ItemId[]): void {
+  private storeOrRefund(items: readonly ItemId[]) {
     for (const item of items) {
-      if (this.stash.put(item).isErr()) this.wallet.earn(itemSellValue(item))
+      if (this.stash.put(item).isErr()) {
+        this.wallet.earn(itemSellValue(item))
+      }
     }
   }
 }

@@ -10,7 +10,7 @@ export interface MatchOptions {
   readonly opponentCoach?: CoachStrategy
 }
 
-export function createMatch(options: MatchOptions = {}): Match {
+export function createMatch(options: MatchOptions = {}) {
   return new Match({
     rng: createRng(options.seed),
     ids: options.ids ?? randomIds,
@@ -18,7 +18,7 @@ export function createMatch(options: MatchOptions = {}): Match {
   })
 }
 
-export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'seed'> = {}): Match {
+export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'seed'> = {}) {
   return new Match(
     {
       rng: createRng(undefined, state.rng),

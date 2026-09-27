@@ -20,13 +20,25 @@ export const usePlanningTimerStore = defineStore('planningTimer', () => {
     { immediate: true },
   )
 
-  function tick(realSeconds: number): void {
-    if (remaining.value === null || !match.isPlanning || pause.paused) return
+  function tick(realSeconds: number) {
+    if (remaining.value === null || !match.isPlanning || pause.paused) {
+      return
+    }
+
     remaining.value = Math.max(0, remaining.value - realSeconds)
-    if (remaining.value > 0) return
+
+    if (remaining.value > 0) {
+      return
+    }
+
     remaining.value = null
     match.startBattleOnTimeout()
   }
 
-  return { remaining, total, paused, tick }
+  return {
+    remaining,
+    total,
+    paused,
+    tick,
+  }
 })

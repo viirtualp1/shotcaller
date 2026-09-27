@@ -9,17 +9,17 @@ const menu = useMenuStore()
 const store = useMatchStore()
 const { t } = useGameText()
 
-function open(dialog: 'help' | 'settings' | 'newMatch'): void {
+function open(dialog: 'help' | 'settings' | 'newMatch') {
   menu.gameMenu = false
   menu[dialog] = true
 }
 
-function tutorial(): void {
+function tutorial() {
   menu.gameMenu = false
   menu.requestTutorial()
 }
 
-function leave(): void {
+function leave() {
   menu.gameMenu = false
   store.leaveToMenu()
 }
@@ -29,28 +29,36 @@ function leave(): void {
   <DialogRoot v-model:open="menu.gameMenu">
     <DialogPortal>
       <DialogOverlay class="overlay menu-overlay" />
+
       <DialogContent class="game-menu" :aria-describedby="undefined">
         <DialogTitle class="title hand">{{ t('app.title') }}</DialogTitle>
+
         <nav class="items">
           <button type="button" class="btn primary block big" @click="menu.gameMenu = false">
             <Play :size="18" /> {{ t('menu.resume') }}
           </button>
+
           <button type="button" class="btn block big" @click="open('help')">
             <CircleHelp :size="18" /> {{ t('hud.help') }}
           </button>
+
           <button type="button" class="btn block big" @click="tutorial">
             <GraduationCap :size="18" /> {{ t('hud.tutorial') }}
           </button>
+
           <button type="button" class="btn block big" @click="open('settings')">
             <Settings :size="18" /> {{ t('hud.settings') }}
           </button>
+
           <button type="button" class="btn block big" @click="open('newMatch')">
             <RotateCcw :size="18" /> {{ t('hud.newMatch') }}
           </button>
+
           <button type="button" class="btn ghost block big" @click="leave">
             <LogOut :size="18" /> {{ t('hud.toMenu') }}
           </button>
         </nav>
+
         <p class="note">{{ t('hud.saved') }}</p>
       </DialogContent>
     </DialogPortal>

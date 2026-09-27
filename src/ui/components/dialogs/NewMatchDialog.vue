@@ -25,15 +25,20 @@ const withTutorial = ref(!tour.completed.value)
 watch(
   () => menu.newMatch,
   (open) => {
-    if (open) withTutorial.value = !tour.completed.value
+    if (open) {
+      withTutorial.value = !tour.completed.value
+    }
   },
 )
 
-function start(): void {
+function start() {
   menu.newMatch = false
   menu.gameMenu = false
   store.newMatch()
-  if (withTutorial.value) menu.requestTutorial()
+
+  if (withTutorial.value) {
+    menu.requestTutorial()
+  }
 }
 </script>
 
@@ -41,19 +46,24 @@ function start(): void {
   <DialogRoot v-model:open="menu.newMatch">
     <DialogPortal>
       <DialogOverlay class="overlay" />
+
       <DialogContent class="sheet new-match" :aria-describedby="undefined">
         <DialogTitle class="title hand">{{ t('newMatch.title') }}</DialogTitle>
         <SettingsFields />
+
         <label class="tutorial">
           <CheckboxRoot v-model="withTutorial" class="checkbox">
             <CheckboxIndicator class="tick">✓</CheckboxIndicator>
           </CheckboxRoot>
+
           <span>{{ t('newMatch.tutorial') }}</span>
         </label>
+
         <div class="actions">
           <button type="button" class="btn primary block big" @click="start">
             <Play :size="18" /> {{ t('newMatch.start') }}
           </button>
+
           <button type="button" class="btn ghost block" @click="menu.newMatch = false">
             {{ t('newMatch.cancel') }}
           </button>

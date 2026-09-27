@@ -20,13 +20,20 @@ export function createRng(seed: string = globalThis.crypto.randomUUID(), restore
   }
 }
 
-export function weightedPick<T>(rng: Rng, items: readonly T[], weight: (item: T) => number): T | undefined {
+export function weightedPick<T>(rng: Rng, items: readonly T[], weight: (item: T) => number) {
   const total = items.reduce((sum, item) => sum + weight(item), 0)
-  if (total <= 0) return undefined
+  if (total <= 0) {
+    return undefined
+  }
+
   let roll = rng.next() * total
   for (const item of items) {
     roll -= weight(item)
-    if (roll < 0) return item
+
+    if (roll < 0) {
+      return item
+    }
   }
+
   return items[items.length - 1]
 }

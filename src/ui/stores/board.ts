@@ -6,9 +6,12 @@ import type { BoardRenderer } from '@/rendering/BoardRenderer'
 export const useBoardStore = defineStore('board', () => {
   const renderer = shallowRef<BoardRenderer | null>(null)
 
-  function register(board: BoardRenderer | null): void {
+  function register(board: BoardRenderer | null) {
     renderer.value = board ? markRaw(board) : null
   }
 
-  return { renderer, register }
+  return {
+    renderer,
+    register,
+  }
 })

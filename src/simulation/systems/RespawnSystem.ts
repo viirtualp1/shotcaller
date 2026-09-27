@@ -7,15 +7,21 @@ const SPAWN_SPREAD = 10
 export class RespawnSystem implements System {
   constructor(private readonly ctx: SimulationContext) {}
 
-  update(dt: number): void {
+  update(dt: number) {
     for (const hero of this.ctx.queries.heroes) {
-      if (!hero.dead) continue
+      if (!hero.dead) {
+        continue
+      }
+
       hero.respawnTimer = (hero.respawnTimer ?? 0) - dt
-      if (hero.respawnTimer <= 0) this.revive(hero)
+
+      if (hero.respawnTimer <= 0) {
+        this.revive(hero)
+      }
     }
   }
 
-  private revive(hero: HeroUnit): void {
+  private revive(hero: HeroUnit) {
     const { world, map, rng } = this.ctx
     const base = map.base(hero.team)
     hero.position.x = base.x + rng.range(-SPAWN_SPREAD, SPAWN_SPREAD)
@@ -25,13 +31,33 @@ export class RespawnSystem implements System {
     hero.status.stun = hero.status.root = hero.status.slow = 0
     hero.targeting.target = null
     hero.targeting.chasing = false
-    if (hero.laneFollower) hero.laneFollower.waypoint = 1
-    if (hero.roamer) hero.roamer.quarry = null
-    if (hero.spin) world.removeComponent(hero, 'spin')
-    if (hero.dot) world.removeComponent(hero, 'dot')
-    if (hero.shield) world.removeComponent(hero, 'shield')
+
+    if (hero.laneFollower) {
+      hero.laneFollower.waypoint = 1
+    }
+
+    if (hero.roamer) {
+      hero.roamer.quarry = null
+    }
+
+    if (hero.spin) {
+      world.removeComponent(hero, 'spin')
+    }
+
+    if (hero.dot) {
+      world.removeComponent(hero, 'dot')
+    }
+
+    if (hero.shield) {
+      world.removeComponent(hero, 'shield')
+    }
+
     delete hero.respawnTimer
     world.removeComponent(hero, 'dead')
-    this.ctx.events.emit('revived', { hero, byItem: false })
+
+    this.ctx.events.emit('revived', {
+      hero,
+      byItem: false,
+    })
   }
 }

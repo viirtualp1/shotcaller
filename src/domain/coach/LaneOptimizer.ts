@@ -22,10 +22,10 @@ const gain = (key: keyof StatModifiers, value: number) => (key === 'damageTaken'
 
 const ITEM_POWER = 0.8
 
-export const heroPower = (hero: OwnedHero): number =>
+export const heroPower = (hero: OwnedHero) =>
   (HEROES[hero.heroId].tier + 1.5) * STAR_POWER[hero.stars] + hero.items.length * ITEM_POWER
 
-function effectiveness(modifiers: StatModifiers): number {
+function effectiveness(modifiers: StatModifiers) {
   return (Object.keys(MODIFIER_WEIGHTS) as (keyof StatModifiers)[]).reduce(
     (product, key) => product * (1 + gain(key, modifiers[key]) * MODIFIER_WEIGHTS[key]),
     1,
@@ -36,25 +36,31 @@ export class LaneOptimizer {
   constructor(private readonly noise = 0.05) {}
 
   /** Square root rewards spreading power across lanes instead of stacking one. */
-  score(team: readonly OwnedHero[], lanes: readonly LaneId[]): number {
+  score(team: readonly OwnedHero[], lanes: readonly LaneId[]) {
     let total = 0
     for (const lane of LANE_IDS) {
       const group = team.filter((_, i) => lanes[i] === lane)
-      if (!group.length) continue
+      if (!group.length) {
+        continue
+      }
+
       const report = resolveLane(
         lane,
         group.map((h) => h.heroId),
       )
+
       const power = group.reduce(
         (sum, h) => sum + heroPower(h) * effectiveness(report.synergyModifiersFor(HEROES[h.heroId].role)),
         0,
       )
+
       total += Math.sqrt(power)
     }
+
     return total
   }
 
-  assign(team: readonly OwnedHero[], rng?: Rng): LaneId[] {
+  assign(team: readonly OwnedHero[], rng?: Rng) {
     let best: LaneId[] = team.map(() => 'mid')
     let bestScore = -Infinity
     for (let code = 0; code < LANE_IDS.length ** team.length; code++) {
@@ -65,6 +71,7 @@ export class LaneOptimizer {
         best = lanes
       }
     }
+
     return best
   }
 }

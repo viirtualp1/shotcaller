@@ -15,9 +15,20 @@ const { t } = text
 const human = computed(() => store.view!.human)
 const empties = computed(() => Math.max(0, human.value.stashSize - human.value.stash.length))
 
-function press(item: StashItemView, e: PointerEvent): void {
-  if (e.button !== 0) return
-  drag.press({ kind: 'item', index: item.index, itemId: item.itemId }, e.clientX, e.clientY)
+function press(item: StashItemView, e: PointerEvent) {
+  if (e.button !== 0) {
+    return
+  }
+
+  drag.press(
+    {
+      kind: 'item',
+      index: item.index,
+      itemId: item.itemId,
+    },
+    e.clientX,
+    e.clientY,
+  )
 }
 </script>
 
@@ -39,11 +50,13 @@ function press(item: StashItemView, e: PointerEvent): void {
         >
           <ItemIcon :item-id="item.itemId" :size="34" />
         </button>
+
         <template #content>
           <strong>{{ text.itemName(item.itemId) }}</strong>
           <div>{{ text.itemDescription(item.itemId) }}</div>
         </template>
       </InfoTooltip>
+
       <span v-for="n in empties" :key="`empty-${n}`" class="slot empty" aria-hidden="true" />
     </div>
   </HudPanel>

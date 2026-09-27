@@ -63,6 +63,20 @@ export interface StructureStats {
 }
 
 export const STRUCTURES: Readonly<Record<StructureType, StructureStats>> = {
-  tower: { hp: 1600, damage: 75, attackInterval: 1, range: 150, armor: 0.3, radius: 13 },
-  throne: { hp: 3000, damage: 95, attackInterval: 1, range: 165, armor: 0.3, radius: 20 },
+  tower: {
+    hp: 1600,
+    damage: 75,
+    attackInterval: 1,
+    range: 150,
+    armor: 0.3,
+    radius: 13,
+  },
+  throne: {
+    hp: 3000,
+    damage: 95,
+    attackInterval: 1,
+    range: 165,
+    armor: 0.3,
+    radius: 20,
+  },
 }

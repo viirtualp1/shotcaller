@@ -13,31 +13,43 @@ const { t } = text
 
 const hint = computed(() => {
   const target = drag.target
-  if (!target) return ''
+  if (!target) {
+    return ''
+  }
+
   switch (target.kind) {
     case 'lane':
       return text.slotName(target.lane)
     case 'bench':
       return t('bench.title')
+
     case 'sell': {
       const payload = drag.payload
       const human = match.view?.human
       if (payload?.kind === 'hero' && human) {
         const located = locateHero(human, payload.uid)
-        if (located) return t('card.sell', { gold: located.hero.sellValue })
+        if (located) {
+          return t('card.sell', { gold: located.hero.sellValue })
+        }
       }
+
       if (payload?.kind === 'item' && human) {
         const item = human.stash[payload.index]
-        if (item) return t('card.sell', { gold: item.sellValue })
+        if (item) {
+          return t('card.sell', { gold: item.sellValue })
+        }
       }
+
       return t('shop.sellZone')
     }
+
     case 'hero': {
       const human = match.view?.human
       const located = human ? locateHero(human, target.uid) : null
       return located ? text.heroName(located.hero.heroId) : ''
     }
   }
+
   return ''
 })
 </script>
@@ -56,6 +68,7 @@ const hint = computed(() => {
       :stars="drag.payload.stars"
       :size="40"
     />
+
     <ItemIcon v-else :item-id="drag.payload.itemId" :size="38" />
     <span v-if="hint" class="hint">{{ hint }}</span>
   </div>

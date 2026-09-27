@@ -8,7 +8,9 @@ const VISIBLE_MS = 1300
 
 const store = useMatchStore()
 const { t } = useGameText()
+
 const shown = ref<{ key: string; title: string; subtitle: string; tone: 'plan' | 'fight' } | null>(null)
+
 const { start } = useTimeoutFn(() => (shown.value = null), VISIBLE_MS, { immediate: false })
 
 const trigger = computed(() => `${store.phase}:${store.view?.round}`)
@@ -31,7 +33,10 @@ watch(
         subtitle: t('banner.battleSub', { round }),
         tone: 'fight',
       }
-    } else return
+    } else {
+      return
+    }
+
     start()
   },
   { immediate: true },

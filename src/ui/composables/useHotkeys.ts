@@ -12,18 +12,28 @@ export interface Hotkeys {
 }
 
 /** Matches physical keys so the shortcuts work on a Russian keyboard layout as well. */
-export function useHotkeys({ reroll, buyXp, fight, sell, cancel }: Hotkeys): void {
+export function useHotkeys({ reroll, buyXp, fight, sell, cancel }: Hotkeys) {
   const bind = (code: string, action: () => void, skipOnButtons = false) =>
     onKeyStroke(
       (e) => e.code === code,
       (e) => {
-        if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e)) return
-        if (skipOnButtons && e.target instanceof HTMLElement && e.target.closest('button')) return
-        if (document.querySelector('[role="dialog"], .driver-popover')) return
+        if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e)) {
+          return
+        }
+
+        if (skipOnButtons && e.target instanceof HTMLElement && e.target.closest('button')) {
+          return
+        }
+
+        if (document.querySelector('[role="dialog"], .driver-popover')) {
+          return
+        }
+
         e.preventDefault()
         action()
       },
     )
+
   bind('KeyD', reroll)
   bind('KeyF', buyXp)
   bind('KeyE', sell)

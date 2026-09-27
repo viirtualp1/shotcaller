@@ -25,7 +25,13 @@ const item = (
   cost: number,
   modifiers: Partial<StatModifiers>,
   effects: ItemEffects = {},
-): ItemDefinition => ({ id, name, cost, modifiers, effects })
+) => ({
+  id,
+  name,
+  cost,
+  modifiers,
+  effects,
+})
 
 export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
   broadsword: item('broadsword', 'Broadsword', 3, { damage: 1.2 }),
