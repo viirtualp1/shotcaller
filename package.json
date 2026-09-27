@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write src tests scripts",
+    "format:check": "prettier --check src tests scripts",
     "balance": "tsx --tsconfig tsconfig.node.json scripts/balance.ts"
   },
   "dependencies": {

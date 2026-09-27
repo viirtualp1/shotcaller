@@ -1,9 +1,19 @@
 node_modules
 dist
+dist-ssr
+coverage
+*.tsbuildinfo
 *.log
 .DS_Store
 
-.vercel
+# Keys stay on this machine; the template to copy is .env.example.
+.env
+.env.*
+!.env.example
 
-.env.local
-.env.*.local
+.vercel
+.idea
+.vscode/*
+!.vscode/extensions.json
+supabase/.temp
+supabase/.branches
