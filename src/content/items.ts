@@ -8,6 +8,10 @@ export interface ItemEffects {
   readonly thorns?: number
   /** Health share restored once per round instead of dying. */
   readonly revive?: number
+  /** Nominal chance for an attack to crit; the battle rolls it with a pseudo-random distribution. */
+  readonly critChance?: number
+  /** Damage multiplier of a critical strike. */
+  readonly critMultiplier?: number
 }
 
 export interface ItemDefinition {
@@ -34,7 +38,16 @@ const item = (
 })
 
 export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
-  broadsword: item('broadsword', 'Broadsword', 3, { damage: 1.2 }),
+  broadsword: item(
+    'broadsword',
+    'Broadsword',
+    3,
+    {},
+    {
+      critChance: 0.2,
+      critMultiplier: 2,
+    },
+  ),
   gloves: item('gloves', 'Gloves of Fury', 3, { attackSpeed: 1.25 }),
   chainmail: item('chainmail', 'Chainmail', 3, { damageTaken: 0.85 }),
   vitality: item('vitality', 'Vitality Orb', 3, { maxHp: 1.25 }),

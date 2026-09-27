@@ -3,6 +3,7 @@ import type { With } from 'miniplex'
 import type { AbilityId, HeroId, ItemId, LaneId, RoleId, StarLevel, TeamId } from '@/content/ids'
 import type { CreepVariant, StructureType } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
+import type { Prd } from '@/core/random/prd'
 import type { LanePath } from '../map/LaneMap'
 
 export type UnitKind = 'hero' | 'creep' | 'structure' | 'turret'
@@ -98,6 +99,8 @@ export interface Projectile {
   splash: number
   visual: ProjectileVisual
   poison?: PoisonPayload
+  /** Basic attacks can miss, crit and bash when they land; ability projectiles never do. */
+  attack?: boolean
 }
 
 export interface PoisonPayload {
@@ -141,6 +144,21 @@ export interface DamageOverTime {
   remaining: number
 }
 
+/** Attack procs. Each one keeps its own pseudo-random streak, like in Dota. */
+export interface CriticalStrike {
+  multiplier: number
+  prd: Prd
+}
+
+export interface Bash {
+  stun: number
+  prd: Prd
+}
+
+export interface Evasion {
+  prd: Prd
+}
+
 /** Passive effects granted by items. */
 export interface ItemEffectsState {
   lifesteal: number
@@ -177,6 +195,9 @@ export interface Entity {
   shield?: Shield
   dot?: DamageOverTime
   itemEffects?: ItemEffectsState
+  crit?: CriticalStrike
+  bash?: Bash
+  evasion?: Evasion
   damageTaken?: number
   respawnTimer?: number
   body?: Circle

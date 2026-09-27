@@ -54,8 +54,11 @@
     },
     "ganker": {
       "name": "Ganker",
-      "passive": "Roams the whole map and hunts wounded heroes on any lane. {speed}% faster."
+      "passive": "Roams the whole map and hunts wounded heroes on any lane. {speed}% faster and evades {evasion}% of attacks."
     }
+  },
+  "innate": {
+    "bash": "Bash: {chance}% chance for an attack to stun the target for {stun} s."
   },
   "abilities": {
     "charge": "Leaps to the farthest enemy within {radius}: {damage} damage and a {stun} s stun.",
@@ -122,7 +125,7 @@
     "bulwark": "Support + initiator"
   },
   "items": {
-    "broadsword": "+{damage}% damage",
+    "broadsword": "{critChance}% chance for an attack to crit for {critMultiplier}% damage",
     "gloves": "+{attackSpeed}% attack speed",
     "chainmail": "{damageTaken}% less damage taken",
     "vitality": "+{maxHp}% health",
@@ -198,7 +201,9 @@
     "timeLeft": "{s} s",
     "damage": "Hero damage",
     "placeHint": "Click a lane to place the hero",
-    "itemHint": "Click a hero to give the item"
+    "itemHint": "Click a hero to give the item",
+    "miss": "miss",
+    "bash": "bash"
   },
   "banner": {
     "planning": "Round {round}",

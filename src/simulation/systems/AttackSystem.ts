@@ -65,6 +65,7 @@ export class AttackSystem implements System {
           damageType: 'physical',
           splash: 0,
           visual: fromStructure ? 'shell' : 'bolt',
+          attack: true,
         },
         unit.color,
       )
@@ -72,6 +73,6 @@ export class AttackSystem implements System {
       return
     }
 
-    this.ctx.combat.dealDamage(unit, target, damage, 'physical')
+    this.ctx.combat.landAttack(unit, target, damage)
   }
 }
