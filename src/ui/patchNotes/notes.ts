@@ -51,6 +51,26 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.7.1',
+    date: '2026-09-29',
+    title: {
+      en: 'Update fix',
+      ru: 'Исправление обновления',
+    },
+    interface: [
+      {
+        en: 'New version card: the close button is as tall as **Update**.',
+        ru: 'Карточка новой версии: крестик одной высоты с кнопкой **«Обновить»**.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The **Update** button on the new version card sometimes did nothing. Now it always reloads into the new version.',
+        ru: 'Кнопка **«Обновить»** на карточке новой версии иногда ничего не делала. Теперь она всегда перезагружает игру на новую версию.',
+      },
+    ],
+  },
+  {
     version: '7.7',
     date: '2026-09-28',
     title: {
@@ -96,12 +116,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       {
         en: 'Tower and throne ranges show up only when enemies step inside, in the colour of the building’s side. A throne lights up **green** while it heals its wounded heroes and no enemy is near.',
         ru: 'Радиус башен и трона виден, только когда в него заходят враги, — в цвете стороны строения. Трон подсвечивается **зелёным**, пока лечит своих раненых героев и рядом нет врагов.',
-      },
-    ],
-    fixes: [
-      {
-        en: 'The **Update** button on the new version card sometimes did nothing. Now it always reloads into the new version.',
-        ru: 'Кнопка **«Обновить»** на карточке новой версии иногда ничего не делала. Теперь она всегда перезагружает игру на новую версию.',
       },
     ],
   },
