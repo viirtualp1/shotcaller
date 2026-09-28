@@ -1,3 +1,6 @@
+import type { HeroId, StarLevel } from '@/content/ids'
+import type { Difficulty } from '@/content/rules'
+
 /** What other players see of a coach. */
 export interface CoachCard {
   readonly id: string
@@ -12,6 +15,55 @@ export interface OwnCard extends CoachCard {
 }
 
 export type FriendStatus = 'friend' | 'incoming' | 'outgoing'
+
+/** What an online coach is doing, as their friends see it. */
+export type Activity = 'menu' | 'match' | 'duel'
+
+export interface PresenceStatus {
+  readonly activity: Activity
+  /** The round being played, in a match or a duel. */
+  readonly round: number | null
+}
+
+/** A finished match as a friend's profile shows it. */
+export interface MatchSummary {
+  readonly id: string
+  readonly playedAt: string
+  readonly difficulty: Difficulty
+  readonly verdict: 'win' | 'loss' | 'draw'
+  readonly rounds: number
+  readonly roundsWon: number
+  readonly roundsLost: number
+  readonly lineup: readonly { readonly heroId: HeroId; readonly stars: StarLevel }[]
+  readonly mvp: HeroId | null
+  readonly ratingBefore: number
+  readonly ratingAfter: number
+  readonly xp: number
+}
+
+export interface FriendProfile extends CoachCard {
+  readonly peakRating: number
+  readonly xp: number
+  /** Null for a coach who has not saved a profile yet. */
+  readonly totals: {
+    readonly matches: number
+    readonly wins: number
+    readonly losses: number
+    readonly draws: number
+    readonly bestWinStreak: number
+  } | null
+  /** Newest first. */
+  readonly recent: readonly MatchSummary[]
+}
+
+/** Online status as friends see it. */
+export interface Presence {
+  /** Who is online and what they are doing. */
+  onChange(listener: (online: ReadonlyMap<string, PresenceStatus>) => void): void
+  /** Tells friends what this coach is doing now. */
+  update(status: PresenceStatus): void
+  leave(): void
+}
 
 export interface FriendEntry extends CoachCard {
   readonly status: FriendStatus
@@ -34,10 +86,12 @@ export interface FriendsService {
   block(coachId: string): Promise<void>
   unblock(coachId: string): Promise<void>
   blocked(): Promise<CoachCard[]>
+  /** A friend's rank, totals and latest matches; null when they are not a friend (any more). */
+  profile(coachId: string): Promise<FriendProfile | null>
   /** Calls back when a request arrives or is accepted. Returns a function that stops listening. */
   watch(onChange: () => void): () => void
-  /** Marks the coach online and reports who else is. Returns a function that goes offline. */
-  presence(onChange: (online: ReadonlySet<string>) => void): () => void
+  /** Marks the coach online with the given status. */
+  presence(status: PresenceStatus): Presence
 }
 
 const CODE_LENGTH = 8

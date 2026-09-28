@@ -24,6 +24,8 @@ import GameMenu from '../components/hud/GameMenu.vue'
 import NoticeToast from '../components/hud/NoticeToast.vue'
 import PhaseBanner from '../components/hud/PhaseBanner.vue'
 import MatchScoreboard from '../components/hud/MatchScoreboard.vue'
+import ReactionStickers from '../components/hud/ReactionStickers.vue'
+import ReactionWheel from '../components/hud/ReactionWheel.vue'
 import FightButton from '../components/hud/FightButton.vue'
 import TavernStrip from '../components/hud/TavernStrip.vue'
 import SynergyTracker from '../components/lanes/SynergyTracker.vue'
@@ -193,9 +195,12 @@ watch(
       <div class="top-center">
         <MatchScoreboard />
         <TavernStrip class="tavern" />
+        <ReactionStickers v-if="store.isDuel" />
       </div>
 
-      <span class="corner" />
+      <div class="corner reactions-corner">
+        <ReactionWheel v-if="store.isDuel" />
+      </div>
     </header>
 
     <template v-if="wide">
@@ -400,6 +405,15 @@ watch(
 .compact .hud-top .corner:first-child {
   display: flex;
   padding-top: 8px;
+}
+
+.compact .hud-top .reactions-corner {
+  display: flex;
+  padding-top: 8px;
+}
+
+.wide .hud-top .reactions-corner {
+  justify-content: flex-end;
 }
 
 .compact .hud-top :deep(.brand) {

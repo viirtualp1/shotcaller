@@ -5,9 +5,11 @@ import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
 import SignInDialog from './components/dialogs/SignInDialog.vue'
 import SettingsDialog from './components/dialogs/SettingsDialog.vue'
+import ChatWindow from './components/social/ChatWindow.vue'
+import CoachProfileDialog from './components/social/CoachProfileDialog.vue'
 import DuelInviteDialog from './components/social/DuelInviteDialog.vue'
-import DuelToast from './components/social/DuelToast.vue'
 import FriendsDrawer from './components/social/FriendsDrawer.vue'
+import NotificationStack from './components/social/NotificationStack.vue'
 import GameScreen from './screens/GameScreen.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
 import ProfileScreen from './screens/ProfileScreen.vue'
@@ -48,8 +50,10 @@ useDuelStore()
       <SignInDialog />
       <CloudConflictDialog />
       <FriendsDrawer />
+      <CoachProfileDialog />
+      <ChatWindow />
       <DuelInviteDialog />
-      <DuelToast />
+      <NotificationStack />
     </template>
   </TooltipProvider>
 </template>

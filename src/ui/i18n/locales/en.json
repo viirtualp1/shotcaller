@@ -638,8 +638,6 @@
     "online": "online",
     "offline": "offline",
     "onlineCount": "{n} online",
-    "onlineOf": "{n} of {total} online",
-    "manage": "Add and manage",
     "wantsToBeFriends": "wants to be friends",
     "incomingBadge": "New: {n}",
     "signInHint": "Friends are available once you sign in with email or Google.",
@@ -675,18 +673,21 @@
     "retry": "Retry",
     "close": "Close",
     "blocked": "Blocked",
-    "unblock": "Unblock"
+    "unblock": "Unblock",
+    "inMatch": "in a match · round {round}",
+    "inDuel": "in a duel · round {round}",
+    "addFriend": "Add a friend",
+    "openProfile": "Profile: {name}",
+    "message": "Message",
+    "blockedCount": "Blocked · {n}"
   },
   "chat": {
     "open": "Message {name}",
-    "back": "Back to friends",
     "placeholder": "Message",
     "send": "Send",
     "empty": "Nothing here yet. Say hi!",
     "older": "Show earlier",
     "loading": "Loading the conversation…",
-    "block": "Block",
-    "confirmBlock": "Block for sure?",
     "blockHint": "A blocked player leaves your friends and cannot message or add you again. They are not told.",
     "unread": "Unread: {n}",
     "failures": {
@@ -743,5 +744,48 @@
     "resumeTitle": "Duel with {name} in progress",
     "resume": "Back to the duel",
     "elsewhere": "The duel is running on another device or tab"
+  },
+  "coach": {
+    "loading": "Loading the profile…",
+    "unavailable": "The profile is not available",
+    "rating": "{n} rating",
+    "matches": "Matches",
+    "winRate": "Win rate",
+    "peak": "Best rating",
+    "bestStreak": "Best streak",
+    "history": "Latest matches",
+    "noMatches": "No matches yet",
+    "remove": "Remove friend",
+    "confirmRemove": "Remove for sure?",
+    "block": "Block",
+    "confirmBlock": "Block for sure?",
+    "close": "Close"
+  },
+  "chatWindow": {
+    "open": "Open chat",
+    "close": "Close chat",
+    "emoji": "Emoji",
+    "newMessage": "New message"
+  },
+  "notifications": {
+    "messages": "{n} new message | {n} new messages",
+    "friendRequest": "wants to be your friend",
+    "friendAccepted": "is your friend now",
+    "profile": "Profile"
+  },
+  "reactions": {
+    "open": "Reactions",
+    "mute": "Hide your opponent’s reactions",
+    "unmute": "Show your opponent’s reactions",
+    "items": {
+      "gg": "GG",
+      "nice": "Nice!",
+      "wow": "Wow!",
+      "lol": "Haha",
+      "oops": "Oops",
+      "grr": "Come on!",
+      "fire": "On fire!",
+      "hmm": "Hmm…"
+    }
   }
 }

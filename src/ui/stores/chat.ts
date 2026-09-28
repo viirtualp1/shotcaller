@@ -9,9 +9,11 @@ import {
 } from '@/application/social/chat'
 import { useCloudStore } from './cloud'
 import { useFriendsStore } from './friends'
+import { useNotificationsStore } from './notifications'
 
 /** The server keeps this many messages per conversation; the screen never needs more. */
 const KEPT_MESSAGES = 200
+const messageKey = (friendId: string) => `message:${friendId}`
 
 /** Conversations with friends. One is open at a time, inside the friends panel. */
 export const useChatStore = defineStore('chat', () => {
@@ -25,6 +27,7 @@ export const useChatStore = defineStore('chat', () => {
   const loading = ref(false)
   const sending = ref(false)
   const failure = ref<ChatFailure | null>(null)
+  const notifications = useNotificationsStore()
 
   let service: ChatService | null = null
   let stop: (() => void) | null = null
@@ -70,11 +73,24 @@ export const useChatStore = defineStore('chat', () => {
 
     if (!mine) {
       setUnread(other, unreadFrom(other) + 1)
+
+      /* Several messages from one friend make one notification that counts them. */
+      const earlier = notifications.find(messageKey(other))?.notice
+      notifications.push(
+        {
+          kind: 'message',
+          friendId: other,
+          body: message.body,
+          count: (earlier?.kind === 'message' ? earlier.count : 0) + 1,
+        },
+        messageKey(other),
+      )
     }
   }
 
   async function open(id: string) {
     friendId.value = id
+    notifications.dismissKey(messageKey(id))
     messages.value = []
     hasOlder.value = false
     failure.value = null

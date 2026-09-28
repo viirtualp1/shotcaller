@@ -1,7 +1,8 @@
-import { useIntervalFn, useNow } from '@vueuse/core'
+import { useIntervalFn, useLocalStorage, useNow } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { parseRemoteBoard } from '@/application/persistence/snapshot'
+import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import {
   DuelError,
   INVITE_SECONDS,
@@ -9,22 +10,30 @@ import {
   sideOf,
   type Duel,
   type DuelEntry,
-  type DuelFailure,
   type DuelService,
 } from '@/application/social/duels'
+import type { ReactionId, ReactionLink } from '@/application/social/reactions'
 import { opponentOf, type TeamId } from '@/content/ids'
 import type { PlayerState } from '@/domain/player/Player'
 import { useCloudStore } from './cloud'
 import { useMatchStore, type DuelBinding } from './match'
+import { useNotificationsStore } from './notifications'
+
+/** A reaction stays on screen this long. */
+const REACTION_SHOWN_MS = 3500
+/** A player can send one reaction this often. */
+const REACTION_COOLDOWN_MS = 3000
+/** The opponent's reactions closer together than this are dropped, so a modified client cannot flood the screen. */
+const REACTION_MIN_GAP_MS = 1000
+
+export interface ShownReaction {
+  readonly key: number
+  readonly reaction: ReactionId
+  readonly mine: boolean
+}
 
 /** Realtime should bring the other board; this is the safety net if a message is lost. */
 const BOARD_POLL_MS = 5000
-
-export type DuelNotice =
-  | { readonly kind: 'failure'; readonly reason: DuelFailure }
-  | { readonly kind: 'declined' | 'expired' | 'cancelled'; readonly name: string }
-  | { readonly kind: 'ended'; readonly how: 'forfeit' | 'timeout' | 'disputed'; readonly won: boolean }
-  | { readonly kind: 'badBoard' }
 
 interface PendingBoard {
   readonly duelId: string
@@ -49,12 +58,20 @@ export const useDuelStore = defineStore('duel', () => {
   const active = shallowRef<DuelEntry | null>(null)
   /** A duel still running on the server that this device can pick up again after a reload. */
   const resumable = shallowRef<DuelEntry | null>(null)
-  const notice = shallowRef<DuelNotice | null>(null)
+  const notifications = useNotificationsStore()
+  /** Reactions on screen, the player's own and the opponent's, a few seconds each. */
+  const reactionsShown = shallowRef<ShownReaction[]>([])
+  const reactionsMuted = useLocalStorage(STORAGE_KEYS.reactionsMuted, false)
+  /** Off for a moment after each reaction, so they cannot be spammed. */
+  const canReact = ref(true)
 
   let service: DuelService | null = null
   let userId: string | null = null
   let stops: (() => void)[] = []
   let stopBoards: (() => void) | null = null
+  let reactionLink: ReactionLink | null = null
+  let reactionKey = 0
+  let lastReceived = 0
   let pending: PendingBoard | null = null
   let generation = 0
 
@@ -102,10 +119,10 @@ export const useDuelStore = defineStore('duel', () => {
   })
 
   function fail(error: unknown) {
-    notice.value = {
-      kind: 'failure',
+    notifications.push({
+      kind: 'duelFailed',
       reason: error instanceof DuelError ? error.reason : 'failed',
-    }
+    })
   }
 
   /** Invites time out on the server; the dialogs close on their own a little after. */
@@ -115,10 +132,10 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     if (outgoing.value && inviteSecondsLeft(outgoing.value) === 0) {
-      notice.value = {
-        kind: 'expired',
+      notifications.push({
+        kind: 'duelExpired',
         name: outgoing.value.opponent.name,
-      }
+      })
 
       outgoing.value = null
     }
@@ -144,6 +161,62 @@ export const useDuelStore = defineStore('duel', () => {
     pending?.reject(new Error(reason))
     pending = null
   }
+
+  function showReaction(reaction: ReactionId, mine: boolean) {
+    const key = ++reactionKey
+
+    reactionsShown.value = [
+      ...reactionsShown.value.filter((shown) => shown.mine !== mine),
+      {
+        key,
+        reaction,
+        mine,
+      },
+    ]
+
+    setTimeout(
+      () => (reactionsShown.value = reactionsShown.value.filter((shown) => shown.key !== key)),
+      REACTION_SHOWN_MS,
+    )
+  }
+
+  function listenForReactions(entry: DuelEntry) {
+    reactionLink?.leave()
+
+    reactionLink =
+      service?.reactions(entry.duel.id, (reaction) => {
+        const now = Date.now()
+        if (reactionsMuted.value || now - lastReceived < REACTION_MIN_GAP_MS) {
+          return
+        }
+
+        lastReceived = now
+        showReaction(reaction, false)
+      }) ?? null
+  }
+
+  function react(reaction: ReactionId) {
+    if (!reactionLink || !canReact.value) {
+      return
+    }
+
+    canReact.value = false
+    setTimeout(() => (canReact.value = true), REACTION_COOLDOWN_MS)
+    reactionLink.send(reaction)
+    showReaction(reaction, true)
+  }
+
+  /* Reactions stay on until the player leaves the match, so a "GG" still goes out after the last round. */
+  watch(
+    () => matchStore.isDuel,
+    (isDuel) => {
+      if (!isDuel) {
+        reactionLink?.leave()
+        reactionLink = null
+        reactionsShown.value = []
+      }
+    },
+  )
 
   function stopDuel() {
     stopBoards?.()
@@ -172,7 +245,7 @@ export const useDuelStore = defineStore('duel', () => {
 
   /** The other board is unusable: say so, keep our result on record and leave the duel. */
   function rejectBoard(duelId: string) {
-    notice.value = { kind: 'badBoard' }
+    notifications.push({ kind: 'badBoard' })
     void service?.report(duelId, mySide.value).catch(() => undefined)
     stopDuel()
     matchStore.leaveToMenu()
@@ -283,6 +356,7 @@ export const useDuelStore = defineStore('duel', () => {
     resumable.value = null
     active.value = entry
     watchBoards(entry)
+    listenForReactions(entry)
 
     matchStore.startDuel(binding(entry), {
       seed: entry.duel.seed,
@@ -301,6 +375,7 @@ export const useDuelStore = defineStore('duel', () => {
     resumable.value = null
     active.value = entry
     watchBoards(entry)
+    listenForReactions(entry)
     matchStore.resumeDuel(binding(entry), state)
 
     const sent = entry.duel.boardRounds[sideOf(entry.duel, userId)]
@@ -314,17 +389,17 @@ export const useDuelStore = defineStore('duel', () => {
     const inMatch = matchStore.isDuel && matchStore.phase !== 'finished'
 
     if (duel.status === 'disputed') {
-      notice.value = {
-        kind: 'ended',
+      notifications.push({
+        kind: 'duelEnded',
         how: 'disputed',
         won: false,
-      }
+      })
     } else if (duel.endedBy === 'forfeit' || duel.endedBy === 'timeout') {
-      notice.value = {
-        kind: 'ended',
+      notifications.push({
+        kind: 'duelEnded',
         how: duel.endedBy,
         won,
-      }
+      })
     }
 
     stopDuel()
@@ -344,10 +419,15 @@ export const useDuelStore = defineStore('duel', () => {
           opponent,
         })
       } else if (duel.status === 'declined' || duel.status === 'expired' || duel.status === 'cancelled') {
-        notice.value = {
-          kind: duel.status,
+        notifications.push({
+          kind:
+            duel.status === 'declined'
+              ? 'duelDeclined'
+              : duel.status === 'expired'
+                ? 'duelExpired'
+                : 'duelCancelled',
           name: opponent.name,
-        }
+        })
 
         outgoing.value = null
       }
@@ -494,11 +574,14 @@ export const useDuelStore = defineStore('duel', () => {
     active,
     resumable,
     canResume,
-    notice,
     busy,
     opponentReady,
     canClaim,
     inviteSecondsLeft,
+    reactionsShown,
+    reactionsMuted,
+    canReact,
+    react,
     invite,
     cancelInvite,
     answer,

@@ -1,5 +1,6 @@
 import type { TeamId } from '@/content/ids'
 import type { CoachCard } from './friends'
+import type { ReactionId, ReactionLink } from './reactions'
 
 export type DuelStatus = 'invited' | 'declined' | 'cancelled' | 'expired' | 'active' | 'finished' | 'disputed'
 
@@ -62,6 +63,8 @@ export interface DuelService {
   watch(onChange: (duel: Duel) => void): () => void
   /** Calls back when the other side's board for a round becomes readable. */
   watchBoards(duelId: string, onBoard: (round: number, side: TeamId, board: unknown) => void): () => void
+  /** Quick reactions with the other player; nothing is stored. */
+  reactions(duelId: string, onReaction: (reaction: ReactionId) => void): ReactionLink
 }
 
 /** The team a coach fights as in a duel. */

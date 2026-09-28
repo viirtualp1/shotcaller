@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Crown } from 'lucide-vue-next'
-import type { MatchRecord } from '@/domain/profile/Profile'
+import { computed } from 'vue'
+import type { MatchSummary } from '@/application/social/friends'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
@@ -8,13 +9,18 @@ import HeroAvatar from '../common/HeroAvatar.vue'
 import HudPanel from '../common/HudPanel.vue'
 import { relativeTime } from './format'
 
+/** The player's own matches, or `matches` from a friend's profile. */
+const props = defineProps<{ matches?: readonly MatchSummary[] }>()
+
 const profile = useProfileStore()
 const settings = useSettingsStore()
 const text = useGameText()
 const { t } = text
 
 /** Copies of the best hero share its id; only the first one gets the crown. */
-const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.heroId === match.mvp)
+const mvpIndex = (match: MatchSummary) => match.lineup.findIndex((hero) => hero.heroId === match.mvp)
+
+const shown = computed(() => props.matches ?? profile.profile.recent)
 
 const signed = (value: number) =>
   value > 0 ? `+${text.number(value)}` : value < 0 ? `−${text.number(-value)}` : '0'
@@ -23,7 +29,7 @@ const signed = (value: number) =>
 <template>
   <HudPanel :title="t('profile.history.title')" class="panel">
     <ol class="matches">
-      <li v-for="match in profile.profile.recent" :key="match.id" class="match" :class="match.verdict">
+      <li v-for="match in shown" :key="match.id" class="match" :class="match.verdict">
         <div class="verdict">
           <strong>{{ t(`result.${match.verdict}`) }}</strong>
         </div>

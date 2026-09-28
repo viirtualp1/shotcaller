@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { FriendRequestResult, FriendStatus, FriendsService } from '../social/friends'
+import { z } from 'zod'
+import { HERO_IDS } from '@/content/ids'
+import type { FriendRequestResult, FriendStatus, FriendsService, PresenceStatus } from '../social/friends'
 import type { Database } from './database'
 
 const FRIEND_STATUSES: ReadonlySet<string> = new Set<FriendStatus>(['friend', 'incoming', 'outgoing'])
@@ -16,6 +18,60 @@ const REQUEST_RESULTS: ReadonlySet<string> = new Set<FriendRequestResult>([
 
 /** Everyone signed in shares one presence channel; fine until the player count calls for per-friend channels. */
 const PRESENCE_CHANNEL = 'online'
+
+const count = z.number().int().nonnegative()
+const heroId = z.enum(HERO_IDS)
+
+/** Other coaches' presence and profiles come from their devices, so they are checked before use. */
+const presenceStatus = z.object({
+  activity: z.enum(['menu', 'match', 'duel']),
+  round: z.number().int().min(1).max(40).nullable(),
+})
+
+const friendProfile = z.object({
+  id: z.uuid(),
+  name: z.string().max(40),
+  avatar: z.string().max(32).nullable(),
+  rating: count,
+  peakRating: count.catch(0),
+  xp: count.catch(0),
+  totals: z
+    .object({
+      matches: count,
+      wins: count,
+      losses: count,
+      draws: count,
+      bestWinStreak: count.catch(0),
+    })
+    .nullable()
+    .catch(null),
+  recent: z
+    .array(
+      z.object({
+        id: z.string().max(64),
+        playedAt: z.string(),
+        difficulty: z.enum(['relaxed', 'standard']).catch('standard'),
+        verdict: z.enum(['win', 'loss', 'draw']),
+        rounds: count,
+        roundsWon: count,
+        roundsLost: count,
+        lineup: z
+          .array(
+            z.object({
+              heroId,
+              stars: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+            }),
+          )
+          .max(10),
+        mvp: heroId.nullable().catch(null),
+        ratingBefore: count,
+        ratingAfter: count,
+        xp: count.catch(0),
+      }),
+    )
+    .max(10)
+    .catch([]),
+})
 
 /** Friends through the functions in `supabase/migrations`; the tables themselves are not readable directly. */
 export class SupabaseFriends implements FriendsService {
@@ -116,6 +172,17 @@ export class SupabaseFriends implements FriendsService {
     }))
   }
 
+  async profile(coachId: string) {
+    const { data, error } = await this.client.rpc('coach_profile', { friend: coachId })
+    if (error) {
+      throw error
+    }
+
+    const parsed = friendProfile.safeParse(data)
+
+    return parsed.success ? parsed.data : null
+  }
+
   watch(onChange: () => void) {
     const channel = this.client.channel(`friendships:${this.userId}`)
 
@@ -137,21 +204,56 @@ export class SupabaseFriends implements FriendsService {
     return () => void this.client.removeChannel(channel)
   }
 
-  presence(onChange: (online: ReadonlySet<string>) => void) {
+  presence(initial: PresenceStatus) {
+    let status = initial
+    let listener: (online: ReadonlyMap<string, PresenceStatus>) => void = () => undefined
+
     const channel = this.client.channel(PRESENCE_CHANNEL, {
       config: {
         presence: { key: this.userId },
       },
     })
 
-    channel.on('presence', { event: 'sync' }, () => onChange(new Set(Object.keys(channel.presenceState()))))
+    channel.on('presence', { event: 'sync' }, () => {
+      const online = new Map<string, PresenceStatus>()
 
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        void channel.track({ online: true })
+      for (const [id, metas] of Object.entries(channel.presenceState())) {
+        const latest = presenceStatus.safeParse(metas.at(-1))
+        online.set(
+          id,
+          latest.success
+            ? latest.data
+            : {
+                activity: 'menu',
+                round: null,
+              },
+        )
+      }
+
+      listener(online)
+    })
+
+    let joined = false
+
+    channel.subscribe((state) => {
+      if (state === 'SUBSCRIBED') {
+        joined = true
+        void channel.track(status)
       }
     })
 
-    return () => void this.client.removeChannel(channel)
+    return {
+      onChange: (next: typeof listener) => {
+        listener = next
+      },
+      update: (next: PresenceStatus) => {
+        status = next
+
+        if (joined) {
+          void channel.track(status)
+        }
+      },
+      leave: () => void this.client.removeChannel(channel),
+    }
   }
 }

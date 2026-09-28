@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import type { TeamId } from '@/content/ids'
 import { DuelError, type Duel, type DuelFailure, type DuelService } from '../social/duels'
+import { isReactionId, type ReactionId } from '../social/reactions'
 import type { Database } from './database'
 import { asJson } from './json'
 
@@ -190,6 +191,34 @@ export class SupabaseDuels implements DuelService {
     channel.subscribe()
 
     return () => void this.client.removeChannel(channel)
+  }
+
+  /** Broadcast only: reactions are never stored, and anything but a known reaction is dropped. */
+  reactions(duelId: string, onReaction: (reaction: ReactionId) => void) {
+    const channel = this.client.channel(`duel-reactions:${duelId}`, {
+      config: {
+        broadcast: { self: false },
+      },
+    })
+
+    channel.on('broadcast', { event: 'reaction' }, ({ payload }) => {
+      const reaction: unknown = (payload as { reaction?: unknown } | undefined)?.reaction
+      if (isReactionId(reaction)) {
+        onReaction(reaction)
+      }
+    })
+
+    channel.subscribe()
+
+    return {
+      send: (reaction: ReactionId) =>
+        void channel.send({
+          type: 'broadcast',
+          event: 'reaction',
+          payload: { reaction },
+        }),
+      leave: () => void this.client.removeChannel(channel),
+    }
   }
 
   watchBoards(duelId: string, onBoard: (round: number, side: TeamId, board: unknown) => void) {

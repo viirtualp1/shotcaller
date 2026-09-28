@@ -50,6 +50,50 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.2',
+    date: '2026-09-28',
+    title: {
+      en: 'Friends up close',
+      ru: 'Друзья поближе',
+    },
+    interface: [
+      {
+        en: 'Friends list: rank next to the avatar, and what a friend is doing: in a match or a duel, with the round.',
+        ru: 'Список друзей: ранг рядом с аватаром и чем занят друг: в игре или в дуэли, с номером раунда.',
+      },
+      {
+        en: 'A click on a friend opens their profile: rank, totals, latest matches. Remove and block live there.',
+        ru: 'Клик по другу открывает его профиль: ранг, итоги, последние матчи. Удалить и заблокировать можно там же.',
+      },
+      {
+        en: 'Adding a friend: one button, the code field opens right in the list.',
+        ru: 'Добавить друга: одна кнопка, поле для кода открывается прямо в списке.',
+      },
+      {
+        en: 'Chat opens in a window in the corner.',
+        ru: 'Чат открывается окном в углу.',
+      },
+      {
+        en: 'Social notifications in one stack at the bottom right: friend requests (accept right there), accepted requests, messages and duel news.',
+        ru: 'Все социальные уведомления в одном месте справа снизу: заявки в друзья (принять можно прямо там), принятые заявки, сообщения и новости дуэлей.',
+      },
+      {
+        en: 'Emoji in chat.',
+        ru: 'Эмодзи в чате.',
+      },
+      {
+        en: 'Duels: a reaction wheel. The opponent sees reactions as stickers and can hide them.',
+        ru: 'Дуэли: колесо реакций. Соперник видит их стикерами и может скрыть.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The hero card no longer jumps when you switch heroes.',
+        ru: 'Карточка героя больше не прыгает при переключении.',
+      },
+    ],
+  },
+  {
     version: '7.1',
     date: '2026-09-28',
     title: {

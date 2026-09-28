@@ -3,11 +3,16 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import type {
   CoachCard,
   FriendEntry,
+  FriendProfile,
   FriendRequestResult,
   FriendsService,
   OwnCard,
+  Presence,
+  PresenceStatus,
 } from '@/application/social/friends'
 import { useCloudStore } from './cloud'
+import { useMatchStore } from './match'
+import { useNotificationsStore } from './notifications'
 
 export type FriendsStatus = 'off' | 'loading' | 'ready' | 'error'
 
@@ -19,20 +24,36 @@ const byName = (a: FriendEntry, b: FriendEntry) => a.name.localeCompare(b.name)
  */
 export const useFriendsStore = defineStore('friends', () => {
   const cloud = useCloudStore()
+  const match = useMatchStore()
+  const notifications = useNotificationsStore()
   const status = ref<FriendsStatus>('off')
   const card = shallowRef<OwnCard | null>(null)
   const entries = shallowRef<FriendEntry[]>([])
   const blocked = shallowRef<CoachCard[]>([])
-  const online = shallowRef<ReadonlySet<string>>(new Set())
+  const online = shallowRef<ReadonlyMap<string, PresenceStatus>>(new Map())
   /** The friends panel on the start screen. */
   const open = ref(false)
+  /** The friend whose profile is open, and the profile once it has loaded. */
+  const viewedId = ref<string | null>(null)
+  const viewed = shallowRef<FriendProfile | null>(null)
+  const viewLoading = ref(false)
 
   let service: FriendsService | null = null
+  let presence: Presence | null = null
   let stops: (() => void)[] = []
+  /** Requests as of the last refresh, to tell what is new; null before the first one. */
+  let known: { incoming: ReadonlySet<string>; outgoing: ReadonlySet<string> } | null = null
   /** Bumped on every account change, so a connection that finishes late for an old account is dropped. */
   let generation = 0
 
   const isOnline = (id: string) => online.value.has(id)
+  const statusOf = (id: string) => online.value.get(id) ?? null
+
+  /** What this coach is doing, as their friends see it. */
+  const ownStatus = computed<PresenceStatus>(() => ({
+    activity: !match.view ? 'menu' : match.isDuel ? 'duel' : 'match',
+    round: match.view?.round ?? null,
+  }))
 
   const friends = computed(() =>
     entries.value
@@ -44,6 +65,24 @@ export const useFriendsStore = defineStore('friends', () => {
   const outgoing = computed(() => entries.value.filter((e) => e.status === 'outgoing').sort(byName))
   const onlineCount = computed(() => friends.value.filter((f) => isOnline(f.id)).length)
 
+  async function openProfile(id: string) {
+    viewedId.value = id
+    viewed.value = null
+    viewLoading.value = true
+
+    const loaded = await service?.profile(id).catch(() => null)
+    if (viewedId.value === id) {
+      viewed.value = loaded ?? null
+      viewLoading.value = false
+    }
+  }
+
+  function closeProfile() {
+    viewedId.value = null
+    viewed.value = null
+    viewLoading.value = false
+  }
+
   function disconnect() {
     generation++
 
@@ -53,11 +92,57 @@ export const useFriendsStore = defineStore('friends', () => {
 
     stops = []
     service = null
+    presence = null
+    known = null
+    notifications.clear()
     card.value = null
     entries.value = []
     blocked.value = []
-    online.value = new Set()
+    online.value = new Map()
     status.value = 'off'
+    closeProfile()
+  }
+
+  /** Announces requests that just arrived and requests of ours that were just accepted. */
+  function announce(list: FriendEntry[]) {
+    const ids = (status: FriendEntry['status']) =>
+      new Set(list.filter((e) => e.status === status).map((e) => e.id))
+
+    const incoming = ids('incoming')
+    const outgoing = ids('outgoing')
+
+    for (const entry of list) {
+      if (entry.status === 'incoming' && !known?.incoming.has(entry.id)) {
+        notifications.push(
+          {
+            kind: 'friendRequest',
+            coach: entry,
+          },
+          `friendRequest:${entry.id}`,
+        )
+      }
+
+      if (entry.status === 'friend' && known?.outgoing.has(entry.id)) {
+        notifications.push(
+          {
+            kind: 'friendAccepted',
+            coach: entry,
+          },
+          `friendAccepted:${entry.id}`,
+        )
+      }
+    }
+
+    for (const id of known?.incoming ?? []) {
+      if (!incoming.has(id)) {
+        notifications.dismissKey(`friendRequest:${id}`)
+      }
+    }
+
+    known = {
+      incoming,
+      outgoing,
+    }
   }
 
   async function refresh() {
@@ -75,6 +160,7 @@ export const useFriendsStore = defineStore('friends', () => {
       ])
 
       if (service === current) {
+        announce(list)
         card.value = ownCard
         entries.value = list
         blocked.value = blockedList
@@ -97,7 +183,10 @@ export const useFriendsStore = defineStore('friends', () => {
     service = cloudClient.friends(userId)
     status.value = 'loading'
 
-    stops = [service.watch(() => void refresh()), service.presence((ids) => (online.value = ids))]
+    const joined = service.presence(ownStatus.value)
+    joined.onChange((next) => (online.value = next))
+    presence = joined
+    stops = [service.watch(() => void refresh()), () => joined.leave()]
 
     await refresh()
   }
@@ -135,6 +224,19 @@ export const useFriendsStore = defineStore('friends', () => {
   const block = (id: string) => act((friends) => friends.block(id))
   const unblock = (id: string) => act((friends) => friends.unblock(id))
 
+  /* Friends see "in a match, round 5" and the like; only a real change is sent. */
+  watch(
+    () => `${ownStatus.value.activity}:${ownStatus.value.round}`,
+    () => presence?.update(ownStatus.value),
+  )
+
+  /* A friend removed or blocked takes their open profile with them. */
+  watch(friends, (list) => {
+    if (viewedId.value && !list.some((f) => f.id === viewedId.value)) {
+      closeProfile()
+    }
+  })
+
   watch(
     () => (cloud.signedIn ? cloud.account?.id : null),
     (userId) => {
@@ -156,7 +258,13 @@ export const useFriendsStore = defineStore('friends', () => {
     blocked,
     onlineCount,
     open,
+    viewedId,
+    viewed,
+    viewLoading,
     isOnline,
+    statusOf,
+    openProfile,
+    closeProfile,
     refresh,
     add,
     accept,

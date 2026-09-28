@@ -1,35 +1,37 @@
 <script setup lang="ts">
-import { useTextareaAutosize, useTimeoutFn } from '@vueuse/core'
-import { ArrowLeft, Ban, SendHorizontal, Swords } from 'lucide-vue-next'
+import { onClickOutside, useTextareaAutosize } from '@vueuse/core'
+import { SendHorizontal, Smile, Swords, X } from 'lucide-vue-next'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { MESSAGE_MAX_LENGTH } from '@/application/social/chat'
 import type { FriendEntry } from '@/application/social/friends'
 import { HERO_IDS } from '@/content/ids'
+import { useFriendStatus } from '../../composables/useFriendStatus'
 import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
 import { useSettingsStore } from '../../stores/settings'
 import CoachAvatar from '../profile/CoachAvatar.vue'
+import EmojiPicker from './EmojiPicker.vue'
 
-/** The block button asks once more; the question goes away on its own. */
-const CONFIRM_MS = 3000
 const SHOW_COUNTER_FROM = MESSAGE_MAX_LENGTH - 100
 
 const props = defineProps<{ friend: FriendEntry }>()
-const emit = defineEmits<{ back: [] }>()
+const emit = defineEmits<{ close: [] }>()
 
 const chat = useChatStore()
 const friends = useFriendsStore()
 const duel = useDuelStore()
 const settings = useSettingsStore()
 const { t } = useGameText()
+const statusText = useFriendStatus()
 const list = useTemplateRef<HTMLElement>('list')
-const { input } = useTextareaAutosize({ element: useTemplateRef<HTMLTextAreaElement>('field') })
-const confirmingBlock = ref(false)
+const field = useTemplateRef<HTMLTextAreaElement>('field')
+const { input } = useTextareaAutosize({ element: field })
+const picking = ref(false)
 
-const { start: expireBlock } = useTimeoutFn(() => (confirmingBlock.value = false), CONFIRM_MS, {
-  immediate: false,
+onClickOutside(useTemplateRef<HTMLElement>('emoji'), () => (picking.value = false), {
+  ignore: ['.emoji-toggle'],
 })
 
 const clock = computed(
@@ -79,17 +81,21 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-function askBlock() {
-  if (!confirmingBlock.value) {
-    confirmingBlock.value = true
-    expireBlock()
+/** Puts the emoji where the caret is, as long as the message stays within the limit. */
+async function insertEmoji(emoji: string) {
+  const el = field.value
+  const start = el?.selectionStart ?? input.value.length
+  const end = el?.selectionEnd ?? start
+  const next = input.value.slice(0, start) + emoji + input.value.slice(end)
 
+  if (next.length > MESSAGE_MAX_LENGTH) {
     return
   }
 
-  confirmingBlock.value = false
-  void friends.block(props.friend.id)
-  emit('back')
+  input.value = next
+  await nextTick()
+  el?.focus()
+  el?.setSelectionRange(start + emoji.length, start + emoji.length)
 }
 </script>
 
@@ -98,23 +104,21 @@ function askBlock() {
     <header class="head">
       <button
         type="button"
-        class="icon-btn"
-        :aria-label="t('chat.back')"
-        :title="t('chat.back')"
-        @click="emit('back')"
+        class="profile"
+        :class="{ online }"
+        :aria-label="t('friends.openProfile', { name: friend.name || t('profile.defaultName') })"
+        @click="friends.openProfile(friend.id)"
       >
-        <ArrowLeft :size="16" />
+        <span class="avatar">
+          <CoachAvatar :hero-id="hero" :size="36" />
+          <i class="presence" />
+        </span>
+
+        <span class="who">
+          <strong class="name">{{ friend.name || t('profile.defaultName') }}</strong>
+          <span class="status">{{ statusText(friend.id) }}</span>
+        </span>
       </button>
-
-      <span class="avatar" :class="{ online }">
-        <CoachAvatar :hero-id="hero" :size="36" />
-        <i class="presence" />
-      </span>
-
-      <span class="who">
-        <strong class="name">{{ friend.name || t('profile.defaultName') }}</strong>
-        <span class="status">{{ online ? t('friends.online') : t('friends.offline') }}</span>
-      </span>
 
       <button
         v-if="online && !duel.busy"
@@ -129,14 +133,12 @@ function askBlock() {
 
       <button
         type="button"
-        class="icon-btn block"
-        :class="{ confirming: confirmingBlock }"
-        :aria-label="t('chat.block')"
-        :title="t('chat.blockHint')"
-        @click="askBlock"
+        class="icon-btn"
+        :aria-label="t('chatWindow.close')"
+        :title="t('chatWindow.close')"
+        @click="emit('close')"
       >
-        <span v-if="confirmingBlock">{{ t('chat.confirmBlock') }}</span>
-        <Ban v-else :size="16" />
+        <X :size="16" />
       </button>
     </header>
 
@@ -164,7 +166,23 @@ function askBlock() {
       </li>
     </ol>
 
+    <div v-if="picking" ref="emoji" class="emoji">
+      <EmojiPicker @pick="insertEmoji" />
+    </div>
+
     <form class="composer" @submit.prevent="submit">
+      <button
+        type="button"
+        class="icon-btn emoji-toggle"
+        :class="{ active: picking }"
+        :aria-label="t('chatWindow.emoji')"
+        :aria-expanded="picking"
+        :title="t('chatWindow.emoji')"
+        @click="picking = !picking"
+      >
+        <Smile :size="17" />
+      </button>
+
       <textarea
         ref="field"
         v-model="input"
@@ -191,10 +209,51 @@ function askBlock() {
 
 <style scoped>
 .chat {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 0;
+}
+
+.profile {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile:hover .name {
+  color: var(--gold);
+}
+
+.emoji {
+  position: absolute;
+  right: 0;
+  bottom: 52px;
+  left: 0;
+  z-index: 2;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.emoji-toggle {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  color: var(--chalk-dim);
+}
+
+.emoji-toggle.active {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .head {
@@ -222,7 +281,7 @@ function askBlock() {
 }
 
 .online .presence {
-  background: #7fe0b4;
+  background: var(--heal);
 }
 
 .who {
@@ -244,27 +303,13 @@ function askBlock() {
   color: var(--chalk-faint);
 }
 
-.online + .who .status {
-  color: #7fe0b4;
+.online .status {
+  color: var(--heal);
 }
 
 .icon-btn.duel {
   border-color: rgba(244, 197, 91, 0.5);
   color: var(--gold);
-}
-
-.icon-btn.block {
-  width: auto;
-  min-width: 36px;
-  padding: 0 8px;
-  color: var(--chalk-dim);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.icon-btn.block.confirming {
-  border-color: rgba(255, 112, 96, 0.6);
-  color: var(--theirs);
 }
 
 .messages {

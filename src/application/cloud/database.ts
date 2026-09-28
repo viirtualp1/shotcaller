@@ -220,6 +220,10 @@ export interface Database {
           opponent_rating: number
         }[]
       }
+      coach_profile: {
+        Args: { friend: string }
+        Returns: Json
+      }
       list_friends: {
         Args: Record<PropertyKey, never>
         Returns: {

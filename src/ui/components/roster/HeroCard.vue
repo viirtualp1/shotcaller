@@ -63,7 +63,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 </script>
 
 <template>
-  <Transition name="rise">
+  <Transition name="card">
     <aside
       v-if="located"
       :key="located.hero.uid"
@@ -144,6 +144,30 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 </template>
 
 <style scoped>
+/* A card for another hero fades in over the old one; the old one leaves the layout so nothing jumps. */
+.card-enter-active {
+  transition:
+    opacity 0.18s ease-out,
+    transform 0.18s ease-out;
+}
+
+.card-leave-active {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  transition: opacity 0.12s ease-in;
+}
+
+.card-enter-from {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+.card-leave-to {
+  opacity: 0;
+}
+
 .hero-card {
   position: relative;
   display: flex;
