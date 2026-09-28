@@ -25,6 +25,7 @@ function lineup(prefix: string, lanes: Partial<Record<LaneId, HeroId[]>>) {
 }
 
 const setup = (seed: string, ours: Lineup, theirs: Lineup, round = 3): BattleSetup => ({
+  mode: 'threeLanes',
   round,
   seed,
   lineups: [ours, theirs],
@@ -243,6 +244,7 @@ describe('BattleSimulation', () => {
     }
 
     const sim = new BattleSimulation({
+      mode: 'threeLanes',
       round: 10,
       seed: 'throne',
       lineups: [lineup('a', { bot: ['engineer', 'sapper', 'blademaster'] }), lineup('b', {})],

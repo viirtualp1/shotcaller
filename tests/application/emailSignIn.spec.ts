@@ -14,6 +14,7 @@ function fakeAuth(known: readonly string[], failure?: Error) {
         id: 'guest',
         anonymous: true,
         email: null,
+        photo: null,
       }
     },
     sendEmail: async (email, mode) => {

@@ -1,5 +1,5 @@
 import { HEROES } from '@/content/heroes'
-import { LANE_IDS, opponentOf, TEAM_IDS, type LaneId, type TeamId } from '@/content/ids'
+import { opponentOf, TEAM_IDS, type LaneId, type TeamId } from '@/content/ids'
 import { ROLES } from '@/content/roles'
 import { BATTLE } from '@/content/rules'
 import type { CreepVariant } from '@/content/units'
@@ -18,27 +18,14 @@ const SIEGE_OFFSET = -40
 export class WaveSpawnSystem implements System {
   private nextWaveAt: number = BATTLE.firstWaveAt
   private wave = 0
-  private readonly creepDamageBonus: Record<TeamId, Record<LaneId, number>>
 
-  constructor(private readonly ctx: SimulationContext) {
-    const bonusFor = (team: TeamId, lane: LaneId) =>
-      ctx.setup.lineups[team][lane].reduce(
-        (sum, h) => sum + (ROLES[HEROES[h.heroId].role].laneCreepDamageBonus ?? 0),
-        0,
-      )
+  constructor(private readonly ctx: SimulationContext) {}
 
-    this.creepDamageBonus = {
-      0: {
-        top: bonusFor(0, 'top'),
-        mid: bonusFor(0, 'mid'),
-        bot: bonusFor(0, 'bot'),
-      },
-      1: {
-        top: bonusFor(1, 'top'),
-        mid: bonusFor(1, 'mid'),
-        bot: bonusFor(1, 'bot'),
-      },
-    }
+  private creepDamageBonus(team: TeamId, lane: LaneId) {
+    return this.ctx.setup.lineups[team][lane].reduce(
+      (sum, h) => sum + (ROLES[HEROES[h.heroId].role].laneCreepDamageBonus ?? 0),
+      0,
+    )
   }
 
   update() {
@@ -49,7 +36,7 @@ export class WaveSpawnSystem implements System {
     this.nextWaveAt += BATTLE.waveInterval
 
     for (const team of TEAM_IDS) {
-      for (const lane of LANE_IDS) {
+      for (const lane of this.ctx.map.lanes) {
         this.spawnWave(team, lane)
       }
     }
@@ -75,7 +62,7 @@ export class WaveSpawnSystem implements System {
         variant,
         along: spawnAlong + offset,
         strength,
-        damageBonus: this.creepDamageBonus[team][lane],
+        damageBonus: this.creepDamageBonus(team, lane),
         mega,
       })
     }

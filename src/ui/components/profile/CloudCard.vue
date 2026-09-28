@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HardDrive, LogOut, Mail, RotateCw } from 'lucide-vue-next'
+import { HardDrive, LogIn, LogOut, RotateCw } from 'lucide-vue-next'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
@@ -72,7 +72,7 @@ function signOut() {
       </button>
 
       <button v-else-if="!cloud.signedIn" type="button" class="btn primary" @click="cloud.signInOpen = true">
-        <Mail :size="15" /> {{ t('cloud.signInEmail') }}
+        <LogIn :size="15" /> {{ t('cloud.signIn') }}
       </button>
 
       <button v-else type="button" class="btn ghost" @click="signOut">

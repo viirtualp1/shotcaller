@@ -1,5 +1,6 @@
 import { HEROES } from '@/content/heroes'
-import { LANE_IDS, type LaneId } from '@/content/ids'
+import type { LaneId, ModeId } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import type { StatModifiers } from '@/content/modifiers'
 import { STAR_POWER } from '@/content/rules'
 import type { Rng } from '@/core/random/rng'
@@ -37,9 +38,9 @@ export class LaneOptimizer {
   constructor(private readonly noise = 0.05) {}
 
   /** Square root rewards spreading power across lanes instead of stacking one. */
-  score(team: readonly OwnedHero[], lanes: readonly LaneId[]) {
+  score(team: readonly OwnedHero[], lanes: readonly LaneId[], mode: ModeId) {
     let total = 0
-    for (const lane of LANE_IDS) {
+    for (const lane of MODES[mode].lanes) {
       const group = team.filter((_, i) => lanes[i] === lane)
       if (!group.length) {
         continue
@@ -48,6 +49,7 @@ export class LaneOptimizer {
       const report = resolveLane(
         lane,
         group.map((h) => h.heroId),
+        mode,
       )
 
       const power = group.reduce(
@@ -61,12 +63,13 @@ export class LaneOptimizer {
     return total
   }
 
-  assign(team: readonly OwnedHero[], rng?: Rng) {
-    let best: LaneId[] = team.map(() => 'mid')
+  assign(team: readonly OwnedHero[], mode: ModeId, rng?: Rng) {
+    const open = MODES[mode].lanes
+    let best: LaneId[] = team.map(() => open[0]!)
     let bestScore = -Infinity
-    for (let code = 0; code < LANE_IDS.length ** team.length; code++) {
-      const lanes = team.map((_, i) => LANE_IDS[Math.floor(code / LANE_IDS.length ** i) % LANE_IDS.length]!)
-      const score = this.score(team, lanes) + (rng ? rng.next() * this.noise : 0)
+    for (let code = 0; code < open.length ** team.length; code++) {
+      const lanes = team.map((_, i) => open[Math.floor(code / open.length ** i) % open.length]!)
+      const score = this.score(team, lanes, mode) + (rng ? rng.next() * this.noise : 0)
       if (score > bestScore) {
         bestScore = score
         best = lanes

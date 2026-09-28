@@ -20,6 +20,7 @@ interface TourStop {
     | 'items'
     | 'scoreboard'
     | 'fight'
+    | 'modes'
   readonly target?: string
   readonly side?: Side
   /** On phones and tablets the widget lives in this tab of the dock. */
@@ -100,14 +101,21 @@ export function useTutorial() {
       target: '[data-tour="fight"]',
       side: 'top',
     },
+    { key: 'modes' },
   ]
+
+  /** The map stop describes the board of the match being played. */
+  const textOf = (stop: TourStop) =>
+    stop.key === 'board'
+      ? t(`tutorial.board.${store.view?.mode ?? 'threeLanes'}`)
+      : t(`tutorial.${stop.key}.text`)
 
   function toStep(stop: TourStop) {
     return {
       ...(stop.target ? { element: stop.target } : {}),
       popover: {
         title: t(`tutorial.${stop.key}.title`),
-        description: t(`tutorial.${stop.key}.text`),
+        description: textOf(stop),
         ...(stop.side
           ? {
               side: stop.side,

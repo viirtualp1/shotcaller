@@ -1,4 +1,5 @@
-import type { TeamId } from '@/content/ids'
+import type { ModeId, TeamId } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { MATCH } from '@/content/rules'
 import type { BattleOutcome, PerTeam, StructureState, TeamBattleStats } from '../battle/contracts'
 import type { RoundVerdict } from '../player/Player'
@@ -15,15 +16,19 @@ export interface MatchResult {
 export const totalStructureDamage = (stats: TeamBattleStats) =>
   STRUCTURE_SLOTS.reduce((sum, slot) => sum + stats.structureDamage[slot], 0)
 
+/** What a round is judged on: building damage, plus hero kills in modes where they count. */
+export const roundScore = (stats: TeamBattleStats, mode: ModeId) =>
+  totalStructureDamage(stats) + stats.heroKills * MODES[mode].killScore
+
 export const verdictFor = (team: TeamId, winner: TeamId | null): RoundVerdict =>
   winner === null ? 'draw' : winner === team ? 'win' : 'loss'
 
-export function judgeRound(outcome: BattleOutcome) {
+export function judgeRound(outcome: BattleOutcome, mode: ModeId) {
   if (outcome.throneFell !== null) {
     return outcome.throneFell === 0 ? 1 : 0
   }
 
-  const [ours, theirs] = outcome.stats.map(totalStructureDamage) as [number, number]
+  const [ours, theirs] = outcome.stats.map((stats) => roundScore(stats, mode)) as [number, number]
   if (Math.abs(ours - theirs) < MATCH.drawThreshold) {
     return null
   }
@@ -31,7 +36,11 @@ export function judgeRound(outcome: BattleOutcome) {
   return ours > theirs ? 0 : 1
 }
 
-export function judgeMatch(structures: PerTeam<StructureState>, round: number): MatchResult | null {
+export function judgeMatch(
+  structures: PerTeam<StructureState>,
+  round: number,
+  mode: ModeId,
+): MatchResult | null {
   const fallen = structures.findIndex((s) => s.throne <= 0)
   if (fallen >= 0) {
     return {
@@ -40,7 +49,7 @@ export function judgeMatch(structures: PerTeam<StructureState>, round: number): 
     }
   }
 
-  if (round < MATCH.maxRounds) {
+  if (round < MODES[mode].maxRounds) {
     return null
   }
 

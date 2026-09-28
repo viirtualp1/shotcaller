@@ -1,4 +1,6 @@
 import { randomIds, type IdGenerator } from '@/core/ids'
+import type { ModeId } from '@/content/ids'
+import { DEFAULT_MODE } from '@/content/modes'
 import { OPPONENT, type Difficulty } from '@/content/rules'
 import { createRng } from '@/core/random/rng'
 import type { CoachStrategy } from '@/domain/coach/CoachStrategy'
@@ -13,6 +15,7 @@ export interface MatchOptions {
   readonly difficulty?: Difficulty
   /** Plays against a person on another device instead of the computer. */
   readonly link?: RemoteLink
+  readonly mode?: ModeId
 }
 
 function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
@@ -34,6 +37,7 @@ export function createMatch(options: MatchOptions = {}) {
     rng: createRng(options.seed),
     ids: options.ids ?? randomIds,
     rival: rivalFor(options),
+    mode: options.mode ?? DEFAULT_MODE,
   })
 }
 
@@ -46,6 +50,7 @@ export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'see
         ...options,
         link: state.link,
       }),
+      mode: state.mode,
     },
     state,
   )

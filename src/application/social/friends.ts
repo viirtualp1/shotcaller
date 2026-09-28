@@ -1,5 +1,6 @@
-import type { HeroId, StarLevel } from '@/content/ids'
+import type { HeroId, ModeId, StarLevel } from '@/content/ids'
 import type { Difficulty } from '@/content/rules'
+import type { ModeRatings } from '@/domain/profile/Profile'
 
 /** What other players see of a coach. */
 export interface CoachCard {
@@ -29,6 +30,9 @@ export interface PresenceStatus {
 export interface MatchSummary {
   readonly id: string
   readonly playedAt: string
+  readonly mode: ModeId
+  /** Against another coach rather than the computer; who it was stays private. */
+  readonly duel: boolean
   readonly difficulty: Difficulty
   readonly verdict: 'win' | 'loss' | 'draw'
   readonly rounds: number
@@ -42,6 +46,7 @@ export interface MatchSummary {
 }
 
 export interface FriendProfile extends CoachCard {
+  readonly ratings: ModeRatings
   readonly peakRating: number
   readonly xp: number
   /** Null for a coach who has not saved a profile yet. */

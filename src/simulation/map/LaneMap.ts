@@ -1,6 +1,6 @@
-import { LANE_IDS, TEAM_IDS, type LaneId, type TeamId } from '@/content/ids'
-import { BASES, LANE_WAYPOINTS } from '@/content/map'
-import { BATTLE } from '@/content/rules'
+import { TEAM_IDS, type LaneId, type ModeId, type TeamId, type TowerSlot } from '@/content/ids'
+import { MAPS, type MapDefinition } from '@/content/map'
+import { DEFAULT_MODE, MODES } from '@/content/modes'
 import { length, vec2, type Vec2 } from '@/core/math/vec2'
 
 export interface LanePath {
@@ -33,19 +33,26 @@ function buildPath(lane: LaneId, points: readonly Vec2[]): LanePath {
   }
 }
 
+/** The board of one game mode: its lanes, towers and relics. */
 export class LaneMap {
-  private readonly paths: Record<TeamId, Record<LaneId, LanePath>>
+  readonly definition: MapDefinition
+  /** The mode's lanes; the others are not on this board. */
+  readonly lanes: readonly LaneId[]
+  private readonly paths: Record<TeamId, Partial<Record<LaneId, LanePath>>>
 
-  constructor() {
-    const forward = (lane: LaneId) => LANE_WAYPOINTS[lane].map(([x, y]) => vec2(x, y))
+  constructor(readonly mode: ModeId = DEFAULT_MODE) {
+    this.definition = MAPS[mode]
+    this.lanes = MODES[mode].lanes
+
+    const forward = (lane: LaneId) => (this.definition.lanes[lane] ?? []).map(([x, y]) => vec2(x, y))
 
     const build = (team: TeamId) =>
       Object.fromEntries(
-        LANE_IDS.map((lane) => {
+        this.lanes.map((lane) => {
           const points = forward(lane)
           return [lane, buildPath(lane, team === 0 ? points : [...points].reverse())]
         }),
-      ) as Record<LaneId, LanePath>
+      ) as Partial<Record<LaneId, LanePath>>
 
     this.paths = {
       0: build(0),
@@ -54,13 +61,18 @@ export class LaneMap {
   }
 
   base(team: TeamId) {
-    const [x, y] = BASES[team]
+    const [x, y] = this.definition.bases[team]
     return vec2(x, y)
   }
 
   /** Path from the team's own base to the enemy base. */
   path(team: TeamId, lane: LaneId) {
-    return this.paths[team][lane]
+    const path = this.paths[team][lane]
+    if (!path) {
+      throw new Error(`No ${lane} lane in ${this.mode}`)
+    }
+
+    return path
   }
 
   segmentAt(path: LanePath, along: number) {
@@ -140,19 +152,33 @@ export class LaneMap {
     return false
   }
 
-  towerAlong(path: LanePath) {
-    return path.length * BATTLE.towerFraction
+  towerPosition(team: TeamId, slot: TowerSlot) {
+    const spot = this.definition.towers[slot]
+    if (!spot) {
+      throw new Error(`No ${slot} tower in ${this.mode}`)
+    }
+
+    const path = this.path(team, spot.lane)
+    return this.pointAt(path, path.length * spot.along)
   }
 
-  towerPosition(team: TeamId, lane: LaneId) {
-    const path = this.path(team, lane)
-    return this.pointAt(path, this.towerAlong(path))
+  /** How far from its own base the lane's outermost tower stands. */
+  frontTowerAlong(path: LanePath) {
+    const shares = Object.values(this.definition.towers)
+      .filter((spot) => spot.lane === path.lane)
+      .map((spot) => spot.along)
+
+    return path.length * Math.max(0, ...shares)
+  }
+
+  relicPositions() {
+    return this.definition.relics.map(([x, y]) => vec2(x, y))
   }
 
   nearestLane(p: Vec2, maxDistance = Infinity) {
     let best: LaneId | null = null
     let bestDistance = maxDistance
-    for (const lane of LANE_IDS) {
+    for (const lane of this.lanes) {
       const { distance } = this.project(this.path(0, lane), p)
       if (distance < bestDistance) {
         bestDistance = distance
@@ -164,8 +190,21 @@ export class LaneMap {
   }
 
   allPaths() {
-    return TEAM_IDS.flatMap((team) => LANE_IDS.map((lane) => this.path(team, lane)))
+    return TEAM_IDS.flatMap((team) => this.lanes.map((lane) => this.path(team, lane)))
   }
 }
 
-export const DEFAULT_LANE_MAP = new LaneMap()
+const cache = new Map<ModeId, LaneMap>()
+
+/** Maps are immutable, so each mode builds its paths once. */
+export function laneMapFor(mode: ModeId) {
+  let map = cache.get(mode)
+  if (!map) {
+    map = new LaneMap(mode)
+    cache.set(mode, map)
+  }
+
+  return map
+}
+
+export const DEFAULT_LANE_MAP = laneMapFor(DEFAULT_MODE)

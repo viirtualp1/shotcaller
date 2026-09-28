@@ -1,5 +1,5 @@
 import { HEROES } from '@/content/heroes'
-import { ROLE_IDS, type HeroId, type LaneId, type RoleId, type SynergyId } from '@/content/ids'
+import { ROLE_IDS, type HeroId, type LaneId, type ModeId, type RoleId, type SynergyId } from '@/content/ids'
 import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { SYNERGIES } from '@/content/synergies'
@@ -18,11 +18,12 @@ export interface LaneReport {
   modifiersFor(role: RoleId): StatModifiers
 }
 
-export function resolveLane(lane: LaneId, heroIds: readonly HeroId[]): LaneReport {
+export function resolveLane(lane: LaneId, heroIds: readonly HeroId[], mode: ModeId): LaneReport {
   const roles = heroIds.map((id) => HEROES[id].role)
 
   const active = SYNERGIES.filter((s) =>
     s.isActive({
+      mode,
       lane,
       roles,
     }),
@@ -33,6 +34,7 @@ export function resolveLane(lane: LaneId, heroIds: readonly HeroId[]): LaneRepor
       synergy: s.id,
       roles: ROLE_IDS.filter((role) =>
         s.isActive({
+          mode,
           lane,
           roles: [...roles, role],
         }),

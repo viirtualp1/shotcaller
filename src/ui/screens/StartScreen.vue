@@ -4,6 +4,7 @@ import { Flag, Play, Swords } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import BoardPreview from '../components/board/BoardPreview.vue'
+import ModeShowcase from '../components/modes/ModeShowcase.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
 import SignInButton from '../components/profile/SignInButton.vue'
@@ -93,13 +94,20 @@ function forfeit() {
       </nav>
     </section>
 
-    <section class="preview">
+    <section v-if="store.saved" class="preview">
       <BoardFrame>
-        <BoardPreview :key="settings.locale" />
+        <BoardPreview :key="`${settings.locale}:${store.saved.mode}`" :state="store.saved" />
       </BoardFrame>
+
+      <p class="caption">
+        {{ t(`modes.${store.saved.mode}.name`) }} · {{ t('start.savedRound', { round: store.saved.round }) }}
+      </p>
     </section>
 
+    <ModeShowcase v-else class="preview" />
+
     <LatestPatchCard class="news" />
+
     <LanguageSwitch compact class="language" />
   </main>
 </template>
@@ -189,6 +197,13 @@ h1 {
 
 .preview {
   min-width: 0;
+}
+
+.caption {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--chalk-dim);
 }
 
 .news {

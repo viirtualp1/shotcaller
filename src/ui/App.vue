@@ -6,6 +6,7 @@ import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
 import SignInDialog from './components/dialogs/SignInDialog.vue'
 import SettingsDialog from './components/dialogs/SettingsDialog.vue'
 import CoachProfileDialog from './components/social/CoachProfileDialog.vue'
+import ChallengeDialog from './components/social/ChallengeDialog.vue'
 import DuelInviteDialog from './components/social/DuelInviteDialog.vue'
 import NotificationStack from './components/social/NotificationStack.vue'
 import SocialWindow from './components/social/SocialWindow.vue'
@@ -52,6 +53,7 @@ useSystemNotificationsStore()
       <CloudConflictDialog />
       <CoachProfileDialog />
       <SocialWindow />
+      <ChallengeDialog />
       <DuelInviteDialog />
       <NotificationStack />
     </template>

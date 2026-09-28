@@ -5,7 +5,7 @@ import type { LaneId } from '@/content/ids'
 import { BATTLE } from '@/content/rules'
 import type { Vec2 } from '@/core/math/vec2'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
-import { DEFAULT_LANE_MAP, type LaneMap } from '@/simulation/map/LaneMap'
+import type { LaneMap } from '@/simulation/map/LaneMap'
 import { paintBoardArt } from './art/paintBoardArt'
 import type { BoardLabels } from './labels'
 import { BattleLayer } from './layers/BattleLayer'
@@ -65,13 +65,13 @@ export class BoardRenderer {
     icons: RoleIcons,
     perspective: Perspective,
   ) {
-    /* The map is symmetric across its diagonal, so the art looks the same from either side. */
+    /* Every map is symmetric along its mirror, so the art looks the same from either side. */
     const art = new Sprite(Texture.from(paintBoardArt(map, labels)))
     art.width = art.height = BATTLE.worldSize
     this.planning = new PlanningLayer(map, icons, perspective)
     this.battle = new BattleLayer(icons, perspective)
     this.effects = new EffectsLayer(labels, (strength) => this.shake(strength), perspective)
-    perspective.transpose(this.board)
+    perspective.orient(this.board)
     this.board.addChild(this.planning, this.battle, this.effects)
     this.world.addChild(art, this.board)
     this.camera.addChild(this.world)
@@ -95,12 +95,7 @@ export class BoardRenderer {
     this.fit(false)
   }
 
-  static async create(
-    host: HTMLElement,
-    labels: BoardLabels,
-    perspective = new Perspective(),
-    map: LaneMap = DEFAULT_LANE_MAP,
-  ) {
+  static async create(host: HTMLElement, labels: BoardLabels, perspective: Perspective, map: LaneMap) {
     const app = new Application()
     await app.init({
       resizeTo: host,

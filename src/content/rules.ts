@@ -1,4 +1,4 @@
-import type { CoachLevel, StarLevel, Tier } from './ids'
+import type { StarLevel, Tier } from './ids'
 
 export const ECONOMY = {
   startGold: 5,
@@ -6,7 +6,6 @@ export const ECONOMY = {
   xpCost: 4,
   xpPerPurchase: 4,
   passiveXpPerRound: 1,
-  baseIncome: 5,
   goldPerInterest: 10,
   maxInterest: 3,
   creepKillsPerGold: 8,
@@ -17,22 +16,7 @@ export const ECONOMY = {
 export const ROSTER = {
   benchSize: 8,
   shopSize: 5,
-  startLevel: 2 as CoachLevel,
-  maxLevel: 5 as CoachLevel,
-  xpToNext: {
-    2: 4,
-    3: 8,
-    4: 14,
-    5: Infinity,
-  } satisfies Record<CoachLevel, number>,
 } as const
-
-export const SHOP_ODDS: Readonly<Record<CoachLevel, readonly [number, number, number]>> = {
-  2: [0.75, 0.25, 0],
-  3: [0.6, 0.32, 0.08],
-  4: [0.45, 0.38, 0.17],
-  5: [0.3, 0.4, 0.3],
-}
 
 export const POOL_COPIES: Readonly<Record<Tier, number>> = {
   1: 12,
@@ -116,8 +100,19 @@ export const OPPONENT: Readonly<Record<Difficulty, OpponentStyle>> = {
 }
 
 export const MATCH = {
-  maxRounds: 20,
   drawThreshold: 60,
+} as const
+
+/** Heal relics on the one-lane bridge, as on ARAM's Howling Abyss. */
+export const RELIC = {
+  firstAt: 8,
+  cooldown: 16,
+  /** How close a hero must come to take one. */
+  pickRadius: 22,
+  /** Share of max health restored to the hero who takes it and to allies this close. */
+  heal: 0.2,
+  shareRadius: 150,
+  color: 0x7fe0b4,
 } as const
 
 export const BATTLE = {
@@ -126,7 +121,6 @@ export const BATTLE = {
   waveInterval: 10,
   firstWaveAt: 0.6,
   creepSpawnFraction: 0.1,
-  towerFraction: 0.3,
   siegeFromRound: 3,
   siegeEveryWaveFromRound: 8,
   creepScalePerRound: 0.07,

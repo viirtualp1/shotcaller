@@ -1,6 +1,13 @@
 export const LANE_IDS = ['top', 'mid', 'bot'] as const
 export type LaneId = (typeof LANE_IDS)[number]
 
+/** A lane's tower is named after it; the one-lane map adds a second tower closer to the throne. */
+export const TOWER_SLOTS = ['top', 'mid', 'bot', 'inner'] as const
+export type TowerSlot = (typeof TOWER_SLOTS)[number]
+
+export const MODE_IDS = ['threeLanes', 'twoLanes', 'oneLane'] as const
+export type ModeId = (typeof MODE_IDS)[number]
+
 export type TeamId = 0 | 1
 export const TEAM_IDS: readonly TeamId[] = [0, 1]
 export const opponentOf = (team: TeamId) => (team === 0 ? 1 : 0)
@@ -85,5 +92,6 @@ export type ItemId = (typeof ITEM_IDS)[number]
 
 export type Tier = 1 | 2 | 3
 export type StarLevel = 1 | 2 | 3
-export type CoachLevel = 2 | 3 | 4 | 5
-export type StructureSlot = LaneId | 'throne'
+/** Starts at 1; what each level allows depends on the game mode. */
+export type CoachLevel = number
+export type StructureSlot = TowerSlot | 'throne'

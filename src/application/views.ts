@@ -1,16 +1,17 @@
 import { HEROES } from '@/content/heroes'
 import {
   ITEM_IDS,
-  LANE_IDS,
   opponentOf,
   type HeroId,
   type ItemId,
   type LaneId,
+  type ModeId,
   type StarLevel,
   type TeamId,
 } from '@/content/ids'
 import { ITEMS, ITEM_SLOTS, STASH_SIZE } from '@/content/items'
-import { COPIES_PER_STAR, MATCH, MERGE_COUNT, ROSTER, SHOP_ODDS } from '@/content/rules'
+import { MODES } from '@/content/modes'
+import { COPIES_PER_STAR, MERGE_COUNT } from '@/content/rules'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { fromSide, seenFrom } from '@/domain/battle/mirror'
 import { findRecruit } from '@/domain/coach/recruit'
@@ -107,6 +108,7 @@ export interface MatchReportView {
 }
 
 export interface MatchView {
+  readonly mode: ModeId
   readonly round: number
   readonly maxRounds: number
   readonly phase: MatchPhase
@@ -150,6 +152,7 @@ function toLaneView(player: Player, lane: LaneId) {
   const report = resolveLane(
     lane,
     heroes.map((h) => h.heroId),
+    player.mode,
   )
 
   return {
@@ -158,7 +161,7 @@ function toLaneView(player: Player, lane: LaneId) {
     report: {
       synergies: report.synergies,
       suggestions: report.suggestions.map((suggestion) => {
-        const recruit = findRecruit(player.roster, player.boardCapacity, lane, suggestion.roles)
+        const recruit = findRecruit(player.roster, player.boardCapacity, lane, suggestion.roles, player.mode)
 
         return {
           ...suggestion,
@@ -184,7 +187,7 @@ function toPlayerView(player: Player) {
     team: player.team,
     gold,
     level: player.level,
-    maxLevel: ROSTER.maxLevel,
+    maxLevel: player.progression.maxLevel,
     xp: player.progression.xp,
     xpToNext: player.progression.xpToNext,
     isMaxLevel: player.progression.isMaxLevel,
@@ -202,7 +205,7 @@ function toPlayerView(player: Player) {
       completesSet: heroId !== null && singlesOf(heroId) >= MERGE_COUNT - 1,
       fits: heroId !== null && (player.roster.hasBenchSpace || wouldPromote(player.roster, heroId)),
     })),
-    shopOdds: SHOP_ODDS[player.level],
+    shopOdds: player.progression.rules.odds,
     stash: player.stash.items.map((itemId, index) => ({
       index,
       itemId,
@@ -226,7 +229,7 @@ function toMatchReport(match: Match): MatchReportView {
       stats: match.stats.teams[id],
       ledger: { ...match.players[id].ledger },
       level: match.players[id].level,
-      towersDestroyed: LANE_IDS.filter((lane) => enemyStructures[lane] <= 0).length,
+      towersDestroyed: MODES[match.mode].towers.filter((slot) => enemyStructures[slot] <= 0).length,
     }
   }
 
@@ -240,8 +243,9 @@ function toMatchReport(match: Match): MatchReportView {
 
 export function toMatchView(match: Match): MatchView {
   return {
+    mode: match.mode,
     round: match.round,
-    maxRounds: MATCH.maxRounds,
+    maxRounds: MODES[match.mode].maxRounds,
     phase: match.phase,
     structures: [{ ...match.structures[0] }, { ...match.structures[1] }],
     human: toPlayerView(match.human),

@@ -11,6 +11,7 @@ import { CreepView } from '../views/CreepView'
 import type { EntityView } from '../views/EntityView'
 import { HeroToken, isOverToken } from '../views/HeroToken'
 import { ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
+import { RelicView } from '../views/RelicView'
 import { StructureView, type StructureZone } from '../views/StructureView'
 
 const MELEE_LUNGE = 6
@@ -23,6 +24,7 @@ export class BattleLayer extends Container {
   private readonly heroes = new Container()
   private readonly projectiles = new Container()
   private readonly views = new Map<Entity, EntityView>()
+  private relicViews: RelicView[] = []
   private subscriptions: (() => void)[] = []
   private hoveredUid: string | null = null
   private simulation: BattleSimulation | null = null
@@ -42,6 +44,14 @@ export class BattleLayer extends Container {
     for (const entity of world) {
       this.add(entity, false)
     }
+
+    this.relicViews = simulation.relics.map((relic) => {
+      const view = new RelicView()
+      view.position.set(relic.position.x, relic.position.y)
+      this.zones.addChild(view)
+
+      return view
+    })
 
     const onAttack = ({ attacker, target }: SimulationEvents['attacked']) => {
       const view = this.views.get(attacker)
@@ -78,12 +88,24 @@ export class BattleLayer extends Container {
     this.subscriptions = []
     this.simulation = null
 
+    for (const view of this.relicViews) {
+      view.destroy({ children: true })
+    }
+
+    this.relicViews = []
+
     for (const entity of [...this.views.keys()]) {
       this.remove(entity, false)
     }
   }
 
   update(dt: number, time: number) {
+    const relics = this.simulation?.relics ?? []
+    this.relicViews.forEach((view, i) => {
+      const relic = relics[i]
+      view.show(relic !== undefined && this.simulation!.elapsed >= relic.readyAt, time)
+    })
+
     for (const [entity, view] of this.views) {
       view.follow(entity.position, entity.projectile ? Infinity : dt)
 
@@ -167,7 +189,7 @@ export class BattleLayer extends Container {
     }
 
     const [view, parent] = created
-    this.perspective.transpose(view)
+    this.perspective.upright(view)
     view.follow(entity.position, Infinity)
     view.sync(entity, 0)
     parent.addChild(view)

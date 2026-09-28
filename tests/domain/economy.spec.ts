@@ -7,6 +7,7 @@ import { createRng } from '@/core/random/rng'
 import { HeroPool } from '@/domain/economy/HeroPool'
 import { computeIncome } from '@/domain/economy/income'
 import { Player } from '@/domain/player/Player'
+import { MODES } from '@/content/modes'
 import { freshStructures } from '@/domain/match/structures'
 
 const totalInPool = (pool: HeroPool) => HERO_IDS.reduce((sum, id) => sum + pool.available(id), 0)
@@ -20,10 +21,11 @@ describe('shop and pool', () => {
       pool,
       rng: createRng('pool'),
       ids: sequentialIds(),
+      mode: 'threeLanes',
     })
 
     player.wallet.earn(100)
-    player.shop.restock(player.level)
+    player.restockShop()
 
     for (let i = 0; i < 10; i++) {
       player.reroll()
@@ -44,9 +46,10 @@ describe('shop and pool', () => {
       pool: new HeroPool(),
       rng: createRng('poor'),
       ids: sequentialIds(),
+      mode: 'threeLanes',
     })
 
-    player.shop.restock(player.level)
+    player.restockShop()
     player.wallet.spend(player.wallet.gold)
     expect(player.buy(0)._unsafeUnwrapErr().code).toBe('notEnoughGold')
   })
@@ -60,14 +63,16 @@ describe('income', () => {
       structureDamage: freshStructures(),
     }
 
-    const income = computeIncome(27, stats, true)
+    const income = computeIncome(27, stats, true, 'threeLanes')
     expect(income).toEqual({
-      base: ECONOMY.baseIncome,
+      base: MODES.threeLanes.baseIncome,
       interest: 2,
       farm: 4,
       win: 1,
-      total: ECONOMY.baseIncome + 7,
+      total: MODES.threeLanes.baseIncome + 7,
     })
+
+    expect(computeIncome(27, stats, true, 'oneLane').base).toBe(MODES.oneLane.baseIncome)
   })
 
   it('caps interest and farm', () => {
@@ -77,7 +82,7 @@ describe('income', () => {
       structureDamage: freshStructures(),
     }
 
-    const income = computeIncome(500, stats, false)
+    const income = computeIncome(500, stats, false, 'threeLanes')
     expect(income.interest).toBe(ECONOMY.maxInterest)
     expect(income.farm).toBe(ECONOMY.maxFarmIncome)
   })

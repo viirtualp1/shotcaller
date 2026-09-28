@@ -24,7 +24,7 @@ describe('boards from the other player', () => {
   it('accepts a board the rules allow', () => {
     const board = sentBoard()
 
-    expect(parseRemoteBoard(board)).toEqual(board)
+    expect(parseRemoteBoard(board, 'threeLanes')).toEqual(board)
   })
 
   it('rejects more heroes on the map than the level allows', () => {
@@ -35,7 +35,7 @@ describe('boards from the other player', () => {
       uid: `extra-${i}`,
     }))
 
-    expect(parseRemoteBoard(board)).toBeNull()
+    expect(parseRemoteBoard(board, 'threeLanes')).toBeNull()
   })
 
   it('rejects heroes that share an id', () => {
@@ -43,7 +43,7 @@ describe('boards from the other player', () => {
     const hero = board.roster.lanes.top[0] ?? board.roster.lanes.mid[0] ?? board.roster.lanes.bot[0]
     board.roster.bench = [{ ...hero }]
 
-    expect(parseRemoteBoard(board)).toBeNull()
+    expect(parseRemoteBoard(board, 'threeLanes')).toBeNull()
   })
 
   it('rejects unknown heroes, impossible stars and junk', () => {
@@ -67,10 +67,10 @@ describe('boards from the other player', () => {
       },
     ]
 
-    expect(parseRemoteBoard(unknown)).toBeNull()
-    expect(parseRemoteBoard(stars)).toBeNull()
-    expect(parseRemoteBoard([1, 2, 3])).toBeNull()
-    expect(parseRemoteBoard(null)).toBeNull()
+    expect(parseRemoteBoard(unknown, 'threeLanes')).toBeNull()
+    expect(parseRemoteBoard(stars, 'threeLanes')).toBeNull()
+    expect(parseRemoteBoard([1, 2, 3], 'threeLanes')).toBeNull()
+    expect(parseRemoteBoard(null, 'threeLanes')).toBeNull()
   })
 
   it('rejects oversized benches, stashes and gold', () => {
@@ -85,7 +85,7 @@ describe('boards from the other player', () => {
     const gold = sentBoard()
     gold.gold = 1e9
 
-    expect(parseRemoteBoard(bench)).toBeNull()
-    expect(parseRemoteBoard(gold)).toBeNull()
+    expect(parseRemoteBoard(bench, 'threeLanes')).toBeNull()
+    expect(parseRemoteBoard(gold, 'threeLanes')).toBeNull()
   })
 })

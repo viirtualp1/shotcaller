@@ -82,6 +82,7 @@ for (let i = 0; i < setupCount; i++) {
     }
 
     const setup: BattleSetup = {
+      mode: 'threeLanes',
       round: 6,
       seed: `${values.seed}-battle-${i}`,
       lineups: [lineup, theirs],
@@ -89,7 +90,7 @@ for (let i = 0; i < setupCount; i++) {
     }
 
     const outcome = headlessResolver.resolve(setup)
-    const winner = judgeRound(outcome)
+    const winner = judgeRound(outcome, 'threeLanes')
 
     const tally = tallies.get(candidate) ?? {
       wins: 0,

@@ -1,19 +1,11 @@
 import gsap from 'gsap'
 import { Container, Graphics } from 'pixi.js'
 import { HEROES } from '@/content/heroes'
-import {
-  LANE_IDS,
-  TEAM_IDS,
-  type HeroId,
-  type ItemId,
-  type LaneId,
-  type StarLevel,
-  type StructureSlot,
-  type TeamId,
-} from '@/content/ids'
+import { TEAM_IDS, type HeroId, type ItemId, type LaneId, type StarLevel, type TeamId } from '@/content/ids'
 import { STRUCTURES } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
+import { structureSlotsOf } from '@/domain/match/structures'
 import type { LaneMap } from '@/simulation/map/LaneMap'
 import { stagingPosition } from '../layout'
 import type { Perspective } from '../perspective'
@@ -162,7 +154,7 @@ export class PlanningLayer extends Container {
   private syncTokens(model: PlanningModel) {
     const seen = new Set<string>()
     for (const team of TEAM_IDS) {
-      for (const lane of LANE_IDS) {
+      for (const lane of this.map.lanes) {
         const tokens = model.lineups[team][lane]
         tokens.forEach((t, i) => {
           seen.add(t.uid)
@@ -207,7 +199,7 @@ export class PlanningLayer extends Container {
     })
 
     token.position.set(position.x, position.y)
-    this.perspective.transpose(token)
+    this.perspective.upright(token)
     this.tokenLayer.addChild(token)
 
     this.placed.set(model.uid, {
@@ -250,13 +242,13 @@ export class PlanningLayer extends Container {
     this.structureLayer.removeChildren().forEach((c) => c.destroy({ children: true }))
 
     for (const team of TEAM_IDS) {
-      for (const slot of [...LANE_IDS, 'throne'] as StructureSlot[]) {
+      for (const slot of structureSlotsOf(this.map.mode)) {
         const type = slot === 'throne' ? 'throne' : 'tower'
         const view = new StructureView(team, type)
         const side = this.perspective.inBattle(team)
         const at = slot === 'throne' ? this.map.base(side) : this.map.towerPosition(side, slot)
         view.position.set(at.x, at.y)
-        this.perspective.transpose(view)
+        this.perspective.upright(view)
         view.show(structures[team][slot], STRUCTURES[type].hp)
         this.structureLayer.addChild(view)
       }
@@ -271,7 +263,7 @@ export class PlanningLayer extends Container {
     }
 
     const target = this.dragging ? this.dropLane : this.hoverLane
-    for (const lane of LANE_IDS) {
+    for (const lane of this.map.lanes) {
       const points = this.map.path(0, lane).points
       points.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)))
 

@@ -23,7 +23,7 @@ describe('findRecruit', () => {
     roster.add(hero(heroWithRole('carry')))
     roster.add(mage)
 
-    expect(findRecruit(roster, 3, 'top', ['mage'])?.uid).toBe(mage.uid)
+    expect(findRecruit(roster, 3, 'top', ['mage'], 'threeLanes')?.uid).toBe(mage.uid)
   })
 
   it('leaves the bench alone when the board is full', () => {
@@ -31,7 +31,7 @@ describe('findRecruit', () => {
     const mage = hero(heroWithRole('mage'))
     roster.add(mage)
 
-    expect(findRecruit(roster, 0, 'top', ['mage'])).toBeNull()
+    expect(findRecruit(roster, 0, 'top', ['mage'], 'threeLanes')).toBeNull()
   })
 
   it('borrows a hero from another lane when the board is full', () => {
@@ -40,13 +40,13 @@ describe('findRecruit', () => {
     roster.add(mage)
     roster.move(mage.uid, 'bot', 1)
 
-    expect(findRecruit(roster, 1, 'top', ['mage'])?.uid).toBe(mage.uid)
+    expect(findRecruit(roster, 1, 'top', ['mage'], 'threeLanes')?.uid).toBe(mage.uid)
   })
 
   it('finds nobody without a hero of the needed role', () => {
     const roster = new Roster(8)
     roster.add(hero(heroWithRole('carry')))
 
-    expect(findRecruit(roster, 3, 'top', ['support'])).toBeNull()
+    expect(findRecruit(roster, 3, 'top', ['support'], 'threeLanes')).toBeNull()
   })
 })

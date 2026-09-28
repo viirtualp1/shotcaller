@@ -181,7 +181,7 @@ export class EffectsLayer extends Container {
     /* The holder sits at the battle position; the label floats up in screen terms inside it. */
     const holder = new Container()
     holder.position.set(at.x, at.y)
-    this.perspective.transpose(holder)
+    this.perspective.upright(holder)
     label.anchor.set(0.5)
     label.position.set(0, -TOKEN_RADIUS + offset)
     label.scale.set(0.6)

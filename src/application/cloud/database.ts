@@ -171,7 +171,7 @@ export interface Database {
         }[]
       }
       invite_duel: {
-        Args: { friend: string }
+        Args: { friend: string; game_mode?: string }
         Returns: string
       }
       respond_duel: {
@@ -209,6 +209,7 @@ export interface Database {
           host: string
           guest: string
           status: string
+          mode?: string
           seed: string | null
           round: number
           round_opened_at: string | null

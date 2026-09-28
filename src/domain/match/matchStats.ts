@@ -1,7 +1,27 @@
-import { TEAM_IDS, type HeroId, type StarLevel, type TeamId } from '@/content/ids'
+import {
+  LANE_IDS,
+  TEAM_IDS,
+  type HeroId,
+  type ItemId,
+  type LaneId,
+  type StarLevel,
+  type TeamId,
+} from '@/content/ids'
 import type { BattleOutcome, PerTeam, StructureState } from '../battle/contracts'
 import type { IncomeBreakdown } from '../economy/income'
+import type { Lineup } from '../roster/Roster'
 import { emptyStructureState } from './structures'
+
+/** A hero as it fought one round; a tuple, because a whole match of these is kept in the profile. */
+export type RoundPick = readonly [heroId: HeroId, stars: StarLevel, lane: LaneId, items: readonly ItemId[]]
+
+/** Both lineups of one round, the player's first. */
+export type RoundLineups = PerTeam<readonly RoundPick[]>
+
+export const picksOf = (lineup: Lineup): RoundPick[] =>
+  LANE_IDS.flatMap((lane) =>
+    lineup[lane].map((hero): RoundPick => [hero.heroId, hero.stars, lane, [...hero.items]]),
+  )
 
 export interface TeamMatchStats {
   readonly roundsWon: number
@@ -34,6 +54,8 @@ export interface MatchStats {
   readonly winners: readonly (TeamId | null)[]
   readonly teams: PerTeam<TeamMatchStats>
   readonly heroes: readonly HeroMatchStats[]
+  /** Who fought each round so far, in order. */
+  readonly lineups: readonly RoundLineups[]
 }
 
 const emptyIncome = (): IncomeBreakdown => ({
@@ -58,6 +80,7 @@ export const emptyMatchStats = (): MatchStats => ({
   winners: [],
   teams: [emptyTeam(), emptyTeam()],
   heroes: [],
+  lineups: [],
 })
 
 function sumRecords<K extends string>(a: Readonly<Record<K, number>>, b: Readonly<Record<K, number>>) {
@@ -71,6 +94,7 @@ export function addRound(
   outcome: BattleOutcome,
   winner: TeamId | null,
   income: PerTeam<IncomeBreakdown>,
+  lineups: RoundLineups,
 ): MatchStats {
   const teams = TEAM_IDS.map((team): TeamMatchStats => {
     const before = stats.teams[team]
@@ -115,5 +139,6 @@ export function addRound(
     winners: [...stats.winners, winner],
     teams: teams as [TeamMatchStats, TeamMatchStats],
     heroes: [...heroes.values()],
+    lineups: [...stats.lineups, lineups],
   }
 }

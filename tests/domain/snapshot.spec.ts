@@ -66,6 +66,18 @@ describe('match snapshots', () => {
     expect(headlessResolver.resolve(restored.pendingBattle!)).toEqual(headlessResolver.resolve(setup))
   })
 
+  it('loads a save from before game modes as three lanes, with levels counted from 1', () => {
+    const saved = JSON.parse(serializeSnapshot(playedMatch().snapshot()))
+    const level = saved.state.players[0].level
+    delete saved.state.mode
+    saved.version = 1
+    saved.state.players[0].level = level + 1
+
+    const state = parseSnapshot(JSON.stringify(saved))!
+    expect(state.mode).toBe('threeLanes')
+    expect(state.players[0].level).toBe(level)
+  })
+
   it('rejects corrupted data', () => {
     expect(parseSnapshot('{"version":1,"round":"three"}')).toBeNull()
     expect(parseSnapshot('not json')).toBeNull()

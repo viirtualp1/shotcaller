@@ -39,7 +39,7 @@ const fresh = isFresh(LATEST_PATCH)
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  width: 300px;
+  width: 400px;
   max-width: 100%;
   padding: 14px 16px;
   border-radius: 12px;

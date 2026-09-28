@@ -17,7 +17,7 @@ const store = useMatchStore()
 const drag = useDragStore()
 const boardStore = useBoardStore()
 const host = ref<HTMLElement | null>(null)
-const renderer = useBoardRenderer(host, store.view?.side ?? 0)
+const renderer = useBoardRenderer(host, store.view?.side ?? 0, store.view?.mode)
 const hovered = shallowRef<HeroHit | null>(null)
 let shownSimulation: BattleSimulation | null = null
 

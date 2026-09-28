@@ -45,4 +45,6 @@ export const PROFILE_XP = {
 export const PROFILE = {
   nameMaxLength: 20,
   recentMatches: 20,
+  /** Recent matches that keep every round's lineups; older ones keep only the last round, to keep saves small. */
+  roundDetailMatches: 5,
 } as const

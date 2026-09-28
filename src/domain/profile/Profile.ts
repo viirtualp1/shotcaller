@@ -1,17 +1,20 @@
 import {
   LANE_IDS,
+  MODE_IDS,
   type HeroId,
   type ItemId,
   type LaneId,
+  type ModeId,
   type StarLevel,
   type SynergyId,
   type TeamId,
 } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { PROFILE } from '@/content/profile'
 import type { Difficulty } from '@/content/rules'
 import { verdictFor, type MatchResult } from '../match/judge'
 import type { Match } from '../match/Match'
-import type { MatchStats } from '../match/matchStats'
+import type { MatchStats, RoundLineups } from '../match/matchStats'
 import type { Lineup } from '../roster/Roster'
 import { resolveLane } from '../synergy/resolveLane'
 import { matchXp, ratingChange, verdictOf, type Verdict } from './progression'
@@ -60,6 +63,7 @@ export interface MatchRecord {
   readonly id: string
   /** ISO date and time. */
   readonly playedAt: string
+  readonly mode: ModeId
   readonly difficulty: Difficulty
   readonly verdict: Verdict
   readonly reason: MatchResult['reason']
@@ -76,6 +80,8 @@ export interface MatchRecord {
   readonly opponentHeroes: readonly MatchHeroLine[]
   /** Who took each round, as the player saw it. */
   readonly history: readonly Verdict[]
+  /** Both lineups of every round; only the latest matches keep them. */
+  readonly roundLineups: readonly RoundLineups[]
   readonly mvp: HeroId | null
   /** Set for a duel with a friend; null for a match against the computer. */
   readonly duel: DuelInfo | null
@@ -109,6 +115,10 @@ export interface Profile {
   /** `null` falls back to the most played hero. */
   readonly avatar: HeroId | null
   readonly createdAt: string
+  /** One rating per game mode; only duels move them. */
+  readonly ratings: ModeRatings
+  readonly peakRatings: ModeRatings
+  /** The best of the ratings: the rank friends see. Kept in the save for versions before game modes. */
   readonly rating: number
   readonly peakRating: number
   readonly xp: number
@@ -119,6 +129,20 @@ export interface Profile {
   readonly recent: readonly MatchRecord[]
 }
 
+export type ModeRatings = Readonly<Record<ModeId, number>>
+
+export const emptyRatings = (): ModeRatings => ({
+  threeLanes: 0,
+  twoLanes: 0,
+  oneLane: 0,
+})
+
+export const bestRating = (ratings: ModeRatings) => Math.max(...MODE_IDS.map((mode) => ratings[mode]))
+
+/** The mode of the best rating; the first mode wins a tie. */
+export const bestMode = (ratings: ModeRatings) =>
+  MODE_IDS.reduce((best, mode) => (ratings[mode] > ratings[best] ? mode : best))
+
 /** A match against a friend rather than the computer; only these move the rating. */
 export interface DuelInfo {
   readonly opponentName: string
@@ -126,6 +150,7 @@ export interface DuelInfo {
 
 /** What the profile needs from a match once it is over. */
 export interface FinishedMatch {
+  readonly mode: ModeId
   readonly difficulty: Difficulty
   readonly result: MatchResult
   readonly stats: MatchStats
@@ -139,6 +164,8 @@ export const createProfile = (createdAt: string): Profile => ({
   name: '',
   avatar: null,
   createdAt,
+  ratings: emptyRatings(),
+  peakRatings: emptyRatings(),
   rating: 0,
   peakRating: 0,
   xp: 0,
@@ -169,12 +196,13 @@ export function finishedMatch(
   }
 
   return {
+    mode: match.mode,
     difficulty,
     result: match.result,
     stats: match.stats,
     lineup: match.human.roster.lineup(),
     opponentLineup: match.opponent.roster.lineup(),
-    towersDestroyed: LANE_IDS.filter((lane) => match.structures[1][lane] <= 0).length,
+    towersDestroyed: MODES[match.mode].towers.filter((slot) => match.structures[1][slot] <= 0).length,
     duel,
   }
 }
@@ -237,6 +265,7 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
           resolveLane(
             lane,
             lineup[lane].map((h) => h.heroId),
+            finished.mode,
           ).synergies,
       ),
     ),
@@ -246,6 +275,7 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
 
   return {
     ...meta,
+    mode: finished.mode,
     difficulty: finished.difficulty,
     verdict,
     reason: finished.result.reason,
@@ -259,6 +289,7 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
     opponentSynergies: synergiesOf(finished.opponentLineup),
     opponentHeroes: heroLinesOf(1),
     history: stats.winners.map((winner) => verdictFor(0, winner)),
+    roundLineups: stats.lineups,
     mvp: heroes[0]?.heroId ?? null,
     duel: finished.duel,
     heroKills: stats.teams[0].heroKills,
@@ -269,6 +300,14 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
     xp: matchXp(verdict, roundsWon),
   }
 }
+
+const withoutRounds = (record: MatchRecord): MatchRecord =>
+  record.roundLineups.length
+    ? {
+        ...record,
+        roundLineups: [],
+      }
+    : record
 
 /** Duels move the rating; before 7.4 matches against the computer did too. */
 export const isRated = (record: Pick<MatchRecord, 'duel' | 'ratingBefore' | 'ratingAfter'>) =>
@@ -298,14 +337,25 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
     }
   }
 
-  const { verdict } = played
+  const { verdict, mode } = played
   const won = verdict === 'win'
-  /* The computer only gives XP; the rating is for beating people. */
-  const rating = played.duel ? Math.max(0, profile.rating + ratingChange(resultOf(played))) : profile.rating
+  const ratingBefore = profile.ratings[mode]
+  /* The computer only gives XP; the rating is for beating people, one per mode. */
+  const rating = played.duel ? Math.max(0, ratingBefore + ratingChange(resultOf(played))) : ratingBefore
+
+  const ratings = {
+    ...profile.ratings,
+    [mode]: rating,
+  }
+
+  const peakRatings = {
+    ...profile.peakRatings,
+    [mode]: Math.max(profile.peakRatings[mode], rating),
+  }
 
   const record: MatchRecord = {
     ...played,
-    ratingBefore: profile.rating,
+    ratingBefore,
     ratingAfter: rating,
   }
 
@@ -360,13 +410,17 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
     record,
     profile: {
       ...profile,
-      rating,
-      peakRating: Math.max(profile.peakRating, rating),
+      ratings,
+      peakRatings,
+      rating: bestRating(ratings),
+      peakRating: bestRating(peakRatings),
       xp: profile.xp + record.xp,
       totals,
       heroes: heroRecords,
       synergies: synergyRecords,
-      recent: [record, ...profile.recent].slice(0, PROFILE.recentMatches),
+      recent: [record, ...profile.recent]
+        .slice(0, PROFILE.recentMatches)
+        .map((kept, i) => (i < PROFILE.roundDetailMatches ? kept : withoutRounds(kept))),
     } satisfies Profile,
     duplicate: false,
   }

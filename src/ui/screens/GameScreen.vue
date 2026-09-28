@@ -187,7 +187,7 @@ watch(
 <template>
   <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait', { battling }]">
     <div class="board-layer">
-      <BoardView :key="`${settings.locale}:${store.view?.side}`" :insets="insets" />
+      <BoardView :key="`${settings.locale}:${store.view?.side}:${store.view?.mode}`" :insets="insets" />
     </div>
 
     <div v-if="mapAnchor" class="map-anchor" :style="mapAnchor" data-tour="board" aria-hidden="true" />

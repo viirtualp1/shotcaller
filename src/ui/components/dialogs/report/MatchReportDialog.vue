@@ -12,9 +12,11 @@ import {
   TabsTrigger,
 } from 'reka-ui'
 import { computed, ref } from 'vue'
-import { LANE_IDS, type TeamId } from '@/content/ids'
+import type { TeamId } from '@/content/ids'
+import { structureSlotsOf } from '@/domain/match/structures'
 import type { TeamReportView } from '@/application/views'
 import { useGameText } from '../../../composables/useGameText'
+import { vOpticalAlign } from '../../../directives/opticalAlign'
 import { useMatchStore } from '../../../stores/match'
 import HeroAvatar from '../../common/HeroAvatar.vue'
 import ProgressStrip from '../../profile/ProgressStrip.vue'
@@ -83,7 +85,7 @@ const combat = computed(() => [
   compare('received', t('report.combat.damageReceived'), (_, id) => heroTotal(id, 'damageReceived')),
   compare('healing', t('report.combat.healing'), (_, id) => heroTotal(id, 'healing')),
   compare('towers', t('report.combat.towersDestroyed'), (s) => s.towersDestroyed),
-  ...[...LANE_IDS, 'throne' as const].map((slot) =>
+  ...structureSlotsOf(store.view?.mode ?? 'threeLanes').map((slot) =>
     compare(
       `slot-${slot}`,
       t('report.combat.slotDamage', { slot: text.slotName(slot) }),
@@ -105,7 +107,9 @@ const combat = computed(() => [
         @pointer-down-outside.prevent
       >
         <header class="head">
-          <DialogTitle class="title hand" :data-verdict="verdict">{{ t(`result.${verdict}`) }}</DialogTitle>
+          <DialogTitle v-optical-align class="title hand" :data-verdict="verdict">{{
+            t(`result.${verdict}`)
+          }}</DialogTitle>
 
           <p v-if="mvp" class="mvp">
             <HeroAvatar :hero-id="mvp.heroId" :stars="mvp.bestStars" :size="30" />
@@ -161,7 +165,12 @@ const combat = computed(() => [
         </TabsRoot>
 
         <footer class="actions">
-          <button v-if="!store.isDuel" type="button" class="btn primary big" @click="store.newMatch()">
+          <button
+            v-if="!store.isDuel"
+            type="button"
+            class="btn primary big"
+            @click="store.newMatch(store.view?.mode)"
+          >
             {{ t('result.again') }}
           </button>
 

@@ -78,6 +78,7 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
           </span>
 
           <span class="muted">
+            {{ t(`modes.${match.mode}.name`) }} ·
             <template v-if="match.duel">
               <Swords :size="12" class="duel" aria-hidden="true" />
               {{ t('matchDetails.against', { name: match.duel.opponentName || t('profile.defaultName') }) }}

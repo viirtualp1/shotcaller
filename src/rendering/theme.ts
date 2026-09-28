@@ -14,6 +14,9 @@ export const PALETTE = {
   river: 0x78b4d2,
   treeLine: 0x96c896,
   treeFill: 0x3c6446,
+  abyssCenter: 0x141d22,
+  abyssEdge: 0x0c1215,
+  bridge: 0x2a3833,
 } as const
 
 export const TEAM_COLORS: Readonly<Record<TeamId, number>> = {

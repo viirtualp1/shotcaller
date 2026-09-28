@@ -1,6 +1,7 @@
 import { World } from 'miniplex'
 import mitt from 'mitt'
-import { LANE_IDS, TEAM_IDS, type HeroId, type StarLevel, type TeamId } from '@/content/ids'
+import { TEAM_IDS, type HeroId, type StarLevel, type TeamId } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { BATTLE } from '@/content/rules'
 import { createRng } from '@/core/random/rng'
 import type { BattleOutcome, BattleResolver, BattleSetup, StructureState } from '@/domain/battle/contracts'
@@ -11,7 +12,7 @@ import { BattleStatsRecorder } from './BattleStatsRecorder'
 import type { Entity } from './ecs/components'
 import { createQueries, type Queries } from './ecs/queries'
 import type { SimulationEmitter, SimulationEvents } from './events'
-import { DEFAULT_LANE_MAP, type LaneMap } from './map/LaneMap'
+import { laneMapFor, type LaneMap } from './map/LaneMap'
 import { CombatService } from './services/CombatService'
 import { EntityFactory } from './services/EntityFactory'
 import { SpatialIndex } from './services/SpatialIndex'
@@ -25,6 +26,7 @@ import { DefenseSystem } from './systems/DefenseSystem'
 import { HealAuraSystem } from './systems/HealAuraSystem'
 import { MovementSystem } from './systems/MovementSystem'
 import { ProjectileSystem } from './systems/ProjectileSystem'
+import { RelicSystem } from './systems/RelicSystem'
 import { RespawnSystem } from './systems/RespawnSystem'
 import { RoamSystem } from './systems/RoamSystem'
 import { SpinSystem } from './systems/SpinSystem'
@@ -61,6 +63,7 @@ export class BattleSimulation {
   private readonly ctx: SimulationContext
   private readonly systems: readonly System[]
   private readonly recorder: BattleStatsRecorder
+  private readonly relicSystem: RelicSystem
   private readonly clock: SimulationClock = { elapsed: 0 }
   private fallenThrone: TeamId | null = null
 
@@ -68,7 +71,7 @@ export class BattleSimulation {
     readonly setup: BattleSetup,
     options: BattleSimulationOptions = {},
   ) {
-    this.map = options.map ?? DEFAULT_LANE_MAP
+    this.map = options.map ?? laneMapFor(setup.mode)
     this.queries = createQueries(this.world)
     const rng = createRng(setup.seed)
     const index = new SpatialIndex(this.queries.units)
@@ -98,6 +101,8 @@ export class BattleSimulation {
     this.spawnStartingUnits()
 
     const ctx = this.ctx
+    this.relicSystem = new RelicSystem(ctx)
+
     this.systems = [
       new WaveSpawnSystem(ctx),
       new RespawnSystem(ctx),
@@ -112,6 +117,7 @@ export class BattleSimulation {
       new TargetingSystem(ctx),
       new AttackSystem(ctx),
       new MovementSystem(ctx),
+      this.relicSystem,
       new ProjectileSystem(ctx),
       new CollisionSystem(ctx),
       new DeathSystem(ctx),
@@ -120,6 +126,11 @@ export class BattleSimulation {
 
   get elapsed() {
     return this.clock.elapsed
+  }
+
+  /** Heal relics of the one-lane map; empty elsewhere. */
+  get relics() {
+    return this.relicSystem.relics
   }
 
   get duration() {
@@ -176,7 +187,7 @@ export class BattleSimulation {
   structureHealth() {
     const result: [StructureState, StructureState] = [emptyStructureState(), emptyStructureState()]
     for (const s of this.queries.structures) {
-      result[s.team][s.structure.lane ?? 'throne'] = Math.max(0, Math.round(s.health.current))
+      result[s.team][s.structure.slot] = Math.max(0, Math.round(s.health.current))
     }
 
     return result
@@ -213,20 +224,21 @@ export class BattleSimulation {
     const { factory } = this.ctx
     for (const team of TEAM_IDS) {
       const structures = this.setup.structures[team]
-      for (const lane of LANE_IDS) {
-        if (structures[lane] > 0) {
-          factory.structure(team, 'tower', lane, structures[lane])
+      for (const slot of MODES[this.setup.mode].towers) {
+        if (structures[slot] > 0) {
+          factory.tower(team, slot, structures[slot])
         }
       }
 
-      factory.structure(team, 'throne', null, structures.throne)
+      factory.throne(team, structures.throne)
 
-      for (const lane of LANE_IDS) {
+      for (const lane of this.map.lanes) {
         const lineup = this.setup.lineups[team][lane]
 
         const report = resolveLane(
           lane,
           lineup.map((h) => h.heroId),
+          this.setup.mode,
         )
 
         lineup.forEach((owned, slot) => factory.hero(owned, team, lane, report, slot))

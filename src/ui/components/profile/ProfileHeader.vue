@@ -2,10 +2,12 @@
 import { Check, Pencil, X } from 'lucide-vue-next'
 import { computed, nextTick, ref } from 'vue'
 import { PROFILE } from '@/content/profile'
+import { bestMode } from '@/domain/profile/Profile'
 import { rankFor } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
+import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import CoachAvatar from './CoachAvatar.vue'
 import RankMedal from './RankMedal.vue'
 
@@ -13,6 +15,7 @@ const emit = defineEmits<{ pickAvatar: [] }>()
 
 const profile = useProfileStore()
 const settings = useSettingsStore()
+const photo = useAccountPhoto()
 const text = useGameText()
 const { t } = text
 
@@ -72,7 +75,13 @@ function save() {
         :aria-label="t('profile.changeAvatar')"
         @click="emit('pickAvatar')"
       >
-        <CoachAvatar :hero-id="profile.avatar" :level="profile.level.level" :size="104" />
+        <CoachAvatar
+          :hero-id="profile.avatar"
+          :level="profile.level.level"
+          :size="104"
+          :photo="photo.shown.value"
+        />
+
         <span class="avatar-edit"><Pencil :size="16" /></span>
       </button>
 
@@ -130,6 +139,11 @@ function save() {
       <div class="rank-text">
         <strong class="rank-name">{{ t(`profile.ranks.${profile.rank.tier}`) }}</strong>
         <span class="rating">{{ text.number(profile.profile.rating) }}</span>
+
+        <span v-if="profile.profile.rating > 0" class="best-mode">
+          {{ t('profile.bestMode', { mode: t(`modes.${bestMode(profile.profile.ratings)}.name`) }) }}
+        </span>
+
         <span class="bar"><span class="fill" :style="{ width: `${rankShare}%` }" /></span>
         <span class="muted">{{ nextStep }}</span>
       </div>
@@ -138,6 +152,13 @@ function save() {
 </template>
 
 <style scoped>
+.best-mode {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
 .header {
   display: flex;
   flex-wrap: wrap;

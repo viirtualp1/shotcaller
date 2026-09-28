@@ -1,7 +1,8 @@
-import type { LaneId, RoleId, SynergyId } from './ids'
+import type { LaneId, ModeId, RoleId, SynergyId } from './ids'
 import type { StatModifiers } from './modifiers'
 
 export interface LaneComposition {
+  readonly mode: ModeId
   readonly lane: LaneId
   readonly roles: readonly RoleId[]
 }
@@ -47,7 +48,8 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
   {
     id: 'soloMid',
     color: 0x6cc4ff,
-    isActive: (c) => c.lane === 'mid' && c.roles.length === 1,
+    /* A lone hero in the middle of three lanes; on the one-lane bridge everybody is in mid. */
+    isActive: (c) => c.mode === 'threeLanes' && c.lane === 'mid' && c.roles.length === 1,
     effects: [
       {
         appliesTo: 'all',

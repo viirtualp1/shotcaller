@@ -6,6 +6,7 @@ import { HERO_IDS } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
 import { useDuelStore } from '../../stores/duel'
 import { useMatchStore } from '../../stores/match'
+import ModeMap from '../modes/ModeMap.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 
 /** A friend's challenge, shown wherever the player is; it has to be answered or left to expire. */
@@ -40,6 +41,11 @@ const leavesSolo = computed(() => match.view !== null && !match.isDuel)
           <p class="text">{{ t('duel.invitedText', { name }) }}</p>
         </div>
 
+        <p v-if="invite" class="mode">
+          <ModeMap :mode="invite.duel.mode" :size="40" />
+          {{ t('modes.duelMode', { mode: t(`modes.${invite.duel.mode}.name`) }) }}
+        </p>
+
         <p v-if="leavesSolo" class="hint">{{ t('duel.invitedHint') }}</p>
 
         <p class="timer">{{ t('duel.expiresIn', { s: duel.inviteSecondsLeft(invite) }) }}</p>
@@ -57,6 +63,14 @@ const leavesSolo = computed(() => match.view !== null && !match.isDuel)
 </template>
 
 <style scoped>
+.mode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-weight: 600;
+}
+
 .invite {
   display: flex;
   flex-direction: column;

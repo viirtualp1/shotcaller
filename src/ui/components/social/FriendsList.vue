@@ -164,7 +164,7 @@ async function submit() {
           class="icon-btn duel"
           :aria-label="t('duel.challengeName', { name: nameOf(entry.name) })"
           :title="t('duel.challenge')"
-          @click="duel.invite(entry.id)"
+          @click="duel.challenge(entry.id)"
         >
           <Swords :size="16" />
         </button>

@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
+import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import CoachAvatar from './CoachAvatar.vue'
 import RankMedal from './RankMedal.vue'
 
 const profile = useProfileStore()
+const photo = useAccountPhoto()
 const { t } = useGameText()
 </script>
 
 <template>
   <a href="#/profile" class="chip" :aria-label="t('profile.title')" @click.prevent="profile.open()">
-    <CoachAvatar :hero-id="profile.avatar" :level="profile.level.level" :size="42" />
+    <CoachAvatar
+      :hero-id="profile.avatar"
+      :level="profile.level.level"
+      :size="42"
+      :photo="photo.shown.value"
+    />
 
     <span class="who">
       <strong class="name">{{ profile.profile.name || t('profile.defaultName') }}</strong>

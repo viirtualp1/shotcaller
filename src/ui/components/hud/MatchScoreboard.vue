@@ -49,7 +49,7 @@ const history = computed(() =>
 
 <template>
   <div class="scoreboard" data-tour="scoreboard">
-    <BaseStatus :team="0" :structures="structures[0]" />
+    <BaseStatus :team="0" :structures="structures[0]" :mode="store.view!.mode" />
 
     <div class="center">
       <span class="round">{{ t('hud.round', { round: view.round, max: view.maxRounds }) }}</span>
@@ -95,7 +95,12 @@ const history = computed(() =>
       </TransitionGroup>
     </div>
 
-    <BaseStatus :team="1" :structures="structures[1]" :name="store.duel?.opponentName" />
+    <BaseStatus
+      :team="1"
+      :structures="structures[1]"
+      :mode="store.view!.mode"
+      :name="store.duel?.opponentName"
+    />
   </div>
 </template>
 

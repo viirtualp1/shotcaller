@@ -1,5 +1,5 @@
-import { LANE_IDS, TEAM_IDS, type LaneId } from '@/content/ids'
-import { RIVER } from '@/content/map'
+import { TEAM_IDS } from '@/content/ids'
+import type { Point } from '@/content/map'
 import { BATTLE } from '@/content/rules'
 import { createRng, type Rng } from '@/core/random/rng'
 import type { Vec2 } from '@/core/math/vec2'
@@ -9,34 +9,15 @@ import { cssColor, FONTS, PALETTE, TEAM_COLORS } from '../theme'
 
 const WORLD = BATTLE.worldSize
 
-const LANE_LABEL_POSITIONS: Readonly<Record<LaneId, Vec2>> = {
-  top: {
-    x: 172,
-    y: 168,
-  },
-  mid: {
-    x: 455,
-    y: 605,
-  },
-  bot: {
-    x: 828,
-    y: 832,
-  },
-}
-
-const BASE_LABEL_POSITIONS = {
-  0: {
-    x: 130,
-    y: 972,
-  },
-  1: {
-    x: 870,
-    y: 30,
-  },
-} as const
-
 const TREE_ATTEMPTS = 1400
 const TREE_LIMIT = 170
+const BRIDGE_WIDTH = 124
+const BASE_PLATFORM = 170
+
+const toVec = ([x, y]: Point) => ({
+  x,
+  y,
+})
 
 function strokePath(ctx: CanvasRenderingContext2D, points: readonly Vec2[]) {
   ctx.beginPath()
@@ -68,11 +49,8 @@ function paintGround(ctx: CanvasRenderingContext2D, rng: Rng) {
   }
 }
 
-function paintRiver(ctx: CanvasRenderingContext2D) {
-  const points = RIVER.map(([x, y]) => ({
-    x,
-    y,
-  }))
+function paintRiver(ctx: CanvasRenderingContext2D, river: readonly Point[]) {
+  const points = river.map(toVec)
 
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
@@ -113,12 +91,8 @@ function distanceToPolyline(p: Vec2, points: readonly Vec2[]) {
 }
 
 function paintTrees(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
-  const lanes = LANE_IDS.map((lane) => map.path(0, lane).points)
-
-  const river = RIVER.map(([x, y]) => ({
-    x,
-    y,
-  }))
+  const lanes = map.lanes.map((lane) => map.path(0, lane).points)
+  const river = (map.definition.river ?? []).map(toVec)
 
   const bases = TEAM_IDS.map((team) => map.base(team))
   let planted = 0
@@ -132,7 +106,7 @@ function paintTrees(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
       continue
     }
 
-    if (distanceToPolyline(p, river) < 44) {
+    if (river.length && distanceToPolyline(p, river) < 44) {
       continue
     }
 
@@ -163,7 +137,7 @@ function paintLanes(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
 
-  for (const lane of LANE_IDS) {
+  for (const lane of map.lanes) {
     const points = map.path(0, lane).points
     strokePath(ctx, points)
     ctx.strokeStyle = cssColor(PALETTE.chalk, 0.05)
@@ -186,26 +160,117 @@ function paintLanes(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
   ctx.setLineDash([])
 }
 
-function paintBases(ctx: CanvasRenderingContext2D, labels: BoardLabels) {
+/** Howling Abyss: a stone bridge over the dark, with a platform around each base. */
+function paintAbyss(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
+  const gradient = ctx.createRadialGradient(WORLD / 2, WORLD / 2, 80, WORLD / 2, WORLD / 2, WORLD * 0.75)
+  gradient.addColorStop(0, cssColor(PALETTE.abyssCenter))
+  gradient.addColorStop(1, cssColor(PALETTE.abyssEdge))
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, WORLD, WORLD)
+
+  for (let i = 0; i < 18; i++) {
+    ctx.save()
+    ctx.translate(rng.range(0, WORLD), rng.range(0, WORLD))
+    ctx.rotate(-Math.PI / 4)
+    ctx.scale(1, rng.range(0.2, 0.4))
+    ctx.beginPath()
+    ctx.arc(0, 0, rng.range(60, 160), 0, Math.PI * 2)
+    ctx.fillStyle = cssColor(PALETTE.frost, 0.025)
+    ctx.fill()
+    ctx.restore()
+  }
+
   for (const team of TEAM_IDS) {
-    const label = BASE_LABEL_POSITIONS[team]
+    const base = map.base(team)
+    ctx.beginPath()
+    ctx.arc(base.x, base.y, BASE_PLATFORM, 0, Math.PI * 2)
+    ctx.fillStyle = cssColor(PALETTE.bridge)
+    ctx.fill()
+    ctx.strokeStyle = cssColor(PALETTE.chalk, 0.18)
+    ctx.lineWidth = 2
+    ctx.stroke()
+  }
+
+  ctx.lineCap = 'butt'
+
+  for (const lane of map.lanes) {
+    const points = map.path(0, lane).points
+    strokePath(ctx, points)
+    ctx.strokeStyle = cssColor(PALETTE.bridge)
+    ctx.lineWidth = BRIDGE_WIDTH
+    ctx.stroke()
+
+    const path = map.path(0, lane)
+    for (let along = 0; along < path.length; along += 26) {
+      const at = map.pointAt(path, along)
+      const tangent = map.tangentAt(path, along)
+      const half = BRIDGE_WIDTH / 2 - 6
+      ctx.beginPath()
+      ctx.moveTo(at.x - tangent.y * half, at.y + tangent.x * half)
+      ctx.lineTo(at.x + tangent.y * half, at.y - tangent.x * half)
+      ctx.strokeStyle = cssColor(PALETTE.chalk, 0.035)
+      ctx.lineWidth = 1.2
+      ctx.stroke()
+    }
+
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+
+      for (let along = 0; along <= path.length; along += 20) {
+        const at = map.pointAt(path, along)
+        const tangent = map.tangentAt(path, along)
+        const x = at.x - tangent.y * side * (BRIDGE_WIDTH / 2)
+        const y = at.y + tangent.x * side * (BRIDGE_WIDTH / 2)
+        if (along) {
+          ctx.lineTo(x, y)
+        } else {
+          ctx.moveTo(x, y)
+        }
+      }
+
+      ctx.strokeStyle = cssColor(PALETTE.chalk, 0.22)
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+  }
+}
+
+/** The spots where heal relics come back; the relics themselves are drawn by the battle. */
+function paintRelicSpots(ctx: CanvasRenderingContext2D, map: LaneMap) {
+  for (const spot of map.relicPositions()) {
+    ctx.beginPath()
+    ctx.arc(spot.x, spot.y, 17, 0, Math.PI * 2)
+    ctx.setLineDash([4, 5])
+    ctx.strokeStyle = cssColor(PALETTE.heal, 0.35)
+    ctx.lineWidth = 1.6
+    ctx.stroke()
+  }
+
+  ctx.setLineDash([])
+}
+
+function paintBases(ctx: CanvasRenderingContext2D, map: LaneMap, labels: BoardLabels) {
+  for (const team of TEAM_IDS) {
+    const [x, y] = map.definition.baseLabels[team]
     ctx.font = `700 26px ${FONTS.hand}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = cssColor(TEAM_COLORS[team], 0.8)
-    ctx.fillText(labels.baseName(team), label.x, label.y)
+    ctx.fillText(labels.baseName(team), x, y)
   }
 }
 
-function paintLaneLabels(ctx: CanvasRenderingContext2D, labels: BoardLabels) {
+function paintLaneLabels(ctx: CanvasRenderingContext2D, map: LaneMap, labels: BoardLabels) {
   ctx.font = `700 32px ${FONTS.hand}`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillStyle = cssColor(PALETTE.chalk, 0.5)
 
-  for (const lane of LANE_IDS) {
-    const at = LANE_LABEL_POSITIONS[lane]
-    ctx.fillText(labels.laneName(lane).toLowerCase(), at.x, at.y)
+  for (const lane of map.lanes) {
+    const at = map.definition.laneLabels[lane]
+    if (at) {
+      ctx.fillText(labels.laneName(lane).toLowerCase(), at[0], at[1])
+    }
   }
 }
 
@@ -233,12 +298,26 @@ export function paintBoardArt(map: LaneMap, labels: BoardLabels, resolution = 20
 
   ctx.scale(resolution / WORLD, resolution / WORLD)
   const rng = createRng('board-art')
-  paintGround(ctx, rng)
-  paintRiver(ctx)
-  paintTrees(ctx, map, rng)
+  const { style, river } = map.definition
+
+  if (style === 'abyss') {
+    paintAbyss(ctx, map, rng)
+  } else {
+    paintGround(ctx, rng)
+  }
+
+  if (river) {
+    paintRiver(ctx, river)
+  }
+
+  if (style !== 'abyss') {
+    paintTrees(ctx, map, rng)
+  }
+
   paintLanes(ctx, map, rng)
-  paintBases(ctx, labels)
-  paintLaneLabels(ctx, labels)
+  paintRelicSpots(ctx, map)
+  paintBases(ctx, map, labels)
+  paintLaneLabels(ctx, map, labels)
   paintFrame(ctx)
 
   return canvas

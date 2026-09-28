@@ -1,16 +1,39 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import type { HeroId } from '@/content/ids'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
-withDefaults(defineProps<{ heroId: HeroId; level?: number | null; size?: number }>(), {
-  level: null,
-  size: 48,
-})
+/** `photo` replaces the hero with the account picture; a picture that fails to load falls back to the hero. */
+const props = withDefaults(
+  defineProps<{ heroId: HeroId; level?: number | null; size?: number; photo?: string | null }>(),
+  {
+    level: null,
+    size: 48,
+    photo: null,
+  },
+)
+
+const broken = ref(false)
+watch(
+  () => props.photo,
+  () => (broken.value = false),
+)
 </script>
 
 <template>
   <span class="coach" :style="{ '--size': `${size}px` }">
-    <HeroAvatar :hero-id="heroId" :size="size" />
+    <img
+      v-if="photo && !broken"
+      class="photo"
+      :src="photo"
+      :width="size"
+      :height="size"
+      alt=""
+      referrerpolicy="no-referrer"
+      @error="broken = true"
+    />
+
+    <HeroAvatar v-else :hero-id="heroId" :size="size" />
     <span v-if="level !== null" class="level">{{ level }}</span>
   </span>
 </template>
@@ -20,6 +43,16 @@ withDefaults(defineProps<{ heroId: HeroId; level?: number | null; size?: number 
   position: relative;
   display: inline-grid;
   flex: none;
+}
+
+.photo {
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 3px var(--gold),
+    0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .coach :deep(.disc) {

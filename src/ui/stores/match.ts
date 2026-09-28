@@ -14,7 +14,7 @@ import {
   type MatchView,
   type PlayerView,
 } from '@/application/views'
-import { LANE_IDS, type HeroId, type ItemId, type StarLevel, type TeamId } from '@/content/ids'
+import { LANE_IDS, type HeroId, type ItemId, type ModeId, type StarLevel, type TeamId } from '@/content/ids'
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
@@ -116,7 +116,9 @@ export const useMatchStore = defineStore('match', () => {
   const live = shallowRef<LiveBattleView | null>(null)
   const simulation = shallowRef<BattleSimulation | null>(null)
   const notice = shallowRef<Notice | null>(null)
-  const savedRound = ref<number | null>(repository.load()?.round ?? null)
+  /** The match against the computer saved on this device, for the start screen. */
+  const saved = shallowRef<MatchState | null>(repository.load())
+  const savedRound = computed(() => saved.value?.round ?? null)
   const selectedUid = ref<string | null>(null)
   const selectedItem = ref<number | null>(null)
   /** An opponent hero opened for a read-only look. */
@@ -191,13 +193,14 @@ export const useMatchStore = defineStore('match', () => {
 
     if (match.phase === 'finished') {
       repository.clear()
-      savedRound.value = null
+      saved.value = null
 
       return
     }
 
-    repository.save(match.snapshot())
-    savedRound.value = match.round
+    const state = match.snapshot()
+    repository.save(state)
+    saved.value = state
   }
 
   function notify(input: NoticeInput) {
@@ -228,11 +231,16 @@ export const useMatchStore = defineStore('match', () => {
     inspectedUid.value = null
   }
 
-  function newMatch() {
+  function newMatch(mode: ModeId = settings.mode) {
     disposeBattle()
     profile.forgetLast()
     duel.value = null
-    match = createMatch({ difficulty: settings.difficulty })
+
+    match = createMatch({
+      difficulty: settings.difficulty,
+      mode,
+    })
+
     clearSelection()
     shopTab.value = 'heroes'
     refresh()
@@ -257,12 +265,16 @@ export const useMatchStore = defineStore('match', () => {
   }
 
   /** Starts an online duel; the solo match stays saved and can be continued later. */
-  function startDuel(binding: DuelBinding, link: RemoteLink) {
+  function startDuel(binding: DuelBinding, link: RemoteLink, mode: ModeId) {
     disposeBattle()
     profile.forgetLast()
     duel.value = binding
     awaiting.value = false
-    match = createMatch({ link })
+
+    match = createMatch({
+      link,
+      mode,
+    })
 
     duelClock.value = {
       seed: link.seed,
@@ -723,7 +735,7 @@ export const useMatchStore = defineStore('match', () => {
     awaiting.value = false
     match = null
     view.value = null
-    savedRound.value = repository.load()?.round ?? null
+    saved.value = repository.load()
   }
 
   function disposeBattle() {
@@ -738,6 +750,7 @@ export const useMatchStore = defineStore('match', () => {
     live,
     simulation,
     notice,
+    saved,
     savedRound,
     selectedUid,
     selectedItem,

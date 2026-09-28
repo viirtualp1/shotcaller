@@ -11,7 +11,8 @@
       "grow": "Save gold, buy experience and items: every level lets one more hero onto the map."
     },
     "newMatch": "New match",
-    "continue": "Continue · round {round}"
+    "continue": "Continue · round {round}",
+    "savedRound": "round {round}"
   },
   "phase": {
     "planning": "Planning",
@@ -23,7 +24,8 @@
     "top": "Top",
     "mid": "Mid",
     "bot": "Bot",
-    "throne": "Throne"
+    "throne": "Throne",
+    "inner": "Inner tower"
   },
   "teams": {
     "ours": "Us",
@@ -251,7 +253,12 @@
       "loss": "The enemy dealt more damage to buildings: {theirs} to {ours}",
       "draw": "Building damage was almost even: {ours} to {theirs}. A win needs a gap of {threshold} or more"
     },
-    "noHealing": "Nobody healed this round"
+    "noHealing": "Nobody healed this round",
+    "scoreReason": {
+      "win": "We scored more: {ours} to {theirs}. Score is damage to buildings plus {kill} for every hero kill",
+      "loss": "The opponent scored more: {theirs} to {ours}. Score is damage to buildings plus {kill} for every hero kill",
+      "draw": "The scores are nearly even: {ours} to {theirs}. A win needs a gap of {threshold}"
+    }
   },
   "result": {
     "win": "Victory",
@@ -312,7 +319,8 @@
     "opponentNotReady": "Your opponent is still placing heroes",
     "stashFull": "The item stash is full",
     "itemSlotsFull": "This hero already carries two items",
-    "itemNotFound": "Item not found"
+    "itemNotFound": "Item not found",
+    "laneClosed": "This mode has no such lane"
   },
   "notices": {
     "promoted": "{hero} is now {stars}",
@@ -332,7 +340,9 @@
     },
     "board": {
       "title": "The map",
-      "text": "Three lanes: top, mid and bot. Your base is bottom left, the enemy base is top right. Each lane has a tower with the throne behind them. Destroy the enemy throne to win."
+      "threeLanes": "Three lanes: top, mid and bot. Your base is bottom left, the enemy base is top right. Each lane has a tower with the throne behind them. Destroy the enemy throne to win.",
+      "twoLanes": "Two lanes: top and bot, with the jungle between them. Your base is on the left, the enemy base on the right. Each lane has a tower with the throne behind them. Destroy the enemy throne to win.",
+      "oneLane": "One lane: a long bridge. Your base is bottom left, the enemy base is top right. Each side has two towers on the bridge, and heal relics wait in the middle. A round goes to building damage and kills."
     },
     "shop": {
       "title": "Hero shop",
@@ -365,6 +375,10 @@
     "fight": {
       "title": "Fight",
       "text": "When your team is ready, press Fight. The battle plays itself; you can speed it up or skip it. Good luck!"
+    },
+    "modes": {
+      "title": "Three modes",
+      "text": "You are learning on two lanes. There is also the classic three lanes and a quick fight on one, across a bridge. Pick the mode when you start a match; each has its own duel rating."
     }
   },
   "settings": {
@@ -526,12 +540,12 @@
       "matches": "Matches",
       "winRate": "Win rate",
       "kd": "K / D",
-      "damage": "Damage per match",
+      "damage": "Damage",
       "empty": "Heroes you field will show up here.",
-      "structureDamage": "Buildings",
+      "structureDamage": "Building damage",
       "healing": "Healing",
-      "damageReceived": "Damage taken",
-      "perMatch": "Average per match"
+      "totalHint": "Total over all matches, with the average per match below",
+      "perMatchShort": "{n} per match"
     },
     "history": {
       "title": "Recent matches",
@@ -548,7 +562,9 @@
       "rankUp": "New rank",
       "levelUp": "Level up",
       "duelsOnly": "Only duels change it"
-    }
+    },
+    "avatarPhoto": "Account photo",
+    "bestMode": "Best in {mode}"
   },
   "itemTip": {
     "passive": "Passive",
@@ -581,7 +597,6 @@
     "pitch": "Sign in to keep your progress online and play on any device.",
     "signedIn": "Signed in as {email}",
     "signIn": "Sign in",
-    "signInEmail": "Sign in with email",
     "signInGoogle": "Continue with Google",
     "signOut": "Sign out",
     "signOutConfirm": "Sign out? The profile leaves this device but stays in your account.",
@@ -813,6 +828,35 @@
     "emptyLane": "Nobody",
     "legacy": "Played before update 7.4, when the opponent and the rounds were not kept yet.",
     "against": "vs {name}",
-    "duelWith": "Duel with {name}"
+    "duelWith": "Duel with {name}",
+    "duel": "Duel",
+    "final": "Final",
+    "noRounds": "Round lineups are kept for your last 5 matches played since 8.0."
+  },
+  "modes": {
+    "title": "Mode",
+    "threeLanes": {
+      "name": "Three lanes",
+      "text": "The classic: top, mid and bot."
+    },
+    "twoLanes": {
+      "name": "Two lanes",
+      "text": "Top and bot around the jungle. A good start."
+    },
+    "oneLane": {
+      "name": "One lane",
+      "text": "A bridge, two towers, heal relics. A short match."
+    },
+    "tutorialNote": "The tutorial is played on two lanes.",
+    "challengeTitle": "Duel challenge",
+    "challengeText": "Pick the mode for the duel with {name}",
+    "send": "Challenge",
+    "duelMode": "Mode: {mode}",
+    "ratings": "Rating by mode",
+    "pick": "Pick a mode",
+    "facts": "Up to {rounds} rounds · {heroes} heroes to start",
+    "yourRating": "Your rating in this mode",
+    "startHere": "Best to start with",
+    "others": "Other modes"
   }
 }

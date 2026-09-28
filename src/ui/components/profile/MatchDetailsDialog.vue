@@ -13,7 +13,8 @@ import {
   TabsTrigger,
 } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
-import { LANE_IDS, type TeamId } from '@/content/ids'
+import type { ModeId, TeamId } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import {
   hasDetails,
   isRated,
@@ -21,7 +22,10 @@ import {
   type MatchHeroLine,
   type MatchRecord,
 } from '@/domain/profile/Profile'
+import type { RoundPick } from '@/domain/match/matchStats'
+import { resolveLane } from '@/domain/synergy/resolveLane'
 import { useGameText } from '../../composables/useGameText'
+import { vOpticalAlign } from '../../directives/opticalAlign'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ItemIcon from '../common/ItemIcon.vue'
@@ -55,10 +59,16 @@ const { t } = text
 const tab = ref('heroes')
 const sort = ref<HeroStatKey>('damageDealt')
 
+/** A round picked to look at; null shows the lineups the match ended with. */
+const round = ref<number | null>(null)
+
 watch(match, () => {
   tab.value = 'heroes'
   sort.value = 'damageDealt'
+  round.value = null
 })
+
+const roundLineups = computed(() => match.value?.roundLineups ?? [])
 
 const open = computed({
   get: () => match.value !== null,
@@ -172,26 +182,52 @@ const heroes = computed(() =>
 
 const topDamage = computed(() => Math.max(1, ...heroes.value.map((h) => h.damageDealt)))
 
-const lanesOf = (lineup: readonly LineupHero[]) =>
-  LANE_IDS.map((lane) => ({
+const lanesOf = (lineup: readonly LineupHero[], mode: ModeId) =>
+  MODES[mode].lanes.map((lane) => ({
     lane,
     heroes: lineup.filter((hero) => hero.lane === lane),
   }))
 
+const fromPicks = (picks: readonly RoundPick[]): LineupHero[] =>
+  picks.map(([heroId, stars, lane, items]) => ({
+    heroId,
+    stars,
+    lane,
+    items,
+  }))
+
+const synergiesOf = (lineup: readonly LineupHero[], mode: ModeId) => [
+  ...new Set(
+    MODES[mode].lanes.flatMap(
+      (lane) =>
+        resolveLane(
+          lane,
+          lineup.filter((hero) => hero.lane === lane).map((hero) => hero.heroId),
+          mode,
+        ).synergies,
+    ),
+  ),
+]
+
+/** Both teams as the picked round saw them, or as the match ended. */
 const sides = computed(() => {
   const record = match.value
   if (!record) {
     return []
   }
 
+  const picked = round.value === null ? undefined : record.roundLineups[round.value - 1]
+  const ourLineup = picked ? fromPicks(picked[0]) : record.lineup
+  const theirLineup = picked ? fromPicks(picked[1]) : record.opponentLineup
+
   const ours = {
     team: 0 as const,
     title: t('report.ours'),
-    lanes: lanesOf(record.lineup),
-    synergies: record.synergies,
+    lanes: lanesOf(ourLineup, record.mode),
+    synergies: picked ? synergiesOf(ourLineup, record.mode) : record.synergies,
   }
 
-  if (!record.opponentLineup.length) {
+  if (!theirLineup.length) {
     return [ours]
   }
 
@@ -200,8 +236,8 @@ const sides = computed(() => {
     {
       team: 1 as const,
       title: t('report.theirs'),
-      lanes: lanesOf(record.opponentLineup),
-      synergies: record.opponentSynergies,
+      lanes: lanesOf(theirLineup, record.mode),
+      synergies: picked ? synergiesOf(theirLineup, record.mode) : record.opponentSynergies,
     },
   ]
 })
@@ -245,13 +281,14 @@ const combat = computed<ComparisonRow[]>(() => {
       <DialogContent v-if="match" class="sheet match-details" :aria-describedby="undefined">
         <header class="head">
           <div class="outcome">
-            <DialogTitle class="title hand" :data-verdict="match.verdict">
+            <DialogTitle v-optical-align class="title hand" :data-verdict="match.verdict">
               {{ t(`result.${match.verdict}`) }}
             </DialogTitle>
 
             <p v-if="reason" class="reason">{{ reason }}</p>
 
             <p class="meta">
+              {{ t(`modes.${match.mode}.name`) }} ·
               {{ opponent ?? t(`settings.difficulties.${match.difficulty}`) }} ·
               <time :datetime="match.playedAt">{{ playedAt }}</time>
             </p>
@@ -279,24 +316,6 @@ const combat = computed<ComparisonRow[]>(() => {
             <span v-if="tile.note" class="tile-note">{{ tile.note }}</span>
           </article>
         </section>
-
-        <section v-if="match.history.length" class="round-by-round">
-          <h3 class="eyebrow">{{ t('matchDetails.roundByRound') }}</h3>
-
-          <ol class="pips">
-            <li
-              v-for="(round, i) in match.history"
-              :key="i"
-              class="pip"
-              :class="round"
-              :title="t(`summary.${round}`, { round: i + 1 })"
-            >
-              {{ i + 1 }}
-            </li>
-          </ol>
-        </section>
-
-        <p v-if="!detailed" class="legacy">{{ t('matchDetails.legacy') }}</p>
 
         <TabsRoot v-model="tab" class="tabs">
           <TabsList class="tab-list" :aria-label="t('report.title')">
@@ -333,6 +352,41 @@ const combat = computed<ComparisonRow[]>(() => {
           </TabsContent>
 
           <TabsContent value="lineups" class="panel">
+            <section v-if="match.history.length" class="round-by-round">
+              <h3 class="eyebrow">{{ t('matchDetails.roundByRound') }}</h3>
+
+              <nav class="pips" :aria-label="t('matchDetails.roundByRound')">
+                <button
+                  v-if="roundLineups.length"
+                  type="button"
+                  class="pip final"
+                  :aria-pressed="round === null"
+                  @click="round = null"
+                >
+                  {{ t('matchDetails.final') }}
+                </button>
+
+                <button
+                  v-for="(verdict, i) in match.history"
+                  :key="i"
+                  type="button"
+                  class="pip"
+                  :class="verdict"
+                  :aria-pressed="round === i + 1"
+                  :disabled="!roundLineups[i]"
+                  :title="t(`summary.${verdict}`, { round: i + 1 })"
+                  @click="round = i + 1"
+                >
+                  {{ i + 1 }}
+                </button>
+              </nav>
+            </section>
+
+            <!-- Older matches kept less: no opponent before 7.4, no rounds before 8.0. -->
+            <p v-if="!roundLineups.length" class="legacy">
+              {{ detailed ? t('matchDetails.noRounds') : t('matchDetails.legacy') }}
+            </p>
+
             <section
               v-for="side in sides"
               :key="side.team"
@@ -511,9 +565,8 @@ const combat = computed<ComparisonRow[]>(() => {
 
 .round-by-round {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .round-by-round .eyebrow {
@@ -524,9 +577,29 @@ const combat = computed<ComparisonRow[]>(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin: 0;
+}
+
+.pip.final {
+  width: auto;
+  padding: 0 8px;
+}
+
+.pip[aria-pressed='true'] {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+button.pip {
   padding: 0;
-  list-style: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+button.pip:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .pip {

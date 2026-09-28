@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import type { TeamId } from '@/content/ids'
+import { MODE_IDS, type ModeId, type TeamId } from '@/content/ids'
+import { DEFAULT_MODE } from '@/content/modes'
 import { DuelError, type Duel, type DuelFailure, type DuelService } from '../social/duels'
 import { isReactionId, type ReactionId } from '../social/reactions'
 import type { Database } from './database'
@@ -24,6 +25,8 @@ const duelRow = z.object({
   host: z.uuid(),
   guest: z.uuid(),
   status: z.enum(['invited', 'declined', 'cancelled', 'expired', 'active', 'finished', 'disputed']),
+  /** Servers without game modes yet send no mode: those duels are three lanes. */
+  mode: z.enum(MODE_IDS).default(DEFAULT_MODE),
   seed: z.string().max(64).nullable(),
   round: z.number().int().min(1).max(40),
   round_opened_at: z.string().nullable(),
@@ -47,6 +50,7 @@ function toDuel(row: z.infer<typeof duelRow>): Duel {
     host: row.host,
     guest: row.guest,
     status: row.status,
+    mode: row.mode,
     seed: row.seed,
     round: row.round,
     roundOpenedAt: row.round_opened_at,
@@ -63,8 +67,17 @@ export class SupabaseDuels implements DuelService {
     private readonly userId: string,
   ) {}
 
-  async invite(friendId: string) {
-    const { data, error } = await this.client.rpc('invite_duel', { friend: friendId })
+  async invite(friendId: string, mode: ModeId) {
+    /* Three lanes is the server's default, so those invites work before and after the game modes migration. */
+    const args =
+      mode === DEFAULT_MODE
+        ? { friend: friendId }
+        : {
+            friend: friendId,
+            game_mode: mode,
+          }
+
+    const { data, error } = await this.client.rpc('invite_duel', args)
     if (error) {
       throw failure(error)
     }

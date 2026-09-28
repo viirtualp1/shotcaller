@@ -1,7 +1,7 @@
 import type { World } from 'miniplex'
 import { ABILITY_PARAMS } from '@/content/abilities'
 import { HEROES } from '@/content/heroes'
-import type { ItemId, LaneId, TeamId } from '@/content/ids'
+import type { ItemId, LaneId, StructureSlot, TeamId, TowerSlot } from '@/content/ids'
 import { ITEMS } from '@/content/items'
 import { combineModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
@@ -81,9 +81,24 @@ export class EntityFactory {
     private readonly rng: Rng,
   ) {}
 
-  structure(team: TeamId, type: StructureType, lane: LaneId | null, hp: number) {
+  tower(team: TeamId, slot: TowerSlot, hp: number) {
+    const lane = this.map.definition.towers[slot]?.lane ?? null
+    return this.structure(team, 'tower', slot, lane, this.map.towerPosition(team, slot), hp)
+  }
+
+  throne(team: TeamId, hp: number) {
+    return this.structure(team, 'throne', 'throne', null, this.map.base(team), hp)
+  }
+
+  private structure(
+    team: TeamId,
+    type: StructureType,
+    slot: StructureSlot,
+    lane: LaneId | null,
+    position: Vec2,
+    hp: number,
+  ) {
     const stats = STRUCTURES[type]
-    const position = lane ? this.map.towerPosition(team, lane) : this.map.base(team)
     return this.world.add({
       team,
       kind: 'structure',
@@ -111,6 +126,7 @@ export class EntityFactory {
       structure: {
         type,
         lane,
+        slot,
       },
       ...(stats.fountainHeal
         ? {

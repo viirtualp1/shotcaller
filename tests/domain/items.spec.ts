@@ -10,10 +10,11 @@ function richPlayer() {
     pool: new HeroPool(),
     rng: createRng('items'),
     ids: sequentialIds(),
+    mode: 'threeLanes',
   })
 
   player.wallet.earn(200)
-  player.shop.restock(player.level)
+  player.restockShop()
 
   return player
 }

@@ -1,5 +1,6 @@
-import type { CoachLevel, HeroId, Tier } from '@/content/ids'
-import { ROSTER, SHOP_ODDS } from '@/content/rules'
+import type { HeroId, Tier } from '@/content/ids'
+import type { LevelRules } from '@/content/modes'
+import { ROSTER } from '@/content/rules'
 import type { Rng } from '@/core/random/rng'
 import type { HeroPool } from './HeroPool'
 
@@ -24,14 +25,14 @@ export class Shop {
     return this.offers[slot] ?? null
   }
 
-  restock(level: CoachLevel) {
+  restock(odds: LevelRules['odds']) {
     for (const id of this.offers) {
       if (id) {
         this.pool.release(id)
       }
     }
 
-    this.offers = Array.from({ length: this.size }, () => this.drawOffer(level))
+    this.offers = Array.from({ length: this.size }, () => this.drawOffer(odds))
   }
 
   claim(slot: number) {
@@ -47,8 +48,8 @@ export class Shop {
     this.offers = [...offers]
   }
 
-  private drawOffer(level: CoachLevel) {
-    const rolled = this.rollTier(level)
+  private drawOffer(odds: LevelRules['odds']) {
+    const rolled = this.rollTier(odds)
 
     const fallbackOrder = [
       rolled,
@@ -66,9 +67,8 @@ export class Shop {
     return null
   }
 
-  private rollTier(level: CoachLevel) {
+  private rollTier(odds: LevelRules['odds']) {
     let roll = this.rng.next()
-    const odds = SHOP_ODDS[level]
     for (const tier of TIERS) {
       const chance = odds[tier - 1] ?? 0
       if (roll < chance) {

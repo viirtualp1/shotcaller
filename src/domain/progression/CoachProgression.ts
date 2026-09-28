@@ -1,9 +1,11 @@
 import type { CoachLevel } from '@/content/ids'
-import { ROSTER } from '@/content/rules'
+import type { LevelRules } from '@/content/modes'
 
+/** Coach level and XP; every coach starts at level 1 of the mode's table. */
 export class CoachProgression {
   constructor(
-    private currentLevel: CoachLevel = ROSTER.startLevel,
+    private readonly levels: readonly LevelRules[],
+    private currentLevel: CoachLevel = 1,
     private currentXp = 0,
   ) {}
 
@@ -15,12 +17,20 @@ export class CoachProgression {
     return this.currentXp
   }
 
+  get maxLevel() {
+    return this.levels.length
+  }
+
+  get rules() {
+    return this.levels[Math.min(this.currentLevel, this.maxLevel) - 1]!
+  }
+
   get xpToNext() {
-    return ROSTER.xpToNext[this.currentLevel]
+    return this.rules.xpToNext
   }
 
   get isMaxLevel() {
-    return this.currentLevel >= ROSTER.maxLevel
+    return this.currentLevel >= this.maxLevel
   }
 
   gain(xp: number) {
@@ -32,7 +42,7 @@ export class CoachProgression {
 
     while (!this.isMaxLevel && this.currentXp >= this.xpToNext) {
       this.currentXp -= this.xpToNext
-      this.currentLevel = (this.currentLevel + 1) as CoachLevel
+      this.currentLevel++
     }
 
     if (this.isMaxLevel) {

@@ -1,4 +1,4 @@
-import { LANE_IDS } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 
@@ -8,13 +8,15 @@ export function useFightRequest() {
   const menu = useMenuStore()
 
   return () => {
-    const human = match.view?.human
+    const view = match.view
 
-    if (!human || !match.isPlanning) {
+    if (!view || !match.isPlanning) {
       return
     }
 
-    const emptyLane = human.boardCount > 0 && LANE_IDS.some((lane) => human.lanes[lane].heroes.length === 0)
+    const { human } = view
+    const lanes = MODES[view.mode].lanes
+    const emptyLane = human.boardCount > 0 && lanes.some((lane) => human.lanes[lane].heroes.length === 0)
 
     if (emptyLane) {
       menu.confirmFight = true

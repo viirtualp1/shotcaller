@@ -11,7 +11,8 @@ import {
 } from 'reka-ui'
 import { Castle } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
-import { LANE_IDS, type StructureSlot } from '@/content/ids'
+import { structureSlotsOf } from '@/domain/match/structures'
+import { MODES } from '@/content/modes'
 import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
 import { starsLabel, useGameText } from '../../composables/useGameText'
@@ -50,18 +51,20 @@ const verdict = computed(() => {
   return winner === 0 ? 'win' : winner === 1 ? 'loss' : 'draw'
 })
 
-/** A round goes to whoever dealt more damage to buildings; a small gap is a draw. */
+/** A round goes to whoever scored more, building damage and kills where they count; a small gap is a draw. */
 const reason = computed(() => {
-  if (!summary.value) {
+  if (!summary.value || !store.view) {
     return ''
   }
 
-  const [ours, theirs] = summary.value.structureDamage.map((damage) => text.number(Math.round(damage)))
+  const [ours, theirs] = summary.value.score.map((score) => text.number(Math.round(score)))
+  const kills = MODES[store.view.mode].killScore
 
-  return t(`summary.reason.${verdict.value}`, {
+  return t(`summary.${kills ? 'scoreReason' : 'reason'}.${verdict.value}`, {
     ours,
     theirs,
     threshold: MATCH.drawThreshold,
+    kill: kills,
   })
 })
 
@@ -72,7 +75,7 @@ const structureRows = computed(() => {
     return []
   }
 
-  return ([...LANE_IDS, 'throne'] as StructureSlot[]).map((slot) => {
+  return structureSlotsOf(view.mode).map((slot) => {
     const max = slot === 'throne' ? STRUCTURES.throne.hp : STRUCTURES.tower.hp
     const side = (team: 0 | 1) => {
       const hp = Math.round(view.structures[team][slot])

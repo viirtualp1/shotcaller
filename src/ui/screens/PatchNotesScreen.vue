@@ -23,6 +23,7 @@ import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPicker from '../components/patchNotes/PatchPicker.vue'
 import { useGameText } from '../composables/useGameText'
+import { vOpticalAlign } from '../directives/opticalAlign'
 import { ROLE_ICONS } from '../icons'
 import type { PatchNote } from '../patchNotes/notes'
 import { usePatchNotesStore } from '../stores/patchNotes'
@@ -66,7 +67,7 @@ watch(
     <Transition name="fade" mode="out-in">
       <main :key="patch.version" class="page">
         <section class="masthead">
-          <h1 class="version hand">{{ patch.version }}</h1>
+          <h1 v-optical-align class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
           <time :datetime="patch.date" class="date">{{ date }}</time>
         </section>
@@ -261,7 +262,7 @@ watch(
 
 /* Caveat digits carry a wide left bearing; pull them back so the ink lines up with the headline. */
 .version {
-  margin: 4px 0 2px -0.13em;
+  margin: 4px 0 2px;
   font-size: clamp(96px, 18vw, 168px);
   line-height: 0.85;
   color: var(--gold);

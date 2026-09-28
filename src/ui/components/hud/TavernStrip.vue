@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { TowerControl } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { LANE_IDS, TEAM_IDS } from '@/content/ids'
+import { TEAM_IDS } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -14,11 +15,12 @@ const { t } = text
 const sides = computed(() => {
   const heroes = [...(store.live?.heroes.values() ?? [])].filter((h) => h.dead)
   const structures = store.live?.structures ?? store.view!.structures
+  const towers = MODES[store.view!.mode].towers
 
   return TEAM_IDS.map((team) => ({
     team,
     fallen: heroes.filter((h) => h.team === team).sort((a, b) => a.respawnIn - b.respawnIn),
-    towersDown: LANE_IDS.filter((lane) => structures[team][lane] <= 0),
+    towersDown: towers.filter((slot) => structures[team][slot] <= 0),
   }))
 })
 

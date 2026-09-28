@@ -1,4 +1,4 @@
-import type { TeamId } from '@/content/ids'
+import type { ModeId, TeamId } from '@/content/ids'
 import type { CoachCard } from './friends'
 import type { ReactionId, ReactionLink } from './reactions'
 
@@ -12,6 +12,8 @@ export interface Duel {
   readonly host: string
   readonly guest: string
   readonly status: DuelStatus
+  /** Picked by the inviting coach. */
+  readonly mode: ModeId
   /** Set once the invite is accepted; both devices derive the battles from it. */
   readonly seed: string | null
   /** The round both coaches are planning now. */
@@ -46,7 +48,7 @@ export const ROUND_TIMEOUT_SECONDS = 180
 
 /** Online duels of the signed-in coach. Every call rejects with a DuelError. */
 export interface DuelService {
-  invite(friendId: string): Promise<string>
+  invite(friendId: string, mode: ModeId): Promise<string>
   respond(duelId: string, accept: boolean): Promise<void>
   cancel(duelId: string): Promise<void>
   /** Open invites and active duels. */

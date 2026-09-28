@@ -5,6 +5,7 @@ import AvatarPicker from '../components/profile/AvatarPicker.vue'
 import CloudCard from '../components/profile/CloudCard.vue'
 import { winRate } from '../components/profile/format'
 import HeroTable from '../components/profile/HeroTable.vue'
+import ModeRatings from '../components/modes/ModeRatings.vue'
 import MatchHistory from '../components/profile/MatchHistory.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import RankLadder from '../components/profile/RankLadder.vue'
@@ -113,6 +114,7 @@ function play() {
     <main class="page">
       <ProfileHeader @pick-avatar="picking = true" />
       <CloudCard />
+      <ModeRatings :ratings="profile.profile.ratings" />
       <RankLadder class="ladder" />
 
       <section class="tiles">

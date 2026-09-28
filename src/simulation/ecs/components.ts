@@ -1,6 +1,15 @@
 import type { Circle } from 'check2d'
 import type { With } from 'miniplex'
-import type { AbilityId, HeroId, ItemId, LaneId, RoleId, StarLevel, TeamId } from '@/content/ids'
+import type {
+  AbilityId,
+  HeroId,
+  ItemId,
+  LaneId,
+  RoleId,
+  StarLevel,
+  StructureSlot,
+  TeamId,
+} from '@/content/ids'
 import type { CreepVariant, StructureType } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
 import type { Prd } from '@/core/random/prd'
@@ -137,7 +146,9 @@ export interface Zone {
 
 export interface StructureData {
   type: StructureType
+  /** The lane a tower guards; null for the throne. */
   lane: LaneId | null
+  slot: StructureSlot
 }
 
 export interface CreepData {

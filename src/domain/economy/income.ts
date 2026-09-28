@@ -1,3 +1,5 @@
+import type { ModeId } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { ECONOMY } from '@/content/rules'
 import type { TeamBattleStats } from '../battle/contracts'
 
@@ -9,8 +11,8 @@ export interface IncomeBreakdown {
   readonly total: number
 }
 
-export function computeIncome(currentGold: number, stats: TeamBattleStats, won: boolean) {
-  const base = ECONOMY.baseIncome
+export function computeIncome(currentGold: number, stats: TeamBattleStats, won: boolean, mode: ModeId) {
+  const base = MODES[mode].baseIncome
   const interest = Math.min(Math.floor(currentGold / ECONOMY.goldPerInterest), ECONOMY.maxInterest)
 
   const farm = Math.min(

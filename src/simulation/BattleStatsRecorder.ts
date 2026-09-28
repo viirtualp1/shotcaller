@@ -16,7 +16,9 @@ export class BattleStatsRecorder {
     events.on('creepKilled', ({ killer }) => this.perTeam[killer.team].creepKills++)
 
     events.on('structureDamaged', ({ structure, amount, attackerTeam }) => {
-      this.perTeam[attackerTeam].structureDamage[structure.structure?.lane ?? 'throne'] += amount
+      if (structure.structure) {
+        this.perTeam[attackerTeam].structureDamage[structure.structure.slot] += amount
+      }
     })
   }
 

@@ -9,7 +9,7 @@ export function arrangeStrongestLineup(player: Player, optimizer: LaneOptimizer,
     .sort((a, b) => heroPower(b) - heroPower(a))
     .slice(0, player.boardCapacity)
 
-  const lanes = optimizer.assign(team, rng)
+  const lanes = optimizer.assign(team, player.mode, rng)
   const board = new Map<OwnedHero, LaneId>(team.map((hero, i) => [hero, lanes[i]!]))
   player.roster.arrange(board)
 }

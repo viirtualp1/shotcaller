@@ -73,6 +73,7 @@ export function finishedMatch(
   })
 
   return {
+    mode: 'threeLanes',
     difficulty,
     result,
     stats,

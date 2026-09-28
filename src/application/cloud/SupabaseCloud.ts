@@ -13,10 +13,17 @@ const UNIQUE_VIOLATION = '23505'
 
 export class CloudError extends Error {}
 
+/** Only an https picture is shown; the metadata comes from the sign-in provider. */
+function photoOf(user: User) {
+  const url: unknown = user.user_metadata?.avatar_url ?? user.user_metadata?.picture
+  return typeof url === 'string' && url.startsWith('https://') ? url : null
+}
+
 const toAccount = (user: User): CloudAccount => ({
   id: user.id,
   anonymous: user.is_anonymous ?? false,
   email: user.email || null,
+  photo: photoOf(user),
 })
 
 const profileRow = (profile: Profile) => ({

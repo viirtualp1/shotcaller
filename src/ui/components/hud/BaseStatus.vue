@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { Crown } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { LANE_IDS, type TeamId } from '@/content/ids'
+import type { ModeId, TeamId } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { STRUCTURES } from '@/content/units'
 import type { StructureState } from '@/domain/battle/contracts'
 import { useGameText } from '../../composables/useGameText'
 
 /** `name` replaces the side's label, such as the opponent's name in a duel. */
-const props = defineProps<{ team: TeamId; structures: StructureState; name?: string }>()
+const props = defineProps<{ team: TeamId; structures: StructureState; mode: ModeId; name?: string }>()
 
 const text = useGameText()
 const { t } = text
@@ -19,9 +20,9 @@ const throneTitle = computed(
 )
 
 const towers = computed(() =>
-  LANE_IDS.map((lane) => ({
-    lane,
-    ratio: props.structures[lane] / STRUCTURES.tower.hp,
+  MODES[props.mode].towers.map((slot) => ({
+    slot,
+    ratio: props.structures[slot] / STRUCTURES.tower.hp,
   })),
 )
 </script>
@@ -33,8 +34,8 @@ const towers = computed(() =>
     <span class="towers" :aria-label="t('hud.towers')">
       <i
         v-for="tower in towers"
-        :key="tower.lane"
-        :title="`${text.slotName(tower.lane)}: ${text.number(structures[tower.lane])}`"
+        :key="tower.slot"
+        :title="`${text.slotName(tower.slot)}: ${text.number(structures[tower.slot])}`"
         :class="{ down: tower.ratio <= 0 }"
         :style="{ '--fill': `${tower.ratio * 100}%` }"
       />

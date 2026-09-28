@@ -23,6 +23,8 @@ export interface CloudAccount {
   /** A guest account lives on this device only until an email or Google is linked. */
   readonly anonymous: boolean
   readonly email: string | null
+  /** The picture of a Google account, if it has one. */
+  readonly photo: string | null
 }
 
 /** `link` attaches an email or Google to the current guest account, `signIn` switches to an existing account. */

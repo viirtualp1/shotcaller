@@ -9,24 +9,39 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
-import { ref, watch } from 'vue'
+import { computed, watch } from 'vue'
+import { TUTORIAL_MODE } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import { useMenuStore } from '../../stores/menu'
+import { useSettingsStore } from '../../stores/settings'
 import { useTutorial } from '../../tutorial/useTutorial'
+import ModePicker from '../modes/ModePicker.vue'
 import SettingsFields from '../settings/SettingsFields.vue'
 
 const menu = useMenuStore()
 const store = useMatchStore()
+const settings = useSettingsStore()
 const tour = useTutorial()
 const { t } = useGameText()
-const withTutorial = ref(!tour.completed.value)
+
+/** Offered until the tutorial is done, and only on its mode: another mode picked means the coach knows the way. */
+const withTutorial = computed({
+  get: () => settings.tutorialWanted && settings.mode === TUTORIAL_MODE,
+  set: (value: boolean) => {
+    settings.tutorialWanted = value
+
+    if (value) {
+      settings.mode = TUTORIAL_MODE
+    }
+  },
+})
 
 watch(
   () => menu.newMatch,
   (open) => {
     if (open) {
-      withTutorial.value = !tour.completed.value
+      settings.tutorialWanted = !tour.completed.value
     }
   },
 )
@@ -34,7 +49,7 @@ watch(
 function start() {
   menu.newMatch = false
   menu.gameMenu = false
-  store.newMatch()
+  store.newMatch(settings.mode)
 
   if (withTutorial.value) {
     menu.requestTutorial()
@@ -49,6 +64,12 @@ function start() {
 
       <DialogContent class="sheet new-match" :aria-describedby="undefined">
         <DialogTitle class="title hand">{{ t('newMatch.title') }}</DialogTitle>
+
+        <div class="mode">
+          <ModePicker v-model="settings.mode" />
+          <p v-if="withTutorial" class="note">{{ t('modes.tutorialNote') }}</p>
+        </div>
+
         <SettingsFields />
 
         <label class="tutorial">
@@ -84,6 +105,18 @@ function start() {
 .title {
   font-size: 40px;
   line-height: 1;
+}
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--chalk-faint);
 }
 
 .tutorial {

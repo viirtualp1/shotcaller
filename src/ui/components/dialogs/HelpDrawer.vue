@@ -18,9 +18,10 @@ import {
   Wand2,
 } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import type { Component } from 'vue'
+import { computed, type Component } from 'vue'
 import { ITEM_IDS, ROLE_IDS, SYNERGY_IDS } from '@/content/ids'
 import { ITEMS } from '@/content/items'
+import { DEFAULT_MODE, MODES } from '@/content/modes'
 import { ROLES } from '@/content/roles'
 import { ECONOMY, MATCH, MERGE_COUNT, STAR_POWER } from '@/content/rules'
 import { SYNERGY_BY_ID } from '@/content/synergies'
@@ -29,10 +30,15 @@ import { useGameText } from '../../composables/useGameText'
 import { ROLE_ICONS } from '../../icons'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ItemIcon from '../common/ItemIcon.vue'
+import { useMatchStore } from '../../stores/match'
 
 const open = defineModel<boolean>('open', { required: true })
 const text = useGameText()
 const { t } = text
+const store = useMatchStore()
+
+/** Round limit and income follow the mode of the match being played. */
+const mode = computed(() => MODES[store.view?.mode ?? DEFAULT_MODE])
 
 const STEPS: readonly { key: 'shop' | 'lanes' | 'fight' | 'grow'; icon: Component }[] = [
   {
@@ -53,35 +59,37 @@ const STEPS: readonly { key: 'shop' | 'lanes' | 'fight' | 'grow'; icon: Componen
   },
 ]
 
-const WIN_RULES: readonly { key: string; icon: Component; params?: Record<string, number> }[] = [
-  {
-    key: 'damage',
-    icon: Castle,
-  },
-  {
-    key: 'draw',
-    icon: Scale,
-    params: { threshold: MATCH.drawThreshold },
-  },
-  {
-    key: 'persist',
-    icon: Hourglass,
-  },
-  {
-    key: 'throne',
-    icon: Crown,
-  },
-  {
-    key: 'limit',
-    icon: Trophy,
-    params: { max: MATCH.maxRounds },
-  },
-]
+const WIN_RULES = computed(
+  (): readonly { key: string; icon: Component; params?: Record<string, number> }[] => [
+    {
+      key: 'damage',
+      icon: Castle,
+    },
+    {
+      key: 'draw',
+      icon: Scale,
+      params: { threshold: MATCH.drawThreshold },
+    },
+    {
+      key: 'persist',
+      icon: Hourglass,
+    },
+    {
+      key: 'throne',
+      icon: Crown,
+    },
+    {
+      key: 'limit',
+      icon: Trophy,
+      params: { max: mode.value.maxRounds },
+    },
+  ],
+)
 
-const ECONOMY_RULES: readonly { key: string; params: Record<string, number> }[] = [
+const ECONOMY_RULES = computed((): readonly { key: string; params: Record<string, number> }[] => [
   {
     key: 'base',
-    params: { gold: ECONOMY.baseIncome },
+    params: { gold: mode.value.baseIncome },
   },
   {
     key: 'interest',
@@ -105,7 +113,7 @@ const ECONOMY_RULES: readonly { key: string; params: Record<string, number> }[] 
     key: 'xp',
     params: { xp: ECONOMY.passiveXpPerRound },
   },
-]
+])
 
 const HOTKEYS: readonly { key: string; label: string }[] = [
   {

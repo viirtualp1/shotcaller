@@ -1,10 +1,11 @@
-import type { HeroId, StarLevel, StructureSlot, TeamId } from '@/content/ids'
+import type { HeroId, ModeId, StarLevel, StructureSlot, TeamId } from '@/content/ids'
 import type { Lineup } from '../roster/Roster'
 
 export type StructureState = Record<StructureSlot, number>
 export type PerTeam<T> = readonly [T, T]
 
 export interface BattleSetup {
+  readonly mode: ModeId
   readonly round: number
   readonly seed: string
   readonly lineups: PerTeam<Lineup>

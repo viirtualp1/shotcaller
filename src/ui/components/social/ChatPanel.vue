@@ -136,7 +136,7 @@ async function insertEmoji(emoji: string) {
         class="icon-btn duel"
         :aria-label="t('duel.challengeName', { name: friend.name || t('profile.defaultName') })"
         :title="t('duel.challenge')"
-        @click="duel.invite(friend.id)"
+        @click="duel.challenge(friend.id)"
       >
         <Swords :size="16" />
       </button>

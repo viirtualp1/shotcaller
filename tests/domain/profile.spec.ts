@@ -5,6 +5,7 @@ import {
   applyRecord,
   avatarOf,
   createProfile,
+  emptyRatings,
   hasDetails,
   isRated,
   matchRecordOf,
@@ -232,7 +233,10 @@ describe('recordMatch', () => {
   it('takes rating from a coach who gives up a duel and counts a settled duel once', () => {
     const start = {
       ...createProfile('2026-09-27T10:00:00.000Z'),
-      rating: 100,
+      ratings: {
+        ...emptyRatings(),
+        threeLanes: 100,
+      },
     }
 
     const forfeit = (winner: 0 | 1) =>
@@ -257,6 +261,79 @@ describe('recordMatch', () => {
     expect(again.profile).toBe(lost.profile)
 
     expect(applyRecord(start, forfeit(0)).profile.rating).toBe(125)
+  })
+
+  it('keeps a rating per mode and shows friends the best one', () => {
+    let profile = createProfile('2026-09-27T10:00:00.000Z')
+    profile = play(profile, duel(WIN)).profile
+
+    const { profile: after, record } = play(profile, {
+      ...duel(WIN),
+      mode: 'oneLane',
+    })
+
+    expect(record).toMatchObject({
+      mode: 'oneLane',
+      ratingBefore: 0,
+      ratingAfter: 30,
+    })
+
+    expect(after.ratings).toEqual({
+      threeLanes: 30,
+      twoLanes: 0,
+      oneLane: 30,
+    })
+
+    const lost = play(after, {
+      ...duel(LOSS),
+      mode: 'oneLane',
+    }).profile
+
+    expect(lost.ratings.oneLane).toBe(10)
+    expect(lost.rating).toBe(30)
+    expect(lost.peakRatings.oneLane).toBe(30)
+  })
+
+  it('reads a profile from before game modes as three-lane rating', () => {
+    const { profile } = play(createProfile('2026-09-27T10:00:00.000Z'), duel(WIN))
+    const saved = JSON.parse(serializeProfile(profile))
+    delete saved.profile.ratings
+    delete saved.profile.peakRatings
+    delete saved.profile.recent[0].mode
+
+    const parsed = parseProfile(JSON.stringify(saved))!
+    expect(parsed.ratings).toEqual({
+      threeLanes: 30,
+      twoLanes: 0,
+      oneLane: 0,
+    })
+
+    expect(parsed.recent[0]!.mode).toBe('threeLanes')
+  })
+
+  it('keeps every round of the latest matches only', () => {
+    const match = finished(WIN)
+
+    const withRounds = {
+      ...match,
+      stats: {
+        ...match.stats,
+        lineups: [
+          [[['archer', 1, 'bot', []]], [['giant', 1, 'top', ['boots']]]],
+          [[['archer', 2, 'bot', ['gloves']]], [['giant', 1, 'top', ['boots']]]],
+        ] as const,
+      },
+    }
+
+    let profile = createProfile('2026-09-27T10:00:00.000Z')
+    for (let i = 0; i <= PROFILE.roundDetailMatches; i++) {
+      profile = play(profile, withRounds).profile
+    }
+
+    expect(profile.recent[0]!.roundLineups[1]![0]).toEqual([['archer', 2, 'bot', ['gloves']]])
+    expect(profile.recent[PROFILE.roundDetailMatches - 1]!.roundLineups).toHaveLength(2)
+    expect(profile.recent[PROFILE.roundDetailMatches]!.roundLineups).toEqual([])
+    expect(parseProfile(serializeProfile(profile))).toEqual(profile)
   })
 
   it('survives a save and rejects anything else', () => {

@@ -1,7 +1,8 @@
 import { err, ok, type Result } from 'neverthrow'
 import { HEROES } from '@/content/heroes'
-import type { CoachLevel, ItemId, TeamId } from '@/content/ids'
+import type { CoachLevel, ItemId, ModeId, TeamId } from '@/content/ids'
 import { ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS } from '@/content/items'
+import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, ECONOMY, ROSTER } from '@/content/rules'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng } from '@/core/random/rng'
@@ -19,6 +20,7 @@ export interface PlayerDependencies {
   readonly pool: HeroPool
   readonly rng: Rng
   readonly ids: IdGenerator
+  readonly mode: ModeId
 }
 
 export interface Purchase {
@@ -44,7 +46,7 @@ export const itemSellValue = (item: ItemId) => Math.floor(ITEMS[item].cost * ITE
 
 export class Player {
   readonly wallet = new Wallet(ECONOMY.startGold)
-  readonly progression = new CoachProgression()
+  readonly progression: CoachProgression
   readonly roster = new Roster(ROSTER.benchSize)
   readonly stash = new Stash()
   readonly shop: Shop
@@ -56,6 +58,16 @@ export class Player {
     private readonly deps: PlayerDependencies,
   ) {
     this.shop = new Shop(deps.pool, deps.rng)
+    this.progression = new CoachProgression(MODES[deps.mode].levels)
+  }
+
+  get mode() {
+    return this.deps.mode
+  }
+
+  /** The lanes of the mode; heroes can only be sent to these. */
+  get lanes() {
+    return MODES[this.deps.mode].lanes
   }
 
   get level() {
@@ -63,7 +75,12 @@ export class Player {
   }
 
   get boardCapacity() {
-    return this.progression.level
+    return this.progression.rules.board
+  }
+
+  /** New offers follow the odds of the coach's level. */
+  restockShop() {
+    this.shop.restock(this.progression.rules.odds)
   }
 
   get streak() {
@@ -130,7 +147,7 @@ export class Player {
     return this.wallet.spend(ECONOMY.rerollCost).map(() => {
       this.books.rerolls++
       this.books.goldSpent += ECONOMY.rerollCost
-      this.shop.restock(this.level)
+      this.restockShop()
     })
   }
 
@@ -199,6 +216,10 @@ export class Player {
   }
 
   move(uid: string, to: RosterSlot): Result<void, DomainError> {
+    if (to !== 'bench' && !this.lanes.includes(to)) {
+      return err({ code: 'laneClosed' })
+    }
+
     return this.roster.move(uid, to, this.boardCapacity)
   }
 
@@ -208,7 +229,7 @@ export class Player {
 
   prepareRound() {
     this.progression.gain(ECONOMY.passiveXpPerRound)
-    this.shop.restock(this.level)
+    this.restockShop()
   }
 
   recordRound(verdict: RoundVerdict, income: number) {

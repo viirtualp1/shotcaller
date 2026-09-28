@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { HERO_IDS, ITEM_IDS, LANE_IDS, SYNERGY_IDS } from '@/content/ids'
+import { HERO_IDS, ITEM_IDS, LANE_IDS, MODE_IDS, SYNERGY_IDS } from '@/content/ids'
+import { DEFAULT_MODE } from '@/content/modes'
 import { PROFILE } from '@/content/profile'
 import { MATCH_END_REASONS } from '@/domain/match/judge'
-import type { Profile } from '@/domain/profile/Profile'
+import { emptyRatings, type Profile } from '@/domain/profile/Profile'
 
 const PROFILE_VERSION = 1
 
@@ -52,9 +53,18 @@ const synergyRecord = z.object({
   wins: count,
 })
 
+const pair = <T extends z.ZodType>(schema: T) => z.tuple([schema, schema]).readonly()
+
+/** A hero as it fought one round: id, stars, lane and items. */
+const roundPick = z
+  .tuple([heroId, stars, z.enum(LANE_IDS), z.array(z.enum(ITEM_IDS)).max(2).readonly()])
+  .readonly()
+
 const matchRecord = z.object({
   id: z.string().min(1),
   playedAt: z.iso.datetime(),
+  /** Matches played before game modes were all three lanes. */
+  mode: z.enum(MODE_IDS).default(DEFAULT_MODE),
   difficulty: z.enum(['relaxed', 'standard']),
   verdict,
   reason: z.enum(MATCH_END_REASONS),
@@ -69,6 +79,11 @@ const matchRecord = z.object({
   opponentSynergies: z.array(synergyId).default([]),
   opponentHeroes: z.array(heroLine).default([]),
   history: z.array(verdict).default([]),
+  /** Only the latest matches keep every round. */
+  roundLineups: z
+    .array(pair(z.array(roundPick).readonly()))
+    .max(40)
+    .default([]),
   mvp: heroId.nullable(),
   duel: z
     .object({ opponentName: z.string().max(64) })
@@ -83,10 +98,18 @@ const matchRecord = z.object({
   xp: amount,
 })
 
+const modeRatings = z.object({
+  threeLanes: amount,
+  twoLanes: amount,
+  oneLane: amount,
+})
+
 const profile = z.object({
   name: z.string().max(PROFILE.nameMaxLength),
   avatar: heroId.nullable(),
   createdAt: z.iso.datetime(),
+  ratings: modeRatings.optional(),
+  peakRatings: modeRatings.optional(),
   rating: amount,
   peakRating: amount,
   xp: amount,
@@ -107,9 +130,22 @@ const profile = z.object({
   recent: z.array(matchRecord).max(PROFILE.recentMatches),
 })
 
+/* Before game modes there was one rating, earned on three lanes. */
+const migratedProfile = profile.transform(({ ratings, peakRatings, ...rest }) => ({
+  ...rest,
+  ratings: ratings ?? {
+    ...emptyRatings(),
+    threeLanes: rest.rating,
+  },
+  peakRatings: peakRatings ?? {
+    ...emptyRatings(),
+    threeLanes: rest.peakRating,
+  },
+}))
+
 const envelope = z.object({
   version: z.literal(PROFILE_VERSION),
-  profile,
+  profile: migratedProfile,
 })
 
 /** The profile as stored locally and in the cloud: versioned, so a newer game can migrate it. */

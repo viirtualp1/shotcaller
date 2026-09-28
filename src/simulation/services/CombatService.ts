@@ -131,7 +131,8 @@ export class CombatService {
     return value
   }
 
-  heal(target: Unit, amount: number, healer: Entity) {
+  /** A null healer is nobody's credit, such as a relic on the map. */
+  heal(target: Unit, amount: number, healer: Entity | null) {
     if (!isAlive(target)) {
       return 0
     }
@@ -139,7 +140,7 @@ export class CombatService {
     const before = target.health.current
     target.health.current = Math.min(target.health.max, before + amount)
     const healed = target.health.current - before
-    const hero = creditedHero(healer)
+    const hero = healer ? creditedHero(healer) : null
     if (hero) {
       hero.hero.healing += healed
     }

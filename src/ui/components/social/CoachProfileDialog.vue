@@ -12,6 +12,7 @@ import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import ModeRatings from '../modes/ModeRatings.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import { relativeTime } from '../profile/format'
 import RankMedal from '../profile/RankMedal.vue'
@@ -63,9 +64,13 @@ const tiles = computed(() => {
     note: '',
   }
 
-  const totals = profile.value?.totals
-  if (!profile.value || !totals) {
-    return [mmr]
+  /* A coach who has not played yet still has a record: all zeros. */
+  const totals = profile.value?.totals ?? {
+    matches: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    bestWinStreak: 0,
   }
 
   const winRate = totals.matches ? Math.round((totals.wins / totals.matches) * 100) : 0
@@ -111,7 +116,7 @@ function challenge() {
   friends.closeProfile()
 
   if (id) {
-    void duel.invite(id)
+    duel.challenge(id)
   }
 }
 
@@ -172,6 +177,8 @@ function ask(action: 'remove' | 'block') {
         <p v-else-if="!profile" class="muted">{{ t('coach.unavailable') }}</p>
 
         <template v-else>
+          <ModeRatings :ratings="profile.ratings" />
+
           <section class="history">
             <h3 class="section-title">{{ t('coach.history') }}</h3>
 
@@ -200,6 +207,11 @@ function ask(action: 'remove' | 'block') {
                 </ul>
 
                 <span class="meta">
+                  <span class="mode">
+                    <Swords v-if="match.duel" :size="11" :aria-label="t('matchDetails.duel')" />
+                    {{ t(`modes.${match.mode}.name`) }}
+                  </span>
+                  ·
                   {{ t('profile.history.rounds', { won: match.roundsWon, lost: match.roundsLost }) }}
                   ·
                   <time :datetime="match.playedAt">{{ relativeTime(match.playedAt, settings.locale) }}</time>
@@ -250,6 +262,12 @@ function ask(action: 'remove' | 'block') {
 </template>
 
 <style scoped>
+.mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
 /* Not `.coach`: that is the avatar's own class, and scoped styles reach a child component's root. */
 .coach-profile {
   display: flex;

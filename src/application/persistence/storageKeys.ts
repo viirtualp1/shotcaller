@@ -15,8 +15,12 @@ export const STORAGE_KEYS = {
   speed: `${PREFIX}/speed`,
   locale: `${PREFIX}/locale`,
   difficulty: `${PREFIX}/difficulty`,
+  /** The game mode picked last, for the next match or duel. */
+  mode: `${PREFIX}/mode`,
   tutorialCompleted: `${PREFIX}/tutorial-completed`,
   profile: `${PREFIX}/profile`,
+  /** Whether the profile shows the account photo instead of a hero. */
+  accountPhoto: `${PREFIX}/account-photo`,
   cloudSync: `${PREFIX}/cloud-sync`,
   cloudSavedAt: `${PREFIX}/cloud-saved-at`,
 } as const

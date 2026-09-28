@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
 import type { RoleId } from '@/content/ids'
-import { heroesByPlays, type HeroRecord } from '@/domain/profile/Profile'
+import { heroesByPlays } from '@/domain/profile/Profile'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -11,20 +11,29 @@ import { winRate } from './format'
 
 const SHOWN = 8
 
-type RoleStat = 'structureDamage' | 'healing' | 'damageReceived'
+type RoleStat = 'structureDamage' | 'healing'
 
-/** Every hero hits buildings, so that column is always there; these roles are also judged by what they are for. */
+/** Every hero hits buildings, so that column is always there; supports are also judged by their healing. */
 const ROLE_STATS: Partial<Record<RoleId, RoleStat>> = {
   support: 'healing',
-  initiator: 'damageReceived',
 }
 
 const SHARED_STATS: readonly RoleStat[] = ['structureDamage']
-const COLUMN_ORDER: readonly RoleStat[] = ['structureDamage', 'healing', 'damageReceived']
+const COLUMN_ORDER: readonly RoleStat[] = ['structureDamage', 'healing']
 
-/** Per match, counting only matches that recorded it; nothing to show before the first such match. */
-const perMatch = (hero: HeroRecord, stat: RoleStat) =>
-  hero.detailed ? Math.round(hero[stat] / hero.detailed) : null
+/** Over all matches, with the average under it; matches recorded before a stat existed do not count toward it. */
+interface Summed {
+  readonly total: number
+  readonly perMatch: number
+}
+
+const summed = (total: number, matches: number): Summed | null =>
+  matches
+    ? {
+        total,
+        perMatch: Math.round(total / matches),
+      }
+    : null
 
 const profile = useProfileStore()
 const text = useGameText()
@@ -37,7 +46,7 @@ const rows = computed(() =>
       heroId,
       hero,
       winRate: winRate(hero.wins, hero.matches),
-      damage: Math.round(hero.damage / hero.matches),
+      damage: summed(hero.damage, hero.matches),
       roleStat: ROLE_STATS[HEROES[heroId].role] ?? null,
     })),
 )
@@ -49,11 +58,8 @@ const shows = (row: Row, stat: RoleStat) => SHARED_STATS.includes(stat) || row.r
 /** Buildings for everyone, plus a column for each role stat some listed hero is judged by. */
 const roleColumns = computed(() => COLUMN_ORDER.filter((stat) => rows.value.some((row) => shows(row, stat))))
 
-function roleValue(row: Row, stat: RoleStat) {
-  const value = shows(row, stat) ? perMatch(row.hero, stat) : null
-
-  return value === null ? '—' : text.number(value)
-}
+const roleValue = (row: Row, stat: RoleStat) =>
+  shows(row, stat) ? summed(row.hero[stat], row.hero.detailed) : null
 </script>
 
 <template>
@@ -65,14 +71,17 @@ function roleValue(row: Row, stat: RoleStat) {
           <th scope="col" class="num">{{ t('profile.heroes.matches') }}</th>
           <th scope="col">{{ t('profile.heroes.winRate') }}</th>
           <th scope="col" class="num extra">{{ t('profile.heroes.kd') }}</th>
-          <th scope="col" class="num extra">{{ t('profile.heroes.damage') }}</th>
+
+          <th scope="col" class="num extra" :title="t('profile.heroes.totalHint')">
+            {{ t('profile.heroes.damage') }}
+          </th>
 
           <th
             v-for="stat in roleColumns"
             :key="stat"
             scope="col"
             class="num extra"
-            :title="t('profile.heroes.perMatch')"
+            :title="t('profile.heroes.totalHint')"
           >
             {{ t(`profile.heroes.${stat}`) }}
           </th>
@@ -98,10 +107,27 @@ function roleValue(row: Row, stat: RoleStat) {
           </td>
 
           <td class="num extra">{{ text.number(row.hero.kills) }} / {{ text.number(row.hero.deaths) }}</td>
-          <td class="num extra">{{ text.number(row.damage) }}</td>
+
+          <td class="num extra">
+            <template v-if="row.damage">
+              <span class="total">{{ text.number(row.damage.total) }}</span>
+
+              <span class="avg">{{
+                t('profile.heroes.perMatchShort', { n: text.number(row.damage.perMatch) })
+              }}</span>
+            </template>
+          </td>
 
           <td v-for="stat in roleColumns" :key="stat" class="num extra" :class="{ muted: !shows(row, stat) }">
-            {{ roleValue(row, stat) }}
+            <template v-if="roleValue(row, stat)">
+              <span class="total">{{ text.number(roleValue(row, stat)!.total) }}</span>
+
+              <span class="avg">
+                {{ t('profile.heroes.perMatchShort', { n: text.number(roleValue(row, stat)!.perMatch) }) }}
+              </span>
+            </template>
+
+            <template v-else>—</template>
           </td>
         </tr>
       </tbody>
@@ -112,6 +138,16 @@ function roleValue(row: Row, stat: RoleStat) {
 </template>
 
 <style scoped>
+.total {
+  display: block;
+}
+
+.avg {
+  display: block;
+  font-size: 11px;
+  color: var(--chalk-faint);
+}
+
 .panel {
   padding: 16px 18px;
   overflow-x: auto;

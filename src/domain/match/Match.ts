@@ -1,5 +1,5 @@
 import { err, ok, type Result } from 'neverthrow'
-import { opponentOf, TEAM_IDS, type LaneId, type StructureSlot, type TeamId } from '@/content/ids'
+import { opponentOf, TEAM_IDS, type ModeId, type StructureSlot, type TeamId } from '@/content/ids'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng, RngState } from '@/core/random/rng'
 import type {
@@ -15,9 +15,16 @@ import { HeroPool, type PoolState } from '../economy/HeroPool'
 import { computeIncome, type IncomeBreakdown } from '../economy/income'
 import type { DomainError } from '../errors'
 import { Player, type PlayerState } from '../player/Player'
-import { judgeMatch, judgeRound, totalStructureDamage, verdictFor, type MatchResult } from './judge'
-import { addRound, emptyMatchStats, type MatchStats } from './matchStats'
-import { freshStructures } from './structures'
+import {
+  judgeMatch,
+  judgeRound,
+  roundScore,
+  totalStructureDamage,
+  verdictFor,
+  type MatchResult,
+} from './judge'
+import { addRound, emptyMatchStats, picksOf, type MatchStats } from './matchStats'
+import { freshStructures, STRUCTURE_SLOTS } from './structures'
 
 export type MatchPhase = 'planning' | 'battle' | 'summary' | 'finished'
 
@@ -25,7 +32,9 @@ export interface RoundSummary {
   readonly round: number
   readonly winner: TeamId | null
   readonly structureDamage: PerTeam<number>
-  readonly laneDamage: Readonly<Record<LaneId | 'throne', PerTeam<number>>>
+  /** What the round was judged on; building damage alone unless the mode counts kills too. */
+  readonly score: PerTeam<number>
+  readonly laneDamage: Readonly<Record<StructureSlot, PerTeam<number>>>
   readonly heroKills: PerTeam<number>
   readonly income: PerTeam<IncomeBreakdown>
   readonly mvp: HeroBattleReport | null
@@ -50,10 +59,12 @@ export interface MatchDependencies {
   readonly rng: Rng
   readonly ids: IdGenerator
   readonly rival: Rival
+  readonly mode: ModeId
 }
 
 /** Everything needed to rebuild a match exactly, including the random stream and an unfinished battle. */
 export interface MatchState {
+  readonly mode: ModeId
   readonly round: number
   readonly phase: MatchPhase
   readonly rng: RngState
@@ -78,7 +89,7 @@ export class Match {
   private readonly pool = new HeroPool()
   private currentRound = 1
   private currentPhase: MatchPhase = 'planning'
-  private structureState: [StructureState, StructureState] = [freshStructures(), freshStructures()]
+  private structureState: [StructureState, StructureState]
   private summary: RoundSummary | null = null
   private matchResult: MatchResult | null = null
   private battle: BattleSetup | null = null
@@ -93,7 +104,10 @@ export class Match {
       pool: this.pool,
       rng: deps.rng,
       ids: deps.ids,
+      mode: deps.mode,
     }
+
+    this.structureState = [freshStructures(deps.mode), freshStructures(deps.mode)]
 
     this.players = [new Player(0, playerDeps), new Player(1, playerDeps)]
 
@@ -104,7 +118,7 @@ export class Match {
     }
 
     for (const player of this.managed) {
-      player.shop.restock(player.level)
+      player.restockShop()
     }
 
     this.planOpponent()
@@ -117,6 +131,10 @@ export class Match {
 
   get link() {
     return this.deps.rival.kind === 'remote' ? this.deps.rival.link : null
+  }
+
+  get mode() {
+    return this.deps.mode
   }
 
   /** Online, the battle waits until the other player sends their board. */
@@ -177,6 +195,7 @@ export class Match {
     this.currentPhase = 'battle'
 
     this.battle = {
+      mode: this.mode,
       round: this.currentRound,
       seed: this.link ? `${this.link.seed}:${this.currentRound}` : this.deps.rng.next().toString(36).slice(2),
       lineups: fromSide(this.side, [this.human.roster.lineup(), this.opponent.roster.lineup()]),
@@ -205,20 +224,23 @@ export class Match {
     }
 
     const outcome = this.side === 0 ? battleOutcome : mirrorOutcome(battleOutcome)
-    const winner = judgeRound(outcome)
+    const winner = judgeRound(outcome, this.mode)
 
     const income = TEAM_IDS.map((team) =>
-      computeIncome(this.players[team].wallet.gold, outcome.stats[team], winner === team),
+      computeIncome(this.players[team].wallet.gold, outcome.stats[team], winner === team, this.mode),
     ) as [IncomeBreakdown, IncomeBreakdown]
 
     TEAM_IDS.forEach((team) => this.players[team].recordRound(verdictFor(team, winner), income[team].total))
+
+    const [ours, theirs] = fromSide(this.side, this.battle!.lineups)
+    const lineups = [picksOf(ours), picksOf(theirs)] as const
 
     this.battle = null
     this.opponentReady = false
     this.structureState = copyStructures(outcome.structures)
     this.summary = this.summarize(outcome, winner, income)
-    this.matchStats = addRound(this.matchStats, outcome, winner, income)
-    this.matchResult = judgeMatch(this.structureState, this.currentRound)
+    this.matchStats = addRound(this.matchStats, outcome, winner, income, lineups)
+    this.matchResult = judgeMatch(this.structureState, this.currentRound, this.mode)
     this.currentPhase = this.matchResult ? 'finished' : 'summary'
 
     return ok(this.summary)
@@ -262,6 +284,7 @@ export class Match {
 
   snapshot(): MatchState {
     return {
+      mode: this.mode,
       round: this.currentRound,
       phase: this.currentPhase,
       rng: this.deps.rng.state(),
@@ -329,12 +352,11 @@ export class Match {
       round: this.currentRound,
       winner,
       structureDamage: [totalStructureDamage(ours), totalStructureDamage(theirs)],
-      laneDamage: {
-        top: damageAt('top'),
-        mid: damageAt('mid'),
-        bot: damageAt('bot'),
-        throne: damageAt('throne'),
-      },
+      score: [roundScore(ours, this.mode), roundScore(theirs, this.mode)],
+      laneDamage: Object.fromEntries(STRUCTURE_SLOTS.map((slot) => [slot, damageAt(slot)])) as Record<
+        StructureSlot,
+        PerTeam<number>
+      >,
       heroKills: [ours.heroKills, theirs.heroKills],
       income,
       mvp,

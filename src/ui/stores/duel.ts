@@ -13,7 +13,7 @@ import {
   type DuelService,
 } from '@/application/social/duels'
 import type { ReactionId, ReactionLink } from '@/application/social/reactions'
-import { opponentOf, type TeamId } from '@/content/ids'
+import { opponentOf, type ModeId, type TeamId } from '@/content/ids'
 import type { PlayerState } from '@/domain/player/Player'
 import { useCloudStore } from './cloud'
 import { useMatchStore, type DuelBinding, type SettledDuel } from './match'
@@ -60,6 +60,8 @@ export const useDuelStore = defineStore('duel', () => {
   const active = shallowRef<DuelEntry | null>(null)
   /** A duel still running on the server that this device can pick up again after a reload. */
   const resumable = shallowRef<DuelEntry | null>(null)
+  /** The friend being challenged while the mode is picked. */
+  const challenging = ref<string | null>(null)
   const notifications = useNotificationsStore()
   /** Reactions on screen, the player's own and the opponent's, a few seconds each. */
   const reactionsShown = shallowRef<ShownReaction[]>([])
@@ -281,8 +283,10 @@ export const useDuelStore = defineStore('duel', () => {
     active.value = null
   }
 
+  /** A board from the other device, checked against the rules of the duel's mode. */
   function checkBoard(raw: unknown) {
-    const board = parseRemoteBoard(raw)
+    const mode = active.value?.duel.mode
+    const board = mode ? parseRemoteBoard(raw, mode) : null
     const mine = new Set(matchStore.view ? matchStore.view.human.bench.map((h) => h.uid) : [])
 
     for (const lane of Object.values(matchStore.view?.human.lanes ?? {})) {
@@ -415,10 +419,14 @@ export const useDuelStore = defineStore('duel', () => {
     watchBoards(entry)
     listenForReactions(entry)
 
-    matchStore.startDuel(binding(entry), {
-      seed: entry.duel.seed,
-      side: sideOf(entry.duel, userId),
-    })
+    matchStore.startDuel(
+      binding(entry),
+      {
+        seed: entry.duel.seed,
+        side: sideOf(entry.duel, userId),
+      },
+      entry.duel.mode,
+    )
   }
 
   /** Picks up the duel saved on this device; a board already sent is sent again and the wait goes on. */
@@ -520,13 +528,20 @@ export const useDuelStore = defineStore('duel', () => {
     }
   }
 
-  async function invite(friendId: string) {
+  /** Asks for the mode first; the invite goes out from there. */
+  function challenge(friendId: string) {
+    challenging.value = friendId
+  }
+
+  async function invite(friendId: string, mode: ModeId) {
+    challenging.value = null
+
     if (!service || busy.value) {
       return
     }
 
     try {
-      await service.invite(friendId)
+      await service.invite(friendId, mode)
       await load()
     } catch (error) {
       fail(error)
@@ -639,6 +654,7 @@ export const useDuelStore = defineStore('duel', () => {
     outgoing,
     active,
     resumable,
+    challenging,
     canResume,
     busy,
     opponentReady,
@@ -648,6 +664,7 @@ export const useDuelStore = defineStore('duel', () => {
     reactionsMuted,
     canReact,
     react,
+    challenge,
     invite,
     cancelInvite,
     answer,

@@ -51,6 +51,104 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.0',
+    date: '2026-09-29',
+    title: {
+      en: 'Game modes',
+      ru: 'Режимы игры',
+    },
+    general: [
+      {
+        en: 'Three game modes: **Three lanes**, **Two lanes** and **One lane**. Pick one for a new match or a duel.',
+        ru: 'Три режима: **Три линии**, **Две линии** и **Одна линия**. Режим выбирается для нового матча и для дуэли.',
+      },
+      {
+        en: 'Two lanes: bases left and right, top and bot around the jungle, one tower per lane.',
+        ru: 'Две линии: базы слева и справа, верх и низ огибают лес, по вышке на линию.',
+      },
+      {
+        en: 'One lane: a long bridge from corner to corner with **2** towers a side, placed so the middle of the bridge is out of their reach.',
+        ru: 'Одна линия: длинный мост из угла в угол, по **2** вышки с каждой стороны. Середина моста вне досягаемости вышек.',
+      },
+      {
+        en: 'One lane: heal relics in the middle restore **20%** health to the hero who takes one and to allies nearby, and come back after **16** s.',
+        ru: 'Одна линия: лечебные руны в середине моста восстанавливают **20%** здоровья взявшему и союзникам рядом, появляются снова через **16** с.',
+      },
+      {
+        en: 'One lane: a round is judged by building damage plus **60** for every hero kill.',
+        ru: 'Одна линия: раунд решает урон по строениям плюс **60** за каждое убийство героя.',
+      },
+      {
+        en: 'One lane: up to **12** rounds, base income **6** gold.',
+        ru: 'Одна линия: до **12** раундов, базовый доход **6** золота.',
+      },
+      {
+        en: 'Every mode starts at coach level **1**. Three and two lanes: **2** heroes on the map, **5** at level 4. One lane: **3** heroes, **5** at level 3.',
+        ru: 'Уровень тренера в каждом режиме начинается с **1**. Три и две линии: **2** героя на карте, **5** на 4-м уровне. Одна линия: **3** героя, **5** на 3-м уровне.',
+      },
+      {
+        en: 'A separate duel rating for each mode; friends see your best one. The rating so far counts as Three lanes.',
+        ru: 'Отдельный рейтинг дуэлей в каждом режиме, друзья видят лучший. Прежний рейтинг засчитан Трём линиям.',
+      },
+      {
+        en: 'Solo mid works on Three lanes only.',
+        ru: '«Соло мид» работает только на Трёх линиях.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Start screen: the map of your saved match, or the three modes with your rank in each.',
+        ru: 'Главный экран: карта сохранённого матча, а без него — три режима и твой ранг в каждом.',
+      },
+      {
+        en: 'Start screen for new coaches: Two lanes to start with, the other modes below.',
+        ru: 'Главный экран для новичков: сначала Две линии, остальные режимы ниже.',
+      },
+      {
+        en: 'New match: pick the mode. The tutorial runs on Two lanes and ends by showing all three.',
+        ru: 'Новый матч: выбор режима. Обучение проходит на Двух линиях и в конце рассказывает про все три.',
+      },
+      {
+        en: 'A duel challenge asks for the mode; the invite shows it.',
+        ru: 'Вызов на дуэль спрашивает режим, приглашение его показывает.',
+      },
+      {
+        en: 'Profile: rating by mode, shown from the first day. The best rank says which mode it is from.',
+        ru: 'Профиль: рейтинг по режимам, виден с первого дня. У лучшего ранга подписан его режим.',
+      },
+      {
+        en: 'Match breakdown: pick a round to see both lineups as they fought it. Kept for your last **5** matches.',
+        ru: 'Разбор матча: выбери раунд, чтобы увидеть составы обеих команд в нём. Хранится для последних **5** матчей.',
+      },
+      {
+        en: 'Favourite heroes: damage, building damage and healing over all matches, with the average per match below. The damage taken column is gone.',
+        ru: 'Любимые герои: урон, урон по строениям и лечение за все матчи, ниже — в среднем за матч. Колонки принятого урона больше нет.',
+      },
+      {
+        en: 'Match history, yours and your friends’: the mode of every match.',
+        ru: 'История матчей, своя и друзей: режим каждого матча.',
+      },
+      {
+        en: 'Friend profile: a coach without matches shows zeros instead of an empty card.',
+        ru: 'Профиль друга: у тренера без матчей нули вместо пустой карточки.',
+      },
+      {
+        en: 'Signed in with Google: your account photo is your profile avatar. Any hero can still be picked instead.',
+        ru: 'Вход через Google: фото аккаунта становится аватаром профиля. Вместо него по-прежнему можно выбрать героя.',
+      },
+      {
+        en: 'The Sign in button no longer says “with email”: the dialog offers email and Google alike.',
+        ru: 'Кнопка входа теперь просто «Войти»: в окне есть и почта, и Google.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Hand-lettered titles, such as Victory and patch numbers, no longer sit off to the right.',
+        ru: 'Рукописные заголовки, например «Победа» и номер патча, больше не съезжают вправо.',
+      },
+    ],
+  },
+  {
     version: '7.7.1',
     date: '2026-09-29',
     title: {

@@ -2,17 +2,25 @@
 import { Sparkles } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { HERO_IDS, type HeroId } from '@/content/ids'
+import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
 const open = defineModel<boolean>('open', { required: true })
 const profile = useProfileStore()
+const photo = useAccountPhoto()
 const text = useGameText()
 const { t } = text
 
 function pick(heroId: HeroId | null) {
+  photo.use(false)
   profile.setAvatar(heroId)
+  open.value = false
+}
+
+function pickPhoto() {
+  photo.use(true)
   open.value = false
 }
 </script>
@@ -27,9 +35,20 @@ function pick(heroId: HeroId | null) {
 
         <div class="grid">
           <button
+            v-if="photo.available.value"
+            type="button"
+            class="option"
+            :aria-pressed="photo.shown.value !== null"
+            @click="pickPhoto"
+          >
+            <img class="account-photo" :src="photo.available.value" alt="" referrerpolicy="no-referrer" />
+            <span class="label">{{ t('profile.avatarPhoto') }}</span>
+          </button>
+
+          <button
             type="button"
             class="option auto"
-            :aria-pressed="profile.profile.avatar === null"
+            :aria-pressed="photo.shown.value === null && profile.profile.avatar === null"
             @click="pick(null)"
           >
             <span class="auto-icon"><Sparkles :size="22" /></span>
@@ -41,7 +60,7 @@ function pick(heroId: HeroId | null) {
             :key="heroId"
             type="button"
             class="option"
-            :aria-pressed="profile.profile.avatar === heroId"
+            :aria-pressed="photo.shown.value === null && profile.profile.avatar === heroId"
             @click="pick(heroId)"
           >
             <HeroAvatar :hero-id="heroId" :size="48" />
@@ -97,6 +116,13 @@ function pick(heroId: HeroId | null) {
 .option[aria-pressed='true'] {
   border-color: var(--gold);
   background: rgba(244, 197, 91, 0.1);
+}
+
+.account-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .auto-icon {

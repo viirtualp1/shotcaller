@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { LANE_IDS } from '@/content/ids'
+import { MODES } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
 import { useMatchStore } from '../../stores/match'
@@ -18,7 +18,7 @@ const { t } = text
 const lanes = computed(() => {
   const view = store.view!
 
-  return LANE_IDS.map((lane) => ({
+  return MODES[view.mode].lanes.map((lane) => ({
     lane,
     ours: view.human.lanes[lane],
     theirs: view.opponent.lanes[lane],

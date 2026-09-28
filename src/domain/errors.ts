@@ -11,5 +11,6 @@ export type DomainError =
   | { readonly code: 'stashFull' }
   | { readonly code: 'itemSlotsFull' }
   | { readonly code: 'itemNotFound' }
+  | { readonly code: 'laneClosed' }
 
 export type DomainErrorCode = DomainError['code']
