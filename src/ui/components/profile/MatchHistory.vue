@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ChevronRight, Crown, Swords } from 'lucide-vue-next'
 import { ref } from 'vue'
-import type { MatchRecord } from '@/domain/profile/Profile'
+import { isRated, type MatchRecord } from '@/domain/profile/Profile'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
@@ -40,6 +40,7 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
 
         <div class="delta">
           <span
+            v-if="isRated(match)"
             class="rating"
             :class="{
               up: match.ratingAfter > match.ratingBefore,

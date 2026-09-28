@@ -91,6 +91,12 @@ export function finishedMatch(
   }
 }
 
+/** The same match played as a duel with a friend. */
+export const duelMatch = (result: MatchResult, rounds = 6): FinishedMatch => ({
+  ...finishedMatch(result, 'standard', rounds),
+  duel: { opponentName: 'Rival' },
+})
+
 let seq = 0
 
 export const play = (profile: Profile, match: FinishedMatch) =>

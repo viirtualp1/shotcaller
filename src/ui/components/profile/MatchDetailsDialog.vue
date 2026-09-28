@@ -14,7 +14,13 @@ import {
 } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 import { LANE_IDS, type TeamId } from '@/content/ids'
-import { hasDetails, type LineupHero, type MatchHeroLine, type MatchRecord } from '@/domain/profile/Profile'
+import {
+  hasDetails,
+  isRated,
+  type LineupHero,
+  type MatchHeroLine,
+  type MatchRecord,
+} from '@/domain/profile/Profile'
 import { useGameText } from '../../composables/useGameText'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -100,7 +106,7 @@ const tiles = computed((): Tile[] => {
     return []
   }
 
-  return [
+  const rating: Tile[] = [
     {
       key: 'rating',
       label: t('matchDetails.rating'),
@@ -108,6 +114,10 @@ const tiles = computed((): Tile[] => {
       note: `${text.number(record.ratingBefore)} → ${text.number(record.ratingAfter)}`,
       tone: delta.value > 0 ? 'up' : delta.value < 0 ? 'down' : undefined,
     },
+  ]
+
+  return [
+    ...(isRated(record) ? rating : []),
     {
       key: 'xp',
       label: t('profile.progress.xp'),

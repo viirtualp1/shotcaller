@@ -4,6 +4,7 @@ import type { BattleSetup } from '@/domain/battle/contracts'
 import { freshStructures } from '@/domain/match/structures'
 import type { Lineup } from '@/domain/roster/Roster'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
+import type { DamageType } from '@/simulation/ecs/components'
 
 function lineup(prefix: string, lanes: Partial<Record<LaneId, HeroId[]>>) {
   const build = (lane: LaneId) =>
@@ -114,6 +115,49 @@ describe('BattleSimulation', () => {
     sim.runToEnd()
     expect(lifestolen).toBeGreaterThan(0)
     expect(revivals).toBeLessThanOrEqual(1)
+  })
+
+  it('steals less life from abilities than from attacks', () => {
+    const base = lineup('a', { mid: ['pyromancer'] })
+
+    const armed: Lineup = {
+      ...base,
+      mid: base.mid.map((h) => ({
+        ...h,
+        items: ['vampireFang'],
+      })),
+    }
+
+    const sim = new BattleSimulation(setup('fang', armed, lineup('b', { mid: ['giant', 'frostWitch'] }), 6))
+
+    const shares: Record<DamageType, Set<number>> = {
+      physical: new Set(),
+      magical: new Set(),
+    }
+
+    /* Lifesteal heals right after the hit it comes from; a heal that tops the hero up is cut short. */
+    let hit: { amount: number; type: DamageType } | null = null
+    sim.events.on('damaged', ({ source, amount, type }) => {
+      hit =
+        source.team === 0 && source.hero
+          ? {
+              amount,
+              type,
+            }
+          : null
+    })
+
+    sim.events.on('healed', ({ target, amount }) => {
+      if (hit && target.team === 0 && target.health.current < target.health.max) {
+        shares[hit.type].add(Math.round((amount / hit.amount) * 100))
+      }
+
+      hit = null
+    })
+
+    sim.runToEnd()
+    expect([...shares.physical]).toEqual([20])
+    expect([...shares.magical]).toEqual([10])
   })
 
   it('rolls crits, bashes and evasion only where they belong', () => {

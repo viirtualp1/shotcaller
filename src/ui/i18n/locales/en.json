@@ -132,7 +132,7 @@
     "boots": "+{speed}% movement speed",
     "staff": "+{spellPower}% ability power",
     "manaStone": "Mana builds {manaGain}% faster",
-    "vampireFang": "Heals for {lifesteal}% of damage dealt",
+    "vampireFang": "Heals for {lifesteal}% of attack damage and {spellLifesteal}% of ability damage",
     "thornMail": "Returns {thorns}% of attack damage to the attacker",
     "aegis": "Once per round prevents death and restores {revive}% health"
   },
@@ -554,7 +554,8 @@
       "rating": "Rating",
       "xp": "XP",
       "rankUp": "New rank",
-      "levelUp": "Level up"
+      "levelUp": "Level up",
+      "duelsOnly": "Only duels change it"
     }
   },
   "itemTip": {

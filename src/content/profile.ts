@@ -1,5 +1,3 @@
-import type { Difficulty } from './rules'
-
 /** Coach ranks, lowest first. Every rank but the last has five stars, like Dota medals. */
 export const RANK_TIERS = [
   'rookie',
@@ -33,11 +31,6 @@ export const RATING = {
   /** Extra for breaking the enemy throne instead of winning on the round limit. */
   throneBonus: 5,
   loss: 20,
-  /** Gains are scaled down on difficulties without the planning timer. */
-  gainScale: {
-    relaxed: 0.8,
-    standard: 1,
-  } satisfies Record<Difficulty, number>,
 } as const
 
 export const PROFILE_XP = {

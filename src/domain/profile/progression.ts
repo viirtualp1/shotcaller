@@ -1,5 +1,4 @@
 import { PROFILE_XP, RANK, RANK_TIERS, RATING, type RankTier } from '@/content/profile'
-import type { Difficulty } from '@/content/rules'
 import type { MatchResult } from '../match/judge'
 
 export type Verdict = 'win' | 'loss' | 'draw'
@@ -41,7 +40,7 @@ export function rankFor(rating: number): Rank {
 /** Orders ranks so a rank-up is simply a bigger number. */
 export const rankStep = (rank: Rank) => RANK_TIERS.indexOf(rank.tier) * RANK.starsPerTier + rank.stars
 
-export function ratingChange(result: MatchResult, difficulty: Difficulty) {
+export function ratingChange(result: MatchResult) {
   const verdict = verdictOf(result)
   if (verdict === 'draw') {
     return 0
@@ -51,8 +50,7 @@ export function ratingChange(result: MatchResult, difficulty: Difficulty) {
     return -RATING.loss
   }
 
-  const gain = RATING.win + (result.reason === 'throne' ? RATING.throneBonus : 0)
-  return Math.round(gain * RATING.gainScale[difficulty])
+  return RATING.win + (result.reason === 'throne' ? RATING.throneBonus : 0)
 }
 
 export function matchXp(verdict: Verdict, roundsWon: number) {

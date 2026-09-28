@@ -191,7 +191,10 @@ function ask(action: 'remove' | 'block') {
                     down: match.ratingAfter < match.ratingBefore,
                   }"
                 >
-                  {{ text.signed(match.ratingAfter - match.ratingBefore) }}
+                  <!-- Only duels move the rating; the column stays for the row to line up. -->
+                  <template v-if="match.ratingAfter !== match.ratingBefore">
+                    {{ text.signed(match.ratingAfter - match.ratingBefore) }}
+                  </template>
                 </span>
 
                 <ul class="lineup">

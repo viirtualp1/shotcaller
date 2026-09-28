@@ -44,7 +44,7 @@ export const ABILITY_PARAMS = {
   fireball: {
     rangeBonus: 60,
     radius: 70,
-    damage: 125,
+    damage: 110,
     speed: 380,
   },
   roots: {

@@ -50,6 +50,79 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.5',
+    date: '2026-09-28',
+    title: {
+      en: 'Rating for duels',
+      ru: 'Рейтинг за дуэли',
+    },
+    general: [
+      {
+        en: 'Rating now comes only from duels: **+25** for a win, **+5** more for breaking the throne, **−20** for a loss.',
+        ru: 'Рейтинг теперь только за дуэли: **+25** за победу, ещё **+5** за сломанный трон, **−20** за поражение.',
+      },
+      {
+        en: 'Matches against the computer give XP only.',
+        ru: 'Матчи против компьютера дают только опыт.',
+      },
+    ],
+    items: [
+      {
+        id: 'staff',
+        badge: 'nerfed',
+        changes: [
+          {
+            en: 'Ability power: **+30%** → **+20%**',
+            ru: 'Сила способностей: **+30%** → **+20%**',
+          },
+        ],
+      },
+      {
+        id: 'vampireFang',
+        badge: 'nerfed',
+        changes: [
+          {
+            en: 'Lifesteal from abilities: **20%** → **10%**',
+            ru: 'Вампиризм от способностей: **20%** → **10%**',
+          },
+          {
+            en: 'Attacks still heal for **20%**.',
+            ru: 'Атаки по-прежнему лечат на **20%**.',
+          },
+        ],
+      },
+    ],
+    heroes: [
+      {
+        id: 'pyromancer',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'fireball',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Damage: **125** → **110**',
+                ru: 'Урон: **125** → **110**',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'Matches against the computer show only XP in the history and the breakdown.',
+        ru: 'У матчей против компьютера в истории и разборе — только опыт.',
+      },
+      {
+        en: 'End of a match against the computer: the rating says only duels change it.',
+        ru: 'Итоги матча против компьютера: у рейтинга подпись «Меняется только в дуэлях».',
+      },
+    ],
+  },
+  {
     version: '7.4',
     date: '2026-09-28',
     title: {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CloudProfile, CloudStore } from '@/application/cloud/CloudStore'
 import { ConflictLoopError, ProfileSync } from '@/application/cloud/ProfileSync'
 import { createProfile, type MatchRecord, type Profile } from '@/domain/profile/Profile'
-import { finishedMatch, LOSS, play, WIN } from '../helpers/profile'
+import { duelMatch, LOSS, play, WIN } from '../helpers/profile'
 
 function memoryStorage() {
   const data = new Map<string, string>()
@@ -70,7 +70,7 @@ class Device {
   profile = createProfile('2026-09-27T10:00:00.000Z')
 
   play(won = true) {
-    const { profile, record } = play(this.profile, finishedMatch(won ? WIN : LOSS))
+    const { profile, record } = play(this.profile, duelMatch(won ? WIN : LOSS))
     this.profile = profile
     this.sync.noteMatch(record)
   }

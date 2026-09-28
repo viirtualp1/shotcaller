@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { parseProfile, serializeProfile } from '@/application/persistence/profileSnapshot'
 import { PROFILE } from '@/content/profile'
-import { applyRecord, avatarOf, createProfile, hasDetails } from '@/domain/profile/Profile'
+import { applyRecord, avatarOf, createProfile, hasDetails, isRated } from '@/domain/profile/Profile'
 import { levelFor, rankFor, rankStep, ratingChange } from '@/domain/profile/progression'
-import { DRAW, finishedMatch as finished, LOSS, play, WIN } from '../helpers/profile'
+import { DRAW, duelMatch as duel, finishedMatch as finished, LOSS, play, WIN } from '../helpers/profile'
 
 describe('coach ranks', () => {
   it('climbs five stars per medal and tops out without stars', () => {
@@ -33,22 +33,18 @@ describe('coach ranks', () => {
     expect(rankStep(rankFor(240))).toBeGreaterThan(rankStep(rankFor(239)))
   })
 
-  it('pays more for a throne and less without the planning timer', () => {
-    expect(ratingChange(WIN, 'standard')).toBe(30)
+  it('pays more for a throne', () => {
+    expect(ratingChange(WIN)).toBe(30)
 
     expect(
-      ratingChange(
-        {
-          ...WIN,
-          reason: 'roundLimit',
-        },
-        'standard',
-      ),
+      ratingChange({
+        ...WIN,
+        reason: 'roundLimit',
+      }),
     ).toBe(25)
 
-    expect(ratingChange(WIN, 'relaxed')).toBe(24)
-    expect(ratingChange(LOSS, 'relaxed')).toBe(-20)
-    expect(ratingChange(DRAW, 'standard')).toBe(0)
+    expect(ratingChange(LOSS)).toBe(-20)
+    expect(ratingChange(DRAW)).toBe(0)
   })
 
   it('needs more XP for every next level', () => {
@@ -77,9 +73,13 @@ describe('recordMatch', () => {
       roundsLost: 2,
       mvp: 'blademaster',
       ratingBefore: 0,
-      ratingAfter: 30,
+      ratingAfter: 0,
+      xp: 180,
       towersDestroyed: 2,
     })
+
+    expect(isRated(record)).toBe(false)
+    expect(profile.xp).toBe(180)
 
     expect(record.heroes.map((h) => h.heroId)).toEqual(['blademaster', 'acolyte'])
     expect([...record.synergies].sort()).toEqual(['guardian', 'soloMid'])
@@ -111,7 +111,7 @@ describe('recordMatch', () => {
 
   it('tracks streaks, keeps rating above zero and caps the history', () => {
     let profile = createProfile('2026-09-27T10:00:00.000Z')
-    profile = play(profile, finished(LOSS)).profile
+    profile = play(profile, duel(LOSS)).profile
     expect(profile.rating).toBe(0)
     expect(profile.totals.streak).toBe(-1)
 
@@ -119,7 +119,7 @@ describe('recordMatch', () => {
     expect(profile.totals.streak).toBe(-2)
 
     for (let i = 0; i < 3; i++) {
-      profile = play(profile, finished(WIN, 'standard', 9 - i)).profile
+      profile = play(profile, duel(WIN, 9 - i)).profile
     }
 
     expect(profile.totals).toMatchObject({
@@ -128,7 +128,7 @@ describe('recordMatch', () => {
       fastestWin: 7,
     })
 
-    profile = play(profile, finished(DRAW)).profile
+    profile = play(profile, duel(DRAW)).profile
     expect(profile.totals.streak).toBe(0)
     expect(profile.peakRating).toBe(90)
 
@@ -198,20 +198,19 @@ describe('recordMatch', () => {
     })
   })
 
-  it('counts a duel as a standard match and names the opponent', () => {
+  it('moves the rating only for a duel, which also names the opponent', () => {
     const solo = play(createProfile('2026-09-27T10:00:00.000Z'), finished(WIN)).profile
-
-    const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), {
-      ...finished(WIN, 'relaxed'),
-      duel: { opponentName: 'Rival' },
-    })
+    const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), duel(WIN))
 
     expect(record).toMatchObject({
       duel: { opponentName: 'Rival' },
-      difficulty: 'standard',
+      ratingBefore: 0,
+      ratingAfter: 30,
     })
 
-    expect(profile.rating).toBe(solo.rating)
+    expect(isRated(record)).toBe(true)
+    expect(solo.rating).toBe(0)
+    expect(profile.rating).toBe(30)
     expect(profile.xp).toBe(solo.xp)
     expect(profile.totals).toEqual(solo.totals)
     expect(profile.heroes).toEqual(solo.heroes)

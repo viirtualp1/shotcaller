@@ -18,6 +18,8 @@ export interface DamageOptions {
   /** Reflected damage never reflects again. */
   readonly reflected?: boolean
   readonly crit?: boolean
+  /** A basic attack rather than an ability; items heal more from these. */
+  readonly attack?: boolean
 }
 
 export interface SplashOptions extends DamageOptions {
@@ -55,6 +57,7 @@ export class CombatService {
 
     const dealt = this.dealDamage(source, target, amount * (crit?.multiplier ?? 1), 'physical', {
       crit: crit !== null,
+      attack: true,
     })
 
     const bash = source.bash
@@ -240,7 +243,8 @@ export class CombatService {
     type: DamageType,
     options: DamageOptions,
   ) {
-    const lifesteal = source.itemEffects?.lifesteal ?? 0
+    const effects = source.itemEffects
+    const lifesteal = (options.attack ? effects?.lifesteal : effects?.spellLifesteal) ?? 0
     if (lifesteal > 0 && value > 0) {
       this.heal(source, value * lifesteal, source)
     }

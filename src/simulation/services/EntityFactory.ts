@@ -30,12 +30,14 @@ function itemEffects(items: readonly ItemId[]) {
       const effects = ITEMS[id].effects
       return {
         lifesteal: acc.lifesteal + (effects.lifesteal ?? 0),
+        spellLifesteal: acc.spellLifesteal + (effects.spellLifesteal ?? 0),
         thorns: acc.thorns + (effects.thorns ?? 0),
         revive: Math.max(acc.revive, effects.revive ?? 0),
       }
     },
     {
       lifesteal: 0,
+      spellLifesteal: 0,
       thorns: 0,
       revive: 0,
     },

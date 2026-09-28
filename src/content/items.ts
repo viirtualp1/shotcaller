@@ -2,8 +2,10 @@ import type { ItemId } from './ids'
 import type { StatModifiers } from './modifiers'
 
 export interface ItemEffects {
-  /** Share of dealt damage returned as healing. */
+  /** Share of attack damage returned as healing. */
   readonly lifesteal?: number
+  /** Share of ability damage returned as healing; spells often hit several targets at once, so it is lower. */
+  readonly spellLifesteal?: number
   /** Share of received attack damage sent back to the attacker. */
   readonly thorns?: number
   /** Health share restored once per round instead of dying. */
@@ -52,9 +54,18 @@ export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
   chainmail: item('chainmail', 'Chainmail', 3, { damageTaken: 0.85 }),
   vitality: item('vitality', 'Vitality Orb', 3, { maxHp: 1.25 }),
   boots: item('boots', 'Boots of Speed', 2, { speed: 1.25 }),
-  staff: item('staff', 'Mage Staff', 4, { spellPower: 1.3 }),
+  staff: item('staff', 'Mage Staff', 4, { spellPower: 1.2 }),
   manaStone: item('manaStone', 'Mana Stone', 3, { manaGain: 1.35 }),
-  vampireFang: item('vampireFang', 'Vampire Fang', 4, {}, { lifesteal: 0.2 }),
+  vampireFang: item(
+    'vampireFang',
+    'Vampire Fang',
+    4,
+    {},
+    {
+      lifesteal: 0.2,
+      spellLifesteal: 0.1,
+    },
+  ),
   thornMail: item('thornMail', 'Thorn Mail', 4, { damageTaken: 0.95 }, { thorns: 0.3 }),
   aegis: item('aegis', 'Aegis', 6, {}, { revive: 0.6 }),
 }

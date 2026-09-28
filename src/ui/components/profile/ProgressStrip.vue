@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { isRated } from '@/domain/profile/Profile'
 import { levelFor, rankFor, rankStep } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
@@ -22,6 +23,7 @@ const progress = computed(() => {
 
   return {
     record,
+    rated: isRated(record),
     rank: after,
     delta: record.ratingAfter - record.ratingBefore,
     rankUp: rankStep(after) > rankStep(before),
@@ -44,9 +46,12 @@ const signed = (value: number) =>
       <span class="line">
         <strong>{{ text.number(progress.record.ratingAfter) }}</strong>
 
-        <span class="delta" :class="{ up: progress.delta > 0, down: progress.delta < 0 }">{{
-          signed(progress.delta)
-        }}</span>
+        <span
+          v-if="progress.rated"
+          class="delta"
+          :class="{ up: progress.delta > 0, down: progress.delta < 0 }"
+          >{{ signed(progress.delta) }}</span
+        >
       </span>
 
       <span v-if="progress.rankUp" class="badge">
@@ -54,9 +59,11 @@ const signed = (value: number) =>
         {{ '★'.repeat(progress.rank.stars) }}
       </span>
 
-      <span v-else class="muted"
+      <span v-else-if="progress.rated" class="muted"
         >{{ t(`profile.ranks.${progress.rank.tier}`) }} {{ '★'.repeat(progress.rank.stars) }}</span
       >
+
+      <span v-else class="muted">{{ t('profile.progress.duelsOnly') }}</span>
     </div>
 
     <div class="cell">

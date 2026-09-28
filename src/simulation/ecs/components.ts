@@ -173,6 +173,7 @@ export interface Evasion {
 /** Passive effects granted by items. */
 export interface ItemEffectsState {
   lifesteal: number
+  spellLifesteal: number
   thorns: number
   revive: number
 }

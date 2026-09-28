@@ -119,7 +119,7 @@ export interface Profile {
   readonly recent: readonly MatchRecord[]
 }
 
-/** A match against a friend rather than the computer; it counts like any other. */
+/** A match against a friend rather than the computer; only these move the rating. */
 export interface DuelInfo {
   readonly opponentName: string
 }
@@ -246,8 +246,7 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
 
   return {
     ...meta,
-    /* Duels run on the planning timer, so they count as standard. */
-    difficulty: finished.duel ? 'standard' : finished.difficulty,
+    difficulty: finished.difficulty,
     verdict,
     reason: finished.result.reason,
     rounds: stats.rounds,
@@ -271,6 +270,10 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
   }
 }
 
+/** Duels move the rating; before 7.4 matches against the computer did too. */
+export const isRated = (record: Pick<MatchRecord, 'duel' | 'ratingBefore' | 'ratingAfter'>) =>
+  record.duel !== null || record.ratingAfter !== record.ratingBefore
+
 /** Records made before the detailed stats existed have no opponent side and no rounds; their zeros mean nothing. */
 export const hasDetails = (record: MatchRecord) =>
   record.opponentHeroes.length > 0 || record.history.length > 0
@@ -287,7 +290,8 @@ const resultOf = (record: MatchRecord): MatchResult => ({
 export function applyRecord(profile: Profile, played: MatchRecord) {
   const { verdict } = played
   const won = verdict === 'win'
-  const rating = Math.max(0, profile.rating + ratingChange(resultOf(played), played.difficulty))
+  /* The computer only gives XP; the rating is for beating people. */
+  const rating = played.duel ? Math.max(0, profile.rating + ratingChange(resultOf(played))) : profile.rating
 
   const record: MatchRecord = {
     ...played,
