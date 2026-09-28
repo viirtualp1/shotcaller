@@ -67,6 +67,30 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.0.1',
+    date: '2026-09-29',
+    title: {
+      en: 'Room on the map',
+      ru: 'Место на карте',
+    },
+    interface: [
+      {
+        en: 'Update card: no close button. While the update installs, the game is covered and takes no clicks or keys.',
+        ru: 'Карточка обновления: без крестика. Пока обновление ставится, игра закрыта и не принимает нажатий и клавиш.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Patch notes: the round picture of the 8.0 highlights sits in the middle of its card.',
+        ru: 'Патчноуты: картинка про раунды в главном из 8.0 стоит по центру карточки.',
+      },
+      {
+        en: 'Tablets and desktops: the hero and item cards open beside the map, under the shop, so a lane is always in reach.',
+        ru: 'Планшеты и компьютеры: карточки героя и предмета открываются рядом с картой, под лавкой, и линия всегда доступна.',
+      },
+    ],
+  },
+  {
     version: '8.0',
     date: '2026-09-29',
     title: {

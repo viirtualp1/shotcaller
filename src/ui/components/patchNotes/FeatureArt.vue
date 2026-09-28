@@ -65,7 +65,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="art" :class="art.kind" aria-hidden="true">
+  <div class="art" aria-hidden="true">
     <img v-if="art.kind === 'map' && picture" class="map" :src="picture" alt="" />
 
     <div v-else-if="art.kind === 'modes'" class="row">
@@ -121,6 +121,8 @@ onMounted(() => {
 }
 
 .map {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

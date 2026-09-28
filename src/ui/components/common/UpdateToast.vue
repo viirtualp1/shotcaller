@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { RefreshCw, X } from 'lucide-vue-next'
+import { useEventListener } from '@vueuse/core'
+import { RefreshCw } from 'lucide-vue-next'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 import { ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'
@@ -34,6 +35,19 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
   },
 })
 
+/* While the new version installs, the game is frozen: no clicks reach it (the veil takes them) and no hotkeys. */
+useEventListener(
+  window,
+  'keydown',
+  (event) => {
+    if (updating.value) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    }
+  },
+  { capture: true },
+)
+
 /**
  * The plugin reloads only a tab that the old worker controlled; a tab opened with a hard reload
  * is not controlled, so it would sit on the old version. Reloading once the new worker is active covers both.
@@ -61,21 +75,21 @@ async function applyUpdate() {
 </script>
 
 <template>
+  <Transition name="veil">
+    <div v-if="updating" class="veil" aria-hidden="true" />
+  </Transition>
+
   <Transition name="toast">
-    <div v-if="needRefresh" class="toast" role="status">
-      <RefreshCw :size="16" class="icon" />
+    <div v-if="needRefresh" class="toast" role="status" :aria-busy="updating">
+      <RefreshCw :size="16" class="icon" :class="{ spinning: updating }" />
 
       <span class="text">
-        <strong>{{ t('pwa.updateTitle') }}</strong>
-        <span v-if="match.isDuel" class="hint">{{ t('pwa.duelHint') }}</span>
+        <strong>{{ updating ? t('pwa.updating') : t('pwa.updateTitle') }}</strong>
+        <span v-if="match.isDuel && !updating" class="hint">{{ t('pwa.duelHint') }}</span>
       </span>
 
-      <button type="button" class="btn primary small" :disabled="updating" @click="applyUpdate">
+      <button v-if="!updating" type="button" class="btn primary small" @click="applyUpdate">
         {{ t('pwa.update') }}
-      </button>
-
-      <button type="button" class="icon-btn close" :aria-label="t('pwa.later')" @click="needRefresh = false">
-        <X :size="14" />
       </button>
     </div>
   </Transition>
@@ -122,10 +136,33 @@ async function applyUpdate() {
   font-size: 12.5px;
 }
 
-.close {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  background: rgba(8, 12, 11, 0.6);
+  backdrop-filter: blur(2px);
+  cursor: progress;
+}
+
+.spinning {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.veil-enter-active,
+.veil-leave-active {
+  transition: opacity 0.2s;
+}
+
+.veil-enter-from,
+.veil-leave-to {
+  opacity: 0;
 }
 
 .toast-enter-active,

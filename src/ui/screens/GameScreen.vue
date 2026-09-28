@@ -220,6 +220,10 @@ watch(
           <BattlePanel v-if="store.phase === 'battle'" key="battle" />
           <ShopPanel v-else key="shop" class="shop-fill" />
         </Transition>
+
+        <!-- Beside the map, never over it: on a tablet the map is too small to spare the room. -->
+        <HeroCard class="side-card" />
+        <ItemCard class="side-card" />
       </aside>
     </template>
 
@@ -232,8 +236,10 @@ watch(
         </p>
       </Transition>
 
-      <HeroCard />
-      <ItemCard />
+      <template v-if="!wide">
+        <HeroCard />
+        <ItemCard />
+      </template>
     </div>
 
     <PhaseBanner />
@@ -390,6 +396,12 @@ watch(
 .shop-fill {
   flex: 1;
   min-height: 0;
+}
+
+/* Between the shop and the fight button; the shop gives up the height. */
+.hud-right .side-card {
+  flex: none;
+  width: 100%;
 }
 
 /* Phones and tablets: the map stays in view and the planning panels share one dock. */

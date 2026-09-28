@@ -717,7 +717,7 @@
     "updateTitle": "A new version is out",
     "duelHint": "Updating reloads the page, so wait for the duel to end",
     "update": "Update",
-    "later": "Later"
+    "updating": "Installing the update…"
   },
   "duel": {
     "challenge": "Challenge to a duel",
