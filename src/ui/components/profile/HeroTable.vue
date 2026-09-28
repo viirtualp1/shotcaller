@@ -13,13 +13,13 @@ const SHOWN = 8
 
 type RoleStat = 'structureDamage' | 'healing' | 'damageReceived'
 
-/** Damage tells most of the story; these roles are also judged by what they are for. */
+/** Every hero hits buildings, so that column is always there; these roles are also judged by what they are for. */
 const ROLE_STATS: Partial<Record<RoleId, RoleStat>> = {
-  pusher: 'structureDamage',
   support: 'healing',
   initiator: 'damageReceived',
 }
 
+const SHARED_STATS: readonly RoleStat[] = ['structureDamage']
 const COLUMN_ORDER: readonly RoleStat[] = ['structureDamage', 'healing', 'damageReceived']
 
 /** Per match, counting only matches that recorded it; nothing to show before the first such match. */
@@ -42,13 +42,15 @@ const rows = computed(() =>
     })),
 )
 
-/** A column for each role stat some listed hero is judged by. */
-const roleColumns = computed(() =>
-  COLUMN_ORDER.filter((stat) => rows.value.some((row) => row.roleStat === stat)),
-)
+type Row = (typeof rows.value)[number]
 
-function roleValue(row: (typeof rows.value)[number], stat: RoleStat) {
-  const value = row.roleStat === stat ? perMatch(row.hero, stat) : null
+const shows = (row: Row, stat: RoleStat) => SHARED_STATS.includes(stat) || row.roleStat === stat
+
+/** Buildings for everyone, plus a column for each role stat some listed hero is judged by. */
+const roleColumns = computed(() => COLUMN_ORDER.filter((stat) => rows.value.some((row) => shows(row, stat))))
+
+function roleValue(row: Row, stat: RoleStat) {
+  const value = shows(row, stat) ? perMatch(row.hero, stat) : null
 
   return value === null ? '—' : text.number(value)
 }
@@ -98,12 +100,7 @@ function roleValue(row: (typeof rows.value)[number], stat: RoleStat) {
           <td class="num extra">{{ text.number(row.hero.kills) }} / {{ text.number(row.hero.deaths) }}</td>
           <td class="num extra">{{ text.number(row.damage) }}</td>
 
-          <td
-            v-for="stat in roleColumns"
-            :key="stat"
-            class="num extra"
-            :class="{ muted: row.roleStat !== stat }"
-          >
+          <td v-for="stat in roleColumns" :key="stat" class="num extra" :class="{ muted: !shows(row, stat) }">
             {{ roleValue(row, stat) }}
           </td>
         </tr>

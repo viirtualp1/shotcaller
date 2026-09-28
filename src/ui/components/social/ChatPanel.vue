@@ -256,8 +256,8 @@ async function insertEmoji(emoji: string) {
 
 .emoji-toggle {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: var(--control);
+  height: var(--control);
   color: var(--chalk-dim);
 }
 
@@ -382,7 +382,9 @@ async function insertEmoji(emoji: string) {
   font-variant-numeric: tabular-nums;
 }
 
+/* The field and its buttons share one height; autosize measures without the border, so min-height sets the floor. */
 .composer {
+  --control: 40px;
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -391,6 +393,7 @@ async function insertEmoji(emoji: string) {
 .input {
   flex: 1;
   min-width: 0;
+  min-height: var(--control);
   max-height: 120px;
   padding: 9px 12px;
   border-radius: 12px;
@@ -410,8 +413,8 @@ async function insertEmoji(emoji: string) {
 
 .send {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: var(--control);
+  height: var(--control);
   border-color: rgba(244, 197, 91, 0.5);
   color: var(--gold);
 }

@@ -169,6 +169,7 @@ export class EntityFactory {
         target: null,
         chasing: false,
         prefersStructures: false,
+        ignoresStructures: role.ignoresStructures ?? false,
       },
       laneFollower: {
         path: this.map.path(team, lane),
@@ -183,6 +184,7 @@ export class EntityFactory {
       caster: {
         ability: definition.ability,
         power: star * mods.spellPower,
+        healPower: star * mods.healPower,
       },
       hero: {
         uid: owned.uid,
@@ -205,13 +207,15 @@ export class EntityFactory {
             roamer: {
               thinkTimer: 0,
               quarry: null,
+              farm: null,
             },
           }
         : {}),
       ...(role.healAura
         ? {
             healAura: {
-              ...role.healAura,
+              radius: role.healAura.radius,
+              hpPercentPerSecond: role.healAura.hpPercentPerSecond * mods.healPower,
               timer: BATTLE.auraInterval,
             },
           }

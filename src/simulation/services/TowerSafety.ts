@@ -8,6 +8,14 @@ import type { SpatialIndex } from './SpatialIndex'
 const TANK_MARGIN = 4
 const PROTECTION_MARGIN = 12
 
+export function isThroneNearlyDown(unit: Unit) {
+  return (
+    unit.structure?.type === 'throne' &&
+    isAlive(unit) &&
+    unit.health.current / unit.health.max < BATTLE.hero.finishThroneBelow
+  )
+}
+
 /**
  * Heroes only walk under an enemy structure while their own creeps or turrets absorb its shots,
  * which is what keeps lanes from collapsing into tower dives.

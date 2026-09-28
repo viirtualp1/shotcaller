@@ -4,6 +4,7 @@ import type { Locale } from '../i18n'
 /**
  * Patch notes, newest first. They are history, so numbers are written out by hand
  * instead of read from content: a later balance change must not rewrite an old patch.
+ * Every line states a change; what stayed the same is left out.
  * `**text**` marks a value to highlight.
  */
 export type NoteText = Readonly<Record<Locale, string>>
@@ -50,6 +51,98 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.6',
+    date: '2026-09-28',
+    title: {
+      en: 'Healing of its own',
+      ru: 'Отдельное лечение',
+    },
+    general: [
+      {
+        en: 'Giving up a duel counts as a loss: **−20** rating. The opponent gets the win and **+25**.',
+        ru: 'Сдача в дуэли — это поражение: **−20** рейтинга. Соперник получает победу и **+25**.',
+      },
+      {
+        en: 'The same goes for a coach who goes silent and gets timed out, even if they come back later.',
+        ru: 'То же для тренера, который пропал и проиграл по таймауту, даже если он вернётся позже.',
+      },
+      {
+        en: 'When the enemy throne drops below **10%** health, heroes next to it drop everything and finish it, even under its fire.',
+        ru: 'Когда у вражеского трона остаётся меньше **10%** здоровья, герои рядом бросают всё и добивают его, даже под его огнём.',
+      },
+    ],
+    roles: [
+      {
+        id: 'ganker',
+        badge: 'reworked',
+        changes: [
+          {
+            en: 'Never attacks towers or the throne; the hero card says so.',
+            ru: 'Не бьёт башни и трон, это написано в карточке героя.',
+          },
+          {
+            en: 'With nobody to fight, heads to the nearest enemy creeps, on another lane if needed, instead of waiting by a tower.',
+            ru: 'Когда драться не с кем, идёт к ближайшим вражеским крипам, при необходимости на другую линию, а не ждёт у башни.',
+          },
+          {
+            en: 'No longer hunts heroes standing under an untanked enemy tower.',
+            ru: 'Больше не охотится на героев, которые стоят под вражеской башней без танка.',
+          },
+        ],
+      },
+    ],
+    items: [
+      {
+        id: 'chalice',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Sacred Chalice: **+30%** healing from abilities and the support aura. Costs **3** gold.',
+            ru: 'Sacred Chalice: **+30%** лечения способностями и аурой саппорта. Стоит **3** золота.',
+          },
+        ],
+      },
+      {
+        id: 'staff',
+        badge: 'nerfed',
+        changes: [
+          {
+            en: 'No longer boosts healing.',
+            ru: 'Больше не усиливает лечение.',
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'Profile, most played heroes: damage to buildings is shown for every hero.',
+        ru: 'Профиль, любимые герои: урон по строениям показан у всех героев.',
+      },
+      {
+        en: 'Coach profile: rating reads as **MMR**, and matches, win rate and best streak moved into the header.',
+        ru: 'Профиль тренера: рейтинг подписан как **MMR**, а матчи, винрейт и лучшая серия переехали в шапку.',
+      },
+      {
+        en: 'Chat: the emoji and send buttons match the height of the message field.',
+        ru: 'Чат: кнопки смайликов и отправки одной высоты с полем сообщения.',
+      },
+      {
+        en: 'Patch notes: the section menu is gone; the back and patch buttons float over the page.',
+        ru: 'Патчноуты: меню разделов убрано, кнопки «назад» и выбора патча висят поверх страницы.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Opening a profile from a chat closes the chat window.',
+        ru: 'Открытие профиля из чата закрывает окно чата.',
+      },
+      {
+        en: 'An open game finds a new version within a minute, and at once when you come back to the tab.',
+        ru: 'Открытая игра находит новую версию за минуту, а при возврате на вкладку — сразу.',
+      },
+    ],
+  },
+  {
     version: '7.5',
     date: '2026-09-28',
     title: {
@@ -84,10 +177,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
           {
             en: 'Lifesteal from abilities: **20%** → **10%**',
             ru: 'Вампиризм от способностей: **20%** → **10%**',
-          },
-          {
-            en: 'Attacks still heal for **20%**.',
-            ru: 'Атаки по-прежнему лечат на **20%**.',
           },
         ],
       },
@@ -267,8 +356,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     },
     general: [
       {
-        en: 'The game installs as an app on phones and computers and opens without a connection. Duels, friends and cloud saves still need the internet.',
-        ru: 'Игру можно установить как приложение на телефон и компьютер, она открывается без интернета. Дуэлям, друзьям и облачным сохранениям сеть по-прежнему нужна.',
+        en: 'The game installs as an app on phones and computers and opens without a connection. Duels, friends and cloud saves need the internet.',
+        ru: 'Игру можно установить как приложение на телефон и компьютер, она открывается без интернета. Дуэлям, друзьям и облачным сохранениям нужна сеть.',
       },
       {
         en: 'Duels run on one clock for both players: a battle plays at **×2** on both sides and planning ends at the same moment.',
@@ -665,8 +754,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Вход по **почте**: вводишь адрес, вписываешь одноразовый код из письма — готово. Новая почта создаёт аккаунт и сохраняет в нём прогресс с этого устройства, знакомая просто входит. Там, где включён Google, можно войти и через него.',
       },
       {
-        en: 'The game still works offline. Progress is saved on the device first and reaches the cloud once the connection is back.',
-        ru: 'Игра по-прежнему работает без интернета. Прогресс сначала сохраняется на устройстве и уходит в облако, когда связь вернётся.',
+        en: 'Progress is saved on the device first and reaches the cloud once the connection is back.',
+        ru: 'Прогресс сначала сохраняется на устройстве и уходит в облако, когда связь вернётся.',
       },
       {
         en: 'Matches played on two devices **add up** instead of one overwriting the other.',
@@ -1038,8 +1127,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Кнопка **В бой** переехала в правый нижний угол, под магазин.',
       },
       {
-        en: 'Start screen: **New match** has a new icon, and the Settings button is gone. Language and difficulty are picked in the New match dialog; the in-game menu still has Settings.',
-        ru: 'Стартовый экран: у **Нового матча** новая иконка, а кнопки настроек больше нет. Язык и сложность выбираются в окне нового матча, в меню во время игры настройки остались.',
+        en: 'Start screen: **New match** has a new icon, and the Settings button is gone. Language and difficulty are picked in the New match dialog.',
+        ru: 'Стартовый экран: у **Нового матча** новая иконка, а кнопки настроек больше нет. Язык и сложность выбираются в окне нового матча.',
       },
       {
         en: 'New **patch notes** page. Open it from the update card on the start screen.',

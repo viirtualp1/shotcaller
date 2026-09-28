@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { HERO_IDS, ITEM_IDS } from '@/content/ids'
 import { ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { ROSTER } from '@/content/rules'
+import { MATCH_END_REASONS } from '@/domain/match/judge'
 import type { MatchState } from '@/domain/match/Match'
 import { emptyMatchStats } from '@/domain/match/matchStats'
 import { emptyLedger } from '@/domain/player/ledger'
@@ -150,7 +151,7 @@ const matchState = z.object({
   result: z
     .object({
       winner: team.nullable(),
-      reason: z.enum(['throne', 'roundLimit']),
+      reason: z.enum(MATCH_END_REASONS),
     })
     .nullable(),
   battle: z

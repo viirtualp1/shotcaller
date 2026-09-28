@@ -144,6 +144,8 @@ export const BATTLE = {
     structureDamage: 0.6,
     finishStructureBelow: 0.15,
     finishStructureIfHealthAbove: 0.6,
+    /** Below this health share the enemy throne beats any other target, tower fire or not. */
+    finishThroneBelow: 0.1,
     /** Seconds a hero keeps answering the enemy hero that last hit it. */
     retaliationMemory: 2,
     /** Below this health share a hero keeps out of enemy tower range even while creeps tank the tower. */

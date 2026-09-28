@@ -4,9 +4,12 @@ import type { BattleOutcome, PerTeam, StructureState, TeamBattleStats } from '..
 import type { RoundVerdict } from '../player/Player'
 import { STRUCTURE_SLOTS, totalStructureHp } from './structures'
 
+export const MATCH_END_REASONS = ['throne', 'roundLimit', 'forfeit'] as const
+
 export interface MatchResult {
   readonly winner: TeamId | null
-  readonly reason: 'throne' | 'roundLimit'
+  /** `forfeit` is a duel given up, or claimed after the other coach went silent. */
+  readonly reason: (typeof MATCH_END_REASONS)[number]
 }
 
 export const totalStructureDamage = (stats: TeamBattleStats) =>

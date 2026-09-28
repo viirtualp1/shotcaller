@@ -10,7 +10,7 @@ import {
   Wrench,
   Zap,
 } from 'lucide-vue-next'
-import { computed, watch, type Component } from 'vue'
+import { computed, watch } from 'vue'
 import { ABILITY_NAMES } from '@/content/abilities'
 import { HERO_IDS, type RoleId } from '@/content/ids'
 import { HEROES } from '@/content/heroes'
@@ -28,35 +28,6 @@ import type { PatchNote } from '../patchNotes/notes'
 import { usePatchNotesStore } from '../stores/patchNotes'
 import { useSettingsStore } from '../stores/settings'
 
-type SectionId = 'general' | 'items' | 'roles' | 'heroes' | 'interface' | 'fixes'
-
-const SECTIONS: readonly { id: SectionId; icon: Component }[] = [
-  {
-    id: 'general',
-    icon: ScrollText,
-  },
-  {
-    id: 'items',
-    icon: Package,
-  },
-  {
-    id: 'roles',
-    icon: Users,
-  },
-  {
-    id: 'heroes',
-    icon: Swords,
-  },
-  {
-    id: 'interface',
-    icon: LayoutPanelTop,
-  },
-  {
-    id: 'fixes',
-    icon: Wrench,
-  },
-]
-
 const notes = usePatchNotesStore()
 const settings = useSettingsStore()
 const text = useGameText()
@@ -64,7 +35,6 @@ const { t } = text
 
 /** The screen is only mounted while a patch is open. */
 const patch = computed(() => notes.patch as PatchNote)
-const sections = computed(() => SECTIONS.filter(({ id }) => patch.value[id]?.length))
 
 const date = computed(() => {
   const [year = 0, month = 1, day = 1] = patch.value.date.split('-').map(Number)
@@ -74,10 +44,6 @@ const date = computed(() => {
 })
 
 const heroesWithRole = (role: RoleId) => HERO_IDS.filter((id) => HEROES[id].role === role)
-
-function jump(id: SectionId) {
-  document.getElementById(`patch-${id}`)?.scrollIntoView({ behavior: 'smooth' })
-}
 
 watch(
   () => patch.value.version,
@@ -89,24 +55,11 @@ watch(
   <div class="patch-notes">
     <header class="topbar">
       <div class="bar">
-        <button type="button" class="btn ghost back" @click="notes.close()">
+        <button type="button" class="btn" @click="notes.close()">
           <ArrowLeft :size="16" /> {{ t('patchNotes.back') }}
         </button>
 
-        <nav class="jump" :aria-label="t('patchNotes.jump')">
-          <button
-            v-for="section in sections"
-            :key="section.id"
-            type="button"
-            class="chip"
-            @click="jump(section.id)"
-          >
-            <component :is="section.icon" :size="14" />
-            {{ t(`patchNotes.nav.${section.id}`) }}
-          </button>
-        </nav>
-
-        <PatchPicker class="picker" />
+        <PatchPicker />
       </div>
     </header>
 
@@ -264,18 +217,18 @@ watch(
   min-height: 100%;
 }
 
+/* The bar itself stays out of the way of the page scrolling under it; only its buttons take clicks. */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(19, 27, 24, 0.86);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--edge);
+  pointer-events: none;
 }
 
 .bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   max-width: 1200px;
   min-height: var(--topbar);
@@ -283,45 +236,10 @@ watch(
   padding: 10px 20px;
 }
 
-.back {
+.bar :deep(.btn) {
   flex: none;
-}
-
-.jump {
-  display: flex;
-  flex: 1;
-  justify-content: safe center;
-  gap: 4px;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: none;
-  padding: 6px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.chip:hover {
-  background: var(--panel-raised);
-  color: var(--chalk);
-}
-
-.picker {
-  flex: none;
+  pointer-events: auto;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
 .page {
@@ -373,7 +291,6 @@ watch(
   flex-direction: column;
   gap: 14px;
   padding-top: 40px;
-  scroll-margin-top: calc(var(--topbar) + 8px);
 }
 
 .section-title {
@@ -564,20 +481,7 @@ watch(
 
 @media (max-width: 720px) {
   .bar {
-    flex-wrap: wrap;
     padding: 8px 16px;
-  }
-
-  .jump {
-    order: 1;
-    flex-basis: 100%;
-    justify-content: flex-start;
-    margin: 0 -16px;
-    padding: 0 12px;
-  }
-
-  .picker {
-    margin-left: auto;
   }
 
   .page {
@@ -586,10 +490,6 @@ watch(
 
   .masthead {
     padding-top: 28px;
-  }
-
-  .section {
-    scroll-margin-top: 112px;
   }
 
   .entry {

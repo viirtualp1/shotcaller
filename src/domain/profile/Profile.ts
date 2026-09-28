@@ -286,8 +286,18 @@ const resultOf = (record: MatchRecord): MatchResult => ({
 /**
  * Adds one match to the profile. It only needs the record, so matches played on another device
  * can be replayed on top of a newer profile; the rating fields are recomputed from the profile's rating.
+ * A record already in the history is left out, so a duel settled on two devices counts once.
  */
 export function applyRecord(profile: Profile, played: MatchRecord) {
+  const known = profile.recent.find((r) => r.id === played.id)
+  if (known) {
+    return {
+      record: known,
+      profile,
+      duplicate: true,
+    }
+  }
+
   const { verdict } = played
   const won = verdict === 'win'
   /* The computer only gives XP; the rating is for beating people. */
@@ -358,6 +368,7 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
       synergies: synergyRecords,
       recent: [record, ...profile.recent].slice(0, PROFILE.recentMatches),
     } satisfies Profile,
+    duplicate: false,
   }
 }
 

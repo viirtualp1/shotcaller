@@ -1,4 +1,4 @@
-import { useIntervalFn, useLocalStorage, useNow } from '@vueuse/core'
+import { StorageSerializers, useIntervalFn, useLocalStorage, useNow } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { parseRemoteBoard } from '@/application/persistence/snapshot'
@@ -16,7 +16,7 @@ import type { ReactionId, ReactionLink } from '@/application/social/reactions'
 import { opponentOf, type TeamId } from '@/content/ids'
 import type { PlayerState } from '@/domain/player/Player'
 import { useCloudStore } from './cloud'
-import { useMatchStore, type DuelBinding } from './match'
+import { useMatchStore, type DuelBinding, type SettledDuel } from './match'
 import { useNotificationsStore } from './notifications'
 
 /** A reaction stays on screen this long. */
@@ -44,6 +44,8 @@ interface PendingBoard {
 
 const secondsSince = (iso: string | null, now: number) => (iso ? (now - Date.parse(iso)) / 1000 : 0)
 
+type PlayingDuel = Omit<SettledDuel, 'won'>
+
 /** Online duels with friends: invites, the running duel and how it ends. */
 export const useDuelStore = defineStore('duel', () => {
   const cloud = useCloudStore()
@@ -64,6 +66,10 @@ export const useDuelStore = defineStore('duel', () => {
   const reactionsMuted = useLocalStorage(STORAGE_KEYS.reactionsMuted, false)
   /** Off for a moment after each reaction, so they cannot be spammed. */
   const canReact = ref(true)
+
+  const playing = useLocalStorage<PlayingDuel | null>(STORAGE_KEYS.duelPlaying, null, {
+    serializer: StorageSerializers.object,
+  })
 
   let service: DuelService | null = null
   let userId: string | null = null
@@ -155,6 +161,56 @@ export const useDuelStore = defineStore('duel', () => {
     /* A duel running elsewhere (another tab or device) is offered, never ended on its own. */
     const running = entries.find((e) => e.duel.status === 'active') ?? null
     resumable.value = running && running.duel.id !== active.value?.duel.id ? running : null
+
+    await settleMissed(entries).catch(() => undefined)
+  }
+
+  function remember(entry: DuelEntry) {
+    playing.value = entry.duel.seed
+      ? {
+          id: entry.duel.id,
+          seed: entry.duel.seed,
+          opponentName: entry.opponent.name,
+        }
+      : null
+  }
+
+  function settle(entry: DuelEntry, won: boolean) {
+    if (entry.duel.seed) {
+      matchStore.settleDuel({
+        id: entry.duel.id,
+        seed: entry.duel.seed,
+        opponentName: entry.opponent.name,
+        won,
+      })
+    }
+
+    if (playing.value?.id === entry.duel.id) {
+      playing.value = null
+    }
+  }
+
+  /** A duel this device was playing that someone gave up or claimed while it was closed still counts. */
+  async function settleMissed(entries: readonly DuelEntry[]) {
+    const missed = playing.value
+    const me = userId
+    if (!missed || !service || !me || entries.some((e) => e.duel.id === missed.id)) {
+      return
+    }
+
+    const duel = await service.find(missed.id)
+    if (playing.value?.id !== missed.id || userId !== me || duel?.status === 'active') {
+      return
+    }
+
+    if (duel?.status === 'finished' && duel.endedBy !== 'result') {
+      matchStore.settleDuel({
+        ...missed,
+        won: duel.winner === me,
+      })
+    }
+
+    playing.value = null
   }
 
   function rejectPending(reason: string) {
@@ -355,6 +411,7 @@ export const useDuelStore = defineStore('duel', () => {
     incoming.value = null
     resumable.value = null
     active.value = entry
+    remember(entry)
     watchBoards(entry)
     listenForReactions(entry)
 
@@ -374,6 +431,7 @@ export const useDuelStore = defineStore('duel', () => {
 
     resumable.value = null
     active.value = entry
+    remember(entry)
     watchBoards(entry)
     listenForReactions(entry)
     matchStore.resumeDuel(binding(entry), state)
@@ -384,9 +442,10 @@ export const useDuelStore = defineStore('duel', () => {
     }
   }
 
+  /** A result both devices reported was recorded when the last battle ended; a forfeit or timeout is counted here. */
   function end(duel: Duel) {
     const won = duel.winner === userId
-    const inMatch = matchStore.isDuel && matchStore.phase !== 'finished'
+    const entry = active.value
 
     if (duel.status === 'disputed') {
       notifications.push({
@@ -404,8 +463,10 @@ export const useDuelStore = defineStore('duel', () => {
 
     stopDuel()
 
-    if (inMatch && duel.endedBy !== 'result') {
-      matchStore.leaveToMenu()
+    if (entry && duel.status === 'finished' && duel.endedBy !== 'result') {
+      settle(entry, won)
+    } else if (playing.value?.id === duel.id) {
+      playing.value = null
     }
   }
 
@@ -505,15 +566,20 @@ export const useDuelStore = defineStore('duel', () => {
     }
   }
 
+  /** Giving up counts as a loss right away; a duel on screen ends on its report. */
   async function forfeit() {
     const entry = active.value ?? resumable.value
     stopDuel()
     resumable.value = null
-    matchStore.leaveToMenu()
 
-    if (entry) {
-      await service?.forfeit(entry.duel.id).catch(fail)
+    if (!entry) {
+      matchStore.leaveToMenu()
+
+      return
     }
+
+    settle(entry, false)
+    await service?.forfeit(entry.duel.id).catch(fail)
   }
 
   async function claim() {

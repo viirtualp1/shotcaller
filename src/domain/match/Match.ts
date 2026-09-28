@@ -1,5 +1,5 @@
 import { err, ok, type Result } from 'neverthrow'
-import { TEAM_IDS, type LaneId, type StructureSlot, type TeamId } from '@/content/ids'
+import { opponentOf, TEAM_IDS, type LaneId, type StructureSlot, type TeamId } from '@/content/ids'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng, RngState } from '@/core/random/rng'
 import type {
@@ -222,6 +222,25 @@ export class Match {
     this.currentPhase = this.matchResult ? 'finished' : 'summary'
 
     return ok(this.summary)
+  }
+
+  /** Ends the match for a side that gave up or went silent; a battle under way does not count. */
+  forfeit(loser: TeamId): Result<MatchResult, DomainError> {
+    if (this.currentPhase === 'finished') {
+      return err({ code: 'wrongPhase' })
+    }
+
+    this.battle = null
+    this.opponentReady = false
+
+    this.matchResult = {
+      winner: opponentOf(loser),
+      reason: 'forfeit',
+    }
+
+    this.currentPhase = 'finished'
+
+    return ok(this.matchResult)
   }
 
   nextRound(): Result<void, DomainError> {

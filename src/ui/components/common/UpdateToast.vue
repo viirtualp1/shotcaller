@@ -4,17 +4,28 @@ import { useRegisterSW } from 'virtual:pwa-register/vue'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 
-/** The game stays open for hours, so it asks the server for a new version now and then. */
-const UPDATE_CHECK_MS = 60 * 60 * 1000
+/** The game stays open for hours, so it asks the server for a new version often; the request is tiny. */
+const UPDATE_CHECK_MS = 60 * 1000
 
 const match = useMatchStore()
 const { t } = useGameText()
 
 const { needRefresh, updateServiceWorker } = useRegisterSW({
   onRegisteredSW(_url, registration) {
-    if (registration) {
-      setInterval(() => void registration.update(), UPDATE_CHECK_MS)
+    if (!registration) {
+      return
     }
+
+    /* A hidden tab waits: coming back checks at once, so nothing is missed. */
+    const check = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine && !registration.installing) {
+        void registration.update().catch(() => undefined)
+      }
+    }
+
+    setInterval(check, UPDATE_CHECK_MS)
+    document.addEventListener('visibilitychange', check)
+    window.addEventListener('online', check)
   },
 })
 </script>

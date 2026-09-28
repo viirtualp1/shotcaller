@@ -115,6 +115,17 @@ export class SupabaseDuels implements DuelService {
     })
   }
 
+  async find(duelId: string) {
+    const { data, error } = await this.client.from('duels').select('*').eq('id', duelId).maybeSingle()
+    if (error) {
+      throw failure(error)
+    }
+
+    const row = duelRow.safeParse(data)
+
+    return row.success ? toDuel(row.data) : null
+  }
+
   async submitBoard(duelId: string, round: number, board: unknown) {
     const { data, error } = await this.client.rpc('submit_board', {
       duel: duelId,

@@ -41,19 +41,27 @@ export const useProfileStore = defineStore('profile', () => {
     repository.save(next)
   }
 
-  /** Returns the new history entry, so the cloud sync can queue it. */
-  function record(match: Match, duel: DuelInfo | null = null) {
-    const finished = finishedMatch(match, settings.difficulty, duel)
+  /**
+   * Returns the new history entry, so the cloud sync can queue it. A duel is recorded under its own id,
+   * so settling it again, here or on another device, changes nothing.
+   */
+  function record(match: Match, duel: (DuelInfo & { readonly id: string }) | null = null) {
+    const finished = finishedMatch(match, settings.difficulty, duel && { opponentName: duel.opponentName })
     if (!finished) {
       return null
     }
 
     const result = recordMatch(profile.value, finished, {
-      id: randomIds(),
+      id: duel?.id ?? randomIds(),
       playedAt: new Date().toISOString(),
     })
 
     lastRecord.value = result.record
+
+    if (result.duplicate) {
+      return null
+    }
+
     update(result.profile)
 
     return result.record

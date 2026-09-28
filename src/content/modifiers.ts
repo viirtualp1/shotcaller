@@ -3,7 +3,10 @@ export interface StatModifiers {
   maxHp: number
   damage: number
   attackSpeed: number
+  /** Ability damage, shields and summons; healing has its own multiplier. */
   spellPower: number
+  /** Healing from abilities and the support aura. */
+  healPower: number
   manaGain: number
   speed: number
   structureDamage: number
@@ -15,6 +18,7 @@ export const NEUTRAL_MODIFIERS: Readonly<StatModifiers> = Object.freeze({
   damage: 1,
   attackSpeed: 1,
   spellPower: 1,
+  healPower: 1,
   manaGain: 1,
   speed: 1,
   structureDamage: 1,

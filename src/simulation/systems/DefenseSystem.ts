@@ -63,6 +63,7 @@ export class DefenseSystem implements System {
   private recall(hero: Unit, throne: Unit, invaders: readonly Unit[]) {
     if (hero.roamer) {
       hero.roamer.quarry = null
+      hero.roamer.farm = null
     }
 
     let nearest: Unit | null = null

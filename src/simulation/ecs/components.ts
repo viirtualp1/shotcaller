@@ -28,6 +28,7 @@ export interface Targeting {
   target: Unit | null
   chasing: boolean
   prefersStructures: boolean
+  ignoresStructures?: boolean
 }
 
 export interface LaneFollower {
@@ -52,6 +53,7 @@ export interface Mana {
 export interface Caster {
   ability: AbilityId
   power: number
+  healPower: number
 }
 
 export interface HeroData {
@@ -74,6 +76,8 @@ export interface HeroData {
 export interface Roamer {
   thinkTimer: number
   quarry: Unit | null
+  /** An enemy creep to walk to when there is nothing to fight nearby. */
+  farm: Unit | null
 }
 
 /** Set while the hero's throne is under attack: it leaves its lane to guard this point. */

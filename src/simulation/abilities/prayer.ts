@@ -15,7 +15,7 @@ export const prayer: Ability = {
       return false
     }
 
-    ctx.combat.heal(target, P.heal * caster.caster.power, caster)
+    ctx.combat.heal(target, P.heal * caster.caster.healPower, caster)
 
     return true
   },

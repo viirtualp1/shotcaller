@@ -74,6 +74,7 @@ export const ITEM_IDS = [
   'vitality',
   'boots',
   'staff',
+  'chalice',
   'manaStone',
   'vampireFang',
   'thornMail',

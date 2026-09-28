@@ -55,6 +55,7 @@ export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
   vitality: item('vitality', 'Vitality Orb', 3, { maxHp: 1.25 }),
   boots: item('boots', 'Boots of Speed', 2, { speed: 1.25 }),
   staff: item('staff', 'Mage Staff', 4, { spellPower: 1.2 }),
+  chalice: item('chalice', 'Sacred Chalice', 3, { healPower: 1.3 }),
   manaStone: item('manaStone', 'Mana Stone', 3, { manaGain: 1.35 }),
   vampireFang: item(
     'vampireFang',

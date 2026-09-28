@@ -54,7 +54,7 @@
     },
     "ganker": {
       "name": "Ganker",
-      "passive": "Roams the whole map and hunts wounded heroes on any lane. {speed}% faster and evades {evasion}% of attacks."
+      "passive": "Roams the whole map and hunts wounded heroes on any lane. Never attacks towers or the throne: with nobody to fight, goes after enemy creeps, on another lane if needed. {speed}% faster and evades {evasion}% of attacks."
     }
   },
   "innate": {
@@ -130,7 +130,8 @@
     "chainmail": "{damageTaken}% less damage taken",
     "vitality": "+{maxHp}% health",
     "boots": "+{speed}% movement speed",
-    "staff": "+{spellPower}% ability power",
+    "staff": "+{spellPower}% ability power (not healing)",
+    "chalice": "+{healPower}% healing from abilities and the aura",
     "manaStone": "Mana builds {manaGain}% faster",
     "vampireFang": "Heals for {lifesteal}% of attack damage and {spellLifesteal}% of ability damage",
     "thornMail": "Returns {thorns}% of attack damage to the attacker",
@@ -459,15 +460,6 @@
     "latest": "Latest update",
     "new": "New",
     "read": "Read the patch notes",
-    "jump": "Sections",
-    "nav": {
-      "general": "General",
-      "items": "Items",
-      "roles": "Roles",
-      "heroes": "Heroes",
-      "interface": "Interface",
-      "fixes": "Fixes"
-    },
     "sections": {
       "general": "General updates",
       "items": "Item updates",
@@ -756,7 +748,7 @@
   "coach": {
     "loading": "Loading the profile…",
     "unavailable": "The profile is not available",
-    "rating": "{n} rating",
+    "rating": "{n} MMR",
     "matches": "Matches",
     "winRate": "Win rate",
     "bestStreak": "Best streak",
@@ -815,7 +807,9 @@
     "reasons": {
       "throneWin": "The enemy throne fell",
       "throneLoss": "Our throne fell",
-      "roundLimit": "The match went to the round limit"
+      "roundLimit": "The match went to the round limit",
+      "forfeitWin": "The opponent gave up or went silent",
+      "forfeitLoss": "You gave up or went silent"
     },
     "structureDamage": "Damage to buildings",
     "emptyLane": "Nobody",

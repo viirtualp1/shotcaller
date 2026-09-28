@@ -3,6 +3,7 @@ import { distance } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import { creditedHero } from '../services/CombatService'
 import { withinLaneBand } from '../services/laneBand'
+import { isThroneNearlyDown } from '../services/TowerSafety'
 import type { SimulationContext, System } from '../SimulationContext'
 
 const PRIORITY = {
@@ -13,6 +14,7 @@ const PRIORITY = {
   heroPrefersHeroes: -50,
   heroStructurePenalty: 80,
   roamerQuarry: -300,
+  finishThrone: -400,
 } as const
 
 /** A hero already trading blows with another hero keeps its target if it is this close to reach. */
@@ -34,9 +36,12 @@ export class TargetingSystem implements System {
       }
 
       const targeting = unit.targeting
-      const attacker = this.answerable(unit)
+      const throne = this.throneToFinish(unit)
+      const attacker = throne ? null : this.answerable(unit)
 
-      if (attacker && this.shouldAnswer(unit, attacker)) {
+      if (throne) {
+        targeting.target = throne
+      } else if (attacker && this.shouldAnswer(unit, attacker)) {
         targeting.target = attacker
       } else if (!this.isValid(unit, targeting.target)) {
         targeting.target = this.find(unit)
@@ -130,10 +135,41 @@ export class TargetingSystem implements System {
     }
 
     if (target.kind === 'structure') {
-      return !this.woundedUnderTower(unit) && this.ctx.safety.canHitStructure(unit, target)
+      return this.mayHitStructure(unit, target)
     }
 
     return !this.exposed(unit) && !this.ctx.safety.isProtected(target, unit.team)
+  }
+
+  private throneToFinish(unit: Unit) {
+    if (unit.kind !== 'hero' || unit.targeting?.ignoresStructures) {
+      return null
+    }
+
+    const aggro = unit.targeting?.aggroRange ?? 0
+    for (const structure of this.ctx.queries.structures) {
+      if (
+        structure.team !== unit.team &&
+        isThroneNearlyDown(structure) &&
+        distance(unit.position, structure.position) - structure.radius <= aggro
+      ) {
+        return structure
+      }
+    }
+
+    return null
+  }
+
+  private mayHitStructure(hero: Unit, structure: Unit) {
+    if (hero.targeting?.ignoresStructures) {
+      return false
+    }
+
+    if (isThroneNearlyDown(structure)) {
+      return true
+    }
+
+    return !this.woundedUnderTower(hero) && this.ctx.safety.canHitStructure(hero, structure)
   }
 
   /** A hero standing in range of an untanked enemy tower backs off instead of picking fights. */
@@ -218,9 +254,11 @@ export class TargetingSystem implements System {
     }
 
     if (candidate.kind === 'structure') {
-      return !this.woundedUnderTower(hero) && this.ctx.safety.canHitStructure(hero, candidate)
-        ? gap + PRIORITY.heroStructurePenalty
-        : Infinity
+      if (!this.mayHitStructure(hero, candidate)) {
+        return Infinity
+      }
+
+      return gap + (isThroneNearlyDown(candidate) ? PRIORITY.finishThrone : PRIORITY.heroStructurePenalty)
     }
 
     const { safety } = this.ctx

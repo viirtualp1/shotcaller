@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
   systemNotifications: `${PREFIX}/system-notifications`,
   systemNotificationsPrompt: `${PREFIX}/system-notifications-prompt`,
   duelClock: `${PREFIX}/duel-clock`,
+  /** The duel this device is playing, so one that ends while it is away still counts. */
+  duelPlaying: `${PREFIX}/duel-playing`,
   speed: `${PREFIX}/speed`,
   locale: `${PREFIX}/locale`,
   difficulty: `${PREFIX}/difficulty`,

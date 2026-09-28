@@ -11,6 +11,7 @@ const MODIFIER_WEIGHTS: Readonly<Record<keyof StatModifiers, number>> = {
   damage: 1,
   attackSpeed: 1,
   spellPower: 0.9,
+  healPower: 0.3,
   manaGain: 0.3,
   speed: 0.2,
   structureDamage: 0.1,

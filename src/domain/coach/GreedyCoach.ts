@@ -9,7 +9,7 @@ import { heroPower, LaneOptimizer } from './LaneOptimizer'
 
 const ITEM_WISHLIST: Readonly<Record<RoleId, readonly ItemId[]>> = {
   carry: ['broadsword', 'gloves', 'vampireFang'],
-  support: ['vitality', 'manaStone', 'chainmail'],
+  support: ['chalice', 'vitality', 'manaStone'],
   mage: ['staff', 'manaStone', 'vitality'],
   initiator: ['chainmail', 'vitality', 'thornMail'],
   pusher: ['gloves', 'broadsword', 'boots'],

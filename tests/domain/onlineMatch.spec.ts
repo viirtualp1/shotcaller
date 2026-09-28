@@ -85,4 +85,21 @@ describe('online match', () => {
     expect(restored.awaitingOpponent).toBe(false)
     expect(restored.opponent.snapshot()).toEqual(host.match.human.snapshot())
   })
+
+  it('ends for the side that gave up, even mid-battle, and only once', () => {
+    const { match } = device('forfeit', 1)
+    match.receiveOpponent(device('forfeit', 0).match.human.snapshot())._unsafeUnwrap()
+    match.startBattle({ allowEmptyBoard: true })._unsafeUnwrap()
+
+    expect(match.forfeit(0)._unsafeUnwrap()).toEqual({
+      winner: 1,
+      reason: 'forfeit',
+    })
+
+    expect(match.phase).toBe('finished')
+    expect(match.pendingBattle).toBeNull()
+    expect(match.forfeit(1).isErr()).toBe(true)
+
+    expect(restoreMatch(parseSnapshot(serializeSnapshot(match.snapshot()))!).result).toEqual(match.result)
+  })
 })

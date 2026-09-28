@@ -63,6 +63,16 @@ watch(
   },
 )
 
+/* A profile takes the stage; its "message" button brings the chat back. */
+watch(
+  () => friends.viewedId,
+  (id) => {
+    if (id) {
+      close()
+    }
+  },
+)
+
 function back() {
   chat.close()
   friends.open = true

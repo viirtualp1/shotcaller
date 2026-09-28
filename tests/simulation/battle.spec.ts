@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { HERO_IDS, type HeroId, type LaneId } from '@/content/ids'
+import { HERO_IDS, type HeroId, type ItemId, type LaneId } from '@/content/ids'
+import { ITEMS } from '@/content/items'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { freshStructures } from '@/domain/match/structures'
 import type { Lineup } from '@/domain/roster/Roster'
@@ -160,6 +161,37 @@ describe('BattleSimulation', () => {
     expect([...shares.magical]).toEqual([10])
   })
 
+  it('boosts healing with the chalice and not with the staff', () => {
+    const acolyte = (items: ItemId[]) => {
+      const base = lineup('a', { mid: ['acolyte'] })
+
+      const ours: Lineup = {
+        ...base,
+        mid: base.mid.map((h) => ({
+          ...h,
+          items,
+        })),
+      }
+
+      const sim = new BattleSimulation(setup('heal', ours, lineup('b', { mid: ['archer'] })))
+
+      return sim.world.entities.find((e) => e.hero?.heroId === 'acolyte')!
+    }
+
+    const plain = acolyte([])
+    const staff = acolyte(['staff'])
+    const chalice = acolyte(['chalice'])
+
+    expect(staff.caster!.power).toBeCloseTo(plain.caster!.power * ITEMS.staff.modifiers.spellPower!)
+    expect(staff.caster!.healPower).toBe(plain.caster!.healPower)
+    expect(staff.healAura).toEqual(plain.healAura)
+
+    const boost = ITEMS.chalice.modifiers.healPower!
+    expect(chalice.caster!.power).toBe(plain.caster!.power)
+    expect(chalice.caster!.healPower).toBeCloseTo(plain.caster!.healPower * boost)
+    expect(chalice.healAura!.hpPercentPerSecond).toBeCloseTo(plain.healAura!.hpPercentPerSecond * boost)
+  })
+
   it('rolls crits, bashes and evasion only where they belong', () => {
     const base = lineup('a', {
       mid: ['giant'],
@@ -283,5 +315,75 @@ describe('BattleSimulation', () => {
 
     expect(crits.units).toBeGreaterThan(0)
     expect(crits.buildings).toBe(0)
+  })
+
+  it('keeps gankers off buildings while they still farm creeps', () => {
+    const outcome = new BattleSimulation(
+      setup('gankers', lineup('a', { top: ['rogue', 'shade', 'butcher'] }), lineup('b', {})),
+    ).runToEnd()
+
+    const gankers = outcome.heroes.filter((h) => h.uid.startsWith('a-'))
+    expect(gankers.every((h) => h.structureDamage === 0)).toBe(true)
+    expect(gankers.reduce((sum, h) => sum + h.lastHits, 0)).toBeGreaterThan(0)
+  })
+
+  it('sends an idle ganker to enemy creeps on another lane', () => {
+    const sim = new BattleSimulation(setup('farm', lineup('a', { top: ['rogue'] }), lineup('b', {})))
+    const enemyCreeps = () => sim.queries.units.entities.filter((u) => u.kind === 'creep' && u.team === 1)
+    while (!enemyCreeps().length) {
+      sim.step()
+    }
+
+    const [creep, ...rest] = enemyCreeps()
+    rest.forEach((c) => sim.world.remove(c))
+    const bot = sim.map.path(1, 'bot')
+    creep!.position = sim.map.pointAt(bot, bot.length / 2)
+    creep!.speed = 0
+
+    const ganker = sim.queries.heroes.entities.find((h) => h.team === 0)!
+    ganker.roamer!.thinkTimer = 0
+    ganker.targeting.target = null
+    sim.step()
+
+    expect(ganker.roamer?.farm).toBe(creep)
+
+    const before = Math.hypot(ganker.position.x - creep!.position.x, ganker.position.y - creep!.position.y)
+    for (let i = 0; i < 30; i++) {
+      sim.step()
+    }
+
+    const after = Math.hypot(ganker.position.x - creep!.position.x, ganker.position.y - creep!.position.y)
+    expect(after).toBeLessThan(before)
+  })
+
+  it('drops everything to finish a nearly dead throne, unless the hero is a ganker', () => {
+    const targetOf = (heroId: HeroId) => {
+      const sim = new BattleSimulation(
+        setup(`finish-${heroId}`, lineup('a', { mid: [heroId] }), lineup('b', {})),
+      )
+
+      const hero = sim.queries.heroes.entities.find((h) => h.team === 0)!
+
+      const throne = sim.queries.structures.entities.find(
+        (s) => s.team === 1 && s.structure.type === 'throne',
+      )!
+
+      const creep = sim.queries.units.entities.find((u) => u.kind === 'creep' && u.team === 1)
+
+      throne.health.current = throne.health.max * 0.05
+
+      hero.position = {
+        x: throne.position.x,
+        y: throne.position.y + throne.radius + hero.targeting.aggroRange / 2,
+      }
+
+      hero.targeting.target = creep ?? null
+      sim.step()
+
+      return hero.targeting.target === throne
+    }
+
+    expect(targetOf('giant')).toBe(true)
+    expect(targetOf('rogue')).toBe(false)
   })
 })

@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { parseProfile, serializeProfile } from '@/application/persistence/profileSnapshot'
 import { PROFILE } from '@/content/profile'
-import { applyRecord, avatarOf, createProfile, hasDetails, isRated } from '@/domain/profile/Profile'
+import {
+  applyRecord,
+  avatarOf,
+  createProfile,
+  hasDetails,
+  isRated,
+  matchRecordOf,
+} from '@/domain/profile/Profile'
 import { levelFor, rankFor, rankStep, ratingChange } from '@/domain/profile/progression'
 import { DRAW, duelMatch as duel, finishedMatch as finished, LOSS, play, WIN } from '../helpers/profile'
 
@@ -192,7 +199,12 @@ describe('recordMatch', () => {
       rounds: 0,
     })
 
-    expect(applyRecord(parsed, legacy).profile.heroes.blademaster).toMatchObject({
+    const another = {
+      ...legacy,
+      id: 'legacy-2',
+    }
+
+    expect(applyRecord(parsed, another).profile.heroes.blademaster).toMatchObject({
       matches: 2,
       detailed: 1,
     })
@@ -215,6 +227,36 @@ describe('recordMatch', () => {
     expect(profile.totals).toEqual(solo.totals)
     expect(profile.heroes).toEqual(solo.heroes)
     expect(parseProfile(serializeProfile(profile))).toEqual(profile)
+  })
+
+  it('takes rating from a coach who gives up a duel and counts a settled duel once', () => {
+    const start = {
+      ...createProfile('2026-09-27T10:00:00.000Z'),
+      rating: 100,
+    }
+
+    const forfeit = (winner: 0 | 1) =>
+      matchRecordOf(
+        duel({
+          winner,
+          reason: 'forfeit',
+        }),
+        {
+          id: 'duel-1',
+          playedAt: '2026-09-27T12:00:00.000Z',
+        },
+      )
+
+    const lost = applyRecord(start, forfeit(1))
+    expect(lost.profile.rating).toBe(80)
+    expect(lost.profile.totals.losses).toBe(1)
+    expect(parseProfile(serializeProfile(lost.profile))).toEqual(lost.profile)
+
+    const again = applyRecord(lost.profile, forfeit(1))
+    expect(again.duplicate).toBe(true)
+    expect(again.profile).toBe(lost.profile)
+
+    expect(applyRecord(start, forfeit(0)).profile.rating).toBe(125)
   })
 
   it('survives a save and rejects anything else', () => {

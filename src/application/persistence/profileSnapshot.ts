@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { HERO_IDS, ITEM_IDS, LANE_IDS, SYNERGY_IDS } from '@/content/ids'
 import { PROFILE } from '@/content/profile'
+import { MATCH_END_REASONS } from '@/domain/match/judge'
 import type { Profile } from '@/domain/profile/Profile'
 
 const PROFILE_VERSION = 1
@@ -56,7 +57,7 @@ const matchRecord = z.object({
   playedAt: z.iso.datetime(),
   difficulty: z.enum(['relaxed', 'standard']),
   verdict,
-  reason: z.enum(['throne', 'roundLimit']),
+  reason: z.enum(MATCH_END_REASONS),
   rounds: count,
   roundsWon: count,
   roundsLost: count,

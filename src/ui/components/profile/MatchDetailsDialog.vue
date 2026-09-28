@@ -74,6 +74,10 @@ const columns = computed(() => (detailed.value ? HERO_COLUMNS : BASIC_COLUMNS))
 
 const reason = computed(() => {
   const record = match.value
+  if (record?.reason === 'forfeit') {
+    return t(`matchDetails.reasons.${record.verdict === 'win' ? 'forfeitWin' : 'forfeitLoss'}`)
+  }
+
   if (record?.reason === 'throne' && record.verdict !== 'draw') {
     return t(`matchDetails.reasons.${record.verdict === 'win' ? 'throneWin' : 'throneLoss'}`)
   }

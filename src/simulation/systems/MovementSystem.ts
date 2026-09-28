@@ -2,6 +2,7 @@ import { BATTLE } from '@/content/rules'
 import { direction, distance, offset, stepTowards, type Vec2 } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
+import { isThroneNearlyDown } from '../services/TowerSafety'
 import { inReach } from './AttackSystem'
 
 const WAYPOINT_REACHED = 8
@@ -26,7 +27,7 @@ export class MovementSystem implements System {
           continue
         }
 
-        if (this.leadsUnderTower(unit, target.position, step)) {
+        if (!isThroneNearlyDown(target) && this.leadsUnderTower(unit, target.position, step)) {
           unit.targeting.target = null
         } else {
           stepTowards(unit.position, target.position, step)
@@ -51,10 +52,28 @@ export class MovementSystem implements System {
       const quarry = unit.roamer?.quarry
       if (quarry && isAlive(quarry)) {
         stepTowards(unit.position, quarry.position, step)
-      } else {
+      } else if (!this.walkToFarm(unit, step)) {
         this.followLane(unit, step)
       }
     }
+  }
+
+  private walkToFarm(unit: Unit, step: number) {
+    const roamer = unit.roamer
+    const farm = roamer?.farm
+    if (!roamer || !farm) {
+      return false
+    }
+
+    if (!isAlive(farm) || this.leadsUnderTower(unit, farm.position, step)) {
+      roamer.farm = null
+
+      return false
+    }
+
+    stepTowards(unit.position, farm.position, step)
+
+    return true
   }
 
   /** Heroes never chase a target through the range of an untanked enemy tower. */

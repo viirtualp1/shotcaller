@@ -51,6 +51,14 @@ export interface DuelBinding {
   finish(winner: TeamId | null): void
 }
 
+/** A duel the server ended early, as `settleDuel` needs it. */
+export interface SettledDuel {
+  readonly id: string
+  readonly seed: string
+  readonly opponentName: string
+  readonly won: boolean
+}
+
 /**
  * Wall-clock times of a duel round. Both devices follow them rather than their own frames, so one that lagged,
  * slept in a background tab or sat in the menu catches up instead of falling behind the other.
@@ -636,7 +644,53 @@ export const useMatchStore = defineStore('match', () => {
 
     const binding = duel.value
     binding?.finish(match.result?.winner ?? null)
-    profile.record(match, binding ? { opponentName: binding.opponentName } : null)
+    profile.record(match, binding)
+  }
+
+  /**
+   * Counts a duel that ended before its last battle: given up, or claimed after a coach went silent.
+   * The one on screen is finished in place and shows its report; one saved here is finished from the save,
+   * and one played elsewhere is still recorded, only without stats.
+   */
+  function settleDuel(ended: SettledDuel) {
+    const loser: TeamId = ended.won ? 1 : 0
+
+    const info = {
+      id: ended.id,
+      opponentName: ended.opponentName,
+    }
+
+    if (match && duel.value?.id === ended.id) {
+      if (match.phase === 'finished') {
+        return
+      }
+
+      disposeBattle()
+      awaiting.value = false
+      apply(match.forfeit(loser))
+      profile.record(match, info)
+
+      return
+    }
+
+    const saved = savedDuel(ended.seed)
+
+    const settled = saved
+      ? restoreMatch(saved)
+      : createMatch({
+          link: {
+            seed: ended.seed,
+            side: 0,
+          },
+        })
+
+    if (saved) {
+      duelRepository.clear()
+    }
+
+    if (settled.forfeit(loser).isOk()) {
+      profile.record(settled, info)
+    }
   }
 
   function nextRound() {
@@ -705,6 +759,7 @@ export const useMatchStore = defineStore('match', () => {
     startDuel,
     savedDuel,
     resumeDuel,
+    settleDuel,
     leaveToMenu,
     buy,
     buyItem,

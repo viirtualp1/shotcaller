@@ -2,7 +2,7 @@
 import { useTimeoutFn } from '@vueuse/core'
 import { Ban, Crown, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useFriendStatus } from '../../composables/useFriendStatus'
@@ -54,16 +54,6 @@ const hero = computed(
 
 const level = computed(() => (profile.value ? levelFor(profile.value.xp).level : null))
 const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
-
-/* The profile takes the stage: an open chat steps aside. */
-watch(
-  () => friends.viewedId,
-  (id) => {
-    if (id) {
-      chat.close()
-    }
-  },
-)
 
 const tiles = computed(() => {
   const totals = profile.value?.totals
@@ -160,7 +150,14 @@ function ask(action: 'remove' | 'block') {
             </span>
           </div>
 
-          <DialogClose class="icon-btn" :aria-label="t('coach.close')">
+          <dl v-if="tiles.length" class="stats">
+            <div v-for="tile in tiles" :key="tile.key" class="stat" :title="tile.note || undefined">
+              <dt class="stat-label">{{ tile.label }}</dt>
+              <dd class="stat-value">{{ tile.value }}</dd>
+            </div>
+          </dl>
+
+          <DialogClose class="icon-btn close" :aria-label="t('coach.close')">
             <X :size="16" />
           </DialogClose>
         </header>
@@ -169,14 +166,6 @@ function ask(action: 'remove' | 'block') {
         <p v-else-if="!profile" class="muted">{{ t('coach.unavailable') }}</p>
 
         <template v-else>
-          <section v-if="tiles.length" class="tiles">
-            <article v-for="tile in tiles" :key="tile.key" class="tile">
-              <span class="tile-label">{{ tile.label }}</span>
-              <strong class="tile-value">{{ tile.value }}</strong>
-              <span v-if="tile.note" class="tile-note">{{ tile.note }}</span>
-            </article>
-          </section>
-
           <section class="history">
             <h3 class="section-title">{{ t('coach.history') }}</h3>
 
@@ -330,12 +319,6 @@ function ask(action: 'remove' | 'block') {
   color: var(--chalk-faint);
 }
 
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px;
-}
-
 .history {
   display: flex;
   flex-direction: column;
@@ -443,33 +426,58 @@ function ask(action: 'remove' | 'block') {
   }
 }
 
-.tile {
+.stats {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--edge);
+  flex: none;
+  gap: 18px;
+  margin: 0;
+  padding-right: 6px;
 }
 
-.tile-label {
-  font-size: 11px;
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+}
+
+.stat-label {
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--chalk-dim);
+  color: var(--chalk-faint);
+  white-space: nowrap;
 }
 
-.tile-value {
-  font-size: 22px;
+.stat-value {
+  margin: 0;
+  font-size: 17px;
   font-weight: 800;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
-.tile-note {
-  font-size: 11.5px;
-  color: var(--chalk-faint);
+/* On a narrow screen the numbers take their own row under the name. */
+@media (max-width: 600px) {
+  .head {
+    flex-wrap: wrap;
+  }
+
+  .close {
+    order: 1;
+  }
+
+  .stats {
+    order: 2;
+    width: 100%;
+    justify-content: space-around;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--edge);
+  }
+
+  .stat {
+    align-items: center;
+  }
 }
 
 .actions {

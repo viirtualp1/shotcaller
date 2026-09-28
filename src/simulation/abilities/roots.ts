@@ -26,7 +26,7 @@ export const roots: Ability = {
     }
 
     for (const ally of alliedHeroesAround(ctx, caster, P.healRadius)) {
-      ctx.combat.heal(ally, P.heal * power, caster)
+      ctx.combat.heal(ally, P.heal * caster.caster.healPower, caster)
     }
 
     ctx.events.emit('burst', {

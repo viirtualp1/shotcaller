@@ -51,6 +51,8 @@ export interface DuelService {
   cancel(duelId: string): Promise<void>
   /** Open invites and active duels. */
   mine(): Promise<DuelEntry[]>
+  /** Any duel of this coach, however it ended; null if there is none with this id. */
+  find(duelId: string): Promise<Duel | null>
   /** Sends this side's board; resolves with the other side's once it is in, or null until then. */
   submitBoard(duelId: string, round: number, board: unknown): Promise<unknown>
   /** The other side's board for a round, once this side has sent its own. */

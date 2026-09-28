@@ -38,6 +38,7 @@ export class RespawnSystem implements System {
 
     if (hero.roamer) {
       hero.roamer.quarry = null
+      hero.roamer.farm = null
     }
 
     if (hero.spin) {
