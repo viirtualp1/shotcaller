@@ -1,4 +1,4 @@
-import type { AbilityId, HeroId, ItemId, RoleId } from '@/content/ids'
+import type { AbilityId, HeroId, ItemId, ModeId, RoleId } from '@/content/ids'
 import type { Locale } from '../i18n'
 
 /**
@@ -35,12 +35,28 @@ export interface HeroNote extends Changes {
   readonly abilities?: readonly AbilityNote[]
 }
 
+/** The picture of a highlight card, drawn by the game itself rather than shipped as an image. */
+export type FeatureArt =
+  | { readonly kind: 'map'; readonly mode: ModeId }
+  | { readonly kind: 'modes' }
+  | { readonly kind: 'ratings' }
+  | { readonly kind: 'rounds' }
+
+/** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
+export interface FeatureNote {
+  readonly art: FeatureArt
+  readonly title: NoteText
+  readonly text: NoteText
+}
+
 export interface PatchNote {
   /** `major.minor` for a release, `major.minor.patch` for a fix on top of one. */
   readonly version: string
   /** ISO date, `YYYY-MM-DD`. */
   readonly date: string
   readonly title: NoteText
+  /** Major updates open with these; the first one is shown large. */
+  readonly features?: readonly FeatureNote[]
   readonly general?: readonly NoteText[]
   readonly items?: readonly ItemNote[]
   readonly roles?: readonly RoleNote[]
@@ -57,6 +73,69 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Game modes',
       ru: 'Режимы игры',
     },
+    features: [
+      {
+        art: { kind: 'modes' },
+        title: {
+          en: 'Three ways to play',
+          ru: 'Три режима',
+        },
+        text: {
+          en: 'The classic on three lanes, two lanes to start with, and a quick fight on one. Pick the mode for a match or a duel.',
+          ru: 'Классика на трёх линиях, две линии для начала и быстрый бой на одной. Режим выбирается для матча и для дуэли.',
+        },
+      },
+      {
+        art: {
+          kind: 'map',
+          mode: 'twoLanes',
+        },
+        title: {
+          en: 'Two lanes',
+          ru: 'Две линии',
+        },
+        text: {
+          en: 'Bases face each other across the jungle, one lane over it and one under. The tutorial is played here.',
+          ru: 'Базы смотрят друг на друга через лес, одна линия идёт сверху, другая снизу. Здесь проходит обучение.',
+        },
+      },
+      {
+        art: {
+          kind: 'map',
+          mode: 'oneLane',
+        },
+        title: {
+          en: 'One lane',
+          ru: 'Одна линия',
+        },
+        text: {
+          en: 'A long bridge, **2** towers a side and heal relics in the middle. Rounds go to building damage and kills.',
+          ru: 'Длинный мост, по **2** вышки у каждой стороны и лечебные руны в середине. Раунд решают урон по строениям и убийства.',
+        },
+      },
+      {
+        art: { kind: 'ratings' },
+        title: {
+          en: 'A rank for every mode',
+          ru: 'Ранг в каждом режиме',
+        },
+        text: {
+          en: 'Each mode keeps its own duel rating. Friends see your best one, with its mode.',
+          ru: 'У каждого режима свой рейтинг дуэлей. Друзья видят лучший, вместе с режимом.',
+        },
+      },
+      {
+        art: { kind: 'rounds' },
+        title: {
+          en: 'Every round, looked back on',
+          ru: 'Любой раунд заново',
+        },
+        text: {
+          en: 'Open a match from your history and pick a round to see both lineups as they fought it.',
+          ru: 'Открой матч из истории и выбери раунд, чтобы увидеть составы обеих команд в нём.',
+        },
+      },
+    ],
     general: [
       {
         en: 'Three game modes: **Three lanes**, **Two lanes** and **One lane**. Pick one for a new match or a duel.',

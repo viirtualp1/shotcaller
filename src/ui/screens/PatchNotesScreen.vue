@@ -4,6 +4,7 @@ import {
   LayoutPanelTop,
   Package,
   ScrollText,
+  Sparkles,
   Swords,
   Users,
   WandSparkles,
@@ -19,6 +20,7 @@ import { ROLES } from '@/content/roles'
 import { cssColor } from '@/rendering/theme'
 import HeroAvatar from '../components/common/HeroAvatar.vue'
 import ItemIcon from '../components/common/ItemIcon.vue'
+import FeatureCard from '../components/patchNotes/FeatureCard.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPicker from '../components/patchNotes/PatchPicker.vue'
@@ -70,6 +72,20 @@ watch(
           <h1 v-optical-align class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
           <time :datetime="patch.date" class="date">{{ date }}</time>
+        </section>
+
+        <section v-if="patch.features?.length" id="patch-features" class="section">
+          <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>
+
+          <div class="features">
+            <FeatureCard
+              v-for="(feature, i) in patch.features"
+              :key="i"
+              :feature="feature"
+              :wide="i === 0"
+              :class="{ lead: i === 0 }"
+            />
+          </div>
         </section>
 
         <section v-if="patch.general?.length" id="patch-general" class="section">
@@ -260,7 +276,6 @@ watch(
   color: var(--gold);
 }
 
-/* Caveat digits carry a wide left bearing; pull them back so the ink lines up with the headline. */
 .version {
   margin: 4px 0 2px;
   font-size: clamp(96px, 18vw, 168px);
@@ -285,6 +300,22 @@ watch(
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--chalk-faint);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.features .lead {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .features {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .section {
