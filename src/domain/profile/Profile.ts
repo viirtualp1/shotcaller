@@ -119,10 +119,7 @@ export interface Profile {
   readonly recent: readonly MatchRecord[]
 }
 
-/**
- * A friendly match: it goes into the history but leaves the rating, XP and lifetime stats alone,
- * or two friends could trade wins.
- */
+/** A match against a friend rather than the computer; it counts like any other. */
 export interface DuelInfo {
   readonly opponentName: string
 }
@@ -249,7 +246,8 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
 
   return {
     ...meta,
-    difficulty: finished.difficulty,
+    /* Duels run on the planning timer, so they count as standard. */
+    difficulty: finished.duel ? 'standard' : finished.difficulty,
     verdict,
     reason: finished.result.reason,
     rounds: stats.rounds,
@@ -269,7 +267,7 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
     goldEarned: stats.teams[0].income.total,
     ratingBefore: 0,
     ratingAfter: 0,
-    xp: finished.duel ? 0 : matchXp(verdict, roundsWon),
+    xp: matchXp(verdict, roundsWon),
   }
 }
 
@@ -287,23 +285,6 @@ const resultOf = (record: MatchRecord): MatchResult => ({
  * can be replayed on top of a newer profile; the rating fields are recomputed from the profile's rating.
  */
 export function applyRecord(profile: Profile, played: MatchRecord) {
-  if (played.duel) {
-    const record: MatchRecord = {
-      ...played,
-      ratingBefore: profile.rating,
-      ratingAfter: profile.rating,
-      xp: 0,
-    }
-
-    return {
-      record,
-      profile: {
-        ...profile,
-        recent: [record, ...profile.recent].slice(0, PROFILE.recentMatches),
-      } satisfies Profile,
-    }
-  }
-
   const { verdict } = played
   const won = verdict === 'win'
   const rating = Math.max(0, profile.rating + ratingChange(resultOf(played), played.difficulty))

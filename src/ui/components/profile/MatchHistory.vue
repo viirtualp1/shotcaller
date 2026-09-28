@@ -38,12 +38,7 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
           </button>
         </div>
 
-        <div v-if="match.duel" class="delta">
-          <span class="rating duel"><Swords :size="14" /> {{ t('matchDetails.duel') }}</span>
-          <span class="muted">{{ t('matchDetails.unranked') }}</span>
-        </div>
-
-        <div v-else class="delta">
+        <div class="delta">
           <span
             class="rating"
             :class="{
@@ -82,11 +77,12 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
           </span>
 
           <span class="muted">
-            {{
-              match.duel
-                ? t('matchDetails.against', { name: match.duel.opponentName || t('profile.defaultName') })
-                : t(`settings.difficulties.${match.difficulty}`)
-            }}
+            <template v-if="match.duel">
+              <Swords :size="12" class="duel" aria-hidden="true" />
+              {{ t('matchDetails.against', { name: match.duel.opponentName || t('profile.defaultName') }) }}
+            </template>
+
+            <template v-else>{{ t(`settings.difficulties.${match.difficulty}`) }}</template>
             ·
             <time :datetime="match.playedAt">{{ relativeTime(match.playedAt, settings.locale) }}</time>
           </span>
@@ -209,12 +205,8 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
   color: var(--theirs);
 }
 
-.rating.duel {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: var(--chalk);
+.duel {
+  vertical-align: -1px;
 }
 
 .team {

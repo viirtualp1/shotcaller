@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Swords } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { levelFor, rankFor, rankStep } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
@@ -10,13 +9,10 @@ const profile = useProfileStore()
 const text = useGameText()
 const { t } = text
 
-/** A duel leaves the rank and level alone, and the strip says so instead. */
-const friendly = computed(() => Boolean(profile.lastRecord?.duel))
-
 /** What the match that just ended did to the coach's rank and level. */
 const progress = computed(() => {
   const record = profile.lastRecord
-  if (!record || record.duel) {
+  if (!record) {
     return null
   }
 
@@ -77,25 +73,9 @@ const signed = (value: number) =>
       <span v-else class="muted">{{ t('profile.level', { level: progress.level }) }}</span>
     </div>
   </section>
-
-  <p v-else-if="friendly" class="friendly"><Swords :size="16" /> {{ t('profile.progress.friendly') }}</p>
 </template>
 
 <style scoped>
-.friendly {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--edge);
-  font-size: 13px;
-  color: var(--chalk-dim);
-}
-
 .progress {
   display: flex;
   flex-wrap: wrap;

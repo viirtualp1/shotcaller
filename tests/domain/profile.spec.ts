@@ -198,28 +198,23 @@ describe('recordMatch', () => {
     })
   })
 
-  it('keeps a duel in the history without touching the rating, XP or lifetime stats', () => {
-    const before = play(createProfile('2026-09-27T10:00:00.000Z'), finished(WIN)).profile
+  it('counts a duel as a standard match and names the opponent', () => {
+    const solo = play(createProfile('2026-09-27T10:00:00.000Z'), finished(WIN)).profile
 
-    const { profile, record } = play(before, {
-      ...finished(WIN),
+    const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), {
+      ...finished(WIN, 'relaxed'),
       duel: { opponentName: 'Rival' },
     })
 
     expect(record).toMatchObject({
       duel: { opponentName: 'Rival' },
-      verdict: 'win',
-      ratingBefore: before.rating,
-      ratingAfter: before.rating,
-      xp: 0,
+      difficulty: 'standard',
     })
 
-    expect(profile.recent[0]).toBe(record)
-    expect(profile.recent).toHaveLength(2)
-    expect(profile.rating).toBe(before.rating)
-    expect(profile.xp).toBe(before.xp)
-    expect(profile.totals).toEqual(before.totals)
-    expect(profile.heroes).toEqual(before.heroes)
+    expect(profile.rating).toBe(solo.rating)
+    expect(profile.xp).toBe(solo.xp)
+    expect(profile.totals).toEqual(solo.totals)
+    expect(profile.heroes).toEqual(solo.heroes)
     expect(parseProfile(serializeProfile(profile))).toEqual(profile)
   })
 

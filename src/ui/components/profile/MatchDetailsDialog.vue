@@ -100,7 +100,7 @@ const tiles = computed((): Tile[] => {
     return []
   }
 
-  const progress: Tile[] = [
+  return [
     {
       key: 'rating',
       label: t('matchDetails.rating'),
@@ -113,10 +113,6 @@ const tiles = computed((): Tile[] => {
       label: t('profile.progress.xp'),
       value: `+${text.number(record.xp)}`,
     },
-  ]
-
-  return [
-    ...(record.duel ? [] : progress),
     {
       key: 'rounds',
       label: t('matchDetails.rounds'),
@@ -286,7 +282,6 @@ const combat = computed<ComparisonRow[]>(() => {
           </ol>
         </section>
 
-        <p v-if="match.duel" class="legacy">{{ t('profile.progress.friendly') }}</p>
         <p v-if="!detailed" class="legacy">{{ t('matchDetails.legacy') }}</p>
 
         <TabsRoot v-model="tab" class="tabs">

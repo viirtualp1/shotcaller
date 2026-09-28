@@ -554,8 +554,7 @@
       "rating": "Rating",
       "xp": "XP",
       "rankUp": "New rank",
-      "levelUp": "Level up",
-      "friendly": "Friendly duel: rating and XP stay as they are"
+      "levelUp": "Level up"
     }
   },
   "itemTip": {
@@ -820,8 +819,6 @@
     "structureDamage": "Damage to buildings",
     "emptyLane": "Nobody",
     "legacy": "Played before update 7.4, when the opponent and the rounds were not kept yet.",
-    "duel": "Duel",
-    "unranked": "unranked",
     "against": "vs {name}",
     "duelWith": "Duel with {name}"
   }

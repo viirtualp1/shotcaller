@@ -66,8 +66,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'История матчей: имена героев при наведении.',
       },
       {
-        en: 'Duels go into the match history with the opponent’s name. They stay friendly: no rating, no XP, no lifetime stats.',
-        ru: 'Дуэли попадают в историю матчей с именем соперника. Они товарищеские: без рейтинга, опыта и общей статистики.',
+        en: 'Duels count: rating, XP and stats as for a Standard match. They show up in the match history with the opponent’s name.',
+        ru: 'Дуэли засчитываются: рейтинг, опыт и статистика как за матч на «Стандарте». В истории матчей — с именем соперника.',
       },
       {
         en: 'Favourite heroes: a column for the role — buildings for pushers, healing for supports, damage taken for initiators.',
@@ -88,8 +88,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     ],
     fixes: [
       {
-        en: 'The end of a duel no longer shows the rating change of your previous match.',
-        ru: 'Конец дуэли больше не показывает изменение рейтинга за прошлый матч.',
+        en: 'The end of a duel showed the rating change of your previous match.',
+        ru: 'Конец дуэли показывал изменение рейтинга за прошлый матч.',
       },
       {
         en: 'Friend profile: heroes in a match row are no longer cut off or squeezed together.',
