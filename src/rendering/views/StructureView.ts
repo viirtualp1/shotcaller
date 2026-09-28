@@ -104,10 +104,14 @@ export class StructureView extends EntityView {
       })
     }
 
-    gsap.fromTo(this.range, { alpha: 0 }, {
-      alpha: 1,
-      duration: ZONE_FADE,
-    })
+    gsap.fromTo(
+      this.range,
+      { alpha: 0 },
+      {
+        alpha: 1,
+        duration: ZONE_FADE,
+      },
+    )
   }
 
   fire() {

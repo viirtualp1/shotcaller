@@ -98,6 +98,12 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Радиус башен и трона виден, только когда в него заходят враги, — в цвете стороны строения. Трон подсвечивается **зелёным**, пока лечит своих раненых героев и рядом нет врагов.',
       },
     ],
+    fixes: [
+      {
+        en: 'The **Update** button on the new version card sometimes did nothing. Now it always reloads into the new version.',
+        ru: 'Кнопка **«Обновить»** на карточке новой версии иногда ничего не делала. Теперь она всегда перезагружает игру на новую версию.',
+      },
+    ],
   },
   {
     version: '7.6',
