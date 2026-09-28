@@ -222,6 +222,7 @@ export const useMatchStore = defineStore('match', () => {
 
   function newMatch() {
     disposeBattle()
+    profile.forgetLast()
     duel.value = null
     match = createMatch({ difficulty: settings.difficulty })
     clearSelection()
@@ -236,6 +237,7 @@ export const useMatchStore = defineStore('match', () => {
     }
 
     disposeBattle()
+    profile.forgetLast()
     duel.value = null
     match = restoreMatch(state, { difficulty: settings.difficulty })
     clearSelection()
@@ -249,6 +251,7 @@ export const useMatchStore = defineStore('match', () => {
   /** Starts an online duel; the solo match stays saved and can be continued later. */
   function startDuel(binding: DuelBinding, link: RemoteLink) {
     disposeBattle()
+    profile.forgetLast()
     duel.value = binding
     awaiting.value = false
     match = createMatch({ link })
@@ -274,6 +277,7 @@ export const useMatchStore = defineStore('match', () => {
 
   function resumeDuel(binding: DuelBinding, state: MatchState) {
     disposeBattle()
+    profile.forgetLast()
     duel.value = binding
     awaiting.value = false
     match = restoreMatch(state)
@@ -630,12 +634,9 @@ export const useMatchStore = defineStore('match', () => {
       return
     }
 
-    /* Duels stay out of the rating: two friends could otherwise trade wins. */
-    if (duel.value) {
-      duel.value.finish(match.result?.winner ?? null)
-    } else {
-      profile.record(match)
-    }
+    const binding = duel.value
+    binding?.finish(match.result?.winner ?? null)
+    profile.record(match, binding ? { opponentName: binding.opponentName } : null)
   }
 
   function nextRound() {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { heroesByPlays } from '@/domain/profile/Profile'
+import { HEROES } from '@/content/heroes'
+import type { RoleId } from '@/content/ids'
+import { heroesByPlays, type HeroRecord } from '@/domain/profile/Profile'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -8,6 +10,21 @@ import HudPanel from '../common/HudPanel.vue'
 import { winRate } from './format'
 
 const SHOWN = 8
+
+type RoleStat = 'structureDamage' | 'healing' | 'damageReceived'
+
+/** Damage tells most of the story; these roles are also judged by what they are for. */
+const ROLE_STATS: Partial<Record<RoleId, RoleStat>> = {
+  pusher: 'structureDamage',
+  support: 'healing',
+  initiator: 'damageReceived',
+}
+
+const COLUMN_ORDER: readonly RoleStat[] = ['structureDamage', 'healing', 'damageReceived']
+
+/** Per match, counting only matches that recorded it; nothing to show before the first such match. */
+const perMatch = (hero: HeroRecord, stat: RoleStat) =>
+  hero.detailed ? Math.round(hero[stat] / hero.detailed) : null
 
 const profile = useProfileStore()
 const text = useGameText()
@@ -21,8 +38,20 @@ const rows = computed(() =>
       hero,
       winRate: winRate(hero.wins, hero.matches),
       damage: Math.round(hero.damage / hero.matches),
+      roleStat: ROLE_STATS[HEROES[heroId].role] ?? null,
     })),
 )
+
+/** A column for each role stat some listed hero is judged by. */
+const roleColumns = computed(() =>
+  COLUMN_ORDER.filter((stat) => rows.value.some((row) => row.roleStat === stat)),
+)
+
+function roleValue(row: (typeof rows.value)[number], stat: RoleStat) {
+  const value = row.roleStat === stat ? perMatch(row.hero, stat) : null
+
+  return value === null ? '—' : text.number(value)
+}
 </script>
 
 <template>
@@ -35,6 +64,16 @@ const rows = computed(() =>
           <th scope="col">{{ t('profile.heroes.winRate') }}</th>
           <th scope="col" class="num extra">{{ t('profile.heroes.kd') }}</th>
           <th scope="col" class="num extra">{{ t('profile.heroes.damage') }}</th>
+
+          <th
+            v-for="stat in roleColumns"
+            :key="stat"
+            scope="col"
+            class="num extra"
+            :title="t('profile.heroes.perMatch')"
+          >
+            {{ t(`profile.heroes.${stat}`) }}
+          </th>
         </tr>
       </thead>
 
@@ -58,6 +97,15 @@ const rows = computed(() =>
 
           <td class="num extra">{{ text.number(row.hero.kills) }} / {{ text.number(row.hero.deaths) }}</td>
           <td class="num extra">{{ text.number(row.damage) }}</td>
+
+          <td
+            v-for="stat in roleColumns"
+            :key="stat"
+            class="num extra"
+            :class="{ muted: row.roleStat !== stat }"
+          >
+            {{ roleValue(row, stat) }}
+          </td>
         </tr>
       </tbody>
     </table>
@@ -140,6 +188,10 @@ tbody th {
 .empty {
   margin: 0;
   color: var(--chalk-dim);
+}
+
+.muted {
+  color: var(--chalk-faint);
 }
 
 @media (max-width: 560px) {

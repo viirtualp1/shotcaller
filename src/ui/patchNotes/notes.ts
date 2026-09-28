@@ -50,6 +50,54 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.4',
+    date: '2026-09-28',
+    title: {
+      en: 'Match breakdown',
+      ru: 'Разбор матча',
+    },
+    interface: [
+      {
+        en: 'A click on a match in your history opens its breakdown: round by round, both lineups with items and synergies, hero stats of both teams.',
+        ru: 'Клик по матчу в истории открывает разбор: ход раундов, составы обеих команд с предметами и синергиями, статистика героев.',
+      },
+      {
+        en: 'Match history: hero names on hover.',
+        ru: 'История матчей: имена героев при наведении.',
+      },
+      {
+        en: 'Duels go into the match history with the opponent’s name. They stay friendly: no rating, no XP, no lifetime stats.',
+        ru: 'Дуэли попадают в историю матчей с именем соперника. Они товарищеские: без рейтинга, опыта и общей статистики.',
+      },
+      {
+        en: 'Favourite heroes: a column for the role — buildings for pushers, healing for supports, damage taken for initiators.',
+        ru: 'Любимые герои: колонка по роли — строения у пушеров, лечение у саппортов, принятый урон у инициаторов.',
+      },
+      {
+        en: 'Friend profile: rank name under the medal, no best rating tile, a line between the history and the actions.',
+        ru: 'Профиль друга: название ранга под медалью, без плитки лучшего рейтинга, черта между историей и действиями.',
+      },
+      {
+        en: 'A friend profile closes the open chat.',
+        ru: 'Профиль друга закрывает открытый чат.',
+      },
+      {
+        en: 'Add a friend: the form opens above its button, which then hides it; your code sits under its label with Copy next to it.',
+        ru: 'Добавление друга: форма открывается над кнопкой, та же кнопка её скрывает; твой код под подписью, «Копировать» рядом.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The end of a duel no longer shows the rating change of your previous match.',
+        ru: 'Конец дуэли больше не показывает изменение рейтинга за прошлый матч.',
+      },
+      {
+        en: 'Friend profile: heroes in a match row are no longer cut off or squeezed together.',
+        ru: 'Профиль друга: герои в строке матча больше не обрезаются и не слипаются.',
+      },
+    ],
+  },
+  {
     version: '7.3',
     date: '2026-09-28',
     title: {

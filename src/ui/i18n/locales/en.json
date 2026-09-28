@@ -535,7 +535,11 @@
       "winRate": "Win rate",
       "kd": "K / D",
       "damage": "Damage per match",
-      "empty": "Heroes you field will show up here."
+      "empty": "Heroes you field will show up here.",
+      "structureDamage": "Buildings",
+      "healing": "Healing",
+      "damageReceived": "Damage taken",
+      "perMatch": "Average per match"
     },
     "history": {
       "title": "Recent matches",
@@ -550,7 +554,8 @@
       "rating": "Rating",
       "xp": "XP",
       "rankUp": "New rank",
-      "levelUp": "Level up"
+      "levelUp": "Level up",
+      "friendly": "Friendly duel: rating and XP stay as they are"
     }
   },
   "itemTip": {
@@ -680,7 +685,8 @@
     "addFriend": "Add a friend",
     "openProfile": "Profile: {name}",
     "message": "Message",
-    "blockedCount": "Blocked · {n}"
+    "blockedCount": "Blocked · {n}",
+    "hideAdding": "Hide"
   },
   "chat": {
     "open": "Message {name}",
@@ -753,7 +759,6 @@
     "rating": "{n} rating",
     "matches": "Matches",
     "winRate": "Win rate",
-    "peak": "Best rating",
     "bestStreak": "Best streak",
     "history": "Latest matches",
     "noMatches": "No matches yet",
@@ -797,5 +802,27 @@
       "fire": "On fire!",
       "hmm": "Hmm…"
     }
+  },
+  "matchDetails": {
+    "open": "Match details",
+    "close": "Close",
+    "rating": "Rating",
+    "rounds": "Rounds",
+    "roundByRound": "Round by round",
+    "tabs": {
+      "lineups": "Lineups"
+    },
+    "reasons": {
+      "throneWin": "The enemy throne fell",
+      "throneLoss": "Our throne fell",
+      "roundLimit": "The match went to the round limit"
+    },
+    "structureDamage": "Damage to buildings",
+    "emptyLane": "Nobody",
+    "legacy": "Played before update 7.4, when the opponent and the rounds were not kept yet.",
+    "duel": "Duel",
+    "unranked": "unranked",
+    "against": "vs {name}",
+    "duelWith": "Duel with {name}"
   }
 }

@@ -12,6 +12,7 @@ const amount = z.number().finite().nonnegative()
 const count = z.number().int().nonnegative()
 const verdict = z.enum(['win', 'loss', 'draw'])
 
+/** The detailed stats came later; profiles saved before read as zero. */
 const heroRecord = z.object({
   matches: count,
   wins: count,
@@ -19,6 +20,30 @@ const heroRecord = z.object({
   deaths: count,
   damage: amount,
   bestStars: stars,
+  detailed: count.default(0),
+  healing: amount.default(0),
+  structureDamage: amount.default(0),
+  damageReceived: amount.default(0),
+})
+
+const lineupHero = z.object({
+  heroId,
+  stars,
+  lane: z.enum(LANE_IDS),
+  items: z.array(z.enum(ITEM_IDS)),
+})
+
+const heroLine = z.object({
+  heroId,
+  stars,
+  kills: count,
+  deaths: count,
+  damage: amount,
+  healing: amount.default(0),
+  structureDamage: amount.default(0),
+  damageReceived: amount.default(0),
+  rounds: count.default(0),
+  lastHits: count.default(0),
 })
 
 const synergyRecord = z.object({
@@ -35,25 +60,19 @@ const matchRecord = z.object({
   rounds: count,
   roundsWon: count,
   roundsLost: count,
-  lineup: z.array(
-    z.object({
-      heroId,
-      stars,
-      lane: z.enum(LANE_IDS),
-      items: z.array(z.enum(ITEM_IDS)),
-    }),
-  ),
+  lineup: z.array(lineupHero),
   synergies: z.array(synergyId),
-  heroes: z.array(
-    z.object({
-      heroId,
-      stars,
-      kills: count,
-      deaths: count,
-      damage: amount,
-    }),
-  ),
+  heroes: z.array(heroLine),
+  /** Added with match details; older records have none. */
+  opponentLineup: z.array(lineupHero).default([]),
+  opponentSynergies: z.array(synergyId).default([]),
+  opponentHeroes: z.array(heroLine).default([]),
+  history: z.array(verdict).default([]),
   mvp: heroId.nullable(),
+  duel: z
+    .object({ opponentName: z.string().max(64) })
+    .nullable()
+    .default(null),
   /** Added with cloud saves; older records fall back to zero. */
   heroKills: count.default(0),
   towersDestroyed: count,

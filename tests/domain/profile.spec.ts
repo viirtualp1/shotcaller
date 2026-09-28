@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseProfile, serializeProfile } from '@/application/persistence/profileSnapshot'
 import { PROFILE } from '@/content/profile'
-import { avatarOf, createProfile } from '@/domain/profile/Profile'
+import { applyRecord, avatarOf, createProfile, hasDetails } from '@/domain/profile/Profile'
 import { levelFor, rankFor, rankStep, ratingChange } from '@/domain/profile/progression'
 import { DRAW, finishedMatch as finished, LOSS, play, WIN } from '../helpers/profile'
 
@@ -138,6 +138,89 @@ describe('recordMatch', () => {
 
     expect(profile.recent).toHaveLength(PROFILE.recentMatches)
     expect(profile.totals.matches).toBe(6 + PROFILE.recentMatches)
+  })
+
+  it('keeps both sides and every round for the match details', () => {
+    const match = finished(WIN)
+
+    const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), {
+      ...match,
+      stats: {
+        ...match.stats,
+        winners: [0, 1, null, 0],
+      },
+    })
+
+    expect(record.history).toEqual(['win', 'loss', 'draw', 'win'])
+    expect(record.opponentHeroes.map((h) => h.heroId)).toEqual(['giant'])
+
+    expect(record.opponentLineup).toEqual([
+      {
+        heroId: 'giant',
+        stars: 1,
+        lane: 'top',
+        items: [],
+      },
+    ])
+
+    expect(hasDetails(record)).toBe(true)
+    expect(profile.heroes.blademaster?.detailed).toBe(1)
+  })
+
+  it('reads matches saved before the details and leaves them out of the averages', () => {
+    const { profile } = play(createProfile('2026-09-27T10:00:00.000Z'), finished(WIN))
+    const saved = JSON.parse(serializeProfile(profile))
+    const old = saved.profile.recent[0]
+
+    for (const key of ['opponentLineup', 'opponentSynergies', 'opponentHeroes', 'history']) {
+      delete old[key]
+    }
+
+    for (const line of old.heroes) {
+      for (const key of ['healing', 'structureDamage', 'damageReceived', 'rounds', 'lastHits']) {
+        delete line[key]
+      }
+    }
+
+    const parsed = parseProfile(JSON.stringify(saved))!
+    const legacy = parsed.recent[0]!
+
+    expect(hasDetails(legacy)).toBe(false)
+
+    expect(legacy.heroes[0]).toMatchObject({
+      healing: 0,
+      rounds: 0,
+    })
+
+    expect(applyRecord(parsed, legacy).profile.heroes.blademaster).toMatchObject({
+      matches: 2,
+      detailed: 1,
+    })
+  })
+
+  it('keeps a duel in the history without touching the rating, XP or lifetime stats', () => {
+    const before = play(createProfile('2026-09-27T10:00:00.000Z'), finished(WIN)).profile
+
+    const { profile, record } = play(before, {
+      ...finished(WIN),
+      duel: { opponentName: 'Rival' },
+    })
+
+    expect(record).toMatchObject({
+      duel: { opponentName: 'Rival' },
+      verdict: 'win',
+      ratingBefore: before.rating,
+      ratingAfter: before.rating,
+      xp: 0,
+    })
+
+    expect(profile.recent[0]).toBe(record)
+    expect(profile.recent).toHaveLength(2)
+    expect(profile.rating).toBe(before.rating)
+    expect(profile.xp).toBe(before.xp)
+    expect(profile.totals).toEqual(before.totals)
+    expect(profile.heroes).toEqual(before.heroes)
+    expect(parseProfile(serializeProfile(profile))).toEqual(profile)
   })
 
   it('survives a save and rejects anything else', () => {

@@ -2,7 +2,7 @@
 import { useTimeoutFn } from '@vueuse/core'
 import { Ban, Crown, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useFriendStatus } from '../../composables/useFriendStatus'
@@ -55,8 +55,15 @@ const hero = computed(
 const level = computed(() => (profile.value ? levelFor(profile.value.xp).level : null))
 const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
 
-const signed = (value: number) =>
-  value > 0 ? `+${text.number(value)}` : value < 0 ? `−${text.number(-value)}` : '0'
+/* The profile takes the stage: an open chat steps aside. */
+watch(
+  () => friends.viewedId,
+  (id) => {
+    if (id) {
+      chat.close()
+    }
+  },
+)
 
 const tiles = computed(() => {
   const totals = profile.value?.totals
@@ -82,12 +89,6 @@ const tiles = computed(() => {
       label: t('coach.winRate'),
       value: `${winRate}%`,
       note: '',
-    },
-    {
-      key: 'peak',
-      label: t('coach.peak'),
-      value: text.number(profile.value.peakRating),
-      note: t(`profile.ranks.${rankFor(profile.value.peakRating).tier}`),
     },
     {
       key: 'streak',
@@ -142,15 +143,17 @@ function ask(action: 'remove' | 'block') {
 
       <DialogContent class="sheet coach-profile" :aria-describedby="undefined">
         <header class="head">
-          <RankMedal :tier="rank.tier" :stars="rank.stars" :size="54" />
+          <span class="medal">
+            <RankMedal :tier="rank.tier" :stars="rank.stars" :size="54" />
+            <span class="medal-name">{{ t(`profile.ranks.${rank.tier}`) }}</span>
+          </span>
+
           <CoachAvatar :hero-id="hero" :level="level" :size="56" />
 
           <div class="who">
             <DialogTitle class="name">{{ name }}</DialogTitle>
 
-            <span class="rank">
-              {{ t(`profile.ranks.${rank.tier}`) }} · {{ t('coach.rating', { n: text.number(rating) }) }}
-            </span>
+            <span class="rank">{{ t('coach.rating', { n: text.number(rating) }) }}</span>
 
             <span v-if="entry" class="status" :class="{ online: friends.isOnline(entry.id) }">
               {{ statusText(entry.id) }}
@@ -188,7 +191,7 @@ function ask(action: 'remove' | 'block') {
                     down: match.ratingAfter < match.ratingBefore,
                   }"
                 >
-                  {{ signed(match.ratingAfter - match.ratingBefore) }}
+                  {{ text.signed(match.ratingAfter - match.ratingBefore) }}
                 </span>
 
                 <ul class="lineup">
@@ -209,6 +212,8 @@ function ask(action: 'remove' | 'block') {
             <p v-else class="muted">{{ t('coach.noMatches') }}</p>
           </section>
         </template>
+
+        <hr v-if="entry" class="divider" />
 
         <footer v-if="entry" class="actions">
           <button type="button" class="btn primary" @click="message">
@@ -259,6 +264,29 @@ function ask(action: 'remove' | 'block') {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.medal {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.medal-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--chalk-dim);
+  white-space: nowrap;
+}
+
+.divider {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--edge);
 }
 
 .who {
@@ -369,14 +397,14 @@ function ask(action: 'remove' | 'block') {
   color: var(--theirs);
 }
 
+/* Room above for the MVP crown and below for the stars; long lineups wrap instead of being cut. */
 .lineup {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
   min-width: 0;
   margin: 0;
-  padding: 0;
-  overflow: hidden;
+  padding: 8px 0 4px;
   list-style: none;
 }
 

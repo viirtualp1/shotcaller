@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
-import { Ban, Check, ChevronDown, Copy, Swords, UserPlus, X } from 'lucide-vue-next'
+import { Ban, Check, ChevronDown, ChevronUp, Copy, Swords, UserPlus, X } from 'lucide-vue-next'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import {
   formatFriendCode,
@@ -194,25 +194,24 @@ async function submit() {
       </li>
     </ul>
 
-    <button type="button" class="btn block add-toggle" :aria-expanded="adding" @click="startAdding">
-      <UserPlus :size="16" /> {{ t('friends.addFriend') }}
-    </button>
-
     <form v-if="adding" class="add" @submit.prevent="submit">
       <div class="own">
         <span class="own-label">{{ t('friends.yourCode') }}</span>
-        <strong class="own-code">{{ ownCode }}</strong>
 
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="t('friends.copy')"
-          :title="copied ? t('friends.copied') : t('friends.copy')"
-          @click="copy(ownCode)"
-        >
-          <Check v-if="copied" :size="16" class="good" />
-          <Copy v-else :size="16" />
-        </button>
+        <div class="own-row">
+          <strong class="own-code">{{ ownCode }}</strong>
+
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="t('friends.copy')"
+            :title="copied ? t('friends.copied') : t('friends.copy')"
+            @click="copy(ownCode)"
+          >
+            <Check v-if="copied" :size="16" class="good" />
+            <Copy v-else :size="16" />
+          </button>
+        </div>
       </div>
 
       <div class="add-row">
@@ -238,6 +237,11 @@ async function submit() {
         {{ t(`friends.results.${result}`) }}
       </p>
     </form>
+
+    <button type="button" class="btn block add-toggle" :aria-expanded="adding" @click="startAdding">
+      <template v-if="adding"><ChevronUp :size="16" /> {{ t('friends.hideAdding') }}</template>
+      <template v-else><UserPlus :size="16" /> {{ t('friends.addFriend') }}</template>
+    </button>
 
     <template v-if="friends.blocked.length">
       <button
@@ -442,6 +446,12 @@ p {
 
 .own {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.own-row {
+  display: flex;
   align-items: center;
   gap: 10px;
 }
@@ -455,7 +465,6 @@ p {
 }
 
 .own-code {
-  flex: 1;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.12em;

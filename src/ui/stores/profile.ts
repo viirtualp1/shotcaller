@@ -10,6 +10,7 @@ import {
   createProfile,
   finishedMatch,
   recordMatch,
+  type DuelInfo,
   type MatchRecord,
   type Profile,
 } from '@/domain/profile/Profile'
@@ -41,8 +42,8 @@ export const useProfileStore = defineStore('profile', () => {
   }
 
   /** Returns the new history entry, so the cloud sync can queue it. */
-  function record(match: Match) {
-    const finished = finishedMatch(match, settings.difficulty)
+  function record(match: Match, duel: DuelInfo | null = null) {
+    const finished = finishedMatch(match, settings.difficulty, duel)
     if (!finished) {
       return null
     }
@@ -56,6 +57,11 @@ export const useProfileStore = defineStore('profile', () => {
     update(result.profile)
 
     return result.record
+  }
+
+  /** A new match has no result yet; the post-game screen must not show the previous one. */
+  function forgetLast() {
+    lastRecord.value = null
   }
 
   /** Takes a profile the cloud settled on; unlike the other actions it is not queued for sync. */
@@ -93,6 +99,7 @@ export const useProfileStore = defineStore('profile', () => {
     open: () => page.open(true),
     close: page.close,
     record,
+    forgetLast,
     replace,
     reset,
     rename,

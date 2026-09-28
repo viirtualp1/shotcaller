@@ -92,6 +92,8 @@ export function useGameText() {
   return {
     t,
     number,
+    /** A change such as a rating delta: "+12", "−8", "0". */
+    signed: (value: number) => (value > 0 ? `+${number(value)}` : value < 0 ? `−${number(-value)}` : '0'),
     heroName: (id: HeroId) => HEROES[id].name,
     roleName: (id: RoleId) => t(`roles.${id}.name`),
     rolePassive: (id: RoleId) => t(`roles.${id}.passive`, roleParams(number, id)),

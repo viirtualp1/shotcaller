@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { TeamId } from '@/content/ids'
-import type { HeroMatchStats } from '@/domain/match/matchStats'
 import { useGameText } from '../../../composables/useGameText'
 import HeroAvatar from '../../common/HeroAvatar.vue'
-import { HERO_COLUMNS, type HeroStatKey } from './reportModel'
+import { HERO_COLUMNS, type HeroStatKey, type HeroStatRow } from './reportModel'
 
-const props = defineProps<{ heroes: readonly HeroMatchStats[]; team: TeamId; topDamage: number }>()
+const props = withDefaults(
+  defineProps<{
+    heroes: readonly HeroStatRow[]
+    team: TeamId
+    topDamage: number
+    columns?: readonly HeroStatKey[]
+  }>(),
+  { columns: () => HERO_COLUMNS },
+)
+
 const sort = defineModel<HeroStatKey>('sort', { required: true })
 
 const text = useGameText()
@@ -28,7 +36,7 @@ const rows = computed(() =>
             <th scope="col" class="hero-col">{{ t('report.columns.hero') }}</th>
 
             <th
-              v-for="key in HERO_COLUMNS"
+              v-for="key in columns"
               :key="key"
               scope="col"
               :aria-sort="sort === key ? 'descending' : 'none'"
@@ -55,7 +63,7 @@ const rows = computed(() =>
               </span>
             </th>
 
-            <td v-for="key in HERO_COLUMNS" :key="key" :class="{ active: sort === key }">
+            <td v-for="key in columns" :key="key" :class="{ active: sort === key }">
               <span v-if="key === 'damageDealt'" class="bar">
                 <i :style="{ width: `${(hero.damageDealt / topDamage) * 100}%` }" />
               </span>
@@ -65,7 +73,7 @@ const rows = computed(() =>
           </tr>
 
           <tr v-if="!rows.length">
-            <td :colspan="HERO_COLUMNS.length + 1" class="empty">{{ t('report.noHeroes') }}</td>
+            <td :colspan="columns.length + 1" class="empty">{{ t('report.noHeroes') }}</td>
           </tr>
         </tbody>
       </table>

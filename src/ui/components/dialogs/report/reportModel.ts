@@ -13,6 +13,9 @@ export type HeroStatKey = keyof Pick<
   | 'healing'
 >
 
+/** A hero's line in a stats table: the finished match's report, or a match kept in the profile. */
+export type HeroStatRow = Pick<HeroMatchStats, 'team' | 'heroId' | 'bestStars' | HeroStatKey>
+
 export const HERO_COLUMNS: readonly HeroStatKey[] = [
   'rounds',
   'kills',

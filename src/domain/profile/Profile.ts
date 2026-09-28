@@ -5,10 +5,11 @@ import {
   type LaneId,
   type StarLevel,
   type SynergyId,
+  type TeamId,
 } from '@/content/ids'
 import { PROFILE } from '@/content/profile'
 import type { Difficulty } from '@/content/rules'
-import type { MatchResult } from '../match/judge'
+import { verdictFor, type MatchResult } from '../match/judge'
 import type { Match } from '../match/Match'
 import type { MatchStats } from '../match/matchStats'
 import type { Lineup } from '../roster/Roster'
@@ -22,6 +23,11 @@ export interface HeroRecord {
   readonly deaths: number
   readonly damage: number
   readonly bestStars: StarLevel
+  /** Matches that also recorded the stats below; older ones did not, so averages count only these. */
+  readonly detailed: number
+  readonly healing: number
+  readonly structureDamage: number
+  readonly damageReceived: number
 }
 
 export interface SynergyRecord {
@@ -42,6 +48,11 @@ export interface MatchHeroLine {
   readonly kills: number
   readonly deaths: number
   readonly damage: number
+  readonly healing: number
+  readonly structureDamage: number
+  readonly damageReceived: number
+  readonly rounds: number
+  readonly lastHits: number
 }
 
 /** One finished match as the profile remembers it. */
@@ -59,7 +70,15 @@ export interface MatchRecord {
   readonly lineup: readonly LineupHero[]
   readonly synergies: readonly SynergyId[]
   readonly heroes: readonly MatchHeroLine[]
+  /** The other side as the match ended; empty for matches recorded before it was kept. */
+  readonly opponentLineup: readonly LineupHero[]
+  readonly opponentSynergies: readonly SynergyId[]
+  readonly opponentHeroes: readonly MatchHeroLine[]
+  /** Who took each round, as the player saw it. */
+  readonly history: readonly Verdict[]
   readonly mvp: HeroId | null
+  /** Set for a duel with a friend; null for a match against the computer. */
+  readonly duel: DuelInfo | null
   /** Hero kills by the whole team, towers and creeps included. */
   readonly heroKills: number
   readonly towersDestroyed: number
@@ -100,13 +119,23 @@ export interface Profile {
   readonly recent: readonly MatchRecord[]
 }
 
+/**
+ * A friendly match: it goes into the history but leaves the rating, XP and lifetime stats alone,
+ * or two friends could trade wins.
+ */
+export interface DuelInfo {
+  readonly opponentName: string
+}
+
 /** What the profile needs from a match once it is over. */
 export interface FinishedMatch {
   readonly difficulty: Difficulty
   readonly result: MatchResult
   readonly stats: MatchStats
   readonly lineup: Lineup
+  readonly opponentLineup: Lineup
   readonly towersDestroyed: number
+  readonly duel: DuelInfo | null
 }
 
 export const createProfile = (createdAt: string): Profile => ({
@@ -133,7 +162,11 @@ export const createProfile = (createdAt: string): Profile => ({
   recent: [],
 })
 
-export function finishedMatch(match: Match, difficulty: Difficulty): FinishedMatch | null {
+export function finishedMatch(
+  match: Match,
+  difficulty: Difficulty,
+  duel: DuelInfo | null = null,
+): FinishedMatch | null {
   if (!match.result) {
     return null
   }
@@ -143,7 +176,9 @@ export function finishedMatch(match: Match, difficulty: Difficulty): FinishedMat
     result: match.result,
     stats: match.stats,
     lineup: match.human.roster.lineup(),
+    opponentLineup: match.opponent.roster.lineup(),
     towersDestroyed: LANE_IDS.filter((lane) => match.structures[1][lane] <= 0).length,
+    duel,
   }
 }
 
@@ -171,37 +206,46 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
   const { stats } = finished
   const roundsWon = stats.teams[0].roundsWon
 
-  const lineup = LANE_IDS.flatMap((lane) =>
-    finished.lineup[lane].map((hero) => ({
-      heroId: hero.heroId,
-      stars: hero.stars,
-      lane,
-      items: [...hero.items],
-    })),
-  )
+  const lineupOf = (lineup: Lineup) =>
+    LANE_IDS.flatMap((lane) =>
+      lineup[lane].map((hero) => ({
+        heroId: hero.heroId,
+        stars: hero.stars,
+        lane,
+        items: [...hero.items],
+      })),
+    )
 
-  const synergies = [
+  const heroLinesOf = (team: TeamId) =>
+    stats.heroes
+      .filter((h) => h.team === team)
+      .sort((a, b) => b.damageDealt - a.damageDealt)
+      .map((h) => ({
+        heroId: h.heroId,
+        stars: h.bestStars,
+        kills: h.kills,
+        deaths: h.deaths,
+        damage: h.damageDealt,
+        healing: h.healing,
+        structureDamage: h.structureDamage,
+        damageReceived: h.damageReceived,
+        rounds: h.rounds,
+        lastHits: h.lastHits,
+      }))
+
+  const synergiesOf = (lineup: Lineup) => [
     ...new Set(
       LANE_IDS.flatMap(
         (lane) =>
           resolveLane(
             lane,
-            finished.lineup[lane].map((h) => h.heroId),
+            lineup[lane].map((h) => h.heroId),
           ).synergies,
       ),
     ),
   ]
 
-  const heroes = stats.heroes
-    .filter((h) => h.team === 0)
-    .sort((a, b) => b.damageDealt - a.damageDealt)
-    .map((h) => ({
-      heroId: h.heroId,
-      stars: h.bestStars,
-      kills: h.kills,
-      deaths: h.deaths,
-      damage: h.damageDealt,
-    }))
+  const heroes = heroLinesOf(0)
 
   return {
     ...meta,
@@ -211,18 +255,27 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
     rounds: stats.rounds,
     roundsWon,
     roundsLost: stats.teams[1].roundsWon,
-    lineup,
-    synergies,
+    lineup: lineupOf(finished.lineup),
+    synergies: synergiesOf(finished.lineup),
     heroes,
+    opponentLineup: lineupOf(finished.opponentLineup),
+    opponentSynergies: synergiesOf(finished.opponentLineup),
+    opponentHeroes: heroLinesOf(1),
+    history: stats.winners.map((winner) => verdictFor(0, winner)),
     mvp: heroes[0]?.heroId ?? null,
+    duel: finished.duel,
     heroKills: stats.teams[0].heroKills,
     towersDestroyed: finished.towersDestroyed,
     goldEarned: stats.teams[0].income.total,
     ratingBefore: 0,
     ratingAfter: 0,
-    xp: matchXp(verdict, roundsWon),
+    xp: finished.duel ? 0 : matchXp(verdict, roundsWon),
   }
 }
+
+/** Records made before the detailed stats existed have no opponent side and no rounds; their zeros mean nothing. */
+export const hasDetails = (record: MatchRecord) =>
+  record.opponentHeroes.length > 0 || record.history.length > 0
 
 const resultOf = (record: MatchRecord): MatchResult => ({
   winner: record.verdict === 'win' ? 0 : record.verdict === 'loss' ? 1 : null,
@@ -234,6 +287,23 @@ const resultOf = (record: MatchRecord): MatchResult => ({
  * can be replayed on top of a newer profile; the rating fields are recomputed from the profile's rating.
  */
 export function applyRecord(profile: Profile, played: MatchRecord) {
+  if (played.duel) {
+    const record: MatchRecord = {
+      ...played,
+      ratingBefore: profile.rating,
+      ratingAfter: profile.rating,
+      xp: 0,
+    }
+
+    return {
+      record,
+      profile: {
+        ...profile,
+        recent: [record, ...profile.recent].slice(0, PROFILE.recentMatches),
+      } satisfies Profile,
+    }
+  }
+
   const { verdict } = played
   const won = verdict === 'win'
   const rating = Math.max(0, profile.rating + ratingChange(resultOf(played), played.difficulty))
@@ -265,6 +335,8 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
     fastestWin: won ? Math.min(before.fastestWin ?? Infinity, record.rounds) : before.fastestWin,
   }
 
+  const detailed = hasDetails(record)
+
   let heroRecords = profile.heroes
   for (const line of record.heroes) {
     heroRecords = add(heroRecords, line.heroId, (h) => ({
@@ -274,6 +346,10 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
       deaths: (h?.deaths ?? 0) + line.deaths,
       damage: (h?.damage ?? 0) + line.damage,
       bestStars: Math.max(h?.bestStars ?? 1, line.stars) as StarLevel,
+      detailed: (h?.detailed ?? 0) + (detailed ? 1 : 0),
+      healing: (h?.healing ?? 0) + line.healing,
+      structureDamage: (h?.structureDamage ?? 0) + line.structureDamage,
+      damageReceived: (h?.damageReceived ?? 0) + line.damageReceived,
     }))
   }
 

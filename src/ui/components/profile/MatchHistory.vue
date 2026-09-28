@@ -1,40 +1,49 @@
 <script setup lang="ts">
-import { Crown } from 'lucide-vue-next'
-import { computed } from 'vue'
-import type { MatchSummary } from '@/application/social/friends'
+import { ChevronRight, Crown, Swords } from 'lucide-vue-next'
+import { ref } from 'vue'
+import type { MatchRecord } from '@/domain/profile/Profile'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import HudPanel from '../common/HudPanel.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
+import MatchDetailsDialog from './MatchDetailsDialog.vue'
 import { relativeTime } from './format'
-
-/** The player's own matches, or `matches` from a friend's profile. */
-const props = defineProps<{ matches?: readonly MatchSummary[] }>()
 
 const profile = useProfileStore()
 const settings = useSettingsStore()
 const text = useGameText()
 const { t } = text
 
+const selected = ref<MatchRecord | null>(null)
+
 /** Copies of the best hero share its id; only the first one gets the crown. */
-const mvpIndex = (match: MatchSummary) => match.lineup.findIndex((hero) => hero.heroId === match.mvp)
-
-const shown = computed(() => props.matches ?? profile.profile.recent)
-
-const signed = (value: number) =>
-  value > 0 ? `+${text.number(value)}` : value < 0 ? `−${text.number(-value)}` : '0'
+const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.heroId === match.mvp)
 </script>
 
 <template>
   <HudPanel :title="t('profile.history.title')" class="panel">
     <ol class="matches">
-      <li v-for="match in shown" :key="match.id" class="match" :class="match.verdict">
+      <li
+        v-for="match in profile.profile.recent"
+        :key="match.id"
+        class="match"
+        :class="match.verdict"
+        @click="selected = match"
+      >
         <div class="verdict">
-          <strong>{{ t(`result.${match.verdict}`) }}</strong>
+          <button type="button" class="open" aria-haspopup="dialog" :title="t('matchDetails.open')">
+            <strong>{{ t(`result.${match.verdict}`) }}</strong>
+          </button>
         </div>
 
-        <div class="delta">
+        <div v-if="match.duel" class="delta">
+          <span class="rating duel"><Swords :size="14" /> {{ t('matchDetails.duel') }}</span>
+          <span class="muted">{{ t('matchDetails.unranked') }}</span>
+        </div>
+
+        <div v-else class="delta">
           <span
             class="rating"
             :class="{
@@ -42,7 +51,7 @@ const signed = (value: number) =>
               down: match.ratingAfter < match.ratingBefore,
             }"
           >
-            {{ signed(match.ratingAfter - match.ratingBefore) }}
+            {{ text.signed(match.ratingAfter - match.ratingBefore) }}
           </span>
 
           <span class="muted">+{{ text.number(match.xp) }} {{ t('profile.progress.xp') }}</span>
@@ -58,7 +67,10 @@ const signed = (value: number) =>
                 :aria-label="t('profile.history.mvp')"
               />
 
-              <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" :size="28" />
+              <InfoTooltip>
+                <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" :size="28" />
+                <template #content>{{ text.heroName(hero.heroId) }}</template>
+              </InfoTooltip>
             </li>
           </ul>
         </div>
@@ -70,12 +82,21 @@ const signed = (value: number) =>
           </span>
 
           <span class="muted">
-            {{ t(`settings.difficulties.${match.difficulty}`) }} ·
+            {{
+              match.duel
+                ? t('matchDetails.against', { name: match.duel.opponentName || t('profile.defaultName') })
+                : t(`settings.difficulties.${match.difficulty}`)
+            }}
+            ·
             <time :datetime="match.playedAt">{{ relativeTime(match.playedAt, settings.locale) }}</time>
           </span>
         </div>
+
+        <ChevronRight :size="18" class="chevron" aria-hidden="true" />
       </li>
     </ol>
+
+    <MatchDetailsDialog v-model="selected" />
   </HudPanel>
 </template>
 
@@ -96,13 +117,51 @@ const signed = (value: number) =>
 .match {
   --verdict: var(--chalk-faint);
   display: grid;
-  grid-template-columns: 150px 90px minmax(0, 1fr) auto;
+  grid-template-columns: 150px 90px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px 18px;
-  padding: 10px 14px 10px 16px;
+  padding: 10px 10px 10px 16px;
   border-radius: 10px;
   background: linear-gradient(90deg, color-mix(in srgb, var(--verdict) 12%, transparent), transparent 40%);
   border-left: 3px solid var(--verdict);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.match:hover,
+.match:has(.open:focus-visible) {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.match:has(.open:focus-visible) {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.open:focus-visible {
+  outline: none;
+}
+
+.chevron {
+  color: var(--chalk-faint);
+  transition:
+    color 0.15s,
+    translate 0.15s;
+}
+
+.match:hover .chevron {
+  color: var(--chalk);
+  translate: 2px 0;
 }
 
 .win {
@@ -148,6 +207,14 @@ const signed = (value: number) =>
 
 .rating.down {
   color: var(--theirs);
+}
+
+.rating.duel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--chalk);
 }
 
 .team {
@@ -208,6 +275,10 @@ const signed = (value: number) =>
     grid-column: 1 / -1;
     align-items: flex-start;
     text-align: left;
+  }
+
+  .chevron {
+    display: none;
   }
 }
 </style>

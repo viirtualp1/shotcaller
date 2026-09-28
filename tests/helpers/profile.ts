@@ -81,7 +81,13 @@ export function finishedMatch(
       mid: [owned('pyromancer')],
       bot: [owned('blademaster'), owned('acolyte')],
     },
+    opponentLineup: {
+      top: [owned('giant')],
+      mid: [],
+      bot: [],
+    },
     towersDestroyed: 2,
+    duel: null,
   }
 }
 
