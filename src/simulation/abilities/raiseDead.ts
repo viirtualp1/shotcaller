@@ -15,6 +15,11 @@ export const raiseDead: Ability = {
       return false
     }
 
+    const alive = ctx.queries.expiring.entities.filter((u) => u.owner === caster && u.creep?.summoned).length
+    if (alive + P.count > P.maxAlive) {
+      return false
+    }
+
     for (let i = 0; i < P.count; i++) {
       const angle = (i / P.count) * Math.PI * 2
       ctx.factory.skeleton(caster, {

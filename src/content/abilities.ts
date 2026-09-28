@@ -71,6 +71,8 @@ export const ABILITY_PARAMS = {
   raiseDead: {
     triggerRadius: 260,
     count: 2,
+    /** More mana only refreshes the army faster; it never grows past this. */
+    maxAlive: 4,
     hp: 260,
     damage: 22,
     lifetime: 12,

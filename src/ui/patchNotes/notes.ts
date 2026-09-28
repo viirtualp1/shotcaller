@@ -51,6 +51,55 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.7',
+    date: '2026-09-28',
+    title: {
+      en: 'A cap on the dead',
+      ru: 'Мёртвых не больше четырёх',
+    },
+    heroes: [
+      {
+        id: 'necromancer',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'raiseDead',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'At most **4** skeletons at a time. Mana Stones make him raise them again faster, but the army no longer grows.',
+                ru: 'Не больше **4** скелетов одновременно. С Mana Stone он быстрее поднимает новых, но армия больше не растёт.',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'Items: clicking an item in the stash opens its card with a **Sell** button, like the hero card. **E** sells the selected item too.',
+        ru: 'Предметы: нажатие на предмет на складе открывает его карточку с кнопкой **Продать**, как у героя. **E** продаёт и выбранный предмет.',
+      },
+      {
+        en: 'Bench and stash: hero and item icons are much bigger and fill their slots.',
+        ru: 'Скамейка и склад: иконки героев и предметов заметно крупнее и заполняют слот.',
+      },
+      {
+        en: 'Coach profile: MMR sits with matches, win rate and best streak instead of under the name.',
+        ru: 'Профиль тренера: MMR стоит рядом с матчами, винрейтом и лучшей серией, а не под ником.',
+      },
+      {
+        en: 'Match details: no more line saying whose throne fell.',
+        ru: 'Детали матча: убрана строка о том, чей трон разрушен.',
+      },
+      {
+        en: 'Tower and throne ranges show up only when enemies step inside, in the colour of the building’s side. A throne lights up **green** while it heals its wounded heroes and no enemy is near.',
+        ru: 'Радиус башен и трона виден, только когда в него заходят враги, — в цвете стороны строения. Трон подсвечивается **зелёным**, пока лечит своих раненых героев и рядом нет врагов.',
+      },
+    ],
+  },
+  {
     version: '7.6',
     date: '2026-09-28',
     title: {

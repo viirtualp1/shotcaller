@@ -56,14 +56,22 @@ const level = computed(() => (profile.value ? levelFor(profile.value.xp).level :
 const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
 
 const tiles = computed(() => {
+  const mmr = {
+    key: 'mmr',
+    label: t('coach.rating'),
+    value: text.number(rating.value),
+    note: '',
+  }
+
   const totals = profile.value?.totals
   if (!profile.value || !totals) {
-    return []
+    return [mmr]
   }
 
   const winRate = totals.matches ? Math.round((totals.wins / totals.matches) * 100) : 0
 
   return [
+    mmr,
     {
       key: 'matches',
       label: t('coach.matches'),
@@ -143,14 +151,12 @@ function ask(action: 'remove' | 'block') {
           <div class="who">
             <DialogTitle class="name">{{ name }}</DialogTitle>
 
-            <span class="rank">{{ t('coach.rating', { n: text.number(rating) }) }}</span>
-
             <span v-if="entry" class="status" :class="{ online: friends.isOnline(entry.id) }">
               {{ statusText(entry.id) }}
             </span>
           </div>
 
-          <dl v-if="tiles.length" class="stats">
+          <dl class="stats">
             <div v-for="tile in tiles" :key="tile.key" class="stat" :title="tile.note || undefined">
               <dt class="stat-label">{{ tile.label }}</dt>
               <dd class="stat-value">{{ tile.value }}</dd>
@@ -296,12 +302,6 @@ function ask(action: 'remove' | 'block') {
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.rank {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--chalk-dim);
 }
 
 .status {

@@ -6,7 +6,10 @@ import { useGameText } from '../../composables/useGameText'
 import ItemIcon from './ItemIcon.vue'
 
 /** Dota-style item tooltip: name and cost up top, then what the item does. */
-const props = defineProps<{ itemId: ItemId; hint?: string }>()
+const props = withDefaults(defineProps<{ itemId: ItemId; hint?: string; heading?: boolean }>(), {
+  hint: undefined,
+  heading: true,
+})
 
 const text = useGameText()
 const { t } = text
@@ -16,7 +19,7 @@ const passive = computed(() => Object.keys(item.value.effects).length > 0)
 
 <template>
   <div class="item-details">
-    <header class="head">
+    <header v-if="heading" class="head">
       <ItemIcon :item-id="itemId" :size="42" />
 
       <span class="title">

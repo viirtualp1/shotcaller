@@ -6,8 +6,9 @@ import { cssColor } from '@/rendering/theme'
 import { starsLabel } from '../../composables/useGameText'
 import { ROLE_ICONS } from '../../icons'
 
+/** `fill` sizes the avatar from its container's width, which must be a size container. */
 const props = withDefaults(
-  defineProps<{ heroId: HeroId; team?: TeamId; stars?: StarLevel; size?: number }>(),
+  defineProps<{ heroId: HeroId; team?: TeamId; stars?: StarLevel; size?: number; fill?: boolean }>(),
   {
     team: 0,
     stars: undefined,
@@ -17,12 +18,12 @@ const props = withDefaults(
 
 const style = computed(() => ({
   '--hero': cssColor(HEROES[props.heroId].color),
-  '--size': `${props.size}px`,
+  ...(props.fill ? {} : { '--size': `${props.size}px` }),
 }))
 </script>
 
 <template>
-  <span class="avatar" :class="team === 0 ? 'ours' : 'theirs'" :style="style" aria-hidden="true">
+  <span class="avatar" :class="[team === 0 ? 'ours' : 'theirs', { fill }]" :style="style" aria-hidden="true">
     <span class="disc">
       <component :is="ROLE_ICONS[HEROES[heroId].role]" :size="Math.round(size * 0.5)" :stroke-width="2.4" />
     </span>
@@ -44,6 +45,16 @@ const style = computed(() => ({
 
 .theirs {
   --team: var(--theirs);
+}
+
+/* Leaves room under the disc for the stars. */
+.avatar.fill {
+  --size: 62cqi;
+}
+
+.avatar.fill svg {
+  width: 50%;
+  height: 50%;
 }
 
 .disc {

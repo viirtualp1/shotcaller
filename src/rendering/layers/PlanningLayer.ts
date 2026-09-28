@@ -257,8 +257,7 @@ export class PlanningLayer extends Container {
         const at = slot === 'throne' ? this.map.base(side) : this.map.towerPosition(side, slot)
         view.position.set(at.x, at.y)
         this.perspective.transpose(view)
-        view.show(structures[team][slot], STRUCTURES[type].hp, true)
-        view.setAggro(false)
+        view.show(structures[team][slot], STRUCTURES[type].hp)
         this.structureLayer.addChild(view)
       }
     }

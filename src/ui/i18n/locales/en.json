@@ -72,7 +72,7 @@
     "roots": "Roots enemies around the target for {duration} s and deals {damage} damage. Heals nearby allies for {heal}.",
     "whirl": "Spins for {duration} s, hitting everyone nearby for {damage} every {tick} s.",
     "leap": "Jumps into the enemy crowd: {damage} damage and a {stun} s stun to everyone nearby.",
-    "raiseDead": "Summons {count} skeletons for {lifetime} s. Each has {hp} health and hits for {damage}.",
+    "raiseDead": "Summons {count} skeletons for {lifetime} s. Each has {hp} health and hits for {damage}. At most {maxAlive} skeletons at a time.",
     "blizzard": "Storm for {duration} s: {damage} damage every {tick} s and a {slow}% slow.",
     "quake": "Stuns every enemy nearby for {stun} s and deals {damage} damage.",
     "turret": "Deploys a turret for {lifetime} s with {hp} health and {damage} damage per shot. It hits structures too.",
@@ -167,7 +167,7 @@
   },
   "stash": {
     "title": "Items",
-    "hint": "Drag onto a hero"
+    "hint": "Click to equip or sell"
   },
   "shop": {
     "heroes": "Heroes",
@@ -295,7 +295,7 @@
     "hotkeys": {
       "reroll": "Reroll the shop",
       "xp": "Buy experience",
-      "sell": "Sell the hero",
+      "sell": "Sell the selected hero or item",
       "menu": "Menu",
       "fight": "Fight"
     }
@@ -316,7 +316,7 @@
   },
   "notices": {
     "promoted": "{hero} is now {stars}",
-    "itemBought": "{item} is in your stash. Drag it onto a hero",
+    "itemBought": "{item} is in your stash. Click it to equip or sell",
     "timeUp": "Time's up, the battle has started",
     "arranged": "Team placed",
     "alreadyArranged": "Your team is already placed optimally"
@@ -356,7 +356,7 @@
     },
     "items": {
       "title": "Items",
-      "text": "The Items tab sells upgrades. Drag a bought item onto a hero: every hero has two slots."
+      "text": "The Items tab sells upgrades. Click a bought item in the stash, then a hero, or just drag it: every hero has two slots. The item card also lets you sell it."
     },
     "scoreboard": {
       "title": "Score",
@@ -748,7 +748,7 @@
   "coach": {
     "loading": "Loading the profile…",
     "unavailable": "The profile is not available",
-    "rating": "{n} MMR",
+    "rating": "MMR",
     "matches": "Matches",
     "winRate": "Win rate",
     "bestStreak": "Best streak",
@@ -805,8 +805,6 @@
       "lineups": "Lineups"
     },
     "reasons": {
-      "throneWin": "The enemy throne fell",
-      "throneLoss": "Our throne fell",
       "roundLimit": "The match went to the round limit",
       "forfeitWin": "The opponent gave up or went silent",
       "forfeitLoss": "You gave up or went silent"

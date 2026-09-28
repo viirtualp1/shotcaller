@@ -46,10 +46,11 @@ function press(item: StashItemView, e: PointerEvent) {
           type="button"
           class="slot anim-pop"
           :class="{ selected: store.selectedItem === item.index }"
+          data-stash-item
           @pointerdown="press(item, $event)"
           @keydown.enter="store.selectItem(item.index)"
         >
-          <ItemIcon :item-id="item.itemId" :size="34" />
+          <ItemIcon :item-id="item.itemId" fill />
         </button>
 
         <template #content>

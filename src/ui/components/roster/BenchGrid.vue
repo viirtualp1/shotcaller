@@ -67,7 +67,7 @@ function onPanelClick() {
           @pointerdown="press(hero, $event)"
           @keydown.enter="store.select(hero.uid)"
         >
-          <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" :size="34" />
+          <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" fill />
 
           <span v-if="hero.items.length" class="pips">
             <i v-for="(item, i) in hero.items" :key="`${item}-${i}`" />
@@ -123,6 +123,7 @@ function onPanelClick() {
   place-items: center;
   aspect-ratio: 1;
   border-radius: 10px;
+  container-type: inline-size;
 }
 
 .slot.empty {
@@ -135,7 +136,7 @@ function onPanelClick() {
   background: rgba(255, 255, 255, 0.04);
   cursor: grab;
   touch-action: none;
-  padding-bottom: 6px;
+  padding: 0 0 6px;
   transition:
     transform 0.12s,
     border-color 0.15s;

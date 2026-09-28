@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js'
 import { HEROES } from '@/content/heroes'
-import type { Vec2 } from '@/core/math/vec2'
+import { distance, type Vec2 } from '@/core/math/vec2'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import { isAlive, type Entity } from '@/simulation/ecs/components'
 import type { SimulationEvents } from '@/simulation/events'
@@ -11,7 +11,7 @@ import { CreepView } from '../views/CreepView'
 import type { EntityView } from '../views/EntityView'
 import { HeroToken, isOverToken } from '../views/HeroToken'
 import { ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
-import { StructureView } from '../views/StructureView'
+import { StructureView, type StructureZone } from '../views/StructureView'
 
 const MELEE_LUNGE = 6
 const RANGED_RECOIL = -2
@@ -25,6 +25,7 @@ export class BattleLayer extends Container {
   private readonly views = new Map<Entity, EntityView>()
   private subscriptions: (() => void)[] = []
   private hoveredUid: string | null = null
+  private simulation: BattleSimulation | null = null
 
   constructor(
     private readonly icons: RoleIcons,
@@ -36,6 +37,7 @@ export class BattleLayer extends Container {
 
   attach(simulation: BattleSimulation) {
     this.detach()
+    this.simulation = simulation
     const { world, events } = simulation
     for (const entity of world) {
       this.add(entity, false)
@@ -74,6 +76,7 @@ export class BattleLayer extends Container {
     }
 
     this.subscriptions = []
+    this.simulation = null
 
     for (const entity of [...this.views.keys()]) {
       this.remove(entity, false)
@@ -89,7 +92,38 @@ export class BattleLayer extends Container {
       }
 
       view.sync(entity, time)
+
+      if (view instanceof StructureView) {
+        view.setZone(this.zoneOf(entity))
+      }
     }
+  }
+
+  /** Enemies inside the range win over a throne healing its own heroes. */
+  private zoneOf(structure: Entity): StructureZone {
+    const range = structure.attack?.range
+    if (!this.simulation || !range || !structure.position || !isAlive(structure)) {
+      return null
+    }
+
+    let healing = false
+    for (const unit of this.simulation.queries.units) {
+      if (
+        unit.kind === 'structure' ||
+        !isAlive(unit) ||
+        distance(unit.position, structure.position) > range + unit.radius
+      ) {
+        continue
+      }
+
+      if (unit.team !== structure.team) {
+        return 'threat'
+      }
+
+      healing ||= Boolean(structure.healAura) && unit.kind === 'hero' && unit.health.current < unit.health.max
+    }
+
+    return healing ? 'heal' : null
   }
 
   setHovered(uid: string | null) {

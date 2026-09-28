@@ -8,6 +8,10 @@ import { drawBar, strokeArc } from './bars'
 import { EntityView } from './EntityView'
 
 const RANGE_DASHES = 36
+const ZONE_FADE = 0.2
+
+/** `threat`: enemies inside the range; `heal`: the throne mends a wounded ally and no enemy is near. */
+export type StructureZone = 'threat' | 'heal' | null
 
 export class StructureView extends EntityView {
   private readonly range = new Graphics()
@@ -16,7 +20,7 @@ export class StructureView extends EntityView {
   private readonly bar = new Graphics()
   private rubble: boolean | null = null
   private lastHealth = Infinity
-  private aggro: boolean | null = null
+  private zone: StructureZone = null
 
   constructor(
     private readonly team: TeamId,
@@ -26,11 +30,12 @@ export class StructureView extends EntityView {
     const { radius } = STRUCTURES[type]
     this.muzzle.circle(0, 0, radius * 0.7).fill({ color: 0xffffff })
     this.muzzle.alpha = 0
+    this.range.alpha = 0
     this.addChildAt(this.range, 0)
     this.body.addChild(this.shape, this.muzzle, this.bar)
   }
 
-  show(health: number, maxHealth: number, showRange: boolean) {
+  show(health: number, maxHealth: number) {
     const destroyed = health <= 0
     if (destroyed !== this.rubble) {
       this.drawShape(destroyed)
@@ -55,43 +60,39 @@ export class StructureView extends EntityView {
       })
     }
 
-    if (!showRange || destroyed) {
-      this.range.clear()
+    if (destroyed) {
+      this.setZone(null)
     }
   }
 
-  /** Lights up the attack radius while the structure is shooting at something. */
-  setAggro(active: boolean) {
-    if (active === this.aggro || this.rubble) {
+  /** The attack radius stays hidden until an enemy steps in, or the throne heals someone. */
+  setZone(zone: StructureZone) {
+    if (this.rubble) {
+      zone = null
+    }
+
+    if (zone === this.zone) {
       return
     }
 
-    this.aggro = active
-    const { range } = STRUCTURES[this.type]
-    const color = TEAM_COLORS[this.team]
-    const g = this.range.clear()
-    if (!active) {
-      /** The throne's reach doubles as the outline of the base, so it reads a little stronger. */
-      const throne = this.type === 'throne'
-      if (throne) {
-        g.circle(0, 0, range).fill({
-          color,
-          alpha: 0.05,
-        })
-      }
+    this.zone = zone
+    gsap.killTweensOf(this.range)
 
-      g.circle(0, 0, range).stroke({
-        width: throne ? 1.6 : 1,
-        color,
-        alpha: throne ? 0.35 : 0.16,
+    if (!zone) {
+      gsap.to(this.range, {
+        alpha: 0,
+        duration: ZONE_FADE,
       })
 
       return
     }
 
+    const { range } = STRUCTURES[this.type]
+    const color = zone === 'heal' ? PALETTE.heal : TEAM_COLORS[this.team]
+    const g = this.range.clear()
     g.circle(0, 0, range).fill({
       color,
-      alpha: 0.06,
+      alpha: 0.07,
     })
 
     for (let i = 0; i < RANGE_DASHES; i++) {
@@ -102,6 +103,11 @@ export class StructureView extends EntityView {
         alpha: 0.7,
       })
     }
+
+    gsap.fromTo(this.range, { alpha: 0 }, {
+      alpha: 1,
+      duration: ZONE_FADE,
+    })
   }
 
   fire() {
@@ -122,10 +128,8 @@ export class StructureView extends EntityView {
 
   sync(entity: Entity) {
     if (entity.health) {
-      this.show(entity.dead ? 0 : entity.health.current, entity.health.max, true)
+      this.show(entity.dead ? 0 : entity.health.current, entity.health.max)
     }
-
-    this.setAggro(Boolean(entity.targeting?.target) && !entity.dead)
   }
 
   private shake() {
@@ -151,7 +155,6 @@ export class StructureView extends EntityView {
     const color = TEAM_COLORS[this.team]
     const { radius } = STRUCTURES[this.type]
     if (destroyed) {
-      this.range.clear()
       const r = radius * 0.8
       g.moveTo(-r, -r).lineTo(r, r).moveTo(r, -r).lineTo(-r, r).stroke({
         width: 2.5,
@@ -199,6 +202,7 @@ export class StructureView extends EntityView {
   override destroy(options?: Parameters<EntityView['destroy']>[0]) {
     gsap.killTweensOf(this.shape)
     gsap.killTweensOf(this.muzzle)
+    gsap.killTweensOf(this.range)
     super.destroy(options)
   }
 }

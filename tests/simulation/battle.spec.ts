@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ABILITY_PARAMS } from '@/content/abilities'
 import { HERO_IDS, type HeroId, type ItemId, type LaneId } from '@/content/ids'
 import { ITEMS } from '@/content/items'
 import type { BattleSetup } from '@/domain/battle/contracts'
@@ -315,6 +316,32 @@ describe('BattleSimulation', () => {
 
     expect(crits.units).toBeGreaterThan(0)
     expect(crits.buildings).toBe(0)
+  })
+
+  it('caps the skeletons a necromancer keeps alive however much mana it gets', () => {
+    const sim = new BattleSimulation(
+      setup('skeletons', lineup('a', { bot: ['necromancer'] }), lineup('b', {})),
+    )
+
+    const necromancer = sim.queries.heroes.entities.find((h) => h.team === 0)!
+    const tower = sim.queries.structures.entities.find((s) => s.team === 1 && s.structure.lane === 'bot')!
+    necromancer.position = {
+      x: tower.position.x,
+      y: tower.position.y + 200,
+    }
+
+    let peak = 0
+    for (let i = 0; i < 60; i++) {
+      necromancer.mana.current = necromancer.mana.max
+      sim.step()
+
+      peak = Math.max(
+        peak,
+        sim.queries.units.entities.filter((u) => u.owner === necromancer && u.creep?.summoned).length,
+      )
+    }
+
+    expect(peak).toBe(ABILITY_PARAMS.raiseDead.maxAlive)
   })
 
   it('keeps gankers off buildings while they still farm creeps', () => {

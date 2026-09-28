@@ -31,6 +31,7 @@ import TavernStrip from '../components/hud/TavernStrip.vue'
 import SynergyTracker from '../components/lanes/SynergyTracker.vue'
 import BenchGrid from '../components/roster/BenchGrid.vue'
 import HeroCard from '../components/roster/HeroCard.vue'
+import ItemCard from '../components/roster/ItemCard.vue'
 import StashGrid from '../components/roster/StashGrid.vue'
 import ShopPanel from '../components/shop/ShopPanel.vue'
 import { useFightRequest } from '../composables/useFightRequest'
@@ -115,10 +116,6 @@ const placementHint = computed(() => {
     return null
   }
 
-  if (store.selectedItem !== null) {
-    return t('battle.itemHint')
-  }
-
   if (store.selectedUid !== null) {
     return t('battle.placeHint')
   }
@@ -161,7 +158,13 @@ useHotkeys({
   reroll: store.reroll,
   buyXp: store.buyXp,
   fight: useFightRequest(),
-  sell: () => store.selectedUid && store.sell(store.selectedUid),
+  sell: () => {
+    if (store.selectedUid) {
+      store.sell(store.selectedUid)
+    } else if (store.selectedItem !== null) {
+      store.sellItem(store.selectedItem)
+    }
+  },
   cancel: escape,
 })
 
@@ -230,6 +233,7 @@ watch(
       </Transition>
 
       <HeroCard />
+      <ItemCard />
     </div>
 
     <PhaseBanner />

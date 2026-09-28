@@ -78,8 +78,8 @@ const reason = computed(() => {
     return t(`matchDetails.reasons.${record.verdict === 'win' ? 'forfeitWin' : 'forfeitLoss'}`)
   }
 
-  if (record?.reason === 'throne' && record.verdict !== 'draw') {
-    return t(`matchDetails.reasons.${record.verdict === 'win' ? 'throneWin' : 'throneLoss'}`)
+  if (record?.reason === 'throne') {
+    return null
   }
 
   return t('matchDetails.reasons.roundLimit')
@@ -249,7 +249,7 @@ const combat = computed<ComparisonRow[]>(() => {
               {{ t(`result.${match.verdict}`) }}
             </DialogTitle>
 
-            <p class="reason">{{ reason }}</p>
+            <p v-if="reason" class="reason">{{ reason }}</p>
 
             <p class="meta">
               {{ opponent ?? t(`settings.difficulties.${match.difficulty}`) }} ·
