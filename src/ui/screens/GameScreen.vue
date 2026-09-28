@@ -265,7 +265,8 @@ watch(
   gap: 12px;
   padding: 0 var(--gutter);
   pointer-events: none;
-  z-index: 10;
+  /* Above the side panels and the dock, so the reaction wheel and the fallen heroes can hang over them. */
+  z-index: 12;
 }
 
 .hud-top > * {

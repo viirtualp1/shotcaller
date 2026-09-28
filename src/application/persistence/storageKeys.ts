@@ -7,6 +7,8 @@ export const STORAGE_KEYS = {
   /** An online duel in progress, kept apart so it never replaces the saved match against the computer. */
   duel: `${PREFIX}/duel`,
   reactionsMuted: `${PREFIX}/reactions-muted`,
+  systemNotifications: `${PREFIX}/system-notifications`,
+  systemNotificationsPrompt: `${PREFIX}/system-notifications-prompt`,
   duelClock: `${PREFIX}/duel-clock`,
   speed: `${PREFIX}/speed`,
   locale: `${PREFIX}/locale`,

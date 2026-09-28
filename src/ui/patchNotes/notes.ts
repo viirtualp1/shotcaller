@@ -50,6 +50,50 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.3',
+    date: '2026-09-28',
+    title: {
+      en: 'Like a messenger',
+      ru: 'Как в мессенджере',
+    },
+    interface: [
+      {
+        en: 'Friends open in a window in the corner: a click on a friend opens the chat, the avatar opens the profile, the duel button sits at the end of the row.',
+        ru: 'Друзья открываются окном в углу: клик по другу открывает чат, по аватару — профиль, кнопка дуэли в конце строки.',
+      },
+      {
+        en: 'Browser notifications for messages, friend requests and duel challenges while the game is in the background. Turned on with the bell in the friends window.',
+        ru: 'Уведомления браузера о сообщениях, заявках и вызовах на дуэль, пока игра в фоне. Включаются колокольчиком в окне друзей.',
+      },
+      {
+        en: 'Friend profile: wider, one line per match with the lineup in a row.',
+        ru: 'Профиль друга: шире, каждый матч в одну строку, герои в ряд.',
+      },
+      {
+        en: 'During a round the meter shows only your heroes; the opponent’s damage and healing are revealed in the round summary.',
+        ru: 'Во время раунда счётчик показывает только твоих героев; урон и лечение соперника видны в итогах раунда.',
+      },
+      {
+        en: 'Round summary: switch between damage and healing of both teams.',
+        ru: 'Итоги раунда: переключение между уроном и лечением обеих команд.',
+      },
+      {
+        en: 'The Friends button shows up once you sign in.',
+        ru: 'Кнопка «Друзья» появляется после входа в аккаунт.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The friend profile no longer breaks: the avatar keeps its size and the name shows.',
+        ru: 'Профиль друга больше не разваливается: аватар своего размера, имя на месте.',
+      },
+      {
+        en: 'The reaction wheel no longer hides under the side panel.',
+        ru: 'Колесо реакций больше не прячется под боковой панелью.',
+      },
+    ],
+  },
+  {
     version: '7.2',
     date: '2026-09-28',
     title: {

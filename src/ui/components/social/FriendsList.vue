@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
-import { Ban, Check, ChevronDown, Copy, MessageCircle, Swords, UserPlus, X } from 'lucide-vue-next'
+import { Ban, Check, ChevronDown, Copy, Swords, UserPlus, X } from 'lucide-vue-next'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import {
   formatFriendCode,
@@ -125,8 +125,9 @@ async function submit() {
       >
         <button
           type="button"
-          class="open"
+          class="profile"
           :aria-label="t('friends.openProfile', { name: nameOf(entry.name) })"
+          :title="t('friends.openProfile', { name: nameOf(entry.name) })"
           @click="friends.openProfile(entry.id)"
         >
           <RankMedal :tier="rankFor(entry.rating).tier" :stars="rankFor(entry.rating).stars" :size="30" />
@@ -135,21 +136,18 @@ async function submit() {
             <CoachAvatar :hero-id="heroOf(entry.avatar)" :size="38" />
             <i class="presence" />
           </span>
-
-          <span class="who">
-            <strong class="name">{{ nameOf(entry.name) }}</strong>
-            <span class="status">{{ statusText(entry.id) }}</span>
-          </span>
         </button>
 
         <button
           type="button"
-          class="icon-btn chat"
+          class="open"
           :aria-label="t('chat.open', { name: nameOf(entry.name) })"
-          :title="t('friends.message')"
           @click="chat.open(entry.id)"
         >
-          <MessageCircle :size="16" />
+          <span class="who">
+            <strong class="name">{{ nameOf(entry.name) }}</strong>
+            <span class="status">{{ statusText(entry.id) }}</span>
+          </span>
 
           <span
             v-if="chat.unreadFrom(entry.id)"
@@ -321,12 +319,11 @@ p {
   opacity: 0.75;
 }
 
+.profile,
 .open {
   display: flex;
-  flex: 1;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: 8px;
   padding: 0;
   border: 0;
   background: none;
@@ -334,6 +331,22 @@ p {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.profile {
+  flex: none;
+}
+
+/* The row is a contact: a click opens the conversation. */
+.open {
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.row:has(.open:hover) {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .open:hover .name {
@@ -394,20 +407,13 @@ p {
   color: var(--heal);
 }
 
-.icon-btn.chat {
-  border-color: rgba(108, 196, 255, 0.5);
-  color: var(--ours);
-}
-
 .icon-btn.duel {
   border-color: rgba(244, 197, 91, 0.5);
   color: var(--gold);
 }
 
 .unread {
-  position: absolute;
-  top: -6px;
-  right: -6px;
+  flex: none;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;

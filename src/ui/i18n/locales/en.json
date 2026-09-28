@@ -201,7 +201,7 @@
     "speed": "Speed",
     "skip": "Skip",
     "timeLeft": "{s} s",
-    "meter": "Heroes",
+    "meter": "Your heroes",
     "damageDealt": "Damage",
     "healing": "Healing",
     "noHealing": "Nobody has healed yet",
@@ -249,7 +249,8 @@
       "win": "We dealt more damage to buildings: {ours} to {theirs}",
       "loss": "The enemy dealt more damage to buildings: {theirs} to {ours}",
       "draw": "Building damage was almost even: {ours} to {theirs}. A win needs a gap of {threshold} or more"
-    }
+    },
+    "noHealing": "Nobody healed this round"
   },
   "result": {
     "win": "Victory",
@@ -695,7 +696,8 @@
       "invalid": "The message is empty or longer than 500 characters",
       "forbidden": "You can only message friends",
       "failed": "That did not work. Try again"
-    }
+    },
+    "toFriends": "Back to friends"
   },
   "pwa": {
     "updateTitle": "A new version is out",
@@ -772,6 +774,14 @@
     "friendRequest": "wants to be your friend",
     "friendAccepted": "is your friend now",
     "profile": "Profile"
+  },
+  "systemNotifications": {
+    "prompt": "Turn on browser notifications? Messages and duel challenges will reach you even while the game is in the background.",
+    "enable": "Turn on",
+    "later": "Not now",
+    "on": "Browser notifications are on",
+    "off": "Browser notifications are off",
+    "denied": "Notifications are blocked in the browser settings"
   },
   "reactions": {
     "open": "Reactions",

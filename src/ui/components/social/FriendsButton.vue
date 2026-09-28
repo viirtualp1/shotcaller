@@ -6,7 +6,7 @@ import { useChatStore } from '../../stores/chat'
 import { useCloudStore } from '../../stores/cloud'
 import { useFriendsStore } from '../../stores/friends'
 
-/** Sits next to the profile card on the start screen; shows who is online and new requests at a glance. */
+/** Sits next to the profile card on the start screen once signed in; shows who is online and new requests at a glance. */
 const cloud = useCloudStore()
 const friends = useFriendsStore()
 const chat = useChatStore()
@@ -17,7 +17,7 @@ const news = computed(() => friends.incoming.length + chat.totalUnread)
 </script>
 
 <template>
-  <button v-if="cloud.enabled" type="button" class="friends" @click="friends.open = true">
+  <button v-if="cloud.signedIn" type="button" class="friends" @click="friends.open = true">
     <span class="icon">
       <Users :size="20" />
 

@@ -6,9 +6,11 @@ import {
   DialogPortal,
   DialogRoot,
   DialogTitle,
+  ToggleGroupItem,
+  ToggleGroupRoot,
 } from 'reka-ui'
 import { Castle } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { LANE_IDS, type StructureSlot } from '@/content/ids'
 import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
@@ -16,9 +18,11 @@ import { starsLabel, useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import AnimatedNumber from '../common/AnimatedNumber.vue'
+import type { MeterStat } from '../battle/DamageMeter.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
 const INCOME_STEP_MS = 220
+const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing']
 
 const store = useMatchStore()
 const timer = usePlanningTimerStore()
@@ -90,12 +94,31 @@ const structureRows = computed(() => {
 
 const untouched = computed(() => structureRows.value.every((r) => !r.ours.lost && !r.theirs.lost))
 
+const meter = ref<MeterStat>('damageDealt')
+
+const meterModel = computed({
+  get: () => meter.value,
+  set: (value: string | undefined) => {
+    if (value) {
+      meter.value = value as MeterStat
+    }
+  },
+})
+
+/** Both teams, by the stat picked; the healing list has only those who healed. */
 const heroRows = computed(() => {
-  const heroes = summary.value?.heroes ?? []
-  const top = Math.max(1, heroes[0]?.damageDealt ?? 1)
+  const stat = meter.value
+
+  const heroes = (summary.value?.heroes ?? [])
+    .filter((hero) => stat === 'damageDealt' || hero.healing > 0)
+    .sort((a, b) => b[stat] - a[stat])
+
+  const top = Math.max(1, heroes[0]?.[stat] ?? 1)
+
   return heroes.map((hero) => ({
     ...hero,
-    share: hero.damageDealt / top,
+    value: hero[stat],
+    share: hero[stat] / top,
   }))
 })
 
@@ -180,9 +203,24 @@ const incomeRows = computed(() => {
         </section>
 
         <section>
-          <h3 class="eyebrow">{{ t('summary.heroes') }}</h3>
+          <header class="heroes-head">
+            <h3 class="eyebrow">{{ t('summary.heroes') }}</h3>
 
-          <ol class="heroes">
+            <ToggleGroupRoot
+              v-model="meterModel"
+              type="single"
+              class="meter-tabs"
+              :aria-label="t('battle.meter')"
+            >
+              <ToggleGroupItem v-for="stat in METER_STATS" :key="stat" :value="stat" class="meter-tab">
+                {{ t(`battle.${stat}`) }}
+              </ToggleGroupItem>
+            </ToggleGroupRoot>
+          </header>
+
+          <p v-if="!heroRows.length" class="none">{{ t('summary.noHealing') }}</p>
+
+          <ol v-else class="heroes" :class="meter">
             <li
               v-for="(hero, i) in heroRows"
               :key="hero.uid"
@@ -197,13 +235,12 @@ const incomeRows = computed(() => {
                 <span class="label">{{ text.heroName(hero.heroId) }} {{ starsLabel(hero.stars) }}</span>
               </span>
 
-              <span class="num damage" :title="t('summary.heroDamage')">{{
-                text.number(hero.damageDealt)
-              }}</span>
-
-              <span class="num healing" :title="t('summary.heroHealing')">{{
-                hero.healing ? `+${text.number(hero.healing)}` : ''
-              }}</span>
+              <span
+                class="num value"
+                :title="meter === 'healing' ? t('summary.heroHealing') : t('summary.heroDamage')"
+              >
+                {{ meter === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}
+              </span>
 
               <span class="num kd" :title="`${t('summary.heroKills')} / ${t('summary.heroDeaths')}`">
                 {{ hero.kills }}/{{ hero.deaths }}
@@ -414,7 +451,7 @@ section {
 .hero {
   --team: var(--ours);
   display: grid;
-  grid-template-columns: 24px 1fr auto 3.6em 3.2em;
+  grid-template-columns: 24px 1fr auto 3.2em;
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
@@ -456,8 +493,44 @@ section {
   color: var(--chalk-dim);
 }
 
-.healing {
+.heroes.healing .value {
   color: var(--heal);
+}
+
+.heroes.healing .bar i {
+  background: color-mix(in srgb, var(--heal) 38%, transparent);
+}
+
+.heroes-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meter-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.meter-tab {
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.meter-tab[data-state='on'] {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--chalk);
 }
 
 .note {

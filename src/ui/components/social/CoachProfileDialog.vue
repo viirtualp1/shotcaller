@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core'
-import { Ban, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
+import { Ban, Crown, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed, ref } from 'vue'
 import { HERO_IDS } from '@/content/ids'
@@ -10,8 +10,10 @@ import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
+import { useSettingsStore } from '../../stores/settings'
+import HeroAvatar from '../common/HeroAvatar.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
-import MatchHistory from '../profile/MatchHistory.vue'
+import { relativeTime } from '../profile/format'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** Removing and blocking ask once more; the question goes away on its own. */
@@ -21,6 +23,7 @@ const CONFIRM_MS = 3000
 const friends = useFriendsStore()
 const chat = useChatStore()
 const duel = useDuelStore()
+const settings = useSettingsStore()
 const text = useGameText()
 const { t } = text
 const statusText = useFriendStatus()
@@ -51,6 +54,9 @@ const hero = computed(
 
 const level = computed(() => (profile.value ? levelFor(profile.value.xp).level : null))
 const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
+
+const signed = (value: number) =>
+  value > 0 ? `+${text.number(value)}` : value < 0 ? `−${text.number(-value)}` : '0'
 
 const tiles = computed(() => {
   const totals = profile.value?.totals
@@ -134,7 +140,7 @@ function ask(action: 'remove' | 'block') {
     <DialogPortal>
       <DialogOverlay class="overlay" />
 
-      <DialogContent class="sheet coach" :aria-describedby="undefined">
+      <DialogContent class="sheet coach-profile" :aria-describedby="undefined">
         <header class="head">
           <RankMedal :tier="rank.tier" :stars="rank.stars" :size="54" />
           <CoachAvatar :hero-id="hero" :level="level" :size="56" />
@@ -168,8 +174,40 @@ function ask(action: 'remove' | 'block') {
             </article>
           </section>
 
-          <MatchHistory v-if="profile.recent.length" :matches="profile.recent" />
-          <p v-else class="muted">{{ t('coach.noMatches') }}</p>
+          <section class="history">
+            <h3 class="section-title">{{ t('coach.history') }}</h3>
+
+            <ol v-if="profile.recent.length" class="matches">
+              <li v-for="match in profile.recent" :key="match.id" class="match" :class="match.verdict">
+                <strong class="verdict">{{ t(`result.${match.verdict}`) }}</strong>
+
+                <span
+                  class="delta"
+                  :class="{
+                    up: match.ratingAfter > match.ratingBefore,
+                    down: match.ratingAfter < match.ratingBefore,
+                  }"
+                >
+                  {{ signed(match.ratingAfter - match.ratingBefore) }}
+                </span>
+
+                <ul class="lineup">
+                  <li v-for="(pick, i) in match.lineup" :key="i" class="hero">
+                    <Crown v-if="pick.heroId === match.mvp" :size="10" class="crown" />
+                    <HeroAvatar :hero-id="pick.heroId" :stars="pick.stars" :size="24" />
+                  </li>
+                </ul>
+
+                <span class="meta">
+                  {{ t('profile.history.rounds', { won: match.roundsWon, lost: match.roundsLost }) }}
+                  ·
+                  <time :datetime="match.playedAt">{{ relativeTime(match.playedAt, settings.locale) }}</time>
+                </span>
+              </li>
+            </ol>
+
+            <p v-else class="muted">{{ t('coach.noMatches') }}</p>
+          </section>
         </template>
 
         <footer v-if="entry" class="actions">
@@ -209,11 +247,12 @@ function ask(action: 'remove' | 'block') {
 </template>
 
 <style scoped>
-.coach {
+/* Not `.coach`: that is the avatar's own class, and scoped styles reach a child component's root. */
+.coach-profile {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: min(640px, calc(100vw - 32px));
+  gap: 18px;
+  width: min(860px, calc(100vw - 32px));
 }
 
 .head {
@@ -262,8 +301,115 @@ function ask(action: 'remove' | 'block') {
 
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 8px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.matches {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One line per match: result, rating change, the lineup in a row, then rounds and when. */
+.match {
+  --verdict: var(--chalk-faint);
+  display: grid;
+  grid-template-columns: 96px 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--verdict) 12%, transparent), transparent 45%);
+  border-left: 3px solid var(--verdict);
+}
+
+.match.win {
+  --verdict: var(--heal);
+}
+
+.match.loss {
+  --verdict: var(--theirs);
+}
+
+.verdict {
+  color: var(--verdict);
+  font-size: 14px;
+}
+
+.delta {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--chalk-dim);
+}
+
+.delta.up {
+  color: var(--heal);
+}
+
+.delta.down {
+  color: var(--theirs);
+}
+
+.lineup {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  flex: none;
+}
+
+.crown {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1;
+  color: var(--gold);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--chalk-dim);
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .match {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .meta {
+    grid-column: 1 / -1;
+  }
 }
 
 .tile {

@@ -5,11 +5,10 @@ import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
 import SignInDialog from './components/dialogs/SignInDialog.vue'
 import SettingsDialog from './components/dialogs/SettingsDialog.vue'
-import ChatWindow from './components/social/ChatWindow.vue'
 import CoachProfileDialog from './components/social/CoachProfileDialog.vue'
 import DuelInviteDialog from './components/social/DuelInviteDialog.vue'
-import FriendsDrawer from './components/social/FriendsDrawer.vue'
 import NotificationStack from './components/social/NotificationStack.vue'
+import SocialWindow from './components/social/SocialWindow.vue'
 import GameScreen from './screens/GameScreen.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
 import ProfileScreen from './screens/ProfileScreen.vue'
@@ -17,6 +16,7 @@ import StartScreen from './screens/StartScreen.vue'
 import { useChatStore } from './stores/chat'
 import { useCloudStore } from './stores/cloud'
 import { useDuelStore } from './stores/duel'
+import { useSystemNotificationsStore } from './stores/systemNotifications'
 import { useFriendsStore } from './stores/friends'
 import { useMatchStore } from './stores/match'
 import { usePatchNotesStore } from './stores/patchNotes'
@@ -31,6 +31,7 @@ const cloud = useCloudStore()
 useFriendsStore()
 useChatStore()
 useDuelStore()
+useSystemNotificationsStore()
 </script>
 
 <template>
@@ -49,9 +50,8 @@ useDuelStore()
     <template v-if="cloud.enabled">
       <SignInDialog />
       <CloudConflictDialog />
-      <FriendsDrawer />
       <CoachProfileDialog />
-      <ChatWindow />
+      <SocialWindow />
       <DuelInviteDialog />
       <NotificationStack />
     </template>

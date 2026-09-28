@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Check, MessageCircle, Swords, UserPlus, X } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { HERO_IDS } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
+import { useNotificationText } from '../../composables/useNotificationText'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
@@ -18,58 +18,8 @@ const duel = useDuelStore()
 const match = useMatchStore()
 const { t } = useGameText()
 
-const nameOr = (name: string | undefined) => name || t('profile.defaultName')
-const heroOf = (avatar: string | null | undefined) => HERO_IDS.find((id) => id === avatar) ?? 'spearman'
-const friendOf = (id: string) => friends.friends.find((f) => f.id === id) ?? null
+const { nameOr, coachOf, headline } = useNotificationText()
 const outgoingName = computed(() => nameOr(duel.outgoing?.opponent.name))
-
-/** The coach a notification is about, for its avatar and name. */
-function coachOf({ notice }: SocialNotification) {
-  if (notice.kind === 'message') {
-    const friend = friendOf(notice.friendId)
-
-    return {
-      name: nameOr(friend?.name),
-      hero: heroOf(friend?.avatar),
-    }
-  }
-
-  if (notice.kind === 'friendRequest' || notice.kind === 'friendAccepted') {
-    return {
-      name: nameOr(notice.coach.name),
-      hero: heroOf(notice.coach.avatar),
-    }
-  }
-
-  return null
-}
-
-function headline({ notice }: SocialNotification) {
-  switch (notice.kind) {
-    case 'message':
-      return notice.count > 1
-        ? t('notifications.messages', { n: notice.count }, notice.count)
-        : t('chatWindow.newMessage')
-    case 'friendRequest':
-      return t('notifications.friendRequest')
-    case 'friendAccepted':
-      return t('notifications.friendAccepted')
-    case 'duelDeclined':
-      return t('duel.declined', { name: nameOr(notice.name) })
-    case 'duelExpired':
-      return t('duel.expired', { name: nameOr(notice.name) })
-    case 'duelCancelled':
-      return t('duel.cancelled', { name: nameOr(notice.name) })
-    case 'duelEnded':
-      return notice.how === 'disputed'
-        ? t('duel.ended.disputed')
-        : t(`duel.ended.${notice.how}${notice.won ? 'Won' : 'Lost'}`)
-    case 'duelFailed':
-      return t(`duel.failures.${notice.reason}`)
-    case 'badBoard':
-      return t('duel.badBoard')
-  }
-}
 
 /** The border colour: friends and messages, duel news, good news or bad news. */
 function tone({ notice }: SocialNotification) {
@@ -118,7 +68,7 @@ function viewProfile(item: SocialNotification, coachId: string) {
     tag="ol"
     name="notification"
     class="notifications"
-    :class="{ 'in-match': match.view !== null, 'beside-chat': chat.friendId !== null }"
+    :class="{ 'in-match': match.view !== null, 'beside-window': friends.open || chat.friendId !== null }"
     aria-live="polite"
   >
     <li v-if="duel.outgoing" key="outgoing-duel" class="card duel sticky">
@@ -223,14 +173,14 @@ function viewProfile(item: SocialNotification, coachId: string) {
   bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
-/* The open chat window takes the corner, so notifications move beside it. */
-.notifications.beside-chat {
+/* The open friends window takes the corner, so notifications move beside it. */
+.notifications.beside-window {
   right: calc(16px + min(380px, 100vw - 32px) + 12px);
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (max-width: 760px) {
-  .notifications.beside-chat {
+  .notifications.beside-window {
     right: 16px;
     bottom: auto;
     top: calc(12px + env(safe-area-inset-top, 0px));

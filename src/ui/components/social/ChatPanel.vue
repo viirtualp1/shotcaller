@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onClickOutside, useTextareaAutosize } from '@vueuse/core'
-import { SendHorizontal, Smile, Swords, X } from 'lucide-vue-next'
+import { ArrowLeft, SendHorizontal, Smile, Swords, X } from 'lucide-vue-next'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { MESSAGE_MAX_LENGTH } from '@/application/social/chat'
 import type { FriendEntry } from '@/application/social/friends'
@@ -17,7 +17,7 @@ import EmojiPicker from './EmojiPicker.vue'
 const SHOW_COUNTER_FROM = MESSAGE_MAX_LENGTH - 100
 
 const props = defineProps<{ friend: FriendEntry }>()
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ back: []; close: [] }>()
 
 const chat = useChatStore()
 const friends = useFriendsStore()
@@ -102,6 +102,16 @@ async function insertEmoji(emoji: string) {
 <template>
   <section class="chat">
     <header class="head">
+      <button
+        type="button"
+        class="icon-btn back"
+        :aria-label="t('chat.toFriends')"
+        :title="t('chat.toFriends')"
+        @click="emit('back')"
+      >
+        <ArrowLeft :size="16" />
+      </button>
+
       <button
         type="button"
         class="profile"
