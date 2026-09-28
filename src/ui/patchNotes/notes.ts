@@ -50,6 +50,71 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.1',
+    date: '2026-09-28',
+    title: {
+      en: 'In step',
+      ru: 'В ногу',
+    },
+    general: [
+      {
+        en: 'The game installs as an app on phones and computers and opens without a connection. Duels, friends and cloud saves still need the internet.',
+        ru: 'Игру можно установить как приложение на телефон и компьютер, она открывается без интернета. Дуэлям, друзьям и облачным сохранениям сеть по-прежнему нужна.',
+      },
+      {
+        en: 'Duels run on one clock for both players: a battle plays at **×2** on both sides and planning ends at the same moment.',
+        ru: 'Дуэли идут по одним часам у обоих игроков: бой играется на **×2** у обоих, подготовка заканчивается в один момент.',
+      },
+      {
+        en: 'Duels: **10** s to read the round results are added to the planning time.',
+        ru: 'Дуэли: к времени подготовки добавлено **10** с на итоги раунда.',
+      },
+    ],
+    heroes: [
+      {
+        id: 'packLeader',
+        changes: [],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'leap',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Jump range: **320** → **200**',
+                ru: 'Дальность прыжка: **320** → **200**',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'Healing: the battle meter switches between damage and healing, and the round results show both.',
+        ru: 'Лечение: в панели боя можно переключиться между уроном и лечением, в итогах раунда видно и то и другое.',
+      },
+      {
+        en: 'The profile shows your friends in place of favourite synergies: who is online, requests, chat and duels in one click.',
+        ru: 'В профиле вместо любимых связок — друзья: кто в сети, заявки, чат и дуэль в один клик.',
+      },
+      {
+        en: 'When a new version is out, the game offers an Update button and never reloads on its own.',
+        ru: 'Когда выходит новая версия, игра предлагает кнопку «Обновить» и сама не перезагружается.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Duels no longer drift apart when one player lags, switches tabs or opens the menu.',
+        ru: 'Дуэль больше не расходится, если у одного из игроков лагает, вкладка свёрнута или открыто меню.',
+      },
+      {
+        en: 'Heroes back from a gank, a chase or defending the base return to their lane instead of freezing between towers.',
+        ru: 'Герои, вернувшиеся с ганка, погони или защиты базы, идут обратно на линию, а не замирают между вышками.',
+      },
+    ],
+  },
+  {
     version: '7.0',
     date: '2026-09-28',
     title: {

@@ -9,7 +9,7 @@
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": false,
     "paths": { "@/*": ["./src/*"] },
-    "types": ["vite/client"]
+    "types": ["vite/client", "vite-plugin-pwa/vue"]
   },
   "include": ["src/**/*.ts", "src/**/*.vue"]
 }

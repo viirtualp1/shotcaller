@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { TooltipProvider } from 'reka-ui'
+import UpdateToast from './components/common/UpdateToast.vue'
 import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
 import SignInDialog from './components/dialogs/SignInDialog.vue'
@@ -41,6 +42,7 @@ useDuelStore()
 
     <SettingsDialog />
     <NewMatchDialog />
+    <UpdateToast />
 
     <template v-if="cloud.enabled">
       <SignInDialog />

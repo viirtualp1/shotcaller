@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/vue" />
 
 interface ImportMetaEnv {
   /** Cloud saves: the Supabase project URL. Leave empty to keep the game local. */

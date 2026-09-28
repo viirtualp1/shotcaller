@@ -44,6 +44,7 @@ export interface HeroStatus {
   readonly dead: boolean
   readonly respawnIn: number
   readonly damageDealt: number
+  readonly healing: number
   readonly kills: number
 }
 
@@ -194,6 +195,7 @@ export class BattleSimulation {
         dead: Boolean(h.dead),
         respawnIn: Math.ceil(h.respawnTimer ?? 0),
         damageDealt: Math.round(h.hero.damageDealt),
+        healing: Math.round(h.hero.healing),
         kills: h.hero.kills,
       })
     }

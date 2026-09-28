@@ -1,4 +1,4 @@
-import { useLocalStorage } from '@vueuse/core'
+import { StorageSerializers, useLocalStorage } from '@vueuse/core'
 import type { Result } from 'neverthrow'
 import { defineStore } from 'pinia'
 import { computed, markRaw, ref, shallowRef } from 'vue'
@@ -15,6 +15,7 @@ import {
   type PlayerView,
 } from '@/application/views'
 import { LANE_IDS, type HeroId, type ItemId, type StarLevel, type TeamId } from '@/content/ids'
+import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
 import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
@@ -49,6 +50,21 @@ export interface DuelBinding {
   /** The result this device replayed, seen from its own side: 0 won, 1 lost, null a draw. */
   finish(winner: TeamId | null): void
 }
+
+/**
+ * Wall-clock times of a duel round. Both devices follow them rather than their own frames, so one that lagged,
+ * slept in a background tab or sat in the menu catches up instead of falling behind the other.
+ */
+interface DuelClock {
+  readonly seed: string
+  readonly round: number
+  /** When this device got both boards and the round's battle began. */
+  readonly battleStartedAt: number | null
+  /** When planning runs out: this round's, or the next one's once the battle is over. */
+  readonly planningEndsAt: number
+}
+
+const secondsFromNow = (seconds: number) => Date.now() + seconds * 1000
 
 export interface LocatedHero {
   readonly hero: HeroCardView
@@ -105,9 +121,20 @@ export const useMatchStore = defineStore('match', () => {
   /** The board is sent and the other player's has not arrived yet; planning is locked meanwhile. */
   const awaiting = ref(false)
 
+  const duelClock = useLocalStorage<DuelClock | null>(STORAGE_KEYS.duelClock, null, {
+    serializer: StorageSerializers.object,
+  })
+
   const phase = computed(() => view.value?.phase ?? null)
   const isDuel = computed(() => duel.value !== null)
   const isPlanning = computed(() => phase.value === 'planning' && !awaiting.value)
+
+  /** When the duel's planning runs out, the summary included; null outside a duel and during its battle. */
+  const planningEndsAt = computed(() =>
+    duel.value && duelClock.value && (phase.value === 'planning' || phase.value === 'summary')
+      ? duelClock.value.planningEndsAt
+      : null,
+  )
 
   const selected = computed(() =>
     view.value && selectedUid.value ? locateHero(view.value.human, selectedUid.value) : null,
@@ -225,6 +252,14 @@ export const useMatchStore = defineStore('match', () => {
     duel.value = binding
     awaiting.value = false
     match = createMatch({ link })
+
+    duelClock.value = {
+      seed: link.seed,
+      round: 1,
+      battleStartedAt: null,
+      planningEndsAt: secondsFromNow(DUEL_PLANNING_SECONDS),
+    }
+
     clearSelection()
     shopTab.value = 'heroes'
     refresh()
@@ -242,6 +277,20 @@ export const useMatchStore = defineStore('match', () => {
     duel.value = binding
     awaiting.value = false
     match = restoreMatch(state)
+
+    /* A clock saved for this round lets a battle interrupted by a reload pick up where it would be by now. */
+    const clock = duelClock.value
+    if (!clock || clock.seed !== state.link?.seed || clock.round !== state.round) {
+      duelClock.value = {
+        seed: state.link?.seed ?? '',
+        round: state.round,
+        battleStartedAt: state.phase === 'battle' ? Date.now() : null,
+        planningEndsAt: secondsFromNow(
+          DUEL_PLANNING_SECONDS + (state.phase === 'summary' ? DUEL_SUMMARY_SECONDS : 0),
+        ),
+      }
+    }
+
     clearSelection()
     refresh()
 
@@ -284,6 +333,7 @@ export const useMatchStore = defineStore('match', () => {
       apply(current.receiveOpponent(theirs))
       const setup = apply(current.startBattle({ allowEmptyBoard: true }))
       if (setup) {
+        startDuelBattle()
         launchBattle(setup)
       }
     } catch {
@@ -465,6 +515,11 @@ export const useMatchStore = defineStore('match', () => {
 
   /** The planning timer ran out: place whoever is on the bench if the map is empty and fight anyway. */
   function startBattleOnTimeout() {
+    /* A duel's clock also covers the summary: a coach still reading it is taken back to the shop. */
+    if (duel.value && phase.value === 'summary') {
+      nextRound()
+    }
+
     if (!match || !isPlanning.value) {
       return
     }
@@ -499,12 +554,44 @@ export const useMatchStore = defineStore('match', () => {
     live.value = liveView(sim)
   }
 
+  /** Keeps the start of a battle already under way, so a board sent again after a reload does not restart it. */
+  function startDuelBattle() {
+    const clock = duelClock.value
+    if (clock) {
+      duelClock.value = {
+        ...clock,
+        battleStartedAt: clock.battleStartedAt ?? Date.now(),
+      }
+    }
+  }
+
+  /** Both devices end the battle at the same moment, so the next planning runs out for both at once. */
+  function scheduleNextPlanning(battleSeconds: number) {
+    const clock = duelClock.value
+    if (!clock) {
+      return
+    }
+
+    const endedAt = (clock.battleStartedAt ?? Date.now()) + (battleSeconds / DUEL_BATTLE_SPEED) * 1000
+
+    duelClock.value = {
+      ...clock,
+      planningEndsAt: endedAt + (DUEL_SUMMARY_SECONDS + DUEL_PLANNING_SECONDS) * 1000,
+    }
+  }
+
   function tick(realSeconds: number) {
     if (!session || phase.value !== 'battle') {
       return
     }
 
-    session.advance(realSeconds, speed.value)
+    const startedAt = duel.value ? duelClock.value?.battleStartedAt : null
+    if (startedAt) {
+      session.catchUp(((Date.now() - startedAt) / 1000) * DUEL_BATTLE_SPEED)
+    } else {
+      session.advance(realSeconds, speed.value)
+    }
+
     liveCountdown -= realSeconds
 
     if (liveCountdown <= 0 || session.isOver) {
@@ -532,6 +619,11 @@ export const useMatchStore = defineStore('match', () => {
     }
 
     live.value = liveView(session.simulation)
+
+    if (duel.value) {
+      scheduleNextPlanning(session.simulation.elapsed)
+    }
+
     apply(match.finishBattle(session.simulation.outcome()))
 
     if (match.phase !== 'finished') {
@@ -553,6 +645,15 @@ export const useMatchStore = defineStore('match', () => {
 
     disposeBattle()
     apply(match.nextRound())
+
+    const clock = duelClock.value
+    if (duel.value && clock) {
+      duelClock.value = {
+        ...clock,
+        round: match.round,
+        battleStartedAt: null,
+      }
+    }
   }
 
   function leaveToMenu() {
@@ -560,6 +661,7 @@ export const useMatchStore = defineStore('match', () => {
 
     if (duel.value) {
       duelRepository.clear()
+      duelClock.value = null
     }
 
     duel.value = null
@@ -596,6 +698,7 @@ export const useMatchStore = defineStore('match', () => {
     isDuel,
     duel,
     awaiting,
+    planningEndsAt,
     newMatch,
     continueMatch,
     startDuel,

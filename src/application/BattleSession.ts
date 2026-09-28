@@ -19,6 +19,13 @@ export class BattleSession {
     })
   }
 
+  /** Steps until the battle reaches the given time, however far behind it fell. */
+  catchUp(elapsed: number) {
+    while (!this.simulation.isOver && this.simulation.elapsed + BATTLE.step <= elapsed) {
+      this.simulation.step()
+    }
+  }
+
   finish() {
     return this.simulation.runToEnd()
   }

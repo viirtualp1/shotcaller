@@ -31,7 +31,7 @@ const progress = computed(() => {
   }
 
   if (timer.remaining !== null && timer.total) {
-    return timer.remaining / timer.total
+    return Math.min(1, timer.remaining / timer.total)
   }
 
   return 0

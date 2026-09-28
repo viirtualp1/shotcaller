@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { useElementBounding, useMediaQuery, useRafFn, useTimeoutFn, useWindowSize } from '@vueuse/core'
+import {
+  useDocumentVisibility,
+  useElementBounding,
+  useIntervalFn,
+  useMediaQuery,
+  useRafFn,
+  useTimeoutFn,
+  useWindowSize,
+} from '@vueuse/core'
 import { MousePointerClick } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
@@ -37,6 +45,7 @@ import { useTutorial } from '../tutorial/useTutorial'
 /** Must match the margin BoardRenderer keeps around the map. */
 const MAP_MARGIN = 12
 const TUTORIAL_DELAY_MS = 900
+const BACKGROUND_TICK_MS = 1000
 
 const store = useMatchStore()
 const settings = useSettingsStore()
@@ -115,14 +124,25 @@ const placementHint = computed(() => {
   return null
 })
 
-useRafFn(({ delta }) => {
+function frame(seconds: number) {
   /* The timer knows when a pause stops it; a duel's clock keeps running. */
-  timer.tick(delta / 1000)
+  timer.tick(seconds)
 
-  if (!pause.paused) {
-    store.tick(delta / 1000)
+  if (!pause.paused || store.isDuel) {
+    store.tick(seconds)
   }
-})
+}
+
+useRafFn(({ delta }) => frame(delta / 1000))
+
+/* A hidden tab gets no animation frames; a duel still has to fight and send its board on time. */
+const visibility = useDocumentVisibility()
+
+useIntervalFn(() => {
+  if (visibility.value === 'hidden' && store.isDuel) {
+    frame(BACKGROUND_TICK_MS / 1000)
+  }
+}, BACKGROUND_TICK_MS)
 
 /** Esc backs out of the current action first and opens the menu when there is nothing to cancel. */
 function escape() {

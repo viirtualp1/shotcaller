@@ -201,7 +201,11 @@
     "speed": "Speed",
     "skip": "Skip",
     "timeLeft": "{s} s",
-    "damage": "Hero damage",
+    "meter": "Heroes",
+    "damageDealt": "Damage",
+    "healing": "Healing",
+    "noHealing": "Nobody has healed yet",
+    "duelSpeed": "In a duel the battle runs at the same speed for both players",
     "placeHint": "Click a lane to place the hero",
     "itemHint": "Click a hero to give the item",
     "miss": "miss",
@@ -229,9 +233,11 @@
     "winBonus": "Win",
     "total": "Total",
     "next": "Back to the shop",
+    "nextIn": "Back to the shop · {s} s",
     "structures": "Towers and throne after the round",
-    "heroes": "Hero damage",
+    "heroes": "Hero damage and healing",
     "heroDamage": "Damage",
+    "heroHealing": "Healing",
     "heroKills": "Kills",
     "heroDeaths": "Deaths",
     "untouched": "Nobody reached the towers this round",
@@ -530,11 +536,6 @@
       "damage": "Damage per match",
       "empty": "Heroes you field will show up here."
     },
-    "synergies": {
-      "title": "Favourite synergies",
-      "matches": "{n} match | {n} matches",
-      "empty": "Synergies from your final lineups will show up here."
-    },
     "history": {
       "title": "Recent matches",
       "mvp": "Best hero",
@@ -637,6 +638,9 @@
     "online": "online",
     "offline": "offline",
     "onlineCount": "{n} online",
+    "onlineOf": "{n} of {total} online",
+    "manage": "Add and manage",
+    "wantsToBeFriends": "wants to be friends",
     "incomingBadge": "New: {n}",
     "signInHint": "Friends are available once you sign in with email or Google.",
     "signIn": "Sign in",
@@ -691,6 +695,12 @@
       "forbidden": "You can only message friends",
       "failed": "That did not work. Try again"
     }
+  },
+  "pwa": {
+    "updateTitle": "A new version is out",
+    "duelHint": "Updating reloads the page, so wait for the duel to end",
+    "update": "Update",
+    "later": "Later"
   },
   "duel": {
     "challenge": "Challenge to a duel",

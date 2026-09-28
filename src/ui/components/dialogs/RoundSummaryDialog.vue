@@ -14,16 +14,23 @@ import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
 import { starsLabel, useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
+import { usePlanningTimerStore } from '../../stores/planningTimer'
 import AnimatedNumber from '../common/AnimatedNumber.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
 const INCOME_STEP_MS = 220
 
 const store = useMatchStore()
+const timer = usePlanningTimerStore()
 const text = useGameText()
 const { t } = text
 
 const summary = computed(() => store.view?.summary ?? null)
+
+/** A duel's planning clock is already running while the summary is open. */
+const duelSecondsLeft = computed(() =>
+  store.isDuel && timer.remaining !== null ? Math.ceil(timer.remaining) : null,
+)
 
 const open = computed({
   get: () => store.phase === 'summary' && summary.value !== null,
@@ -194,6 +201,10 @@ const incomeRows = computed(() => {
                 text.number(hero.damageDealt)
               }}</span>
 
+              <span class="num healing" :title="t('summary.heroHealing')">{{
+                hero.healing ? `+${text.number(hero.healing)}` : ''
+              }}</span>
+
               <span class="num kd" :title="`${t('summary.heroKills')} / ${t('summary.heroDeaths')}`">
                 {{ hero.kills }}/{{ hero.deaths }}
               </span>
@@ -257,7 +268,7 @@ const incomeRows = computed(() => {
         </ul>
 
         <button type="button" class="btn primary next" @click="store.nextRound()">
-          {{ t('summary.next') }}
+          {{ duelSecondsLeft === null ? t('summary.next') : t('summary.nextIn', { s: duelSecondsLeft }) }}
         </button>
       </DialogContent>
     </DialogPortal>
@@ -403,7 +414,7 @@ section {
 .hero {
   --team: var(--ours);
   display: grid;
-  grid-template-columns: 24px 1fr auto 3.2em;
+  grid-template-columns: 24px 1fr auto 3.6em 3.2em;
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
@@ -443,6 +454,10 @@ section {
 
 .kd {
   color: var(--chalk-dim);
+}
+
+.healing {
+  color: var(--heal);
 }
 
 .note {

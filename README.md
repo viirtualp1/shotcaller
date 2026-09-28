@@ -13,7 +13,11 @@ npm run typecheck  # vue-tsc
 npm run lint       # ESLint, включая правила границ между слоями
 npm run balance -- --matches 100   # прогон матчей ИИ против ИИ без браузера
 npm run build
+npm run icons      # иконки PWA в public/ из public/icon.svg
 ```
+
+Сборка — PWA (`vite-plugin-pwa`): игра ставится как приложение и открывается без сети. Service worker
+работает только в `build`/`preview`, в `dev` его нет.
 
 ## Архитектура
 

@@ -63,7 +63,7 @@ export const ABILITY_PARAMS = {
     damage: 45,
   },
   leap: {
-    searchRadius: 320,
+    searchRadius: 200,
     radius: 90,
     damage: 100,
     stun: 1.1,

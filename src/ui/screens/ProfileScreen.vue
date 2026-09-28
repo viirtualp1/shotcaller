@@ -8,8 +8,9 @@ import HeroTable from '../components/profile/HeroTable.vue'
 import MatchHistory from '../components/profile/MatchHistory.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import RankLadder from '../components/profile/RankLadder.vue'
-import SynergyList from '../components/profile/SynergyList.vue'
+import FriendsCard from '../components/social/FriendsCard.vue'
 import { useGameText } from '../composables/useGameText'
+import { useCloudStore } from '../stores/cloud'
 import { useMenuStore } from '../stores/menu'
 import { useProfileStore } from '../stores/profile'
 
@@ -22,6 +23,7 @@ interface Tile {
 }
 
 const profile = useProfileStore()
+const cloud = useCloudStore()
 const menu = useMenuStore()
 const text = useGameText()
 const { t } = text
@@ -122,21 +124,25 @@ function play() {
       </section>
 
       <template v-if="totals.matches">
-        <div class="columns">
+        <div class="columns" :class="{ single: !cloud.enabled }">
           <HeroTable />
-          <SynergyList />
+          <FriendsCard v-if="cloud.enabled" class="friends" />
         </div>
 
         <MatchHistory />
       </template>
 
-      <section v-else class="empty">
-        <h2 class="hand">{{ t('profile.empty.title') }}</h2>
+      <template v-else>
+        <section class="empty">
+          <h2 class="hand">{{ t('profile.empty.title') }}</h2>
 
-        <button type="button" class="btn primary big" @click="play">
-          <Swords :size="18" /> {{ t('profile.empty.play') }}
-        </button>
-      </section>
+          <button type="button" class="btn primary big" @click="play">
+            <Swords :size="18" /> {{ t('profile.empty.play') }}
+          </button>
+        </section>
+
+        <FriendsCard v-if="cloud.enabled" />
+      </template>
     </main>
 
     <AvatarPicker v-model:open="picking" />
@@ -231,6 +237,10 @@ function play() {
   align-items: start;
 }
 
+.columns.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .empty {
   display: flex;
   flex-direction: column;
@@ -255,6 +265,19 @@ function play() {
 @media (max-width: 900px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Beside the heroes table the friends card takes the table's height and its list scrolls within it. */
+@media (min-width: 901px) {
+  .columns:not(.single) > .friends {
+    align-self: stretch;
+  }
+
+  .columns:not(.single) > .friends :deep(.scroll) {
+    flex: 1 1 160px;
+    max-height: none;
+    contain: size;
   }
 }
 

@@ -59,6 +59,12 @@ export type Difficulty = 'relaxed' | 'standard'
 /** Online duels always run on the clock: the other player is waiting. */
 export const DUEL_PLANNING_SECONDS = 60
 
+/** Both devices play a duel battle at this speed on the wall clock, so neither can run ahead of the other. */
+export const DUEL_BATTLE_SPEED = 2
+
+/** Added to a duel's planning time for reading the round summary; the clock starts when the battle ends. */
+export const DUEL_SUMMARY_SECONDS = 10
+
 /** Planning time limit per difficulty; null means the player starts the fight manually. */
 export const DIFFICULTIES: Readonly<Record<Difficulty, { readonly planningSeconds: number | null }>> = {
   relaxed: { planningSeconds: null },

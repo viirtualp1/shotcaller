@@ -6,6 +6,8 @@ import { inReach } from './AttackSystem'
 
 const WAYPOINT_REACHED = 8
 const TOWER_LOOKAHEAD = 16
+/** Farther than this from its lane, a hero walks back to the lane before going on along it. */
+const LANE_REJOIN_DISTANCE = 60
 
 export class MovementSystem implements System {
   constructor(private readonly ctx: SimulationContext) {}
@@ -73,6 +75,10 @@ export class MovementSystem implements System {
       return
     }
 
+    if (unit.kind === 'hero' && this.returnToLane(unit, step)) {
+      return
+    }
+
     const points = follower.path.points
     let waypoint = points[follower.waypoint]!
     if (distance(unit.position, waypoint) < WAYPOINT_REACHED && follower.waypoint < points.length - 1) {
@@ -95,6 +101,30 @@ export class MovementSystem implements System {
     }
 
     stepTowards(unit.position, waypoint, step)
+  }
+
+  /**
+   * A hero off its lane (after a gank, a chase or defending the base) heads for the nearest point of the lane
+   * instead of cutting across the map to its next waypoint, and backs off towards its base rather than
+   * stopping when that way leads into an untanked enemy tower.
+   */
+  private returnToLane(unit: Unit, step: number) {
+    const follower = unit.laneFollower
+    if (!follower) {
+      return false
+    }
+
+    const { map, safety } = this.ctx
+    const { point, segment, distance: off } = map.project(follower.path, unit.position)
+    if (off <= LANE_REJOIN_DISTANCE) {
+      return false
+    }
+
+    follower.waypoint = Math.min(segment + 1, follower.path.points.length - 1)
+    const probe = offset(unit.position, direction(unit.position, point), step + TOWER_LOOKAHEAD)
+    stepTowards(unit.position, safety.isUnsafeFor(unit, probe) ? map.base(unit.team) : point, step)
+
+    return true
   }
 
   private rejoinLane(unit: Unit) {

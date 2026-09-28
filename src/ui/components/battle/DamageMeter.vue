@@ -4,21 +4,31 @@ import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
+export type MeterStat = 'damageDealt' | 'healing'
+
+const props = defineProps<{ stat: MeterStat }>()
+
 const store = useMatchStore()
 const text = useGameText()
+const { t } = text
 
+/** Most heroes never heal, so the healing meter lists only those who did. */
 const rows = computed(() => {
-  const heroes = [...(store.live?.heroes.values() ?? [])].sort((a, b) => b.damageDealt - a.damageDealt)
-  const top = Math.max(1, heroes[0]?.damageDealt ?? 1)
+  const heroes = [...(store.live?.heroes.values() ?? [])]
+    .filter((h) => props.stat === 'damageDealt' || h.healing > 0)
+    .sort((a, b) => b[props.stat] - a[props.stat])
+
+  const top = Math.max(1, heroes[0]?.[props.stat] ?? 1)
   return heroes.map((h) => ({
     ...h,
-    share: h.damageDealt / top,
+    value: h[props.stat],
+    share: h[props.stat] / top,
   }))
 })
 </script>
 
 <template>
-  <TransitionGroup name="rank" tag="ol" class="meter">
+  <TransitionGroup v-if="rows.length" name="rank" tag="ol" class="meter" :class="stat">
     <li
       v-for="row in rows"
       :key="row.uid"
@@ -32,9 +42,11 @@ const rows = computed(() => {
         <span class="label">{{ text.heroName(row.heroId) }}</span>
       </span>
 
-      <span class="value">{{ row.damageDealt }}</span>
+      <span class="value">{{ row.value }}</span>
     </li>
   </TransitionGroup>
+
+  <p v-else class="empty">{{ t('battle.noHealing') }}</p>
 </template>
 
 <style scoped>
@@ -79,6 +91,11 @@ const rows = computed(() => {
   transition: width 0.3s ease-out;
 }
 
+.healing .bar i {
+  background: color-mix(in srgb, var(--heal) 40%, transparent);
+  box-shadow: inset 3px 0 0 var(--team);
+}
+
 .label {
   position: relative;
   padding-left: 8px;
@@ -91,6 +108,12 @@ const rows = computed(() => {
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--chalk-dim);
+}
+
+.empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--chalk-faint);
 }
 
 .rank-move {
