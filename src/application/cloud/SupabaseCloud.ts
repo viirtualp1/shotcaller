@@ -4,6 +4,9 @@ import { fromProfileEnvelope, toProfileEnvelope } from '../persistence/profileSn
 import type { AccountMode, CloudAccount, CloudStore } from './CloudStore'
 import type { CloudConfig } from './config'
 import type { Database } from './database'
+import { SupabaseChat } from './SupabaseChat'
+import { SupabaseDuels } from './SupabaseDuels'
+import { SupabaseFriends } from './SupabaseFriends'
 import { asJson } from './json'
 
 const UNIQUE_VIOLATION = '23505'
@@ -128,6 +131,21 @@ export class SupabaseCloud implements CloudStore {
     if (error) {
       throw error
     }
+  }
+
+  /** Friends of the given signed-in coach, over the same connection. */
+  friends(userId: string) {
+    return new SupabaseFriends(this.client, userId)
+  }
+
+  /** Conversations of the given signed-in coach, over the same connection. */
+  chat(userId: string) {
+    return new SupabaseChat(this.client, userId)
+  }
+
+  /** Online duels of the given signed-in coach, over the same connection. */
+  duels(userId: string) {
+    return new SupabaseDuels(this.client, userId)
   }
 
   async signOut() {

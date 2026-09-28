@@ -9,7 +9,7 @@ export class CreepView extends EntityView {
   private readonly bar = new Graphics()
 
   constructor(
-    team: TeamId,
+    private readonly team: TeamId,
     creep: CreepData,
     private readonly radius: number,
     ownerColor?: number,
@@ -77,7 +77,7 @@ export class CreepView extends EntityView {
         width: 15,
         height: 2.2,
         ratio: health.current / health.max,
-        color: TEAM_COLORS[entity.team],
+        color: TEAM_COLORS[this.team],
       })
     }
   }

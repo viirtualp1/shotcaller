@@ -9,6 +9,7 @@ import type {
   PerTeam,
   StructureState,
 } from '../battle/contracts'
+import { fromSide, mirrorOutcome } from '../battle/mirror'
 import type { CoachStrategy } from '../coach/CoachStrategy'
 import { HeroPool, type PoolState } from '../economy/HeroPool'
 import { computeIncome, type IncomeBreakdown } from '../economy/income'
@@ -32,10 +33,23 @@ export interface RoundSummary {
   readonly heroes: readonly HeroBattleReport[]
 }
 
+/** What both devices of an online match agree on before it starts. */
+export interface RemoteLink {
+  /** Battle seeds come from it, so both devices replay the same fights. */
+  readonly seed: string
+  /** The team this device fights as: the host is team 0, the guest team 1. */
+  readonly side: TeamId
+}
+
+/** Who plays the other side: a coach on this device, or a player elsewhere whose board arrives before each battle. */
+export type Rival =
+  | { readonly kind: 'coach'; readonly coach: CoachStrategy }
+  | { readonly kind: 'remote'; readonly link: RemoteLink }
+
 export interface MatchDependencies {
   readonly rng: Rng
   readonly ids: IdGenerator
-  readonly opponentCoach: CoachStrategy
+  readonly rival: Rival
 }
 
 /** Everything needed to rebuild a match exactly, including the random stream and an unfinished battle. */
@@ -50,6 +64,8 @@ export interface MatchState {
   readonly result: MatchResult | null
   readonly battle: BattleSetup | null
   readonly stats: MatchStats
+  readonly link?: RemoteLink
+  readonly opponentReady?: boolean
 }
 
 const copyStructures = (s: PerTeam<StructureState>): [StructureState, StructureState] => [
@@ -67,6 +83,7 @@ export class Match {
   private matchResult: MatchResult | null = null
   private battle: BattleSetup | null = null
   private matchStats: MatchStats = emptyMatchStats()
+  private opponentReady = false
 
   constructor(
     private readonly deps: MatchDependencies,
@@ -86,11 +103,25 @@ export class Match {
       return
     }
 
-    for (const player of this.players) {
+    for (const player of this.managed) {
       player.shop.restock(player.level)
     }
 
     this.planOpponent()
+  }
+
+  /** Everything is seen from this device's player; this is the team that player fights as. */
+  get side() {
+    return this.link?.side ?? 0
+  }
+
+  get link() {
+    return this.deps.rival.kind === 'remote' ? this.deps.rival.link : null
+  }
+
+  /** Online, the battle waits until the other player sends their board. */
+  get awaitingOpponent() {
+    return this.link !== null && !this.opponentReady
   }
 
   get human() {
@@ -139,23 +170,41 @@ export class Match {
       return err({ code: 'emptyBoard' })
     }
 
+    if (this.awaitingOpponent) {
+      return err({ code: 'opponentNotReady' })
+    }
+
     this.currentPhase = 'battle'
 
     this.battle = {
       round: this.currentRound,
-      seed: this.deps.rng.next().toString(36).slice(2),
-      lineups: [this.human.roster.lineup(), this.opponent.roster.lineup()],
-      structures: copyStructures(this.structureState),
+      seed: this.link ? `${this.link.seed}:${this.currentRound}` : this.deps.rng.next().toString(36).slice(2),
+      lineups: fromSide(this.side, [this.human.roster.lineup(), this.opponent.roster.lineup()]),
+      structures: fromSide(this.side, copyStructures(this.structureState)),
     }
 
     return ok(this.battle)
   }
 
-  finishBattle(outcome: BattleOutcome): Result<RoundSummary, DomainError> {
+  /** The other player's board for this round, sent once they are ready to fight. */
+  receiveOpponent(state: PlayerState): Result<void, DomainError> {
+    if (!this.link || this.currentPhase !== 'planning') {
+      return err({ code: 'wrongPhase' })
+    }
+
+    this.opponent.restore(state)
+    this.opponentReady = true
+
+    return ok(undefined)
+  }
+
+  /** Takes the outcome in battle order, as the simulation reports it. */
+  finishBattle(battleOutcome: BattleOutcome): Result<RoundSummary, DomainError> {
     if (this.currentPhase !== 'battle') {
       return err({ code: 'wrongPhase' })
     }
 
+    const outcome = this.side === 0 ? battleOutcome : mirrorOutcome(battleOutcome)
     const winner = judgeRound(outcome)
 
     const income = TEAM_IDS.map((team) =>
@@ -165,6 +214,7 @@ export class Match {
     TEAM_IDS.forEach((team) => this.players[team].recordRound(verdictFor(team, winner), income[team].total))
 
     this.battle = null
+    this.opponentReady = false
     this.structureState = copyStructures(outcome.structures)
     this.summary = this.summarize(outcome, winner, income)
     this.matchStats = addRound(this.matchStats, outcome, winner, income)
@@ -181,7 +231,7 @@ export class Match {
 
     this.currentRound++
 
-    for (const player of this.players) {
+    for (const player of this.managed) {
       player.prepareRound()
     }
 
@@ -203,6 +253,12 @@ export class Match {
       result: this.matchResult,
       battle: this.battle,
       stats: this.matchStats,
+      ...(this.link
+        ? {
+            link: this.link,
+            opponentReady: this.opponentReady,
+          }
+        : {}),
     }
   }
 
@@ -216,10 +272,20 @@ export class Match {
     this.matchResult = state.result
     this.battle = state.battle
     this.matchStats = state.stats
+    this.opponentReady = state.opponentReady ?? false
+  }
+
+  /** Players whose shop and progression run on this device; a remote player's run on theirs. */
+  private get managed() {
+    return this.deps.rival.kind === 'coach' ? this.players : [this.human]
   }
 
   private planOpponent() {
-    this.deps.opponentCoach.playTurn(this.opponent, {
+    if (this.deps.rival.kind !== 'coach') {
+      return
+    }
+
+    this.deps.rival.coach.playTurn(this.opponent, {
       round: this.currentRound,
       rng: this.deps.rng,
     })

@@ -56,6 +56,9 @@ export const MERGE_COUNT = 3
 
 export type Difficulty = 'relaxed' | 'standard'
 
+/** Online duels always run on the clock: the other player is waiting. */
+export const DUEL_PLANNING_SECONDS = 60
+
 /** Planning time limit per difficulty; null means the player starts the fight manually. */
 export const DIFFICULTIES: Readonly<Record<Difficulty, { readonly planningSeconds: number | null }>> = {
   relaxed: { planningSeconds: null },

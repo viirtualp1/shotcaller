@@ -6,7 +6,8 @@ import { STRUCTURES } from '@/content/units'
 import type { StructureState } from '@/domain/battle/contracts'
 import { useGameText } from '../../composables/useGameText'
 
-const props = defineProps<{ team: TeamId; structures: StructureState }>()
+/** `name` replaces the side's label, such as the opponent's name in a duel. */
+const props = defineProps<{ team: TeamId; structures: StructureState; name?: string }>()
 
 const text = useGameText()
 const { t } = text
@@ -27,7 +28,7 @@ const towers = computed(() =>
 
 <template>
   <div class="base" :class="team === 0 ? 'ours' : 'theirs'">
-    <span class="who">{{ team === 0 ? t('teams.ours') : t('teams.theirs') }}</span>
+    <span class="who">{{ name || (team === 0 ? t('teams.ours') : t('teams.theirs')) }}</span>
 
     <span class="towers" :aria-label="t('hud.towers')">
       <i

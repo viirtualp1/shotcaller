@@ -161,11 +161,16 @@ const combat = computed(() => [
         </TabsRoot>
 
         <footer class="actions">
-          <button type="button" class="btn primary big" @click="store.newMatch()">
+          <button v-if="!store.isDuel" type="button" class="btn primary big" @click="store.newMatch()">
             {{ t('result.again') }}
           </button>
 
-          <button type="button" class="btn ghost big" @click="store.leaveToMenu()">
+          <button
+            type="button"
+            class="btn big"
+            :class="store.isDuel ? 'primary' : 'ghost'"
+            @click="store.leaveToMenu()"
+          >
             {{ t('result.menu') }}
           </button>
         </footer>

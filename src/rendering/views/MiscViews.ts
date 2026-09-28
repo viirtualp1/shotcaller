@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js'
+import type { TeamId } from '@/content/ids'
 import type { Entity, ProjectileVisual } from '@/simulation/ecs/components'
 import { PALETTE, TEAM_COLORS } from '../theme'
 import { drawBar, strokeArc } from './bars'
@@ -7,7 +8,10 @@ import { EntityView } from './EntityView'
 export class TurretView extends EntityView {
   private readonly bar = new Graphics()
 
-  constructor(color: number) {
+  constructor(
+    color: number,
+    private readonly team: TeamId,
+  ) {
     super()
     const shape = new Graphics()
     shape.rect(-8, -8, 16, 16).fill(PALETTE.ink).stroke({
@@ -28,7 +32,7 @@ export class TurretView extends EntityView {
         width: 18,
         height: 2.5,
         ratio: entity.health.current / entity.health.max,
-        color: TEAM_COLORS[entity.team],
+        color: TEAM_COLORS[this.team],
       })
     }
   }

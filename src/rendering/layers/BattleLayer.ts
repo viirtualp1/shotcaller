@@ -4,6 +4,7 @@ import type { Vec2 } from '@/core/math/vec2'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import { isAlive, type Entity } from '@/simulation/ecs/components'
 import type { SimulationEvents } from '@/simulation/events'
+import type { Perspective } from '../perspective'
 import type { RoleIcons } from '../roleIcons'
 import { PALETTE, TEAM_COLORS } from '../theme'
 import { CreepView } from '../views/CreepView'
@@ -25,7 +26,10 @@ export class BattleLayer extends Container {
   private subscriptions: (() => void)[] = []
   private hoveredUid: string | null = null
 
-  constructor(private readonly icons: RoleIcons) {
+  constructor(
+    private readonly icons: RoleIcons,
+    private readonly perspective: Perspective,
+  ) {
     super()
     this.addChild(this.zones, this.structures, this.creeps, this.heroes, this.projectiles)
   }
@@ -97,7 +101,7 @@ export class BattleLayer extends Container {
       if (entity.hero && isAlive(entity) && isOverToken(view.position, point)) {
         return {
           uid: entity.hero.uid,
-          team: entity.team,
+          team: this.perspective.seen(entity.team),
         }
       }
     }
@@ -129,6 +133,7 @@ export class BattleLayer extends Container {
     }
 
     const [view, parent] = created
+    this.perspective.transpose(view)
     view.follow(entity.position, Infinity)
     view.sync(entity, 0)
     parent.addChild(view)
@@ -161,10 +166,12 @@ export class BattleLayer extends Container {
   }
 
   private createView(entity: Entity): [EntityView, Container] | null {
+    const team = this.perspective.seen(entity.team)
+
     if (entity.hero) {
       const token = new HeroToken({
         color: entity.color ?? PALETTE.chalk,
-        team: entity.team,
+        team,
         icon: this.icons[HEROES[entity.hero.heroId].role],
         stars: entity.hero.stars,
         items: entity.hero.items,
@@ -174,20 +181,20 @@ export class BattleLayer extends Container {
     }
 
     if (entity.creep && entity.radius) {
-      return [new CreepView(entity.team, entity.creep, entity.radius, entity.color), this.creeps]
+      return [new CreepView(team, entity.creep, entity.radius, entity.color), this.creeps]
     }
 
     if (entity.structure) {
-      return [new StructureView(entity.team, entity.structure.type), this.structures]
+      return [new StructureView(team, entity.structure.type), this.structures]
     }
 
     if (entity.kind === 'turret') {
-      return [new TurretView(entity.color ?? TEAM_COLORS[entity.team]), this.creeps]
+      return [new TurretView(entity.color ?? TEAM_COLORS[team], team), this.creeps]
     }
 
     if (entity.projectile) {
       return [
-        new ProjectileView(entity.projectile.visual, entity.color ?? TEAM_COLORS[entity.team]),
+        new ProjectileView(entity.projectile.visual, entity.color ?? TEAM_COLORS[team]),
         this.projectiles,
       ]
     }

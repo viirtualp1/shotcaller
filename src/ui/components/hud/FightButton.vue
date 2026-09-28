@@ -1,19 +1,37 @@
 <script setup lang="ts">
-import { Swords } from 'lucide-vue-next'
+import { Flag, LoaderCircle, Swords } from 'lucide-vue-next'
 import { useFightRequest } from '../../composables/useFightRequest'
 import { useGameText } from '../../composables/useGameText'
+import { useDuelStore } from '../../stores/duel'
 import { useMatchStore } from '../../stores/match'
 
 const store = useMatchStore()
+const duel = useDuelStore()
 const { t } = useGameText()
 const fight = useFightRequest()
 </script>
 
 <template>
   <div class="fight-slot">
-    <Transition name="fade">
+    <Transition name="fade" mode="out-in">
       <button
-        v-if="store.phase !== 'battle'"
+        v-if="duel.canClaim"
+        key="claim"
+        type="button"
+        class="btn primary block fight"
+        :title="t('duel.claimHint')"
+        @click="duel.claim()"
+      >
+        <Flag :size="18" /> {{ t('duel.claim') }}
+      </button>
+
+      <button v-else-if="store.awaiting" key="waiting" type="button" class="btn block fight waiting" disabled>
+        <LoaderCircle :size="18" class="spin" /> {{ t('duel.waiting') }}
+      </button>
+
+      <button
+        v-else-if="store.phase !== 'battle'"
+        key="fight"
         type="button"
         class="btn primary block fight"
         :disabled="!store.isPlanning"
@@ -37,6 +55,20 @@ const fight = useFightRequest()
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+.waiting {
+  font-size: 15px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
 }
 
 .fight:not(:disabled) {

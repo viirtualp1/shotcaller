@@ -2,9 +2,11 @@ import gsap from 'gsap'
 import { Container, Graphics, Text, type ContainerChild } from 'pixi.js'
 import { ABILITY_NAMES } from '@/content/abilities'
 import { ITEMS } from '@/content/items'
+import type { TeamId } from '@/content/ids'
 import type { Vec2 } from '@/core/math/vec2'
 import type { SimulationEmitter, SimulationEvents } from '@/simulation/events'
 import type { BoardLabels } from '../labels'
+import type { Perspective } from '../perspective'
 import { FONTS, PALETTE, TEAM_COLORS } from '../theme'
 import { TOKEN_RADIUS } from '../views/HeroToken'
 
@@ -23,6 +25,7 @@ export class EffectsLayer extends Container {
   constructor(
     private readonly labels: BoardLabels,
     private readonly shake: (strength: number) => void,
+    private readonly perspective: Perspective,
   ) {
     super()
   }
@@ -39,8 +42,8 @@ export class EffectsLayer extends Container {
     )
 
     this.listen(events, 'heroKilled', ({ victim, killer }) => {
-      this.floatText('✕', victim.position, TEAM_COLORS[killer.team], 26, FONTS.ui)
-      this.ring(victim.position, 34, TEAM_COLORS[killer.team], 0.5)
+      this.floatText('✕', victim.position, this.teamColor(killer.team), 26, FONTS.ui)
+      this.ring(victim.position, 34, this.teamColor(killer.team), 0.5)
     })
 
     this.listen(events, 'damaged', ({ target, amount, type, crit }) => {
@@ -105,14 +108,14 @@ export class EffectsLayer extends Container {
 
     this.listen(events, 'attacked', ({ attacker, target }) => {
       if (attacker.kind === 'structure') {
-        this.tracer(attacker.position, target.position, TEAM_COLORS[attacker.team])
+        this.tracer(attacker.position, target.position, this.teamColor(attacker.team))
       } else if (attacker.kind === 'hero' && !attacker.attack?.ranged) {
-        this.slash(target.position, TEAM_COLORS[attacker.team])
+        this.slash(target.position, this.teamColor(attacker.team))
       }
     })
 
     this.listen(events, 'structureDestroyed', ({ structure }) => {
-      this.debris(structure.position, TEAM_COLORS[structure.team])
+      this.debris(structure.position, this.teamColor(structure.team))
       this.ring(structure.position, 70, PALETTE.chalk, 0.9)
       this.shake(structure.structure?.type === 'throne' ? 14 : 8)
     })
@@ -144,9 +147,15 @@ export class EffectsLayer extends Container {
     this.detachers.push(() => events.off(type, budgeted))
   }
 
+  private teamColor(team: TeamId) {
+    return TEAM_COLORS[this.perspective.seen(team)]
+  }
+
   private dispose(child: ContainerChild) {
-    gsap.killTweensOf(child)
-    gsap.killTweensOf(child.scale)
+    for (const node of [child, ...child.children]) {
+      gsap.killTweensOf(node)
+      gsap.killTweensOf(node.scale)
+    }
 
     if (!child.destroyed) {
       child.destroy({ children: true })
@@ -169,10 +178,15 @@ export class EffectsLayer extends Container {
       resolution: 3,
     })
 
+    /* The holder sits at the battle position; the label floats up in screen terms inside it. */
+    const holder = new Container()
+    holder.position.set(at.x, at.y)
+    this.perspective.transpose(holder)
     label.anchor.set(0.5)
-    label.position.set(at.x, at.y - TOKEN_RADIUS + offset)
+    label.position.set(0, -TOKEN_RADIUS + offset)
     label.scale.set(0.6)
-    this.addChild(label)
+    holder.addChild(label)
+    this.addChild(holder)
 
     gsap.to(label.scale, {
       x: 1,
@@ -187,7 +201,7 @@ export class EffectsLayer extends Container {
       duration: 1.1,
       delay: 0.25,
       ease: 'power1.in',
-      onComplete: () => this.dispose(label),
+      onComplete: () => this.dispose(holder),
     })
   }
 

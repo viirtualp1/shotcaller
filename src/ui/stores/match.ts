@@ -14,12 +14,13 @@ import {
   type MatchView,
   type PlayerView,
 } from '@/application/views'
-import { LANE_IDS, type HeroId, type ItemId, type StarLevel } from '@/content/ids'
+import { LANE_IDS, type HeroId, type ItemId, type StarLevel, type TeamId } from '@/content/ids'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
 import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
 import type { DomainError } from '@/domain/errors'
-import type { Match } from '@/domain/match/Match'
+import type { Match, MatchState, RemoteLink } from '@/domain/match/Match'
+import type { PlayerState } from '@/domain/player/Player'
 import type { RosterSlot } from '@/domain/roster/Roster'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
 import { useProfileStore } from './profile'
@@ -38,6 +39,16 @@ type NoticeInput =
 export type Notice = NoticeInput & { readonly id: number }
 
 const LIVE_REFRESH_SECONDS = 0.15
+
+/** What the match needs from an online duel; the duel store provides it. */
+export interface DuelBinding {
+  readonly id: string
+  readonly opponentName: string
+  /** Sends this round's board and resolves with the other player's once both are in. */
+  exchange(round: number, board: PlayerState): Promise<PlayerState>
+  /** The result this device replayed, seen from its own side: 0 won, 1 lost, null a draw. */
+  finish(winner: TeamId | null): void
+}
 
 export interface LocatedHero {
   readonly hero: HeroCardView
@@ -68,6 +79,7 @@ export function locateHero(player: PlayerView, uid: string) {
 
 export const useMatchStore = defineStore('match', () => {
   const repository = new LocalStorageMatchRepository()
+  const duelRepository = new LocalStorageMatchRepository(STORAGE_KEYS.duel)
   const optimizer = new LaneOptimizer()
   const profile = useProfileStore()
   const settings = useSettingsStore()
@@ -88,9 +100,14 @@ export const useMatchStore = defineStore('match', () => {
   const shopTab = ref<ShopTab>('heroes')
   const rerolls = ref(0)
   const speed = useLocalStorage<BattleSpeed>(STORAGE_KEYS.speed, 2)
+  /** Set while this match is an online duel. */
+  const duel = shallowRef<DuelBinding | null>(null)
+  /** The board is sent and the other player's has not arrived yet; planning is locked meanwhile. */
+  const awaiting = ref(false)
 
   const phase = computed(() => view.value?.phase ?? null)
-  const isPlanning = computed(() => phase.value === 'planning')
+  const isDuel = computed(() => duel.value !== null)
+  const isPlanning = computed(() => phase.value === 'planning' && !awaiting.value)
 
   const selected = computed(() =>
     view.value && selectedUid.value ? locateHero(view.value.human, selectedUid.value) : null,
@@ -124,6 +141,16 @@ export const useMatchStore = defineStore('match', () => {
 
   function persist() {
     if (!match) {
+      return
+    }
+
+    if (duel.value) {
+      if (match.phase === 'finished') {
+        duelRepository.clear()
+      } else {
+        duelRepository.save(match.snapshot())
+      }
+
       return
     }
 
@@ -168,6 +195,7 @@ export const useMatchStore = defineStore('match', () => {
 
   function newMatch() {
     disposeBattle()
+    duel.value = null
     match = createMatch({ difficulty: settings.difficulty })
     clearSelection()
     shopTab.value = 'heroes'
@@ -181,12 +209,89 @@ export const useMatchStore = defineStore('match', () => {
     }
 
     disposeBattle()
+    duel.value = null
     match = restoreMatch(state, { difficulty: settings.difficulty })
     clearSelection()
     refresh()
 
     if (match.phase === 'battle' && match.pendingBattle) {
       launchBattle(match.pendingBattle)
+    }
+  }
+
+  /** Starts an online duel; the solo match stays saved and can be continued later. */
+  function startDuel(binding: DuelBinding, link: RemoteLink) {
+    disposeBattle()
+    duel.value = binding
+    awaiting.value = false
+    match = createMatch({ link })
+    clearSelection()
+    shopTab.value = 'heroes'
+    refresh()
+  }
+
+  /** The duel saved on this device, if it belongs to the given seed. */
+  function savedDuel(seed: string) {
+    const state = duelRepository.load()
+
+    return state?.link?.seed === seed ? state : null
+  }
+
+  function resumeDuel(binding: DuelBinding, state: MatchState) {
+    disposeBattle()
+    duel.value = binding
+    awaiting.value = false
+    match = restoreMatch(state)
+    clearSelection()
+    refresh()
+
+    if (match.phase === 'battle' && match.pendingBattle) {
+      launchBattle(match.pendingBattle)
+    }
+  }
+
+  /** Sends the board and fights once the other one arrives. */
+  async function fightDuel(timedOut: boolean) {
+    const binding = duel.value
+    const current = match
+    if (!binding || !current || current.phase !== 'planning' || awaiting.value) {
+      return
+    }
+
+    if (current.human.roster.boardCount === 0) {
+      if (!timedOut) {
+        notify({
+          kind: 'error',
+          error: { code: 'emptyBoard' },
+        })
+
+        return
+      }
+
+      arrangeStrongestLineup(current.human, optimizer)
+    }
+
+    awaiting.value = true
+    clearSelection()
+    refresh()
+
+    try {
+      const theirs = await binding.exchange(current.round, current.human.snapshot())
+      if (match !== current) {
+        return
+      }
+
+      apply(current.receiveOpponent(theirs))
+      const setup = apply(current.startBattle({ allowEmptyBoard: true }))
+      if (setup) {
+        launchBattle(setup)
+      }
+    } catch {
+      /* The duel store explains what went wrong and ends the duel when it cannot go on. */
+    } finally {
+      if (match === current) {
+        awaiting.value = false
+      }
     }
   }
 
@@ -346,6 +451,12 @@ export const useMatchStore = defineStore('match', () => {
       return
     }
 
+    if (duel.value) {
+      void fightDuel(false)
+
+      return
+    }
+
     const setup = apply(match.startBattle())
     if (setup) {
       launchBattle(setup)
@@ -355,6 +466,13 @@ export const useMatchStore = defineStore('match', () => {
   /** The planning timer ran out: place whoever is on the bench if the map is empty and fight anyway. */
   function startBattleOnTimeout() {
     if (!match || !isPlanning.value) {
+      return
+    }
+
+    if (duel.value) {
+      notify({ kind: 'timeUp' })
+      void fightDuel(true)
+
       return
     }
 
@@ -371,12 +489,14 @@ export const useMatchStore = defineStore('match', () => {
     launchBattle(setup)
   }
 
+  const liveView = (sim: BattleSimulation) => toLiveBattleView(sim, match?.side ?? 0)
+
   function launchBattle(setup: BattleSetup) {
     const sim = markRaw(new BattleSimulation(setup))
     session = new BattleSession(sim)
     simulation.value = sim
     clearSelection()
-    live.value = toLiveBattleView(sim)
+    live.value = liveView(sim)
   }
 
   function tick(realSeconds: number) {
@@ -389,7 +509,7 @@ export const useMatchStore = defineStore('match', () => {
 
     if (liveCountdown <= 0 || session.isOver) {
       liveCountdown = LIVE_REFRESH_SECONDS
-      live.value = toLiveBattleView(session.simulation)
+      live.value = liveView(session.simulation)
     }
 
     if (session.isOver) {
@@ -411,10 +531,17 @@ export const useMatchStore = defineStore('match', () => {
       return
     }
 
-    live.value = toLiveBattleView(session.simulation)
+    live.value = liveView(session.simulation)
     apply(match.finishBattle(session.simulation.outcome()))
 
-    if (match.phase === 'finished') {
+    if (match.phase !== 'finished') {
+      return
+    }
+
+    /* Duels stay out of the rating: two friends could otherwise trade wins. */
+    if (duel.value) {
+      duel.value.finish(match.result?.winner ?? null)
+    } else {
       profile.record(match)
     }
   }
@@ -430,6 +557,13 @@ export const useMatchStore = defineStore('match', () => {
 
   function leaveToMenu() {
     disposeBattle()
+
+    if (duel.value) {
+      duelRepository.clear()
+    }
+
+    duel.value = null
+    awaiting.value = false
     match = null
     view.value = null
     savedRound.value = repository.load()?.round ?? null
@@ -459,8 +593,14 @@ export const useMatchStore = defineStore('match', () => {
     speed,
     phase,
     isPlanning,
+    isDuel,
+    duel,
+    awaiting,
     newMatch,
     continueMatch,
+    startDuel,
+    savedDuel,
+    resumeDuel,
     leaveToMenu,
     buy,
     buyItem,

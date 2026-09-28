@@ -5,6 +5,9 @@ import { enemiesAround } from './selectors'
 const P = ABILITY_PARAMS.raiseDead
 const SPREAD = 16
 
+/** Rounds away the last bits `sin` and `cos` may disagree on between browsers; 1/1024 is exact in binary. */
+const snap = (value: number) => Math.round(value * 1024) / 1024
+
 export const raiseDead: Ability = {
   id: 'raiseDead',
   cast(caster, ctx) {
@@ -15,8 +18,8 @@ export const raiseDead: Ability = {
     for (let i = 0; i < P.count; i++) {
       const angle = (i / P.count) * Math.PI * 2
       ctx.factory.skeleton(caster, {
-        x: caster.position.x + Math.cos(angle) * SPREAD,
-        y: caster.position.y + Math.sin(angle) * SPREAD,
+        x: caster.position.x + snap(Math.cos(angle) * SPREAD),
+        y: caster.position.y + snap(Math.sin(angle) * SPREAD),
       })
     }
 

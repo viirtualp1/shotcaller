@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { CircleHelp, GraduationCap, LogOut, Play, RotateCcw, Settings } from 'lucide-vue-next'
+import { useTimeoutFn } from '@vueuse/core'
+import { CircleHelp, Flag, GraduationCap, LogOut, Play, RotateCcw, Settings } from 'lucide-vue-next'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
+import { ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'
+import { useDuelStore } from '../../stores/duel'
 import { useMatchStore } from '../../stores/match'
 import { useMenuStore } from '../../stores/menu'
 
 const menu = useMenuStore()
 const store = useMatchStore()
+const duel = useDuelStore()
 const { t } = useGameText()
+/** Giving up a duel asks once more; the question goes away on its own. */
+const confirmingForfeit = ref(false)
+
+const { start: expireForfeit } = useTimeoutFn(() => (confirmingForfeit.value = false), 3000, {
+  immediate: false,
+})
 
 function open(dialog: 'help' | 'settings' | 'newMatch') {
   menu.gameMenu = false
@@ -22,6 +32,19 @@ function tutorial() {
 function leave() {
   menu.gameMenu = false
   store.leaveToMenu()
+}
+
+function forfeit() {
+  if (!confirmingForfeit.value) {
+    confirmingForfeit.value = true
+    expireForfeit()
+
+    return
+  }
+
+  confirmingForfeit.value = false
+  menu.gameMenu = false
+  void duel.forfeit()
 }
 </script>
 
@@ -42,7 +65,7 @@ function leave() {
             <CircleHelp :size="18" /> {{ t('hud.help') }}
           </button>
 
-          <button type="button" class="btn block big" @click="tutorial">
+          <button v-if="!store.isDuel" type="button" class="btn block big" @click="tutorial">
             <GraduationCap :size="18" /> {{ t('hud.tutorial') }}
           </button>
 
@@ -50,11 +73,21 @@ function leave() {
             <Settings :size="18" /> {{ t('hud.settings') }}
           </button>
 
-          <button type="button" class="btn block big" @click="open('newMatch')">
+          <button v-if="!store.isDuel" type="button" class="btn block big" @click="open('newMatch')">
             <RotateCcw :size="18" /> {{ t('hud.newMatch') }}
           </button>
 
-          <button type="button" class="btn ghost block big" @click="leave">
+          <button
+            v-if="store.isDuel && store.phase !== 'finished'"
+            type="button"
+            class="btn ghost block big"
+            :class="{ danger: confirmingForfeit }"
+            @click="forfeit"
+          >
+            <Flag :size="18" /> {{ confirmingForfeit ? t('duel.confirmForfeit') : t('duel.forfeit') }}
+          </button>
+
+          <button v-else type="button" class="btn ghost block big" @click="leave">
             <LogOut :size="18" /> {{ t('hud.toMenu') }}
           </button>
         </nav>
@@ -64,6 +97,11 @@ function leave() {
 </template>
 
 <style scoped>
+.btn.danger {
+  border-color: rgba(255, 112, 96, 0.6);
+  color: var(--theirs);
+}
+
 .game-menu {
   position: fixed;
   inset: 0;

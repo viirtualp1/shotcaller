@@ -116,12 +116,12 @@ const placementHint = computed(() => {
 })
 
 useRafFn(({ delta }) => {
-  if (pause.paused) {
-    return
-  }
-
-  store.tick(delta / 1000)
+  /* The timer knows when a pause stops it; a duel's clock keeps running. */
   timer.tick(delta / 1000)
+
+  if (!pause.paused) {
+    store.tick(delta / 1000)
+  }
 })
 
 /** Esc backs out of the current action first and opens the menu when there is nothing to cancel. */
@@ -162,7 +162,7 @@ watch(
 <template>
   <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait', { battling }]">
     <div class="board-layer">
-      <BoardView :key="settings.locale" :insets="insets" />
+      <BoardView :key="`${settings.locale}:${store.view?.side}`" :insets="insets" />
     </div>
 
     <div v-if="mapAnchor" class="map-anchor" :style="mapAnchor" data-tour="board" aria-hidden="true" />

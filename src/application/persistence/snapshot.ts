@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { HERO_IDS, ITEM_IDS } from '@/content/ids'
-import { ITEM_SLOTS } from '@/content/items'
+import { ITEM_SLOTS, STASH_SIZE } from '@/content/items'
+import { ROSTER } from '@/content/rules'
 import type { MatchState } from '@/domain/match/Match'
 import { emptyMatchStats } from '@/domain/match/matchStats'
 import { emptyLedger } from '@/domain/player/ledger'
@@ -129,6 +130,11 @@ const matchStats = z.object({
   heroes: z.array(heroStats).readonly(),
 })
 
+const remoteLink = z.object({
+  seed: z.string().min(1),
+  side: team,
+})
+
 const matchState = z.object({
   round: z.number().int().positive(),
   phase: z.enum(['planning', 'battle', 'summary', 'finished']),
@@ -156,6 +162,8 @@ const matchState = z.object({
     })
     .nullable(),
   stats: matchStats.default(emptyMatchStats),
+  link: remoteLink.optional(),
+  opponentReady: z.boolean().optional(),
 })
 
 const envelope = z.object({
@@ -170,6 +178,38 @@ export function serializeSnapshot(state: MatchState) {
     savedAt: Date.now(),
     state,
   })
+}
+
+/** Far above anything a real match reaches; only there to reject nonsense. */
+const REMOTE_GOLD_LIMIT = 10_000
+const REMOTE_UID_LENGTH = 64
+
+/**
+ * The board another player sent for a duel. It comes from someone else's device, so on top of the save
+ * format it must be a board the rules allow: no more heroes on the map than the level lets, no oversized
+ * bench, shop or stash, and every hero id unique.
+ */
+export function parseRemoteBoard(json: unknown) {
+  const parsed = player.safeParse(json)
+  if (!parsed.success) {
+    return null
+  }
+
+  const board = parsed.data
+  const { lanes, bench } = board.roster
+  const heroes = [...bench, ...lanes.top, ...lanes.mid, ...lanes.bot]
+  const onMap = lanes.top.length + lanes.mid.length + lanes.bot.length
+
+  const allowed =
+    onMap <= board.level &&
+    bench.length <= ROSTER.benchSize &&
+    board.shop.length <= ROSTER.shopSize &&
+    board.stash.length <= STASH_SIZE &&
+    board.gold <= REMOTE_GOLD_LIMIT &&
+    heroes.every((hero) => hero.uid.length <= REMOTE_UID_LENGTH) &&
+    new Set(heroes.map((hero) => hero.uid)).size === heroes.length
+
+  return allowed ? board : null
 }
 
 /** Returns null for anything that is not a save this version of the game can load. */

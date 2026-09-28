@@ -1,7 +1,7 @@
 import { LANE_IDS, TEAM_IDS, type LaneId, type TeamId } from '@/content/ids'
 import { BASES, LANE_WAYPOINTS } from '@/content/map'
 import { BATTLE } from '@/content/rules'
-import { vec2, type Vec2 } from '@/core/math/vec2'
+import { length, vec2, type Vec2 } from '@/core/math/vec2'
 
 export interface LanePath {
   readonly lane: LaneId
@@ -22,7 +22,7 @@ function buildPath(lane: LaneId, points: readonly Vec2[]): LanePath {
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1]!
     const b = points[i]!
-    cumulative.push(cumulative[i - 1]! + Math.hypot(b.x - a.x, b.y - a.y))
+    cumulative.push(cumulative[i - 1]! + length(b.x - a.x, b.y - a.y))
   }
 
   return {
@@ -86,7 +86,7 @@ export class LaneMap {
   tangentAt(path: LanePath, along: number) {
     const a = this.pointAt(path, along)
     const b = this.pointAt(path, along + 1)
-    const d = Math.hypot(b.x - a.x, b.y - a.y) || 1
+    const d = length(b.x - a.x, b.y - a.y) || 1
     return vec2((b.x - a.x) / d, (b.y - a.y) / d)
   }
 
@@ -106,7 +106,7 @@ export class LaneMap {
       const lengthSq = vx * vx + vy * vy
       const t = lengthSq ? Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / lengthSq)) : 0
       const point = vec2(a.x + vx * t, a.y + vy * t)
-      const distance = Math.hypot(p.x - point.x, p.y - point.y)
+      const distance = length(p.x - point.x, p.y - point.y)
       if (distance < best.distance) {
         best = {
           distance,
@@ -131,8 +131,8 @@ export class LaneMap {
       const t = lengthSq ? Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / lengthSq)) : 0
       const dx = p.x - (a.x + vx * t)
       const dy = p.y - (a.y + vy * t)
-      // The distance is never shorter than either leg, so far segments are ruled out without Math.hypot.
-      if (Math.abs(dx) <= maxDistance && Math.abs(dy) <= maxDistance && Math.hypot(dx, dy) <= maxDistance) {
+      // The distance is never shorter than either leg, so far segments are ruled out without a square root.
+      if (Math.abs(dx) <= maxDistance && Math.abs(dy) <= maxDistance && length(dx, dy) <= maxDistance) {
         return true
       }
     }

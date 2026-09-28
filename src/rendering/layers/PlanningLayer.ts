@@ -16,6 +16,7 @@ import type { Vec2 } from '@/core/math/vec2'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import type { LaneMap } from '@/simulation/map/LaneMap'
 import { stagingPosition } from '../layout'
+import type { Perspective } from '../perspective'
 import type { RoleIcons } from '../roleIcons'
 import { PALETTE } from '../theme'
 import { HeroToken, isOverToken } from '../views/HeroToken'
@@ -28,6 +29,7 @@ export interface TokenModel {
   readonly items: readonly ItemId[]
 }
 
+/** Lineups and structures as the player sees them: index 0 is the player's own side. */
 export interface PlanningModel {
   readonly lineups: PerTeam<Readonly<Record<LaneId, readonly TokenModel[]>>>
   readonly structures: PerTeam<StructureState>
@@ -61,6 +63,7 @@ export class PlanningLayer extends Container {
   constructor(
     private readonly map: LaneMap,
     private readonly icons: RoleIcons,
+    private readonly perspective: Perspective,
   ) {
     super()
     this.addChild(this.highlight, this.structureLayer, this.tokenLayer)
@@ -163,7 +166,7 @@ export class PlanningLayer extends Container {
         const tokens = model.lineups[team][lane]
         tokens.forEach((t, i) => {
           seen.add(t.uid)
-          const position = stagingPosition(this.map, team, lane, i, tokens.length)
+          const position = stagingPosition(this.map, this.perspective.inBattle(team), lane, i, tokens.length)
           const existing = this.placed.get(t.uid)
           if (existing && existing.key === tokenKey(t)) {
             existing.position = position
@@ -204,6 +207,7 @@ export class PlanningLayer extends Container {
     })
 
     token.position.set(position.x, position.y)
+    this.perspective.transpose(token)
     this.tokenLayer.addChild(token)
 
     this.placed.set(model.uid, {
@@ -249,8 +253,10 @@ export class PlanningLayer extends Container {
       for (const slot of [...LANE_IDS, 'throne'] as StructureSlot[]) {
         const type = slot === 'throne' ? 'throne' : 'tower'
         const view = new StructureView(team, type)
-        const at = slot === 'throne' ? this.map.base(team) : this.map.towerPosition(team, slot)
+        const side = this.perspective.inBattle(team)
+        const at = slot === 'throne' ? this.map.base(side) : this.map.towerPosition(side, slot)
         view.position.set(at.x, at.y)
+        this.perspective.transpose(view)
         view.show(structures[team][slot], STRUCTURES[type].hp, true)
         view.setAggro(false)
         this.structureLayer.addChild(view)

@@ -1,7 +1,9 @@
 import { markRaw, onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { BoardLabels } from '@/rendering/labels'
+import type { TeamId } from '@/content/ids'
 import { BoardRenderer } from '@/rendering/BoardRenderer'
+import { Perspective } from '@/rendering/perspective'
 import { FONTS } from '@/rendering/theme'
 import type { MessageSchema } from '../i18n'
 
@@ -19,7 +21,8 @@ export function useBoardLabels(): BoardLabels {
   }
 }
 
-export function useBoardRenderer(host: Ref<HTMLElement | null>) {
+/** `side` is the team the player fights as; it is fixed for a renderer's lifetime. */
+export function useBoardRenderer(host: Ref<HTMLElement | null>, side: TeamId = 0) {
   const renderer = shallowRef<BoardRenderer | null>(null)
   const labels = useBoardLabels()
   let disposed = false
@@ -31,7 +34,7 @@ export function useBoardRenderer(host: Ref<HTMLElement | null>) {
       return
     }
 
-    const created = await BoardRenderer.create(host.value, labels)
+    const created = await BoardRenderer.create(host.value, labels, new Perspective(side))
     if (disposed) {
       created.destroy()
     } else {

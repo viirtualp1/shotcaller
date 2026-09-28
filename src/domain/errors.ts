@@ -7,6 +7,7 @@ export type DomainError =
   | { readonly code: 'heroNotFound' }
   | { readonly code: 'emptyBoard' }
   | { readonly code: 'wrongPhase' }
+  | { readonly code: 'opponentNotReady' }
   | { readonly code: 'stashFull' }
   | { readonly code: 'itemSlotsFull' }
   | { readonly code: 'itemNotFound' }

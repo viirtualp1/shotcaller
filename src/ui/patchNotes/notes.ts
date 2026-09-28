@@ -50,6 +50,52 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '7.0',
+    date: '2026-09-28',
+    title: {
+      en: 'Play online',
+      ru: 'Игра по сети',
+    },
+    general: [
+      {
+        en: 'Duels with friends: challenge a friend who is online, plan at the same time, fight the same battles. Each player sees the match from their own base.',
+        ru: 'Дуэли с друзьями: вызови друга в сети, планируйте одновременно, бои у вас одни и те же. Каждый видит матч со своей базы.',
+      },
+      {
+        en: 'Duels: **60** s to plan, the clock never pauses. Duels do not change the rating.',
+        ru: 'Дуэли: **60** с на подготовку, таймер не ставится на паузу. Дуэли не меняют рейтинг.',
+      },
+      {
+        en: 'A duelist silent for **3** min loses; the other can claim the win.',
+        ru: 'Кто молчит **3** мин, проигрывает: соперник может забрать победу.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Friends: add by friend code, see who is online. Needs an email or Google account.',
+        ru: 'Друзья: добавление по коду друга, кто сейчас в сети. Нужен вход по почте или через Google.',
+      },
+      {
+        en: 'Chat with friends.',
+        ru: 'Чат с друзьями.',
+      },
+      {
+        en: 'Block: removes the friend and the conversation; they cannot write or add you again.',
+        ru: 'Блокировка: убирает из друзей и стирает переписку, игрок больше не сможет писать и добавлять тебя.',
+      },
+      {
+        en: 'A duel survives a page reload: pick it up again from the start screen.',
+        ru: 'Дуэль переживает перезагрузку страницы: вернуться можно со стартового экрана.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Battles play out the same in every browser.',
+        ru: 'Бои проходят одинаково в любом браузере.',
+      },
+    ],
+  },
+  {
     version: '6.1.1',
     date: '2026-09-28',
     title: {

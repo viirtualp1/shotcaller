@@ -11,6 +11,7 @@ import type { BoardLabels } from './labels'
 import { BattleLayer } from './layers/BattleLayer'
 import { EffectsLayer } from './layers/EffectsLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
+import { Perspective } from './perspective'
 import { loadRoleIcons, type RoleIcons } from './roleIcons'
 import { TOKEN_RADIUS, type HeroHit } from './views/HeroToken'
 
@@ -37,6 +38,8 @@ export class BoardRenderer {
   readonly events = mitt<BoardEvents>()
   private readonly camera = new Container()
   private readonly world = new Container()
+  /** Holds everything placed in battle coordinates; mirrored when the viewer fights as team 1. */
+  private readonly board = new Container()
   private readonly planning: PlanningLayer
   private readonly battle: BattleLayer
   private readonly effects: EffectsLayer
@@ -60,13 +63,17 @@ export class BoardRenderer {
     private readonly map: LaneMap,
     labels: BoardLabels,
     icons: RoleIcons,
+    perspective: Perspective,
   ) {
+    /* The map is symmetric across its diagonal, so the art looks the same from either side. */
     const art = new Sprite(Texture.from(paintBoardArt(map, labels)))
     art.width = art.height = BATTLE.worldSize
-    this.planning = new PlanningLayer(map, icons)
-    this.battle = new BattleLayer(icons)
-    this.effects = new EffectsLayer(labels, (strength) => this.shake(strength))
-    this.world.addChild(art, this.planning, this.battle, this.effects)
+    this.planning = new PlanningLayer(map, icons, perspective)
+    this.battle = new BattleLayer(icons, perspective)
+    this.effects = new EffectsLayer(labels, (strength) => this.shake(strength), perspective)
+    perspective.transpose(this.board)
+    this.board.addChild(this.planning, this.battle, this.effects)
+    this.world.addChild(art, this.board)
     this.camera.addChild(this.world)
     app.stage.addChild(this.camera)
 
@@ -88,7 +95,12 @@ export class BoardRenderer {
     this.fit(false)
   }
 
-  static async create(host: HTMLElement, labels: BoardLabels, map: LaneMap = DEFAULT_LANE_MAP) {
+  static async create(
+    host: HTMLElement,
+    labels: BoardLabels,
+    perspective = new Perspective(),
+    map: LaneMap = DEFAULT_LANE_MAP,
+  ) {
     const app = new Application()
     await app.init({
       resizeTo: host,
@@ -101,7 +113,7 @@ export class BoardRenderer {
     const icons = await loadRoleIcons()
     host.appendChild(app.canvas)
 
-    return new BoardRenderer(app, host, map, labels, icons)
+    return new BoardRenderer(app, host, map, labels, icons, perspective)
   }
 
   /** Space covered by HUD panels; the map is fitted into what is left. */
@@ -168,7 +180,7 @@ export class BoardRenderer {
     }
 
     const canvas = this.app.canvas.getBoundingClientRect()
-    const center = this.world.toGlobal(new Point(position.x, position.y))
+    const center = this.board.toGlobal(new Point(position.x, position.y))
     const radius = TOKEN_RADIUS * this.world.scale.x
     return new DOMRect(
       canvas.left + center.x - radius,
@@ -274,7 +286,7 @@ export class BoardRenderer {
       return null
     }
 
-    return this.world.toLocal(new Point(clientX - rect.left, clientY - rect.top))
+    return this.board.toLocal(new Point(clientX - rect.left, clientY - rect.top))
   }
 
   private heroAt(point: Vec2) {
@@ -311,7 +323,7 @@ export class BoardRenderer {
   }
 
   private onPointerMove(e: FederatedPointerEvent) {
-    const point = this.world.toLocal(e.global)
+    const point = this.board.toLocal(e.global)
     const hit = this.heroAt(point)
     this.setHovered(hit)
 
@@ -334,7 +346,7 @@ export class BoardRenderer {
       return
     }
 
-    const uid = this.planning.tokenAt(this.world.toLocal(e.global))
+    const uid = this.planning.tokenAt(this.board.toLocal(e.global))
     if (!uid) {
       return
     }
@@ -353,7 +365,7 @@ export class BoardRenderer {
       return
     }
 
-    const point = this.world.toLocal(e.global)
+    const point = this.board.toLocal(e.global)
     const hit = this.heroAt(point)
     if (hit) {
       this.events.emit('heroTapped', hit)

@@ -12,6 +12,7 @@ import {
 import { ITEMS, ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { COPIES_PER_STAR, MATCH, MERGE_COUNT, ROSTER, SHOP_ODDS } from '@/content/rules'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
+import { fromSide, seenFrom } from '@/domain/battle/mirror'
 import { findRecruit } from '@/domain/coach/recruit'
 import { verdictFor, type MatchResult } from '@/domain/match/judge'
 import type { Match, MatchPhase, RoundSummary } from '@/domain/match/Match'
@@ -113,6 +114,8 @@ export interface MatchView {
   readonly human: PlayerView
   readonly opponent: PlayerView
   readonly summary: RoundSummary | null
+  /** The team the player fights as; everything else in the view is already seen from their side. */
+  readonly side: TeamId
   /** Rounds played so far, as the human player saw them. */
   readonly history: readonly RoundVerdict[]
   readonly result: MatchResult | null
@@ -244,17 +247,32 @@ export function toMatchView(match: Match): MatchView {
     human: toPlayerView(match.human),
     opponent: toPlayerView(match.opponent),
     summary: match.lastSummary,
+    side: match.side,
     history: match.stats.winners.map((winner) => verdictFor(match.human.team, winner)),
     result: match.result,
     report: match.phase === 'finished' ? toMatchReport(match) : null,
   }
 }
 
-export function toLiveBattleView(simulation: BattleSimulation) {
+/** The simulation reports in battle order; the view is seen from the side the player fights as. */
+export function toLiveBattleView(simulation: BattleSimulation, side: TeamId) {
+  const heroes = simulation.heroStatus()
+
   return {
     elapsed: simulation.elapsed,
     duration: simulation.duration,
-    structures: simulation.structureHealth(),
-    heroes: simulation.heroStatus(),
+    structures: fromSide(side, simulation.structureHealth()),
+    heroes:
+      side === 0
+        ? heroes
+        : new Map(
+            [...heroes].map(([uid, status]) => [
+              uid,
+              {
+                ...status,
+                team: seenFrom(side, status.team),
+              },
+            ]),
+          ),
   }
 }

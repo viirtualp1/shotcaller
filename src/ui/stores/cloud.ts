@@ -243,5 +243,6 @@ export const useCloudStore = defineStore('cloud', () => {
     verifyCode,
     signInWithGoogle,
     signOut,
+    connect,
   }
 })

@@ -8,7 +8,13 @@ export const vec2 = (x: number, y: number) => ({
   y,
 })
 
-export const distance = (a: Vec2, b: Vec2) => Math.hypot(a.x - b.x, a.y - b.y)
+/**
+ * Battles are replayed on every player's device, so their maths must give the same bits in every browser.
+ * `Math.hypot`, `sin` and `cos` may differ between engines in the last bit; `+`, `*` and `sqrt` never do.
+ */
+export const length = (x: number, y: number) => Math.sqrt(x * x + y * y)
+
+export const distance = (a: Vec2, b: Vec2) => length(a.x - b.x, a.y - b.y)
 
 export function direction(from: Vec2, to: Vec2) {
   const d = distance(from, to)

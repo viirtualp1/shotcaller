@@ -4,6 +4,8 @@ const LEGACY_PREFIXES = ['tri-linii'] as const
 
 export const STORAGE_KEYS = {
   match: `${PREFIX}/match`,
+  /** An online duel in progress, kept apart so it never replaces the saved match against the computer. */
+  duel: `${PREFIX}/duel`,
   speed: `${PREFIX}/speed`,
   locale: `${PREFIX}/locale`,
   difficulty: `${PREFIX}/difficulty`,

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
+import { useDuelStore } from '../../stores/duel'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import BaseStatus from './BaseStatus.vue'
 
@@ -9,6 +10,7 @@ const URGENT_SECONDS = 10
 
 const store = useMatchStore()
 const timer = usePlanningTimerStore()
+const duel = useDuelStore()
 const { t } = useGameText()
 const view = computed(() => store.view!)
 const structures = computed(() => store.live?.structures ?? view.value.structures)
@@ -53,7 +55,9 @@ const history = computed(() =>
       <span class="round">{{ t('hud.round', { round: view.round, max: view.maxRounds }) }}</span>
 
       <Transition name="phase" mode="out-in">
-        <span v-if="store.phase === 'battle' && secondsLeft !== null" key="timer" class="phase battle">
+        <span v-if="store.awaiting" key="awaiting" class="phase awaiting">{{ t('duel.waiting') }}</span>
+
+        <span v-else-if="store.phase === 'battle' && secondsLeft !== null" key="timer" class="phase battle">
           {{ t('battle.timeLeft', { s: secondsLeft }) }}
         </span>
 
@@ -76,6 +80,10 @@ const history = computed(() =>
         <i :style="{ width: `${progress * 100}%` }" />
       </span>
 
+      <span v-if="store.isDuel && store.isPlanning && duel.opponentReady" class="ready">
+        {{ t('duel.opponentReady') }}
+      </span>
+
       <TransitionGroup v-if="history.length" name="pop" tag="ol" class="history">
         <li
           v-for="entry in history"
@@ -87,7 +95,7 @@ const history = computed(() =>
       </TransitionGroup>
     </div>
 
-    <BaseStatus :team="1" :structures="structures[1]" />
+    <BaseStatus :team="1" :structures="structures[1]" :name="store.duel?.opponentName" />
   </div>
 </template>
 
@@ -129,6 +137,19 @@ const history = computed(() =>
   line-height: 1;
   color: var(--gold);
   font-variant-numeric: tabular-nums;
+}
+
+.phase.awaiting {
+  font-size: 22px;
+  color: var(--chalk-dim);
+}
+
+.ready {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--heal);
 }
 
 .phase.battle {

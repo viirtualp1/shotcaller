@@ -1,5 +1,5 @@
 import gsap from 'gsap'
-import { Container } from 'pixi.js'
+import { Container, Point } from 'pixi.js'
 import type { Vec2 } from '@/core/math/vec2'
 import type { Entity } from '@/simulation/ecs/components'
 
@@ -68,9 +68,11 @@ export abstract class EntityView extends Container {
     })
   }
 
+  /** `toward` is in the parent's coordinates; the body moves in its own, which may be mirrored. */
   lunge(toward: Vec2, distance = 6) {
-    const dx = toward.x - this.x
-    const dy = toward.y - this.y
+    const local = this.parent ? this.toLocal(new Point(toward.x, toward.y), this.parent) : toward
+    const dx = local.x
+    const dy = local.y
     const length = Math.hypot(dx, dy) || 1
     gsap.killTweensOf(this.body.position)
 
