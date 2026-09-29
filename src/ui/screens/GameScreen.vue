@@ -186,7 +186,7 @@ watch(
 </script>
 
 <template>
-  <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait', { battling }]">
+  <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait']">
     <div class="board-layer">
       <BoardView
         :key="`${settings.locale}:${store.view?.side}:${store.view?.mode}`"
@@ -475,10 +475,6 @@ watch(
 .compact {
   --dock-height: clamp(240px, 44dvh, 480px);
   --dock-width: clamp(290px, 40vw, 400px);
-}
-
-.compact.battling {
-  --dock-height: clamp(150px, 26dvh, 280px);
 }
 
 .compact .hud-top {

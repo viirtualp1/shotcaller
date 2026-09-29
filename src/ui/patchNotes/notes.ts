@@ -71,6 +71,30 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.4.2',
+    date: '2026-09-29',
+    title: {
+      en: 'Clean ring',
+      ru: 'Чистое кольцо',
+    },
+    interface: [
+      {
+        en: 'Round summary: damage, healing and damage taken fill the width. The heading above them is gone.',
+        ru: 'Итог раунда: урон, лечение и полученный урон на всю ширину. Заголовка над ними больше нет.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Selecting a hero no longer draws lines from the corner of the map to the selection ring.',
+        ru: 'Выбор героя больше не рисует линии из угла карты к кольцу выделения.',
+      },
+      {
+        en: 'Hero slots line up with item slots.',
+        ru: 'Слоты героев выровнены так же, как слоты предметов.',
+      },
+    ],
+  },
+  {
     version: '8.4.1',
     date: '2026-09-29',
     title: {

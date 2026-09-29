@@ -1,10 +1,8 @@
 import type { Graphics, StrokeInput } from 'pixi.js'
 
-/** Pixi continues the previous path, so each arc needs its own moveTo to avoid a connecting line. */
+/** A fresh path per arc. Continuing the previous one makes Pixi stroke a line out to the origin. */
 export function strokeArc(g: Graphics, radius: number, from: number, to: number, style: StrokeInput) {
-  g.moveTo(Math.cos(from) * radius, Math.sin(from) * radius)
-    .arc(0, 0, radius, from, to)
-    .stroke(style)
+  g.beginPath().arc(0, 0, radius, from, to).stroke(style)
 }
 
 export interface BarSpec {

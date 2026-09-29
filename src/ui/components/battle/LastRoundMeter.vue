@@ -9,6 +9,8 @@ import type { MeterStat } from './DamageMeter.vue'
 
 const STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
 
+defineProps<{ placeholder?: boolean }>()
+
 const store = useMatchStore()
 const text = useGameText()
 const { t } = text
@@ -41,7 +43,9 @@ const rows = computed(() => {
 </script>
 
 <template>
-  <HudPanel v-if="summary" class="panel" :title="t('summary.lastRound', { round: summary.round })">
+  <p v-if="!summary && placeholder" class="empty">{{ t('summary.noRound') }}</p>
+
+  <HudPanel v-else-if="summary" class="panel" :title="t('summary.lastRound', { round: summary.round })">
     <ToggleGroupRoot v-model="meterModel" type="single" class="tabs" :aria-label="t('summary.heroes')">
       <ToggleGroupItem v-for="item in STATS" :key="item" :value="item" class="tab">
         {{ t(`battle.${item}`) }}

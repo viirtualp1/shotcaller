@@ -58,6 +58,14 @@ describe('patch notes', () => {
     expect(patchSnippet(latest, 'en')).toMatch(/Bug fixes$/)
     expect(patchSnippet(latest, 'ru')).toMatch(/Исправления$/)
     expect(patchSnippet(latest, 'en')).not.toContain('past the sides of the bridge')
+
+    const ring = findPatch('8.4.2')!
+    expect(patchSnippet(ring, 'en')).toContain('fill the width')
+    expect(patchSnippet(ring, 'en')).toMatch(/Bug fixes$/)
+    expect(patchSnippet(ring, 'en')).not.toContain('selection ring')
+    expect(patchSnippet(ring, 'ru')).toMatch(/Исправления$/)
+    expect(patchSnippet(ring, 'en').length).toBeLessThanOrEqual(160)
+    expect(patchSnippet(ring, 'ru').length).toBeLessThanOrEqual(160)
     expect(patchSnippet(pages, 'en')).not.toContain('Bug fixes')
     expect(patchSnippet(modes, 'en').length).toBeLessThanOrEqual(160)
     expect(patchSnippet(modes, 'en')).toContain('Three ways to play')

@@ -217,20 +217,16 @@ const incomeRows = computed(() => {
         </section>
 
         <section>
-          <header class="heroes-head">
-            <h3 class="eyebrow">{{ t('summary.heroes') }}</h3>
-
-            <ToggleGroupRoot
-              v-model="meterModel"
-              type="single"
-              class="meter-tabs"
-              :aria-label="t('battle.meter')"
-            >
-              <ToggleGroupItem v-for="stat in METER_STATS" :key="stat" :value="stat" class="meter-tab">
-                {{ t(`battle.${stat}`) }}
-              </ToggleGroupItem>
-            </ToggleGroupRoot>
-          </header>
+          <ToggleGroupRoot
+            v-model="meterModel"
+            type="single"
+            class="meter-tabs"
+            :aria-label="t('summary.heroes')"
+          >
+            <ToggleGroupItem v-for="stat in METER_STATS" :key="stat" :value="stat" class="meter-tab">
+              {{ t(`battle.${stat}`) }}
+            </ToggleGroupItem>
+          </ToggleGroupRoot>
 
           <p v-if="meter === 'healing' && !heroRows.length" class="none">{{ t('summary.noHealing') }}</p>
 
@@ -526,29 +522,25 @@ section {
   box-shadow: inset 3px 0 0 var(--team);
 }
 
-.heroes-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .meter-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
-  margin-left: auto;
+  width: 100%;
   padding: 2px;
   border-radius: 7px;
   background: rgba(0, 0, 0, 0.25);
 }
 
 .meter-tab {
-  padding: 3px 8px;
+  padding: 6px 8px;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--chalk-dim);
   font-size: 11px;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
   transition: background 0.15s;
 }

@@ -127,7 +127,7 @@ function onPanelClick() {
 
 .grid.dense {
   grid-template-columns: repeat(auto-fill, 52px);
-  justify-content: center;
+  justify-content: start;
   gap: 6px;
   padding: 2px;
 }

@@ -159,7 +159,8 @@
     "label": "Planning",
     "shop": "Shop",
     "heroes": "Heroes",
-    "lanes": "Lanes"
+    "lanes": "Lanes",
+    "stats": "Stats"
   },
   "tracker": {
     "anyHero": "any hero",
@@ -244,6 +245,7 @@
     "nextIn": "Back to the shop · {s} s",
     "structures": "Towers and throne after the round",
     "lastRound": "Round {round}",
+    "noRound": "Stats appear after a round",
     "heroes": "Hero damage and healing",
     "heroDamage": "Damage",
     "heroHealing": "Healing",

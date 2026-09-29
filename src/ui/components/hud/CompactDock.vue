@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Route, Store, Users } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { ChartColumn, Route, Store, Users } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useDockStore, type DockTab } from '../../stores/dock'
 import { useMatchStore } from '../../stores/match'
 import BattlePanel from '../battle/BattlePanel.vue'
+import LastRoundMeter from '../battle/LastRoundMeter.vue'
 import SynergyTracker from '../lanes/SynergyTracker.vue'
 import BenchGrid from '../roster/BenchGrid.vue'
 import HeroCard from '../roster/HeroCard.vue'
@@ -18,6 +19,21 @@ const dock = useDockStore()
 const { t } = useGameText()
 const battling = computed(() => store.phase === 'battle')
 const benchCount = computed(() => store.view!.human.bench.length)
+/** The tab to return to once the fight is over. */
+const planningTab = ref<DockTab>(dock.tab)
+
+watch(
+  battling,
+  (isBattle, wasBattle) => {
+    if (isBattle && wasBattle !== true) {
+      planningTab.value = dock.tab
+      dock.tab = 'stats'
+    } else if (wasBattle === true && !isBattle) {
+      dock.tab = planningTab.value
+    }
+  },
+  { immediate: true },
+)
 
 const tabs = computed(() => [
   {
@@ -35,6 +51,11 @@ const tabs = computed(() => [
     icon: Route,
     badge: 0,
   },
+  {
+    id: 'stats' as DockTab,
+    icon: ChartColumn,
+    badge: 0,
+  },
 ])
 </script>
 
@@ -48,7 +69,7 @@ const tabs = computed(() => [
           <ItemCard docked />
         </div>
 
-        <BattlePanel v-else-if="battling" key="battle" />
+        <BattlePanel v-else-if="battling && dock.tab === 'stats'" key="battle" />
         <ShopPanel v-else-if="dock.tab === 'shop'" key="shop" />
 
         <div v-else-if="dock.tab === 'heroes'" key="heroes" class="stack">
@@ -56,11 +77,12 @@ const tabs = computed(() => [
           <StashGrid dense />
         </div>
 
+        <LastRoundMeter v-else-if="dock.tab === 'stats'" key="stats" placeholder />
         <SynergyTracker v-else key="lanes" />
       </Transition>
     </div>
 
-    <nav v-if="!battling" class="tabbar">
+    <nav class="tabbar" :class="{ battling }">
       <button
         v-for="tab in tabs"
         :key="tab.id"
@@ -78,7 +100,7 @@ const tabs = computed(() => [
         {{ t(`dock.${tab.id}`) }}
       </button>
 
-      <FightButton class="fight" />
+      <FightButton v-if="!battling" class="fight" />
     </nav>
   </section>
 </template>
@@ -116,11 +138,15 @@ const tabs = computed(() => [
 
 .tabbar {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.5fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.35fr);
   align-items: center;
   gap: 4px;
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--edge);
+}
+
+.tabbar.battling {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .tab {
