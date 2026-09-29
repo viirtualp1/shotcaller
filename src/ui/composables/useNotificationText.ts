@@ -19,6 +19,7 @@ export function useNotificationText() {
       return {
         name: nameOr(friend?.name),
         hero: heroOf(friend?.avatar),
+        photo: friend?.photo ?? null,
       }
     }
 
@@ -26,6 +27,7 @@ export function useNotificationText() {
       return {
         name: nameOr(notice.coach.name),
         hero: heroOf(notice.coach.avatar),
+        photo: notice.coach.photo,
       }
     }
 

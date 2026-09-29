@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { useElementBounding, useEventListener, useMediaQuery, useRafFn, useWindowSize } from '@vueuse/core'
+import {
+  useElementBounding,
+  useEventListener,
+  useMediaQuery,
+  useRafFn,
+  useScrollLock,
+  useWindowSize,
+} from '@vueuse/core'
 import { Pause, Play, RotateCcw, X } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
@@ -38,13 +45,11 @@ const text = useGameText()
 const { t } = text
 const host = ref<HTMLElement | null>(null)
 const topEl = ref<HTMLElement | null>(null)
-const centerEl = ref<HTMLElement | null>(null)
 const sideEl = ref<HTMLElement | null>(null)
 const renderer = useBoardRenderer(host, props.match.side, props.match.mode)
 const wide = useMediaQuery('(min-width: 1100px)')
 const { width: viewportW, height: viewportH } = useWindowSize()
 const topBox = useElementBounding(topEl)
-const centerBox = useElementBounding(centerEl)
 const sideBox = useElementBounding(sideEl)
 const avatarSize = computed(() => (wide.value ? 30 : 22))
 
@@ -77,22 +82,9 @@ const hoveredHero = computed(() => {
   return cast.value.find((hero) => hero.uid === hit.uid) ?? null
 })
 
-const pipShift = computed(() => {
-  if (centerBox.width.value === 0 || topBox.width.value === 0) {
-    return 0
-  }
-
-  const center = centerBox.left.value + centerBox.width.value / 2
-  const panel = topBox.left.value + topBox.width.value / 2
-
-  return Math.round(center - panel)
-})
-
 const maxRounds = computed(() => MODES[props.match.mode].maxRounds)
-const roundVerdict = computed(() => props.match.history[replay.round - 1] ?? null)
 const opponentName = computed(() => props.match.duel?.opponentName ?? undefined)
 const secondsLeft = computed(() => Math.max(0, Math.ceil(BATTLE.duration - elapsed.value)))
-const progress = computed(() => (over.value ? 1 : Math.min(1, elapsed.value / BATTLE.duration)))
 
 const meterRows = computed(() => {
   const rows = cast.value
@@ -284,14 +276,13 @@ watch(renderer, (board, _, onCleanup) => {
 
 watch(selectedUid, () => sideEl.value?.scrollTo({ top: 0 }))
 
-document.documentElement.classList.add('replay-open')
-
+/* The screen underneath must not scroll while the replay covers it. The root, not the body: a closing dialog restores the body's own lock. */
+useScrollLock(document.documentElement, true)
 useRafFn(({ delta }) => tick(delta / 1000))
 useEventListener(window, 'keydown', onKey, { capture: true })
 useEventListener(window, 'pointerdown', onPointerDown)
 
 onBeforeUnmount(() => {
-  document.documentElement.classList.remove('replay-open')
   session?.dispose()
 })
 </script>
@@ -311,21 +302,16 @@ onBeforeUnmount(() => {
       <div class="scoreboard">
         <BaseStatus :team="0" :structures="structures[0]" :mode="match.mode" />
 
-        <div ref="centerEl" class="center">
+        <div class="center">
           <span class="eyebrow">{{ t('replay.title') }}</span>
           <span class="round">{{ t('hud.round', { round: replay.round, max: maxRounds }) }}</span>
           <span class="phase">{{ t('battle.timeLeft', { s: secondsLeft }) }}</span>
-          <span class="progress"><i :style="{ width: `${progress * 100}%` }" /></span>
-
-          <span v-if="roundVerdict" class="verdict" :class="roundVerdict">
-            {{ t(`summary.${roundVerdict}`, { round: replay.round }) }}
-          </span>
         </div>
 
         <BaseStatus :team="1" :structures="structures[1]" :mode="match.mode" :name="opponentName" />
       </div>
 
-      <nav class="pips" :style="{ translate: `${pipShift}px 0` }" :aria-label="t('matchDetails.roundByRound')">
+      <nav class="pips" :aria-label="t('matchDetails.roundByRound')">
         <button
           v-for="(verdict, i) in match.history"
           :key="i"
@@ -439,17 +425,11 @@ onBeforeUnmount(() => {
   --side: 0px;
   position: fixed;
   inset: 0;
-  /* Above the match dialog, below item tooltips portaled to the body. */
+  /* Above the social windows, below item tooltips portaled to the body. */
   z-index: 49;
   overflow: hidden;
   background: var(--board);
   pointer-events: auto;
-}
-
-/* The match dialog unlocks the page when a press lands outside it. Keep the replay from scrolling. */
-:global(html.replay-open),
-:global(html.replay-open body) {
-  overflow: hidden !important;
 }
 
 .board {
@@ -515,8 +495,10 @@ onBeforeUnmount(() => {
   pointer-events: auto;
 }
 
+/* Equal side columns keep the round in the middle, right above the round buttons. */
 .scoreboard {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 22px;
   padding: 8px 18px 10px;
@@ -526,6 +508,14 @@ onBeforeUnmount(() => {
   border-top: 0;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(6px);
+}
+
+.scoreboard > :first-child {
+  justify-self: end;
+}
+
+.scoreboard > :last-child {
+  justify-self: start;
 }
 
 .center {
@@ -553,39 +543,6 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.progress {
-  width: 100%;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-
-.progress i {
-  display: block;
-  height: 100%;
-  background: var(--theirs);
-}
-
-.verdict {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.verdict.win {
-  color: var(--heal);
-}
-
-.verdict.loss {
-  color: var(--theirs);
-}
-
-.verdict.draw {
-  color: var(--chalk-dim);
-}
-
 .side {
   position: absolute;
   top: 12px;
@@ -597,7 +554,6 @@ onBeforeUnmount(() => {
   gap: 12px;
   width: min(320px, calc(100vw - 24px));
   overflow: auto;
-  scrollbar-width: thin;
   pointer-events: none;
 }
 

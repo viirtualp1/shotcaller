@@ -120,7 +120,7 @@ async function insertEmoji(emoji: string) {
         @click="friends.openProfile(friend.id)"
       >
         <span class="avatar">
-          <CoachAvatar :hero-id="hero" :size="36" />
+          <CoachAvatar :hero-id="hero" :photo="friend.photo" :size="36" />
           <i class="presence" />
         </span>
 
@@ -332,7 +332,6 @@ async function insertEmoji(emoji: string) {
   padding: 2px 2px 4px;
   overflow-y: auto;
   list-style: none;
-  scrollbar-width: thin;
 }
 
 .older {
@@ -404,6 +403,10 @@ async function insertEmoji(emoji: string) {
   resize: none;
   /* The field grows with its text up to max-height; past that it scrolls without showing a bar. */
   scrollbar-width: none;
+}
+
+.input::-webkit-scrollbar {
+  display: none;
 }
 
 .input:focus {

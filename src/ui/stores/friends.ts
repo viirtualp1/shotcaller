@@ -11,6 +11,7 @@ import type {
   PresenceStatus,
 } from '@/application/social/friends'
 import type { MatchRecord } from '@/domain/profile/Profile'
+import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useCloudStore } from './cloud'
 import { useMatchStore } from './match'
 import { useNotificationsStore } from './notifications'
@@ -48,6 +49,9 @@ export const useFriendsStore = defineStore('friends', () => {
   let known: { incoming: ReadonlySet<string>; outgoing: ReadonlySet<string> } | null = null
   /** Bumped on every account change, so a connection that finishes late for an old account is dropped. */
   let generation = 0
+  /** The Google picture last published for friends, so a list refresh does not send it again. */
+  let publishedPhoto: string | null | undefined
+  const accountPhoto = useAccountPhoto()
 
   const isOnline = (id: string) => online.value.has(id)
   const statusOf = (id: string) => online.value.get(id) ?? null
@@ -128,7 +132,26 @@ export const useFriendsStore = defineStore('friends', () => {
     blocked.value = []
     online.value = new Map()
     status.value = 'off'
+    publishedPhoto = undefined
     closeProfile()
+  }
+
+  /** Friends see the Google picture only while this coach shows it. */
+  function publishPhoto() {
+    if (!service || status.value !== 'ready') {
+      return
+    }
+
+    const url = accountPhoto.shown.value
+    if (publishedPhoto === url) {
+      return
+    }
+
+    publishedPhoto = url
+
+    void service.setPhoto(url).catch(() => {
+      publishedPhoto = undefined
+    })
   }
 
   /** Announces requests that just arrived and requests of ours that were just accepted. */
@@ -264,6 +287,8 @@ export const useFriendsStore = defineStore('friends', () => {
       closeProfile()
     }
   })
+
+  watch([() => status.value, accountPhoto.shown], () => publishPhoto())
 
   watch(
     () => (cloud.signedIn ? cloud.account?.id : null),

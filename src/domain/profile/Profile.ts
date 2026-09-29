@@ -146,6 +146,21 @@ export const emptyRatings = (): ModeRatings => ({
 
 export const bestRating = (ratings: ModeRatings) => Math.max(...MODE_IDS.map((mode) => ratings[mode]))
 
+/** Ratings as the server settled them from duels, with the best each mode reached. */
+export interface SettledRatings {
+  readonly ratings: ModeRatings
+  readonly peaks: ModeRatings
+}
+
+/** The server has the final say on ratings: only duels it saw end count, whatever this device worked out. */
+export const withSettledRatings = (profile: Profile, settled: SettledRatings): Profile => ({
+  ...profile,
+  ratings: settled.ratings,
+  peakRatings: settled.peaks,
+  rating: bestRating(settled.ratings),
+  peakRating: bestRating(settled.peaks),
+})
+
 /** The mode of the best rating; the first mode wins a tie. */
 export const bestMode = (ratings: ModeRatings) =>
   MODE_IDS.reduce((best, mode) => (ratings[mode] > ratings[best] ? mode : best))

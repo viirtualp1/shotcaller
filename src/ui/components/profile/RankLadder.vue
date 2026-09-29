@@ -38,7 +38,6 @@ const floorOf = (index: number) => index * RANK.starsPerTier * RANK.pointsPerSta
 <style scoped>
 .ladder {
   overflow-x: auto;
-  scrollbar-width: thin;
 }
 
 ol {

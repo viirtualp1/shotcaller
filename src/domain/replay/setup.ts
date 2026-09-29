@@ -20,7 +20,8 @@ export interface ReplayHero {
 export type ReplayAvailability = 'ready' | 'stale' | 'missing'
 
 export function replayAvailability(record: MatchRecord): ReplayAvailability {
-  if (record.replays.length === 0 || record.roundLineups.length === 0) {
+  /* A match already under way when replays came in has lineups for rounds without a tape: the lists no longer line up. */
+  if (record.replays.length === 0 || record.replays.length !== record.roundLineups.length) {
     return 'missing'
   }
 

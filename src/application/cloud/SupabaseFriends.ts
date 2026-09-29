@@ -3,8 +3,15 @@ import { z } from 'zod'
 import { HERO_IDS, MODE_IDS } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { matchRecordSchema } from '../persistence/profileSnapshot'
-import type { FriendRequestResult, FriendStatus, FriendsService, PresenceStatus } from '../social/friends'
+import {
+  coachPhoto,
+  type FriendRequestResult,
+  type FriendStatus,
+  type FriendsService,
+  type PresenceStatus,
+} from '../social/friends'
 import type { Database } from './database'
+import { modeRatingsSchema } from './ratingsSchema'
 
 const FRIEND_STATUSES: ReadonlySet<string> = new Set<FriendStatus>(['friend', 'incoming', 'outgoing'])
 
@@ -30,20 +37,20 @@ const presenceStatus = z.object({
   round: z.number().int().min(1).max(40).nullable(),
 })
 
-const modeRatings = z.object({
-  threeLanes: count.catch(0),
-  twoLanes: count.catch(0),
-  oneLane: count.catch(0),
-})
-
 const friendProfile = z
   .object({
     id: z.uuid(),
     name: z.string().max(40),
     avatar: z.string().max(32).nullable(),
+    photo: z
+      .string()
+      .max(2048)
+      .nullable()
+      .catch(null)
+      .transform((url) => coachPhoto(url)),
     rating: count,
     /** Missing before game modes, or before the coach saved a profile with them. */
-    ratings: modeRatings.nullable().catch(null),
+    ratings: modeRatingsSchema.nullable().catch(null),
     peakRating: count.catch(0),
     xp: count.catch(0),
     totals: z
@@ -120,6 +127,7 @@ export class SupabaseFriends implements FriendsService {
       id: data.id,
       name: data.name,
       avatar: data.avatar,
+      photo: coachPhoto(data.photo),
       rating: data.rating,
       friendCode: data.friend_code,
     }
@@ -137,6 +145,7 @@ export class SupabaseFriends implements FriendsService {
         id: row.id,
         name: row.name,
         avatar: row.avatar,
+        photo: coachPhoto(row.photo),
         rating: row.rating,
         status: row.status as FriendStatus,
         since: row.since,
@@ -198,8 +207,16 @@ export class SupabaseFriends implements FriendsService {
       id: row.id,
       name: row.name,
       avatar: row.avatar,
+      photo: coachPhoto(row.photo),
       rating: row.rating,
     }))
+  }
+
+  async setPhoto(url: string | null) {
+    const { error } = await this.client.rpc('set_coach_photo', { url })
+    if (error) {
+      throw error
+    }
   }
 
   async profile(coachId: string) {

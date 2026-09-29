@@ -120,9 +120,14 @@ export interface Database {
           friend_code: string
           name: string
           avatar: string | null
+          photo: string | null
           rating: number
           updated_at: string
         }
+      }
+      set_coach_photo: {
+        Args: { url: string | null }
+        Returns: undefined
       }
       request_friend: {
         Args: { code: string }
@@ -166,6 +171,7 @@ export interface Database {
           id: string
           name: string
           avatar: string | null
+          photo: string | null
           rating: number
           since: string
         }[]
@@ -191,7 +197,7 @@ export interface Database {
         Returns: Json
       }
       report_duel: {
-        Args: { duel: string; winning_side: number | null }
+        Args: { duel: string; winning_side: number | null; by_throne?: boolean }
         Returns: undefined
       }
       forfeit_duel: {
@@ -218,11 +224,16 @@ export interface Database {
           created_at: string
           opponent_name: string
           opponent_avatar: string | null
+          opponent_photo: string | null
           opponent_rating: number
         }[]
       }
       coach_profile: {
         Args: { friend: string }
+        Returns: Json
+      }
+      my_ratings: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       coach_match: {
@@ -235,6 +246,7 @@ export interface Database {
           id: string
           name: string
           avatar: string | null
+          photo: string | null
           rating: number
           status: string
           since: string

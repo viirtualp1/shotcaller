@@ -37,7 +37,7 @@ const leavesSolo = computed(() => match.view !== null && !match.isDuel)
         <DialogTitle class="hand title">{{ t('duel.invitedTitle') }}</DialogTitle>
 
         <div class="who">
-          <CoachAvatar :hero-id="hero" :size="44" />
+          <CoachAvatar :hero-id="hero" :photo="invite?.opponent.photo" :size="44" />
           <p class="text">{{ t('duel.invitedText', { name }) }}</p>
         </div>
 

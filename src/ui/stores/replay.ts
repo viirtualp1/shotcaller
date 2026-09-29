@@ -9,8 +9,7 @@ export const useReplayStore = defineStore('replay', () => {
 
   function open(record: MatchRecord) {
     match.value = record
-    const first = record.replays.findIndex((replay) => replay)
-    round.value = first === -1 ? 1 : first + 1
+    round.value = 1
   }
 
   function close() {

@@ -18,8 +18,9 @@ const replay = useReplayStore()
 const text = useGameText()
 const { t } = text
 
+/* Steps aside while its replay plays: a modal left open underneath traps focus and closes on the first press. */
 const open = computed({
-  get: () => match.value !== null,
+  get: () => match.value !== null && replay.match === null,
   set: (value: boolean) => {
     if (!value) {
       match.value = null

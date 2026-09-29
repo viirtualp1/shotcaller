@@ -6,6 +6,7 @@ const coach = {
   id: 'c1',
   name: 'Anna',
   avatar: null,
+  photo: null,
   rating: 0,
 }
 

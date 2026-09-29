@@ -1,4 +1,4 @@
-import type { MatchRecord, Profile } from '@/domain/profile/Profile'
+import type { MatchRecord, Profile, SettledRatings } from '@/domain/profile/Profile'
 
 export interface CloudProfile {
   readonly profile: Profile
@@ -16,6 +16,8 @@ export interface CloudStore {
   save(profile: Profile, baseRevision: number): Promise<CloudProfile | 'conflict'>
   /** Archives finished matches; ones already stored are skipped. */
   addMatches(records: readonly MatchRecord[]): Promise<void>
+  /** Ratings the server settled from this account's duels; null before it has any. */
+  ratings(): Promise<SettledRatings | null>
 }
 
 export interface CloudAccount {

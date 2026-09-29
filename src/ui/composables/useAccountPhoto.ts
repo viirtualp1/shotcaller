@@ -5,7 +5,7 @@ import { useCloudStore } from '../stores/cloud'
 
 /**
  * The Google account's picture as the coach's own avatar: shown by default when there is one, until the coach
- * picks a hero instead. It stays on this device; friends see the hero avatar.
+ * picks a hero instead. Friends see the same choice.
  */
 export function useAccountPhoto() {
   const cloud = useCloudStore()

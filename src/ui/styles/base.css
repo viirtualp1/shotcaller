@@ -29,6 +29,34 @@
   box-sizing: border-box;
 }
 
+/* Gold bars that stay on screen: a styled scrollbar is never the fading overlay kind. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(244, 197, 91, 0.16);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--gold);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox has no scrollbar pseudo-elements; the standard properties give it the same colours. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold) rgba(244, 197, 91, 0.16);
+  }
+}
+
 html,
 body,
 #app {

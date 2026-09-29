@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { HERO_IDS, type HeroId } from '@/content/ids'
-import { applyRecord, type MatchRecord, type Profile } from '@/domain/profile/Profile'
+import { applyRecord, withSettledRatings, type MatchRecord, type Profile } from '@/domain/profile/Profile'
 import { matchRecordSchema } from '../persistence/profileSnapshot'
 import { STORAGE_KEYS } from '../persistence/storageKeys'
 import type { CloudProfile, CloudStore } from './CloudStore'
@@ -110,16 +110,17 @@ export class ProfileSync {
       const sent = this.current
       const local = current()
       const cloud = await store.load()
+      const rated = await this.settledRatings(store)
 
       if (!cloud) {
-        const created = await store.create(local)
+        const created = await store.create(rated(local))
         if (created === 'conflict') {
           continue
         }
 
         await store.addMatches(local.recent)
 
-        return this.settle(userId, created.revision, local, sent)
+        return this.settle(userId, created.revision, rated(local), sent)
       }
 
       if (sent.userId !== userId) {
@@ -131,10 +132,10 @@ export class ProfileSync {
           }
         }
 
-        return this.settle(userId, cloud.revision, cloud.profile, sent)
+        return this.settle(userId, cloud.revision, rated(cloud.profile), sent)
       }
 
-      const next = this.replay(cloud.profile, sent)
+      const next = rated(this.replay(cloud.profile, sent))
       if (!sent.pending.length && !sent.identity) {
         return this.settle(userId, cloud.revision, next, sent)
       }
@@ -160,22 +161,31 @@ export class ProfileSync {
       const sent = this.current
       const local = current()
       const cloud = await store.load()
+      const rated = await this.settledRatings(store)
 
       if (keep === 'cloud' && cloud) {
-        return this.settle(userId, cloud.revision, cloud.profile, sent).profile
+        return this.settle(userId, cloud.revision, rated(cloud.profile), sent).profile
       }
 
-      const saved = cloud ? await store.save(local, cloud.revision) : await store.create(local)
+      const kept = rated(local)
+      const saved = cloud ? await store.save(kept, cloud.revision) : await store.create(kept)
       if (saved === 'conflict') {
         continue
       }
 
       await store.addMatches(local.recent)
 
-      return this.settle(userId, saved.revision, local, sent).profile
+      return this.settle(userId, saved.revision, kept, sent).profile
     }
 
     throw new ConflictLoopError()
+  }
+
+  /** Puts the server's ratings on a profile; a failed lookup keeps this device's until the next sync. */
+  private async settledRatings(store: CloudStore) {
+    const settled = await store.ratings().catch(() => null)
+
+    return (profile: Profile) => (settled ? withSettledRatings(profile, settled) : profile)
   }
 
   /** Records what reached the cloud; anything queued while saving stays queued and stays visible. */

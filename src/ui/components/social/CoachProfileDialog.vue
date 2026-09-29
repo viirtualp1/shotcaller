@@ -14,7 +14,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useFriendStatus } from '../../composables/useFriendStatus'
@@ -22,6 +22,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
+import { useReplayStore } from '../../stores/replay'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeRatings from '../modes/ModeRatings.vue'
@@ -35,6 +36,7 @@ const CONFIRM_MS = 3000
 
 /** A friend's profile: rank, totals and latest matches, with everything that can be done with them. */
 const friends = useFriendsStore()
+const replay = useReplayStore()
 const chat = useChatStore()
 const duel = useDuelStore()
 const settings = useSettingsStore()
@@ -47,8 +49,17 @@ const { start: expireConfirm } = useTimeoutFn(() => (confirming.value = null), C
   immediate: false,
 })
 
+/** The opened match stays open while its replay plays and the profile steps aside. */
+const expanded = ref<string>()
+
+watch(
+  () => friends.viewedId,
+  () => (expanded.value = undefined),
+)
+
+/* Hidden under a replay: a modal left open underneath traps focus and closes on the first press. */
 const open = computed({
-  get: () => friends.viewedId !== null,
+  get: () => friends.viewedId !== null && replay.match === null,
   set: (value) => {
     if (!value) {
       friends.closeProfile()
@@ -65,6 +76,8 @@ const name = computed(() => entry.value?.name || profile.value?.name || t('profi
 const hero = computed(
   () => HERO_IDS.find((id) => id === (entry.value?.avatar ?? profile.value?.avatar)) ?? 'spearman',
 )
+
+const photo = computed(() => entry.value?.photo ?? profile.value?.photo ?? null)
 
 const level = computed(() => (profile.value ? levelFor(profile.value.xp).level : null))
 const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
@@ -164,7 +177,7 @@ function ask(action: 'remove' | 'block') {
             <span class="medal-name">{{ t(`profile.ranks.${rank.tier}`) }}</span>
           </span>
 
-          <CoachAvatar :hero-id="hero" :level="level" :size="56" />
+          <CoachAvatar :hero-id="hero" :photo="photo" :level="level" :size="56" />
 
           <div class="who">
             <DialogTitle class="name">{{ name }}</DialogTitle>
@@ -195,7 +208,14 @@ function ask(action: 'remove' | 'block') {
           <section class="history">
             <h3 class="section-title">{{ t('coach.history') }}</h3>
 
-            <AccordionRoot v-if="profile.recent.length" as="ol" type="single" collapsible class="matches">
+            <AccordionRoot
+              v-if="profile.recent.length"
+              v-model="expanded"
+              as="ol"
+              type="single"
+              collapsible
+              class="matches"
+            >
               <AccordionItem
                 v-for="match in profile.recent"
                 :key="match.id"

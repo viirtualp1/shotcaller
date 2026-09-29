@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { MODE_IDS, type ModeId, type TeamId } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { DuelError, type Duel, type DuelFailure, type DuelService } from '../social/duels'
+import { coachPhoto } from '../social/friends'
 import { isReactionId, type ReactionId } from '../social/reactions'
 import type { Database } from './database'
 import { asJson } from './json'
@@ -120,6 +121,7 @@ export class SupabaseDuels implements DuelService {
                 id: duel.data.host === this.userId ? duel.data.guest : duel.data.host,
                 name: row.opponent_name,
                 avatar: row.opponent_avatar,
+                photo: coachPhoto(row.opponent_photo),
                 rating: row.opponent_rating,
               },
             },
@@ -166,10 +168,11 @@ export class SupabaseDuels implements DuelService {
     return data
   }
 
-  async report(duelId: string, winningSide: TeamId | null) {
+  async report(duelId: string, winningSide: TeamId | null, byThrone: boolean) {
     const { error } = await this.client.rpc('report_duel', {
       duel: duelId,
       winning_side: winningSide,
+      by_throne: byThrone,
     })
 
     if (error) {

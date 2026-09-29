@@ -13,7 +13,8 @@ import {
   type DuelService,
 } from '@/application/social/duels'
 import type { ReactionId, ReactionLink } from '@/application/social/reactions'
-import { opponentOf, type ModeId, type TeamId } from '@/content/ids'
+import { opponentOf, type ModeId } from '@/content/ids'
+import type { MatchResult } from '@/domain/match/judge'
 import type { PlayerState } from '@/domain/player/Player'
 import { useCloudStore } from './cloud'
 import { useMatchStore, type DuelBinding, type SettledDuel } from './match'
@@ -306,7 +307,7 @@ export const useDuelStore = defineStore('duel', () => {
   /** The other board is unusable: say so, keep our result on record and leave the duel. */
   function rejectBoard(duelId: string) {
     notifications.push({ kind: 'badBoard' })
-    void service?.report(duelId, mySide.value).catch(() => undefined)
+    void service?.report(duelId, mySide.value, false).catch(() => undefined)
     stopDuel()
     matchStore.leaveToMenu()
   }
@@ -376,10 +377,10 @@ export const useDuelStore = defineStore('duel', () => {
     }
   }, BOARD_POLL_MS)
 
-  function report(duelId: string, winner: TeamId | null) {
+  function report(duelId: string, { winner, reason }: MatchResult) {
     const side = mySide.value
     const winningSide = winner === null ? null : winner === 0 ? side : opponentOf(side)
-    void service?.report(duelId, winningSide).catch(() => undefined)
+    void service?.report(duelId, winningSide, reason === 'throne').catch(() => undefined)
   }
 
   function binding(entry: DuelEntry): DuelBinding {
@@ -387,7 +388,7 @@ export const useDuelStore = defineStore('duel', () => {
       id: entry.duel.id,
       opponentName: entry.opponent.name,
       exchange: (round, board) => exchange(entry.duel.id, round, board),
-      finish: (winner) => report(entry.duel.id, winner),
+      finish: (result) => report(entry.duel.id, result),
     }
   }
 
@@ -476,6 +477,9 @@ export const useDuelStore = defineStore('duel', () => {
     } else if (playing.value?.id === duel.id) {
       playing.value = null
     }
+
+    /* The server has just settled the ratings; the profile takes its figures over the ones worked out here. */
+    void cloud.syncNow()
   }
 
   function onDuel(duel: Duel) {

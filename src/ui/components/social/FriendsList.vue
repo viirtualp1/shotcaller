@@ -87,7 +87,7 @@ async function submit() {
   <div v-else class="friends-list">
     <ul v-if="friends.incoming.length" class="list">
       <li v-for="entry in friends.incoming" :key="entry.id" class="row request">
-        <CoachAvatar :hero-id="heroOf(entry.avatar)" :size="38" />
+        <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
 
         <span class="who">
           <strong class="name">{{ nameOf(entry.name) }}</strong>
@@ -133,7 +133,7 @@ async function submit() {
           <RankMedal :tier="rankFor(entry.rating).tier" :stars="rankFor(entry.rating).stars" :size="30" />
 
           <span class="avatar">
-            <CoachAvatar :hero-id="heroOf(entry.avatar)" :size="38" />
+            <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
             <i class="presence" />
           </span>
         </button>
@@ -175,7 +175,7 @@ async function submit() {
 
     <ul v-if="friends.outgoing.length" class="list">
       <li v-for="entry in friends.outgoing" :key="entry.id" class="row pending">
-        <CoachAvatar :hero-id="heroOf(entry.avatar)" :size="32" />
+        <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
 
         <span class="who">
           <strong class="name">{{ nameOf(entry.name) }}</strong>
@@ -256,7 +256,7 @@ async function submit() {
 
       <ul v-if="showBlocked" class="list">
         <li v-for="entry in friends.blocked" :key="entry.id" class="row pending">
-          <CoachAvatar :hero-id="heroOf(entry.avatar)" :size="32" />
+          <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
 
           <span class="who">
             <strong class="name">{{ nameOf(entry.name) }}</strong>

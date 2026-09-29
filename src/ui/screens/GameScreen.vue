@@ -365,7 +365,6 @@ watch(
   bottom: var(--gutter);
   padding: 0;
   overflow-y: auto;
-  scrollbar-width: thin;
   z-index: 10;
 }
 

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useTimeoutFn } from '@vueuse/core'
+import { useIntervalFn, useTimeoutFn } from '@vueuse/core'
 import { Flag, Play, Swords } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
-import BoardPreview from '../components/board/BoardPreview.vue'
-import ModeShowcase from '../components/modes/ModeShowcase.vue'
+import DemoBattle from '../components/board/DemoBattle.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
 import SignInButton from '../components/profile/SignInButton.vue'
@@ -16,11 +16,20 @@ import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { useSettingsStore } from '../stores/settings'
 
+/** The show fight moves on to the next mode this often. */
+const DEMO_MODE_MS = 15_000
+
 const store = useMatchStore()
 const menu = useMenuStore()
 const settings = useSettingsStore()
 const duel = useDuelStore()
 const { t } = useGameText()
+
+const demoMode = ref<ModeId>(MODE_IDS[0])
+
+useIntervalFn(() => {
+  demoMode.value = MODE_IDS[(MODE_IDS.indexOf(demoMode.value) + 1) % MODE_IDS.length]!
+}, DEMO_MODE_MS)
 
 const rival = computed(() => duel.resumable?.opponent.name || t('profile.defaultName'))
 /** Giving up asks once more; the question goes away on its own. */
@@ -94,17 +103,13 @@ function forfeit() {
       </nav>
     </section>
 
-    <section v-if="store.saved" class="preview">
+    <section class="preview">
       <BoardFrame>
-        <BoardPreview :key="`${settings.locale}:${store.saved.mode}`" :state="store.saved" />
+        <Transition name="fade" mode="out-in">
+          <DemoBattle :key="`${settings.locale}:${demoMode}`" :mode="demoMode" />
+        </Transition>
       </BoardFrame>
-
-      <p class="caption">
-        {{ t(`modes.${store.saved.mode}.name`) }} · {{ t('start.savedRound', { round: store.saved.round }) }}
-      </p>
     </section>
-
-    <ModeShowcase v-else class="preview" />
 
     <LatestPatchCard class="news" />
 
@@ -197,13 +202,6 @@ h1 {
 
 .preview {
   min-width: 0;
-}
-
-.caption {
-  margin: 10px 0 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--chalk-dim);
 }
 
 .news {

@@ -40,7 +40,7 @@ const version = computed({
         align="end"
         :side-offset="6"
       >
-        <SelectViewport>
+        <SelectViewport class="patch-list">
           <SelectItem
             v-for="patch in PATCH_NOTES"
             :key="patch.version"
@@ -93,5 +93,21 @@ const version = computed({
   width: max-content;
   max-width: min(320px, calc(100vw - 32px));
   transform-origin: var(--reka-select-content-transform-origin);
+}
+
+/* reka hides the list's scrollbar in favour of scroll buttons; this long list shows the gold one instead. */
+.patch-list[data-reka-select-viewport] {
+  max-height: 500px;
+  scrollbar-width: auto;
+}
+
+.patch-list[data-reka-select-viewport]::-webkit-scrollbar {
+  display: block;
+}
+
+@media (max-width: 560px) {
+  .patch-list {
+    max-height: min(320px, 55dvh);
+  }
 }
 </style>

@@ -25,6 +25,5 @@ const { t } = useGameText()
   min-height: 0;
   max-height: 520px;
   overflow-y: auto;
-  scrollbar-width: thin;
 }
 </style>

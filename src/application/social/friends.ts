@@ -2,12 +2,18 @@ import type { HeroId, ModeId, StarLevel } from '@/content/ids'
 import type { Difficulty } from '@/content/rules'
 import type { MatchRecord, ModeRatings } from '@/domain/profile/Profile'
 
+/** An https address of a Google account picture, or nothing. */
+export const coachPhoto = (url: string | null | undefined): string | null =>
+  url && url.length <= 2048 && url.startsWith('https://') ? url : null
+
 /** What other players see of a coach. */
 export interface CoachCard {
   readonly id: string
   readonly name: string
   /** A hero id; null until the coach picks one. */
   readonly avatar: string | null
+  /** The Google account picture, when the coach shows it instead of a hero. */
+  readonly photo: string | null
   readonly rating: number
 }
 
@@ -91,6 +97,8 @@ export interface FriendsService {
   block(coachId: string): Promise<void>
   unblock(coachId: string): Promise<void>
   blocked(): Promise<CoachCard[]>
+  /** Publishes the Google picture for friends, or clears it when a hero is shown instead. */
+  setPhoto(url: string | null): Promise<void>
   /** A friend's rank, totals and latest matches; null when they are not a friend (any more). */
   profile(coachId: string): Promise<FriendProfile | null>
   /** One of those matches in full, without the duel opponent's name; null when it is not there any more. */

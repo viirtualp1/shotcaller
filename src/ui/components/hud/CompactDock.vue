@@ -99,7 +99,6 @@ const tabs = computed(() => [
   padding: 8px 10px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
 }
 
 /* Tablets in portrait get a wide dock; panels keep their phone proportions in the middle of it. */

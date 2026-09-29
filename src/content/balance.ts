@@ -5,7 +5,7 @@ import { ITEMS } from './items'
 import { MAPS } from './map'
 import { MODES } from './modes'
 import { ROLES } from './roles'
-import { BATTLE, STAR_POWER } from './rules'
+import { BATTLE, RELIC, STAR_POWER } from './rules'
 import { SYNERGIES } from './synergies'
 import { CREEPS, STRUCTURES } from './units'
 
@@ -26,6 +26,14 @@ function fnv1a(text: string) {
   return (hash >>> 0).toString(16).padStart(8, '0')
 }
 
+/** Colours are only drawn, so a new shade does not retire replays. */
+function withoutColor(value: object) {
+  const copy: Record<string, unknown> = { ...value }
+  delete copy.color
+
+  return copy
+}
+
 /**
  * Everything a fight reads, and nothing a patch can change without changing the fight:
  * prices, names and colours stay out, so a shop tweak does not retire old replays.
@@ -35,6 +43,7 @@ function balanceData() {
     logic: LOGIC_REVISION,
     starPower: STAR_POWER,
     battle: BATTLE,
+    relic: withoutColor(RELIC),
     creeps: CREEPS,
     structures: STRUCTURES,
     abilities: ABILITY_PARAMS,
@@ -56,12 +65,7 @@ function balanceData() {
         effects: item.effects,
       }
     }),
-    roles: ROLE_IDS.map((id) => {
-      const role: Record<string, unknown> = { ...ROLES[id] }
-      delete role.color
-
-      return role
-    }),
+    roles: ROLE_IDS.map((id) => withoutColor(ROLES[id])),
     synergies: SYNERGIES.map(({ id, effects }) => ({
       id,
       effects,

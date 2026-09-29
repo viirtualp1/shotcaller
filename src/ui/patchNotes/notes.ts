@@ -67,6 +67,60 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.3',
+    date: '2026-09-29',
+    title: {
+      en: 'Fair rating',
+      ru: 'Честный рейтинг',
+    },
+    general: [
+      {
+        en: 'The server keeps the duel rating: it counts only duels it saw end, and that is the rank friends see. Your profile takes its figures on every sync.',
+        ru: 'Рейтинг дуэлей хранит сервер: считает только дуэли, которые сам видел завершёнными, и этот ранг видят друзья. Профиль берёт его цифры при каждой синхронизации.',
+      },
+      {
+        en: 'Replays recorded before 8.3 no longer open: the balance check now covers heal relics too.',
+        ru: 'Повторы, записанные до 8.3, больше не открываются: проверка баланса теперь учитывает и реликвии.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Start screen: two bots fight on the map, three lanes, two lanes and one lane in turn, **15** s each. The saved match and the mode cards are gone from it.',
+        ru: 'Главный экран: на карте бьются два бота — три линии, две и одна по очереди, по **15** с. Сохранённого матча и карточек режимов там больше нет.',
+      },
+      {
+        en: 'A replay opens on round **1**, paused, at **×1**.',
+        ru: 'Повтор открывается с раунда **1**, на паузе, на скорости **×1**.',
+      },
+      {
+        en: 'Replay: the round buttons sit under the scoreboard, in line with the round. Play is the first button, close is at the top right of the actions card. The map and the scoreboard are centered on the screen.',
+        ru: 'Повтор: кнопки раундов под верхней панелью, ровно под номером раунда. «Играть» первая слева, закрытие — в правом верхнем углу карточки. Карта и панель по центру экрана.',
+      },
+      {
+        en: 'Match breakdown: **Watch** sits beside Victory or Defeat.',
+        ru: 'Разбор матча: **Смотреть** справа от «Победы» или «Поражения».',
+      },
+      {
+        en: 'Replay: the won or lost line and the bar under the timer are gone.',
+        ru: 'Повтор: под таймером больше нет строки о победе или поражении в раунде и полоски.',
+      },
+      {
+        en: 'Signed in with Google: friends see your account photo while it is your avatar. A hero you pick replaces it for them too.',
+        ru: 'Вход через Google: друзья видят фото аккаунта, пока оно стоит аватаром. Выбранный герой заменяет его и у них.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Replay from a match breakdown or a friend’s profile: the window steps aside while it plays and comes back after, with the same match open.',
+        ru: 'Повтор из разбора матча или профиля друга: окно уходит на время повтора и возвращается после, с тем же открытым матчем.',
+      },
+      {
+        en: 'Replay of a match that was under way when 8.2 came out: it is no longer offered, instead of showing another round’s fight.',
+        ru: 'Повтор матча, который шёл во время выхода 8.2: больше не предлагается, раньше показывал бой другого раунда.',
+      },
+    ],
+  },
+  {
     version: '8.2',
     date: '2026-09-29',
     title: {

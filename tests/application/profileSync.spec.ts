@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CloudProfile, CloudStore } from '@/application/cloud/CloudStore'
 import { ConflictLoopError, ProfileSync } from '@/application/cloud/ProfileSync'
-import { createProfile, type MatchRecord, type Profile } from '@/domain/profile/Profile'
+import { createProfile, type MatchRecord, type Profile, type SettledRatings } from '@/domain/profile/Profile'
 import { duelMatch, LOSS, play, WIN } from '../helpers/profile'
 
 function memoryStorage() {
@@ -18,6 +18,8 @@ function memoryStorage() {
 class MemoryCloud implements CloudStore {
   row: CloudProfile | null = null
   readonly matches = new Map<string, MatchRecord>()
+  /** What the server settled from duels; null for an account that has not had one. */
+  settled: SettledRatings | null = null
   /** Runs once right before the next save, to let another device get in first. */
   beforeSave: (() => unknown) | null = null
 
@@ -61,6 +63,10 @@ class MemoryCloud implements CloudStore {
         this.matches.set(record.id, record)
       }
     }
+  }
+
+  async ratings() {
+    return this.settled
   }
 }
 
@@ -229,6 +235,50 @@ describe('ProfileSync', () => {
 
     expect(phone.profile.name).toBe('Nikita')
     expect(laptop.sync.state.identity).toBeNull()
+  })
+
+  it('takes the ratings the server settled over the ones worked out here', async () => {
+    const cloud = new MemoryCloud()
+    const phone = new Device()
+    phone.play()
+    phone.play()
+    expect(phone.profile.ratings.threeLanes).toBe(60)
+
+    /* One of the two duels ended in a dispute, so the server counted only the other. */
+    cloud.settled = {
+      ratings: {
+        threeLanes: 30,
+        twoLanes: 0,
+        oneLane: 45,
+      },
+      peaks: {
+        threeLanes: 50,
+        twoLanes: 0,
+        oneLane: 45,
+      },
+    }
+
+    await phone.push(cloud)
+
+    expect(phone.profile).toMatchObject({
+      ratings: cloud.settled.ratings,
+      peakRatings: cloud.settled.peaks,
+      rating: 45,
+      peakRating: 50,
+    })
+
+    expect(cloud.row?.profile.ratings).toEqual(cloud.settled.ratings)
+    expect(phone.profile.totals.matches).toBe(2)
+  })
+
+  it('keeps this device’s ratings when the server has none to give', async () => {
+    const cloud = new MemoryCloud()
+    const phone = new Device()
+    phone.play()
+
+    await phone.push(cloud)
+
+    expect(phone.profile.ratings.threeLanes).toBe(30)
   })
 
   it('gives up when the cloud keeps changing', async () => {

@@ -94,7 +94,7 @@ function viewProfile(item: SocialNotification, coachId: string) {
       :class="kind"
     >
       <header class="line">
-        <CoachAvatar v-if="coach" :hero-id="coach.hero" :size="30" />
+        <CoachAvatar v-if="coach" :hero-id="coach.hero" :photo="coach.photo" :size="30" />
         <Swords v-else :size="16" class="icon" />
 
         <span class="text">

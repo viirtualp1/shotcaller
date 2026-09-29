@@ -11,8 +11,7 @@
       "grow": "Save gold, buy experience and items: every level lets one more hero onto the map."
     },
     "newMatch": "New match",
-    "continue": "Continue · round {round}",
-    "savedRound": "round {round}"
+    "continue": "Continue · round {round}"
   },
   "phase": {
     "planning": "Planning",
@@ -866,11 +865,6 @@
     "challengeText": "Pick the mode for the duel with {name}",
     "send": "Challenge",
     "duelMode": "Mode: {mode}",
-    "ratings": "Rating by mode",
-    "pick": "Pick a mode",
-    "facts": "Up to {rounds} rounds · {heroes} heroes to start",
-    "yourRating": "Your rating in this mode",
-    "startHere": "Best to start with",
-    "others": "Other modes"
+    "ratings": "Rating by mode"
   }
 }

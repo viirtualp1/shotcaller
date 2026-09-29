@@ -8,6 +8,7 @@ import { SupabaseChat } from './SupabaseChat'
 import { SupabaseDuels } from './SupabaseDuels'
 import { SupabaseFriends } from './SupabaseFriends'
 import { asJson } from './json'
+import { settledRatingsSchema } from './ratingsSchema'
 
 const UNIQUE_VIOLATION = '23505'
 
@@ -160,6 +161,17 @@ export class SupabaseCloud implements CloudStore {
     if (error) {
       throw error
     }
+  }
+
+  async ratings() {
+    const { data, error } = await this.client.rpc('my_ratings')
+    if (error) {
+      throw error
+    }
+
+    const parsed = settledRatingsSchema.nullable().safeParse(data)
+
+    return parsed.success ? parsed.data : null
   }
 
   async load() {

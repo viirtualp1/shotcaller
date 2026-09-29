@@ -20,6 +20,7 @@ import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
 import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
 import type { DomainError } from '@/domain/errors'
+import type { MatchResult } from '@/domain/match/judge'
 import type { Match, MatchState, RemoteLink } from '@/domain/match/Match'
 import type { PlayerState } from '@/domain/player/Player'
 import type { RosterSlot } from '@/domain/roster/Roster'
@@ -48,7 +49,8 @@ export interface DuelBinding {
   /** Sends this round's board and resolves with the other player's once both are in. */
   exchange(round: number, board: PlayerState): Promise<PlayerState>
   /** The result this device replayed, seen from its own side: 0 won, 1 lost, null a draw. */
-  finish(winner: TeamId | null): void
+  /** Reports how the match ended, as this device played it. */
+  finish(result: MatchResult): void
 }
 
 /** A duel the server ended early, as `settleDuel` needs it. */
@@ -663,7 +665,10 @@ export const useMatchStore = defineStore('match', () => {
     }
 
     const binding = duel.value
-    binding?.finish(match.result?.winner ?? null)
+    if (match.result) {
+      binding?.finish(match.result)
+    }
+
     profile.record(match, binding)
   }
 

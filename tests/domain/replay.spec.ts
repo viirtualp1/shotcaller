@@ -183,4 +183,42 @@ describe('replays', () => {
 
     expect(replayAvailability(parsed.recent[0]!)).toBe('missing')
   })
+
+  it('does not pair a round with another round’s tape', () => {
+    const tape = {
+      seed: 'late',
+      structures: [
+        {
+          top: 1,
+          mid: 1,
+          bot: 1,
+          inner: 0,
+          throne: 1,
+        },
+        {
+          top: 1,
+          mid: 1,
+          bot: 1,
+          inner: 0,
+          throne: 1,
+        },
+      ],
+    } as const
+
+    /* Round 1 was fought before the update, round 2 after it: only round 2 has a tape. */
+    const { record } = play(createProfile('2026-09-29T10:00:00.000Z'), {
+      ...finished(WIN),
+      stats: {
+        ...finished(WIN).stats,
+        lineups: [
+          [[], []],
+          [[], []],
+        ],
+        replays: [tape],
+      },
+    })
+
+    expect(replayAvailability(record)).toBe('missing')
+    expect(replaySetup(record, 1)).toBeNull()
+  })
 })
