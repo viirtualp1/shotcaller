@@ -251,10 +251,7 @@ const incomeRows = computed(() => {
                 <span class="label">{{ text.heroName(hero.heroId) }} {{ starsLabel(hero.stars) }}</span>
               </span>
 
-              <span
-                class="num value"
-                :title="valueTitle"
-              >
+              <span class="num value" :title="valueTitle">
                 {{ meter === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}
               </span>
 

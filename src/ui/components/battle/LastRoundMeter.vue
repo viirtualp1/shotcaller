@@ -27,9 +27,9 @@ const meterModel = computed({
 
 const rows = computed(() => {
   const key = stat.value
-  const heroes = (summary.value?.heroes ?? [])
-    .filter((hero) => hero[key] > 0)
-    .sort((a, b) => b[key] - a[key])
+
+  const heroes = (summary.value?.heroes ?? []).filter((hero) => hero[key] > 0).sort((a, b) => b[key] - a[key])
+
   const top = Math.max(1, heroes[0]?.[key] ?? 1)
 
   return heroes.map((hero) => ({
@@ -59,7 +59,9 @@ const rows = computed(() => {
           <span class="label">{{ text.heroName(hero.heroId) }} {{ starsLabel(hero.stars) }}</span>
         </span>
 
-        <span class="value">{{ stat === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}</span>
+        <span class="value">{{
+          stat === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value)
+        }}</span>
       </li>
     </ol>
   </HudPanel>
