@@ -18,6 +18,12 @@ export type RoundPick = readonly [heroId: HeroId, stars: StarLevel, lane: LaneId
 /** Both lineups of one round, the player's first. */
 export type RoundLineups = PerTeam<readonly RoundPick[]>
 
+/** What a replay needs besides the lineups: the seed, and building health as the round started, player's first. */
+export interface RoundReplay {
+  readonly seed: string
+  readonly structures: PerTeam<StructureState>
+}
+
 export const picksOf = (lineup: Lineup): RoundPick[] =>
   LANE_IDS.flatMap((lane) =>
     lineup[lane].map((hero): RoundPick => [hero.heroId, hero.stars, lane, [...hero.items]]),
@@ -56,6 +62,8 @@ export interface MatchStats {
   readonly heroes: readonly HeroMatchStats[]
   /** Who fought each round so far, in order. */
   readonly lineups: readonly RoundLineups[]
+  /** One per round, alongside `lineups`: the seed and the buildings as the fight started. */
+  readonly replays: readonly RoundReplay[]
 }
 
 const emptyIncome = (): IncomeBreakdown => ({
@@ -81,6 +89,7 @@ export const emptyMatchStats = (): MatchStats => ({
   teams: [emptyTeam(), emptyTeam()],
   heroes: [],
   lineups: [],
+  replays: [],
 })
 
 function sumRecords<K extends string>(a: Readonly<Record<K, number>>, b: Readonly<Record<K, number>>) {
@@ -95,6 +104,7 @@ export function addRound(
   winner: TeamId | null,
   income: PerTeam<IncomeBreakdown>,
   lineups: RoundLineups,
+  replay: RoundReplay,
 ): MatchStats {
   const teams = TEAM_IDS.map((team): TeamMatchStats => {
     const before = stats.teams[team]
@@ -140,5 +150,6 @@ export function addRound(
     teams: teams as [TeamMatchStats, TeamMatchStats],
     heroes: [...heroes.values()],
     lineups: [...stats.lineups, lineups],
+    replays: [...stats.replays, replay],
   }
 }

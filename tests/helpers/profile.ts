@@ -87,6 +87,7 @@ export function finishedMatch(
       mid: [],
       bot: [],
     },
+    side: 0,
     towersDestroyed: 2,
     duel: null,
   }

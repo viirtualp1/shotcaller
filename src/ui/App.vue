@@ -11,6 +11,7 @@ import DuelInviteDialog from './components/social/DuelInviteDialog.vue'
 import NotificationStack from './components/social/NotificationStack.vue'
 import SocialWindow from './components/social/SocialWindow.vue'
 import GameScreen from './screens/GameScreen.vue'
+import ReplayScreen from './screens/ReplayScreen.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
 import ProfileScreen from './screens/ProfileScreen.vue'
 import StartScreen from './screens/StartScreen.vue'
@@ -22,10 +23,12 @@ import { useFriendsStore } from './stores/friends'
 import { useMatchStore } from './stores/match'
 import { usePatchNotesStore } from './stores/patchNotes'
 import { useProfileStore } from './stores/profile'
+import { useReplayStore } from './stores/replay'
 
 const store = useMatchStore()
 const patchNotes = usePatchNotesStore()
 const profile = useProfileStore()
+const replay = useReplayStore()
 /* Started with the app: it picks up a sign-in link and pulls progress saved on other devices. */
 const cloud = useCloudStore()
 /* Also started with the app, so a signed-in coach shows up online for their friends. */
@@ -44,8 +47,12 @@ useSystemNotificationsStore()
       <StartScreen v-else />
     </Transition>
 
+    <ReplayScreen v-if="replay.match" :key="replay.match.id" :match="replay.match" />
+
     <SettingsDialog />
+
     <NewMatchDialog />
+
     <UpdateToast />
 
     <template v-if="cloud.enabled">

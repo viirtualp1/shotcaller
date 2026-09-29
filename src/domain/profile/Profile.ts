@@ -1,3 +1,4 @@
+import { BALANCE_FINGERPRINT } from '@/content/balance'
 import {
   LANE_IDS,
   MODE_IDS,
@@ -14,7 +15,7 @@ import { PROFILE } from '@/content/profile'
 import type { Difficulty } from '@/content/rules'
 import { verdictFor, type MatchResult } from '../match/judge'
 import type { Match } from '../match/Match'
-import type { MatchStats, RoundLineups } from '../match/matchStats'
+import type { MatchStats, RoundLineups, RoundReplay } from '../match/matchStats'
 import type { Lineup } from '../roster/Roster'
 import { resolveLane } from '../synergy/resolveLane'
 import { matchXp, ratingChange, verdictOf, type Verdict } from './progression'
@@ -82,6 +83,12 @@ export interface MatchRecord {
   readonly history: readonly Verdict[]
   /** Both lineups of every round; only the latest matches keep them. */
   readonly roundLineups: readonly RoundLineups[]
+  /** The team this profile's owner fought as. A replay runs the battle in that order. */
+  readonly side: TeamId
+  /** Balance the match was played on. A replay is offered only while the game still matches it. */
+  readonly balance: string
+  /** Seed and building health for each round, kept for as long as `roundLineups`. */
+  readonly replays: readonly RoundReplay[]
   readonly mvp: HeroId | null
   /** Set for a duel with a friend; null for a match against the computer. */
   readonly duel: DuelInfo | null
@@ -157,6 +164,7 @@ export interface FinishedMatch {
   readonly stats: MatchStats
   readonly lineup: Lineup
   readonly opponentLineup: Lineup
+  readonly side: TeamId
   readonly towersDestroyed: number
   readonly duel: DuelInfo | null
 }
@@ -203,6 +211,7 @@ export function finishedMatch(
     stats: match.stats,
     lineup: match.human.roster.lineup(),
     opponentLineup: match.opponent.roster.lineup(),
+    side: match.side,
     towersDestroyed: MODES[match.mode].towers.filter((slot) => match.structures[1][slot] <= 0).length,
     duel,
   }
@@ -291,6 +300,9 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
     opponentHeroes: heroLinesOf(1),
     history: stats.winners.map((winner) => verdictFor(0, winner)),
     roundLineups: stats.lineups,
+    side: finished.side,
+    balance: BALANCE_FINGERPRINT,
+    replays: stats.replays,
     mvp: heroes[0]?.heroId ?? null,
     duel: finished.duel,
     heroKills: stats.teams[0].heroKills,
@@ -303,10 +315,11 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
 }
 
 const withoutRounds = (record: MatchRecord): MatchRecord =>
-  record.roundLineups.length
+  record.roundLineups.length || record.replays.length
     ? {
         ...record,
         roundLineups: [],
+        replays: [],
       }
     : record
 

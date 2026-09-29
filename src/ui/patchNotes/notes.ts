@@ -67,6 +67,33 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.2',
+    date: '2026-09-29',
+    title: {
+      en: 'Replays',
+      ru: 'Повторы',
+    },
+    features: [
+      {
+        art: { kind: 'rounds' },
+        title: {
+          en: 'Watch a fight again',
+          ru: 'Посмотреть бой ещё раз',
+        },
+        text: {
+          en: 'Open one of your last **5** matches, or a friend’s, and press **Watch**. The round shows the towers, the throne and the time left. Click a hero to see their items and what they did.',
+          ru: 'Открой один из последних **5** матчей, своих или друга, и нажми **Смотреть**. У раунда видны башни, трон и оставшееся время. Нажми на героя, чтобы увидеть предметы и что он сделал.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'The fight is played again from that round’s lineups, the random seed and the health of the towers and the throne. After a balance change the same inputs would play out differently, so those fights stay in the history but **Watch** is hidden.',
+        ru: 'Бой проигрывается заново из составов раунда, случайного зерна и здоровья башен и трона. После изменения баланса те же данные разошлись бы, поэтому такие бои остаются в истории, но кнопка **Смотреть** скрыта.',
+      },
+    ],
+  },
+  {
     version: '8.1',
     date: '2026-09-29',
     title: {

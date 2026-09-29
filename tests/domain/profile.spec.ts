@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseProfile, serializeProfile } from '@/application/persistence/profileSnapshot'
+import { emptyStructureState } from '@/domain/match/structures'
 import { PROFILE } from '@/content/profile'
 import {
   applyRecord,
@@ -313,6 +314,7 @@ describe('recordMatch', () => {
 
   it('keeps every round of the latest matches only', () => {
     const match = finished(WIN)
+    const empty = emptyStructureState()
 
     const withRounds = {
       ...match,
@@ -321,6 +323,16 @@ describe('recordMatch', () => {
         lineups: [
           [[['archer', 1, 'bot', []]], [['giant', 1, 'top', ['boots']]]],
           [[['archer', 2, 'bot', ['gloves']]], [['giant', 1, 'top', ['boots']]]],
+        ] as const,
+        replays: [
+          {
+            seed: 'a',
+            structures: [empty, empty],
+          },
+          {
+            seed: 'b',
+            structures: [empty, empty],
+          },
         ] as const,
       },
     }
@@ -331,8 +343,10 @@ describe('recordMatch', () => {
     }
 
     expect(profile.recent[0]!.roundLineups[1]![0]).toEqual([['archer', 2, 'bot', ['gloves']]])
+    expect(profile.recent[0]!.replays).toHaveLength(2)
     expect(profile.recent[PROFILE.roundDetailMatches - 1]!.roundLineups).toHaveLength(2)
     expect(profile.recent[PROFILE.roundDetailMatches]!.roundLineups).toEqual([])
+    expect(profile.recent[PROFILE.roundDetailMatches]!.replays).toEqual([])
     expect(parseProfile(serializeProfile(profile))).toEqual(profile)
   })
 

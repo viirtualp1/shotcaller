@@ -172,6 +172,11 @@ export class BoardRenderer {
     return point && this.mode === 'planning' ? this.planning.tokenAt(point) : null
   }
 
+  heroAtClient(clientX: number, clientY: number) {
+    const point = this.clientToWorld(clientX, clientY)
+    return point ? this.heroAt(point) : null
+  }
+
   /** Client-space box around a hero token for anchoring HTML overlays; null once the hero is gone. */
   heroBounds(uid: string) {
     const position = this.heroPosition(uid)

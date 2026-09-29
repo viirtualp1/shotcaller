@@ -836,6 +836,17 @@
     "final": "Final",
     "noRounds": "Round lineups are kept for the last 5 matches played since 8.0."
   },
+  "replay": {
+    "watch": "Watch",
+    "title": "Replay",
+    "round": "Round {round}",
+    "play": "Play",
+    "pause": "Pause",
+    "restart": "Restart",
+    "close": "Close",
+    "speed": "Speed",
+    "stale": "This match was played on an older balance, so the fight can't be replayed."
+  },
   "modes": {
     "title": "Mode",
     "threeLanes": {

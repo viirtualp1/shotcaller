@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, LayoutGrid, Swords, Users } from 'lucide-vue-next'
+import { Crown, LayoutGrid, Play, Swords, Users } from 'lucide-vue-next'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { computed, ref } from 'vue'
 import type { ModeId, TeamId } from '@/content/ids'
@@ -12,6 +12,7 @@ import {
   type MatchRecord,
 } from '@/domain/profile/Profile'
 import type { RoundPick } from '@/domain/match/matchStats'
+import { replayAvailability } from '@/domain/replay/setup'
 import { resolveLane } from '@/domain/synergy/resolveLane'
 import { useGameText } from '../../composables/useGameText'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -25,6 +26,7 @@ import {
   type HeroStatRow,
 } from '../dialogs/report/reportModel'
 import SynergyChip from '../lanes/SynergyChip.vue'
+import { useReplayStore } from '../../stores/replay'
 
 /** Older matches kept only these per hero. */
 const BASIC_COLUMNS: readonly HeroStatKey[] = ['kills', 'deaths', 'damageDealt']
@@ -40,18 +42,22 @@ interface Tile {
 /** Totals, heroes, lineups and the fight of one match; keyed by the match, so switching resets the tabs. */
 const props = defineProps<{
   match: MatchRecord
+  /** The match dialog puts Watch beside the verdict, so the copy here stays hidden. */
+  hideWatch?: boolean
 }>()
 
 const text = useGameText()
 const { t } = text
+const replay = useReplayStore()
 
 const tab = ref('heroes')
 const sort = ref<HeroStatKey>('damageDealt')
 
 /** A round picked to look at; null shows the lineups the match ended with. */
-const round = ref<number | null>(null)
+const round = defineModel<number | null>('round', { default: null })
 
 const roundLineups = computed(() => props.match.roundLineups)
+const availability = computed(() => replayAvailability(props.match))
 const detailed = computed(() => hasDetails(props.match))
 const columns = computed(() => (detailed.value ? HERO_COLUMNS : BASIC_COLUMNS))
 
@@ -175,6 +181,10 @@ const sides = computed(() => {
   ]
 })
 
+function watchRound() {
+  replay.open(props.match, round.value ?? props.match.replays.length)
+}
+
 const total = (lines: readonly MatchHeroLine[], pick: (line: MatchHeroLine) => number) =>
   lines.reduce((sum, line) => sum + pick(line), 0)
 
@@ -212,6 +222,17 @@ const combat = computed<ComparisonRow[]>(() => {
         <span v-if="tile.note" class="tile-note">{{ tile.note }}</span>
       </article>
     </section>
+
+    <button
+      v-if="!hideWatch && availability === 'ready'"
+      type="button"
+      class="btn replay"
+      @click="watchRound()"
+    >
+      <Play :size="14" /> {{ t('replay.watch') }}
+    </button>
+
+    <p v-else-if="availability === 'stale'" class="legacy">{{ t('replay.stale') }}</p>
 
     <TabsRoot v-model="tab" class="tabs">
       <TabsList class="tab-list" :aria-label="t('report.title')">
@@ -455,6 +476,10 @@ button.pip:disabled {
 
 .pip.loss {
   --verdict: var(--theirs);
+}
+
+.replay {
+  align-self: flex-start;
 }
 
 .legacy {

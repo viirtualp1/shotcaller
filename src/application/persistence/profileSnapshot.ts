@@ -54,6 +54,20 @@ const synergyRecord = z.object({
 })
 
 const pair = <T extends z.ZodType>(schema: T) => z.tuple([schema, schema]).readonly()
+const team = z.union([z.literal(0), z.literal(1)])
+
+const structureHp = z.object({
+  top: amount,
+  mid: amount,
+  bot: amount,
+  inner: amount,
+  throne: amount,
+})
+
+const roundReplay = z.object({
+  seed: z.string().min(1).max(80),
+  structures: pair(structureHp),
+})
 
 /** A hero as it fought one round: id, stars, lane and items. */
 const roundPick = z
@@ -84,6 +98,10 @@ const matchRecord = z.object({
     .array(pair(z.array(roundPick).readonly()))
     .max(40)
     .default([]),
+  /** 0 for every match recorded before replays, and for every match against the computer. */
+  side: team.default(0),
+  balance: z.string().max(32).default(''),
+  replays: z.array(roundReplay).max(40).default([]),
   mvp: heroId.nullable(),
   duel: z
     .object({ opponentName: z.string().max(64) })

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
+import { Play, X } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { MatchRecord } from '@/domain/profile/Profile'
+import { replayAvailability } from '@/domain/replay/setup'
 import { useGameText } from '../../composables/useGameText'
 import { vOpticalAlign } from '../../directives/opticalAlign'
+import { useReplayStore } from '../../stores/replay'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import MatchDetails from './MatchDetails.vue'
@@ -12,8 +14,10 @@ import MatchDetails from './MatchDetails.vue'
 const match = defineModel<MatchRecord | null>({ required: true })
 
 const settings = useSettingsStore()
+const replay = useReplayStore()
 const text = useGameText()
 const { t } = text
+const round = ref<number | null>(null)
 
 const open = computed({
   get: () => match.value !== null,
@@ -53,6 +57,21 @@ const playedAt = computed(() =>
 )
 
 const mvp = computed(() => match.value?.heroes.find((line) => line.heroId === match.value?.mvp) ?? null)
+const canWatch = computed(() => match.value !== null && replayAvailability(match.value) === 'ready')
+
+function watchReplay() {
+  const record = match.value
+
+  if (!record) {
+    return
+  }
+
+  replay.open(record, round.value ?? record.replays.length)
+}
+
+watch(match, () => {
+  round.value = null
+})
 </script>
 
 <template>
@@ -63,9 +82,15 @@ const mvp = computed(() => match.value?.heroes.find((line) => line.heroId === ma
       <DialogContent v-if="match" class="sheet match-details" :aria-describedby="undefined">
         <header class="head">
           <div class="outcome">
-            <DialogTitle v-optical-align class="title hand" :data-verdict="match.verdict">
-              {{ t(`result.${match.verdict}`) }}
-            </DialogTitle>
+            <div class="title-row">
+              <DialogTitle v-optical-align class="title hand" :data-verdict="match.verdict">
+                {{ t(`result.${match.verdict}`) }}
+              </DialogTitle>
+
+              <button v-if="canWatch" type="button" class="btn watch" @click="watchReplay()">
+                <Play :size="14" /> {{ t('replay.watch') }}
+              </button>
+            </div>
 
             <p v-if="reason" class="reason">{{ reason }}</p>
 
@@ -91,7 +116,7 @@ const mvp = computed(() => match.value?.heroes.find((line) => line.heroId === ma
           </DialogClose>
         </header>
 
-        <MatchDetails :key="match.id" :match="match" />
+        <MatchDetails :key="match.id" v-model:round="round" hide-watch :match="match" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -121,10 +146,24 @@ const mvp = computed(() => match.value?.heroes.find((line) => line.heroId === ma
   min-width: 200px;
 }
 
+.title-row {
+  --title: 44px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
 .title {
   margin: 0;
-  font-size: 44px;
+  font-size: var(--title);
   line-height: 1;
+}
+
+/* Caveat draws its letters below the middle of the em box, so the button follows the ink. */
+.watch {
+  flex: none;
+  translate: 0 calc(var(--title) * 0.1);
 }
 
 .title[data-verdict='win'] {
@@ -171,8 +210,8 @@ const mvp = computed(() => match.value?.heroes.find((line) => line.heroId === ma
 }
 
 @media (max-width: 560px) {
-  .title {
-    font-size: 36px;
+  .title-row {
+    --title: 36px;
   }
 }
 </style>

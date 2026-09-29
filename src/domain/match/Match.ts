@@ -232,14 +232,20 @@ export class Match {
 
     TEAM_IDS.forEach((team) => this.players[team].recordRound(verdictFor(team, winner), income[team].total))
 
-    const [ours, theirs] = fromSide(this.side, this.battle!.lineups)
+    const battle = this.battle!
+    const [ours, theirs] = fromSide(this.side, battle.lineups)
     const lineups = [picksOf(ours), picksOf(theirs)] as const
+
+    const replay = {
+      seed: battle.seed,
+      structures: fromSide(this.side, copyStructures(battle.structures)),
+    }
 
     this.battle = null
     this.opponentReady = false
     this.structureState = copyStructures(outcome.structures)
     this.summary = this.summarize(outcome, winner, income)
-    this.matchStats = addRound(this.matchStats, outcome, winner, income, lineups)
+    this.matchStats = addRound(this.matchStats, outcome, winner, income, lineups, replay)
     this.matchResult = judgeMatch(this.structureState, this.currentRound, this.mode)
     this.currentPhase = this.matchResult ? 'finished' : 'summary'
 

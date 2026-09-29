@@ -141,6 +141,11 @@ const roundPick = z
   .tuple([heroId, stars, z.enum(LANE_IDS), z.array(itemId).max(ITEM_SLOTS).readonly()])
   .readonly()
 
+const roundReplay = z.object({
+  seed: z.string().min(1).max(80),
+  structures: pair(structures),
+})
+
 const matchStats = z.object({
   rounds: amount,
   draws: amount,
@@ -152,6 +157,7 @@ const matchStats = z.object({
     .array(pair(z.array(roundPick).readonly()))
     .readonly()
     .default([]),
+  replays: z.array(roundReplay).max(40).readonly().default([]),
 })
 
 const remoteLink = z.object({
