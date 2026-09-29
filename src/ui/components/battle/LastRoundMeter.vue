@@ -108,6 +108,7 @@ const rows = computed(() => {
   margin: 0;
   /* The team ring is drawn outside the disc, so the scrollport needs room or it slices the icon. */
   padding: 4px 0 8px 4px;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
 }

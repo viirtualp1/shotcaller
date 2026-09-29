@@ -138,7 +138,12 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 .list {
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+.list[data-state='inactive'] {
+  display: none;
 }
 
 .offers {

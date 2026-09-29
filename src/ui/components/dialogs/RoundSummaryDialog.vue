@@ -98,8 +98,6 @@ const structureRows = computed(() => {
   })
 })
 
-const untouched = computed(() => structureRows.value.every((r) => !r.ours.lost && !r.theirs.lost))
-
 const meter = ref<MeterStat>('damageDealt')
 
 const meterModel = computed({
@@ -255,7 +253,11 @@ const incomeRows = computed(() => {
                 {{ meter === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}
               </span>
 
-              <span class="num kd" :title="`${t('summary.heroKills')} / ${t('summary.heroDeaths')}`">
+              <span
+                v-if="meter !== 'damageReceived'"
+                class="num kd"
+                :title="`${t('summary.heroKills')} / ${t('summary.heroDeaths')}`"
+              >
                 {{ hero.kills }}/{{ hero.deaths }}
               </span>
             </li>
@@ -264,7 +266,6 @@ const incomeRows = computed(() => {
 
         <section>
           <h3 class="eyebrow">{{ t('summary.structures') }}</h3>
-          <p v-if="untouched" class="note">{{ t('summary.untouched') }}</p>
 
           <ul class="structures">
             <li v-for="row in structureRows" :key="row.slot" class="structure">
@@ -331,6 +332,8 @@ const incomeRows = computed(() => {
   flex-direction: column;
   gap: 14px;
   width: min(600px, calc(100vw - 32px));
+  /* Rows slide in from the right; that must not open a horizontal bar for a moment. */
+  overflow-x: hidden;
 }
 
 .title {
@@ -474,6 +477,10 @@ section {
   --team: var(--theirs);
 }
 
+.heroes.damageReceived .hero {
+  grid-template-columns: 24px 1fr auto;
+}
+
 .bar {
   position: relative;
   height: 22px;
@@ -549,12 +556,6 @@ section {
 .meter-tab[data-state='on'] {
   background: rgba(255, 255, 255, 0.1);
   color: var(--chalk);
-}
-
-.note {
-  margin: 0;
-  font-size: 12px;
-  color: var(--chalk-faint);
 }
 
 .structures {

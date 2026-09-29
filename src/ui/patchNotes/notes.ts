@@ -87,6 +87,28 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Снесённые вышки больше не подписаны под верхней панелью.',
       },
     ],
+    fixes: [
+      {
+        en: 'One lane: a shove can no longer carry a hero or a creep past the sides of the bridge.',
+        ru: 'Одна линия: толчок больше не выносит героя или крипа за края моста.',
+      },
+      {
+        en: 'The dark strip between cards is gone.',
+        ru: 'Тёмная полоска между карточками пропала.',
+      },
+      {
+        en: 'A scrollbar no longer flashes when you press **Fight**, switch the shop between heroes and items, or switch damage, healing and damage taken.',
+        ru: 'Полоса прокрутки больше не вспыхивает, когда жмёшь **В бой**, переключаешь магазин между героями и предметами или переключаешь урон, лечение и полученный урон.',
+      },
+      {
+        en: 'The round summary no longer says that nobody reached the towers.',
+        ru: 'В итоге раунда больше нет строки о том, что никто не дошёл до вышек.',
+      },
+      {
+        en: 'Damage taken no longer shows kills and deaths.',
+        ru: 'У полученного урона больше нет убийств и смертей.',
+      },
+    ],
   },
   {
     version: '8.4',

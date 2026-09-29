@@ -231,9 +231,14 @@ watch(
         </Transition>
 
         <!-- Beside the map, never over it: on a tablet the map is too small to spare the room. -->
-        <HeroCard class="side-card" />
-        <ItemCard class="side-card" />
+        <template v-if="touch">
+          <HeroCard class="side-card" />
+          <ItemCard class="side-card" />
+        </template>
       </aside>
+
+      <HeroCard v-if="!touch" class="floating" />
+      <ItemCard v-if="!touch" class="floating" />
     </template>
 
     <CompactDock v-else ref="dock" class="dock" />
@@ -375,8 +380,37 @@ watch(
   top: 84px;
   bottom: var(--gutter);
   padding: 0;
+  /* A sideways slide must not open a scrollbar for a moment and shove the column. */
+  overflow-x: hidden;
   overflow-y: auto;
   z-index: 10;
+}
+
+/* The shop and the round meter scroll inside themselves. The column must not grow a bar while they slide away. */
+.wide .hud-right {
+  overflow: hidden;
+}
+
+.wide .hud-right.card-open {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.wide :deep(.floating) {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 25;
+  width: min(380px, calc(100vw - 32px));
+  translate: -50% -50%;
+}
+
+.wide :deep(.floating.card-leave-active) {
+  position: fixed;
+  top: 50%;
+  bottom: auto;
+  left: 50%;
+  translate: -50% -50%;
 }
 
 .wide .hud-left {
@@ -408,13 +442,21 @@ watch(
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+  overflow: hidden;
 }
 
-/* Hug the content. A stretched card leaves an empty panel between the shop and the round. */
-.planning.split > :deep(.shop),
+/* As tall as the offers. Only when that is taller than the column does the list scroll. */
+.planning.split > :deep(.shop) {
+  flex: 0 0 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+/* The round meter takes the rest and scrolls there. */
 .planning.split > :deep(.panel) {
-  flex: 0 1 auto;
-  max-height: calc((100% - 12px) / 2);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
 }
 
