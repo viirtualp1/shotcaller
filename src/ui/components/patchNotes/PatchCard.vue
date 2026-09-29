@@ -74,10 +74,6 @@ const { t } = useGameText()
   transform: translateY(-1px);
 }
 
-.patch-card.latest {
-  width: 370px;
-}
-
 .icon {
   display: grid;
   place-items: center;

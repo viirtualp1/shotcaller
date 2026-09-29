@@ -213,6 +213,7 @@ h1 {
   margin: 0;
   font-size: 17px;
   color: var(--chalk-dim);
+  white-space: pre-line;
 }
 
 .menu {
@@ -241,7 +242,6 @@ h1 {
   right: 24px;
   z-index: 1;
   display: flex;
-  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 12px;
   max-width: calc(100% - 48px);
@@ -266,6 +266,16 @@ h1 {
   animation: fade-in 0.4s 0.2s ease-out both;
 }
 
+@media (max-width: 1200px) {
+  .news {
+    display: block;
+  }
+
+  .news :deep(.patch-card + .patch-card) {
+    margin-top: 12px;
+  }
+}
+
 @media (max-width: 860px) {
   .start {
     grid-template-columns: minmax(0, 1fr);
@@ -273,6 +283,7 @@ h1 {
     gap: 24px;
   }
 
+  .copy,
   .menu {
     max-width: none;
   }
@@ -280,10 +291,17 @@ h1 {
   .news {
     position: relative;
     inset: auto;
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     width: auto;
     max-width: none;
+  }
+
+  .news :deep(.patch-card) {
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 
   .coach {

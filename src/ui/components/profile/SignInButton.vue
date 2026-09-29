@@ -14,10 +14,11 @@ const { t } = useGameText()
     type="button"
     class="sign-in"
     :title="t('cloud.button.hint')"
+    :aria-label="t('cloud.button.signIn')"
     @click="cloud.signInOpen = true"
   >
     <CloudUpload :size="20" />
-    <span>{{ t('cloud.button.signIn') }}</span>
+    <span class="label">{{ t('cloud.button.signIn') }}</span>
   </button>
 </template>
 
@@ -47,5 +48,16 @@ const { t } = useGameText()
 .sign-in:hover {
   border-color: rgba(244, 197, 91, 0.8);
   transform: translateY(-1px);
+}
+
+@media (max-width: 1199px) {
+  .label {
+    display: none;
+  }
+
+  .sign-in {
+    width: 66px;
+    padding: 0;
+  }
 }
 </style>
