@@ -11,6 +11,9 @@ import ItemIcon from '../common/ItemIcon.vue'
 /** Presses that keep the card open: the card, the stash and the heroes the item can go to. */
 const KEEP_OPEN = '.item-card, [data-stash-item], [data-drop^="hero:"]'
 
+/** `docked`: shown inside a panel on small screens rather than floating. */
+withDefaults(defineProps<{ docked?: boolean }>(), { docked: false })
+
 const store = useMatchStore()
 const board = useBoardStore()
 const text = useGameText()
@@ -48,7 +51,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 
 <template>
   <Transition name="card">
-    <aside v-if="item" :key="item.index" class="item-card" aria-live="polite">
+    <aside v-if="item" :key="item.index" class="item-card" :class="{ docked }" aria-live="polite">
       <header class="head">
         <ItemIcon :item-id="item.itemId" :size="54" />
 
@@ -79,6 +82,27 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 </template>
 
 <style scoped>
+/*
+ * Docked in a panel instead of floating: full width, and what the player acts on (items, selling) comes
+ * right under the name, so a small screen needs no scrolling to reach it.
+ */
+.item-card.docked {
+  width: 100%;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.item-card.docked .head {
+  order: -2;
+}
+
+.item-card.docked .bottom {
+  order: -1;
+  padding: 0 0 10px;
+  border-top: 0;
+  border-bottom: 1px solid var(--edge);
+}
+
 .card-enter-active {
   transition:
     opacity 0.18s ease-out,

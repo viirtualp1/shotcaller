@@ -10,6 +10,9 @@ import HeroDetails from '../common/HeroDetails.vue'
 import HudPanel from '../common/HudPanel.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
+/** `dense`: small fixed-size slots, so a touch screen fits the whole grid without scrolling. */
+withDefaults(defineProps<{ dense?: boolean }>(), { dense: false })
+
 const store = useMatchStore()
 const drag = useDragStore()
 const { t } = useGameText()
@@ -54,7 +57,20 @@ function onPanelClick() {
     :meta="t('bench.onBoard', { count: human.boardCount, capacity: human.boardCapacity })"
     data-tour="bench"
   >
-    <div class="grid" :class="{ dropping, hovered }" data-drop="bench" @click.self="onPanelClick">
+    <!-- Dense panels keep the button in the header, so the whole dock fits a phone without scrolling. -->
+    <template v-if="dense" #actions>
+      <button
+        type="button"
+        class="btn small auto"
+        :disabled="!canArrange"
+        data-tour="auto-place"
+        @click="store.autoArrange()"
+      >
+        <Wand2 :size="14" /> {{ t('shop.autoArrange') }}
+      </button>
+    </template>
+
+    <div class="grid" :class="{ dropping, hovered, dense }" data-drop="bench" @click.self="onPanelClick">
       <InfoTooltip v-for="hero in human.bench" :key="hero.uid" side="right" :disabled="drag.active">
         <button
           type="button"
@@ -83,6 +99,7 @@ function onPanelClick() {
     </div>
 
     <button
+      v-if="!dense"
       type="button"
       class="btn block auto"
       :disabled="!canArrange"
@@ -106,6 +123,19 @@ function onPanelClick() {
   transition:
     border-color 0.15s,
     background 0.15s;
+}
+
+.grid.dense {
+  grid-template-columns: repeat(auto-fill, 52px);
+  justify-content: center;
+  gap: 6px;
+  padding: 2px;
+}
+
+.small {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 .grid.dropping {

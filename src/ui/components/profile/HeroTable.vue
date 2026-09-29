@@ -64,74 +64,81 @@ const roleValue = (row: Row, stat: RoleStat) =>
 
 <template>
   <HudPanel :title="t('profile.heroes.title')" class="panel">
-    <table v-if="rows.length">
-      <thead>
-        <tr>
-          <th scope="col">{{ t('profile.heroes.hero') }}</th>
-          <th scope="col" class="num">{{ t('profile.heroes.matches') }}</th>
-          <th scope="col">{{ t('profile.heroes.winRate') }}</th>
-          <th scope="col" class="num extra">{{ t('profile.heroes.kd') }}</th>
+    <div v-if="rows.length" class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('profile.heroes.hero') }}</th>
+            <th scope="col" class="num">{{ t('profile.heroes.matches') }}</th>
+            <th scope="col">{{ t('profile.heroes.winRate') }}</th>
+            <th scope="col" class="num extra">{{ t('profile.heroes.kd') }}</th>
 
-          <th scope="col" class="num extra" :title="t('profile.heroes.totalHint')">
-            {{ t('profile.heroes.damage') }}
-          </th>
+            <th scope="col" class="num extra" :title="t('profile.heroes.totalHint')">
+              {{ t('profile.heroes.damage') }}
+            </th>
 
-          <th
-            v-for="stat in roleColumns"
-            :key="stat"
-            scope="col"
-            class="num extra"
-            :title="t('profile.heroes.totalHint')"
-          >
-            {{ t(`profile.heroes.${stat}`) }}
-          </th>
-        </tr>
-      </thead>
+            <th
+              v-for="stat in roleColumns"
+              :key="stat"
+              scope="col"
+              class="num extra"
+              :title="t('profile.heroes.totalHint')"
+            >
+              {{ t(`profile.heroes.${stat}`) }}
+            </th>
+          </tr>
+        </thead>
 
-      <tbody>
-        <tr v-for="row in rows" :key="row.heroId">
-          <th scope="row">
-            <span class="hero">
-              <HeroAvatar :hero-id="row.heroId" :stars="row.hero.bestStars" :size="30" />
-              {{ text.heroName(row.heroId) }}
-            </span>
-          </th>
-
-          <td class="num">{{ text.number(row.hero.matches) }}</td>
-
-          <td>
-            <span class="rate">
-              <span class="bar"><span class="fill" :style="{ width: `${row.winRate}%` }" /></span>
-              {{ row.winRate }}%
-            </span>
-          </td>
-
-          <td class="num extra">{{ text.number(row.hero.kills) }} / {{ text.number(row.hero.deaths) }}</td>
-
-          <td class="num extra">
-            <template v-if="row.damage">
-              <span class="total">{{ text.number(row.damage.total) }}</span>
-
-              <span class="avg">{{
-                t('profile.heroes.perMatchShort', { n: text.number(row.damage.perMatch) })
-              }}</span>
-            </template>
-          </td>
-
-          <td v-for="stat in roleColumns" :key="stat" class="num extra" :class="{ muted: !shows(row, stat) }">
-            <template v-if="roleValue(row, stat)">
-              <span class="total">{{ text.number(roleValue(row, stat)!.total) }}</span>
-
-              <span class="avg">
-                {{ t('profile.heroes.perMatchShort', { n: text.number(roleValue(row, stat)!.perMatch) }) }}
+        <tbody>
+          <tr v-for="row in rows" :key="row.heroId">
+            <th scope="row">
+              <span class="hero">
+                <HeroAvatar :hero-id="row.heroId" :stars="row.hero.bestStars" :size="30" />
+                {{ text.heroName(row.heroId) }}
               </span>
-            </template>
+            </th>
 
-            <template v-else>—</template>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <td class="num">{{ text.number(row.hero.matches) }}</td>
+
+            <td>
+              <span class="rate">
+                <span class="bar"><span class="fill" :style="{ width: `${row.winRate}%` }" /></span>
+                {{ row.winRate }}%
+              </span>
+            </td>
+
+            <td class="num extra">{{ text.number(row.hero.kills) }} / {{ text.number(row.hero.deaths) }}</td>
+
+            <td class="num extra">
+              <template v-if="row.damage">
+                <span class="total">{{ text.number(row.damage.total) }}</span>
+
+                <span class="avg">{{
+                  t('profile.heroes.perMatchShort', { n: text.number(row.damage.perMatch) })
+                }}</span>
+              </template>
+            </td>
+
+            <td
+              v-for="stat in roleColumns"
+              :key="stat"
+              class="num extra"
+              :class="{ muted: !shows(row, stat) }"
+            >
+              <template v-if="roleValue(row, stat)">
+                <span class="total">{{ text.number(roleValue(row, stat)!.total) }}</span>
+
+                <span class="avg">
+                  {{ t('profile.heroes.perMatchShort', { n: text.number(roleValue(row, stat)!.perMatch) }) }}
+                </span>
+              </template>
+
+              <template v-else>—</template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <p v-else class="empty">{{ t('profile.heroes.empty') }}</p>
   </HudPanel>
@@ -150,7 +157,20 @@ const roleValue = (row: Row, stat: RoleStat) =>
 
 .panel {
   padding: 16px 18px;
+}
+
+/* A phone scrolls the columns sideways; the hero stays pinned on the left. */
+.scroll {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+thead th:first-child,
+tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: rgb(17, 24, 21);
 }
 
 table {
@@ -228,7 +248,6 @@ tbody th {
 }
 
 @media (max-width: 560px) {
-  .extra,
   .bar {
     display: none;
   }

@@ -11,6 +11,8 @@ import {
 import { MousePointerClick } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
+import { fitMap, WHOLE_BOARD } from '@/rendering/fitMap'
+import { laneMapFor } from '@/simulation/map/LaneMap'
 import BattlePanel from '../components/battle/BattlePanel.vue'
 import BoardView from '../components/board/BoardView.vue'
 import ConfirmFightDialog from '../components/dialogs/ConfirmFightDialog.vue'
@@ -45,8 +47,6 @@ import { usePlanningTimerStore } from '../stores/planningTimer'
 import { useSettingsStore } from '../stores/settings'
 import { useTutorial } from '../tutorial/useTutorial'
 
-/** Must match the margin BoardRenderer keeps around the map. */
-const MAP_MARGIN = 12
 const TUTORIAL_DELAY_MS = 900
 const BACKGROUND_TICK_MS = 1000
 
@@ -64,6 +64,8 @@ const left = ref<HTMLElement | null>(null)
 const right = ref<HTMLElement | null>(null)
 const dock = ref<InstanceType<typeof CompactDock> | null>(null)
 const wide = useMediaQuery('(min-width: 1100px)')
+/** Phones and tablets; a desktop with a mouse keeps its layout as it is. */
+const touch = useMediaQuery('(pointer: coarse)')
 /** Phones and tablets on their side keep the dock on the right, so the map stays square. */
 const landscape = useMediaQuery('(orientation: landscape)')
 const { width: viewportWidth, height: viewportHeight } = useWindowSize()
@@ -99,13 +101,11 @@ const insets = computed<Insets>(() => {
 
 /** An invisible box over the map so the tutorial can spotlight it. */
 const mapAnchor = computed(() => {
-  const { top: t0, left: l0, right: r0, bottom: b0 } = insets.value
-  const width = viewportWidth.value - l0 - r0 - MAP_MARGIN * 2
-  const height = viewportHeight.value - t0 - b0 - MAP_MARGIN * 2
-  const size = Math.max(0, Math.min(width, height))
+  const focus = touch.value && store.view ? laneMapFor(store.view.mode).contentBounds() : WHOLE_BOARD
+  const { x, y, size } = fitMap(viewportWidth.value, viewportHeight.value, insets.value, focus)
   return {
-    left: `${l0 + MAP_MARGIN + (width - size) / 2}px`,
-    top: `${t0 + MAP_MARGIN + (height - size) / 2}px`,
+    left: `${x}px`,
+    top: `${y}px`,
     width: `${size}px`,
     height: `${size}px`,
   }
@@ -187,7 +187,11 @@ watch(
 <template>
   <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait', { battling }]">
     <div class="board-layer">
-      <BoardView :key="`${settings.locale}:${store.view?.side}:${store.view?.mode}`" :insets="insets" />
+      <BoardView
+        :key="`${settings.locale}:${store.view?.side}:${store.view?.mode}`"
+        :insets="insets"
+        :close-up="touch"
+      />
     </div>
 
     <div v-if="mapAnchor" class="map-anchor" :style="mapAnchor" data-tour="board" aria-hidden="true" />
@@ -209,11 +213,11 @@ watch(
     <template v-if="wide">
       <aside ref="left" class="hud-left" :class="{ collapsed: battling }" :inert="battling">
         <SynergyTracker />
-        <BenchGrid />
-        <StashGrid />
+        <BenchGrid :dense="touch" />
+        <StashGrid :dense="touch" />
       </aside>
 
-      <aside ref="right" class="hud-right">
+      <aside ref="right" class="hud-right" :class="{ 'card-open': touch && store.showsCard }">
         <FightButton class="fight-dock" />
 
         <Transition name="swap" mode="out-in">
@@ -235,11 +239,6 @@ watch(
           <MousePointerClick :size="15" /> {{ placementHint }}
         </p>
       </Transition>
-
-      <template v-if="!wide">
-        <HeroCard />
-        <ItemCard />
-      </template>
     </div>
 
     <PhaseBanner />
@@ -404,6 +403,11 @@ watch(
   width: 100%;
 }
 
+/* On a tablet the column is short: the card takes the shop's place rather than squeezing it. */
+.hud-right.card-open > :not(.side-card, .fight-dock) {
+  display: none;
+}
+
 /* Phones and tablets: the map stays in view and the planning panels share one dock. */
 .compact {
   --dock-height: clamp(240px, 44dvh, 480px);
@@ -419,17 +423,14 @@ watch(
   padding: 0 8px;
 }
 
-.compact .hud-top .corner:first-child {
+/* Equal corners keep the scoreboard centred even when the reactions corner is empty. */
+.compact .hud-top .corner {
   display: flex;
+  flex: 1 1 0;
   padding-top: 8px;
 }
 
-.compact .hud-top .reactions-corner {
-  display: flex;
-  padding-top: 8px;
-}
-
-.wide .hud-top .reactions-corner {
+.hud-top .reactions-corner {
   justify-content: flex-end;
 }
 
@@ -461,13 +462,13 @@ watch(
   border-left: 1px solid var(--edge);
 }
 
-/* The hero card covers the dock, never the map, so a lane stays one tap away. */
-.landscape .hud-bottom {
-  left: calc(100% - var(--dock-width) / 2);
+/* The placement hint sits on the map, clear of the dock. */
+.portrait .hud-bottom {
+  bottom: calc(var(--dock-height) + 10px);
 }
 
-.landscape .hud-bottom :deep(.hero-card) {
-  width: calc(var(--dock-width) - 20px);
+.landscape .hud-bottom {
+  left: calc((100% - var(--dock-width)) / 2);
 }
 
 .swap-enter-active,

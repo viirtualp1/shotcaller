@@ -9,6 +9,9 @@ import InfoTooltip from '../common/InfoTooltip.vue'
 import ItemDetails from '../common/ItemDetails.vue'
 import ItemIcon from '../common/ItemIcon.vue'
 
+/** `dense`: small fixed-size slots, so a touch screen fits the whole grid without scrolling. */
+withDefaults(defineProps<{ dense?: boolean }>(), { dense: false })
+
 const store = useMatchStore()
 const drag = useDragStore()
 const text = useGameText()
@@ -35,7 +38,7 @@ function press(item: StashItemView, e: PointerEvent) {
 
 <template>
   <HudPanel :title="t('stash.title')" :meta="human.stash.length ? t('stash.hint') : ''" data-tour="stash">
-    <div class="grid">
+    <div class="grid" :class="{ dense }">
       <InfoTooltip
         v-for="item in human.stash"
         :key="`${item.itemId}-${item.index}`"
@@ -68,6 +71,11 @@ function press(item: StashItemView, e: PointerEvent) {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
+}
+
+.grid.dense {
+  grid-template-columns: repeat(auto-fill, 44px);
+  justify-content: center;
 }
 
 .slot {

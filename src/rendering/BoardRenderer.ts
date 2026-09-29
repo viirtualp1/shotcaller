@@ -11,6 +11,7 @@ import type { BoardLabels } from './labels'
 import { BattleLayer } from './layers/BattleLayer'
 import { EffectsLayer } from './layers/EffectsLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
+import { fitMap, WHOLE_BOARD, type Insets } from './fitMap'
 import { Perspective } from './perspective'
 import { loadRoleIcons, type RoleIcons } from './roleIcons'
 import { TOKEN_RADIUS, type HeroHit } from './views/HeroToken'
@@ -22,16 +23,9 @@ export type BoardEvents = {
   lanePicked: LaneId
 }
 
-export interface Insets {
-  readonly top: number
-  readonly right: number
-  readonly bottom: number
-  readonly left: number
-}
+export type { Insets } from './fitMap'
 
 const LANE_PICK_DISTANCE = 80
-const MAP_MARGIN = 12
-const MIN_MAP_SIZE = 200
 const CAMERA_TWEEN = 0.45
 
 export class BoardRenderer {
@@ -50,6 +44,7 @@ export class BoardRenderer {
     bottom: 0,
     left: 0,
   }
+  private closeUp = false
   private clock = 0
   private pressedToken = false
   private placing = false
@@ -133,6 +128,16 @@ export class BoardRenderer {
       return
     }
 
+    this.fit(true)
+  }
+
+  /** Frames the lanes instead of the whole board: small screens have no room for the empty edges. */
+  setCloseUp(closeUp: boolean) {
+    if (closeUp === this.closeUp) {
+      return
+    }
+
+    this.closeUp = closeUp
     this.fit(true)
   }
 
@@ -240,13 +245,8 @@ export class BoardRenderer {
     gsap.killTweensOf(this.world.scale)
 
     const { width, height } = this.app.screen
-    const { top, right, bottom, left } = this.insets
-    const availableWidth = Math.max(MIN_MAP_SIZE, width - left - right - MAP_MARGIN * 2)
-    const availableHeight = Math.max(MIN_MAP_SIZE, height - top - bottom - MAP_MARGIN * 2)
-    const size = Math.min(availableWidth, availableHeight)
-    const scale = size / BATTLE.worldSize
-    const x = left + MAP_MARGIN + (availableWidth - size) / 2
-    const y = top + MAP_MARGIN + (availableHeight - size) / 2
+    const focus = this.closeUp ? this.map.contentBounds() : WHOLE_BOARD
+    const { x, y, scale } = fitMap(width, height, this.insets, focus)
     this.app.stage.hitArea = this.app.screen
 
     if (!animate) {

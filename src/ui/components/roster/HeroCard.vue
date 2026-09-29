@@ -17,6 +17,9 @@ import ItemIcon from '../common/ItemIcon.vue'
 /** Presses that keep the card open: the card itself and everything that acts on the selected hero. */
 const KEEP_OPEN = '.hero-card, [data-drop^="lane:"], [data-drop^="hero:"], [data-drop="bench"]'
 
+/** `docked`: shown inside a panel on small screens rather than floating. */
+withDefaults(defineProps<{ docked?: boolean }>(), { docked: false })
+
 const store = useMatchStore()
 const board = useBoardStore()
 const text = useGameText()
@@ -68,7 +71,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
       v-if="located"
       :key="located.hero.uid"
       class="hero-card"
-      :class="{ enemy }"
+      :class="{ enemy, docked }"
       :style="{ '--hero': accent }"
       aria-live="polite"
     >
@@ -144,6 +147,27 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 </template>
 
 <style scoped>
+/*
+ * Docked in a panel instead of floating: full width, and what the player acts on (items, selling) comes
+ * right under the name, so a small screen needs no scrolling to reach it.
+ */
+.hero-card.docked {
+  width: 100%;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.hero-card.docked .head {
+  order: -2;
+}
+
+.hero-card.docked .bottom {
+  order: -1;
+  padding: 0 0 10px;
+  border-top: 0;
+  border-bottom: 1px solid var(--edge);
+}
+
 /* A card for another hero fades in over the old one; the old one leaves the layout so nothing jumps. */
 .card-enter-active {
   transition:

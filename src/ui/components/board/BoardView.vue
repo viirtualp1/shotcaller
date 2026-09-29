@@ -11,7 +11,8 @@ import { useDragStore } from '../../stores/drag'
 import { locateHero, useMatchStore } from '../../stores/match'
 import MapHeroTooltip from './MapHeroTooltip.vue'
 
-const props = defineProps<{ insets: Insets }>()
+/** `closeUp` frames the lanes rather than the whole board, for touch screens. */
+const props = withDefaults(defineProps<{ insets: Insets; closeUp?: boolean }>(), { closeUp: false })
 
 const store = useMatchStore()
 const drag = useDragStore()
@@ -44,6 +45,8 @@ function planningModel(): PlanningModel | null {
 watch(renderer, (board) => boardStore.register(board), { immediate: true })
 
 watch([renderer, () => props.insets], ([board, insets]) => board?.setInsets(insets), { immediate: true })
+
+watch([renderer, () => props.closeUp], ([board, closeUp]) => board?.setCloseUp(closeUp), { immediate: true })
 
 watch(
   [renderer, () => store.view, () => store.selectedUid, () => store.inspectedUid, () => store.simulation],

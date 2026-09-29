@@ -58,9 +58,9 @@ export const ABILITY_PARAMS = {
   whirl: {
     triggerRadius: 90,
     radius: 85,
-    duration: 2,
+    duration: 1.6,
     tick: 0.4,
-    damage: 45,
+    damage: 40,
   },
   leap: {
     searchRadius: 200,

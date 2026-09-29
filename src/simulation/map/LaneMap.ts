@@ -1,7 +1,11 @@
 import { TEAM_IDS, type LaneId, type ModeId, type TeamId, type TowerSlot } from '@/content/ids'
 import { MAPS, type MapDefinition } from '@/content/map'
 import { DEFAULT_MODE, MODES } from '@/content/modes'
+import { BATTLE } from '@/content/rules'
 import { length, vec2, type Vec2 } from '@/core/math/vec2'
+
+/** Room around the lanes for the heroes, creeps and towers standing on them. */
+const CONTENT_PADDING = 45
 
 export interface LanePath {
   readonly lane: LaneId
@@ -173,6 +177,27 @@ export class LaneMap {
 
   relicPositions() {
     return this.definition.relics.map(([x, y]) => vec2(x, y))
+  }
+
+  /** The part of the board where anything happens: lanes, bases and towers, with room for the units on them. */
+  contentBounds() {
+    const points = [
+      ...this.allPaths().flatMap((path) => path.points),
+      ...TEAM_IDS.map((team) => this.base(team)),
+      ...TEAM_IDS.flatMap((team) => MODES[this.mode].towers.map((slot) => this.towerPosition(team, slot))),
+    ]
+
+    const xs = points.map((p) => p.x)
+    const ys = points.map((p) => p.y)
+    const x = Math.max(0, Math.min(...xs) - CONTENT_PADDING)
+    const y = Math.max(0, Math.min(...ys) - CONTENT_PADDING)
+
+    return {
+      x,
+      y,
+      width: Math.min(BATTLE.worldSize, Math.max(...xs) + CONTENT_PADDING) - x,
+      height: Math.min(BATTLE.worldSize, Math.max(...ys) + CONTENT_PADDING) - y,
+    }
   }
 
   nearestLane(p: Vec2, maxDistance = Infinity) {

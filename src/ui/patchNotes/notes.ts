@@ -67,6 +67,75 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.0.2',
+    date: '2026-09-29',
+    title: {
+      en: 'Made for touch',
+      ru: 'Под пальцы',
+    },
+    heroes: [
+      {
+        id: 'blademaster',
+        badge: 'nerfed',
+        changes: [
+          {
+            en: 'Health: **560** → **640**',
+            ru: 'Здоровье: **560** → **640**',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'whirl',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Damage per tick: **45** → **40**',
+                ru: 'Урон за тик: **45** → **40**',
+              },
+              {
+                en: 'Duration: **2** → **1.6** s',
+                ru: 'Длительность: **2** → **1,6** с',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'Phones and tablets: the camera frames the lanes, not the whole board, and the empty edges go under the panels. Two lanes get up to **30%** bigger.',
+        ru: 'Телефоны и планшеты: камера наводится на линии, а не на всю доску, пустые края уходят под панели. Две линии крупнее до **30%**.',
+      },
+      {
+        en: 'Phones and tablets: small slots for heroes and items, so the Heroes tab fits without scrolling. Auto place moved into its header.',
+        ru: 'Телефоны и планшеты: маленькие ячейки героев и предметов, вкладка «Герои» помещается без прокрутки. «Расставить» переехала в её заголовок.',
+      },
+      {
+        en: 'Phones: a hero or item card opens in the bottom panel instead of over the map, with Sell and the item slots right under the name.',
+        ru: 'Телефоны: карточка героя или предмета открывается в нижней панели, а не поверх карты. «Продать» и слоты предметов сразу под именем.',
+      },
+      {
+        en: 'Tablets: the hero or item card takes the shop’s place while it is open.',
+        ru: 'Планшеты: карточка героя или предмета встаёт на место лавки, пока открыта.',
+      },
+      {
+        en: 'Match breakdown: the close button is in the top right corner, as in every other window.',
+        ru: 'Разбор матча: кнопка закрытия в правом верхнем углу, как во всех окнах.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Favourite heroes on phones: every column is there, scrolled sideways with the hero pinned on the left.',
+        ru: 'Любимые герои на телефоне: все колонки на месте, таблица листается вбок, герой закреплён слева.',
+      },
+      {
+        en: 'Phones and tablets: the round panel sits in the middle of the screen, the menu button in the top left corner.',
+        ru: 'Телефоны и планшеты: панель раунда по центру экрана, кнопка меню в левом верхнем углу.',
+      },
+    ],
+  },
+  {
     version: '8.0.1',
     date: '2026-09-29',
     title: {

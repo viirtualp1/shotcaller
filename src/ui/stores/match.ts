@@ -158,6 +158,14 @@ export const useMatchStore = defineStore('match', () => {
     () => selectedUid.value !== null || selectedItem.value !== null || inspectedUid.value !== null,
   )
 
+  /** A hero or item card is on screen: stash items can only be picked while planning. */
+  const showsCard = computed(
+    () =>
+      selected.value !== null ||
+      inspected.value !== null ||
+      (selectedItem.value !== null && isPlanning.value),
+  )
+
   function refresh() {
     view.value = match ? toMatchView(match) : null
 
@@ -758,6 +766,7 @@ export const useMatchStore = defineStore('match', () => {
     inspectedUid,
     inspected,
     hasSelection,
+    showsCard,
     shopTab,
     rerolls,
     speed,

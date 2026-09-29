@@ -7,6 +7,8 @@ import { useMatchStore } from '../../stores/match'
 import BattlePanel from '../battle/BattlePanel.vue'
 import SynergyTracker from '../lanes/SynergyTracker.vue'
 import BenchGrid from '../roster/BenchGrid.vue'
+import HeroCard from '../roster/HeroCard.vue'
+import ItemCard from '../roster/ItemCard.vue'
 import StashGrid from '../roster/StashGrid.vue'
 import ShopPanel from '../shop/ShopPanel.vue'
 import FightButton from './FightButton.vue'
@@ -39,13 +41,19 @@ const tabs = computed(() => [
 <template>
   <section class="dock" :class="{ battling }" :aria-label="t('dock.label')">
     <div class="pane">
+      <!-- A hero or item card takes the dock's place while it is open: nothing floats over the map. -->
       <Transition name="fade" mode="out-in">
-        <BattlePanel v-if="battling" key="battle" />
+        <div v-if="store.showsCard" key="card" class="stack">
+          <HeroCard docked />
+          <ItemCard docked />
+        </div>
+
+        <BattlePanel v-else-if="battling" key="battle" />
         <ShopPanel v-else-if="dock.tab === 'shop'" key="shop" />
 
         <div v-else-if="dock.tab === 'heroes'" key="heroes" class="stack">
-          <BenchGrid />
-          <StashGrid />
+          <BenchGrid dense />
+          <StashGrid dense />
         </div>
 
         <SynergyTracker v-else key="lanes" />
@@ -88,7 +96,7 @@ const tabs = computed(() => [
 .pane {
   flex: 1;
   min-height: 0;
-  padding: 10px;
+  padding: 8px 10px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -103,7 +111,7 @@ const tabs = computed(() => [
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tabbar {

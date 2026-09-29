@@ -463,6 +463,7 @@ const combat = computed<ComparisonRow[]>(() => {
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 10px 18px;
+  padding-right: 40px;
 }
 
 .outcome {
@@ -515,8 +516,11 @@ const combat = computed<ComparisonRow[]>(() => {
   color: var(--gold);
 }
 
+/* In the corner like every other dialog, however the header wraps. */
 .close {
-  flex: none;
+  position: absolute;
+  top: 14px;
+  right: 14px;
 }
 
 .tiles {
