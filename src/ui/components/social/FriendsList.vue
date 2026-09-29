@@ -85,36 +85,40 @@ async function submit() {
   </div>
 
   <div v-else class="friends-list">
-    <ul v-if="friends.incoming.length" class="list">
-      <li v-for="entry in friends.incoming" :key="entry.id" class="row request">
-        <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
+    <section v-if="friends.incoming.length" class="group">
+      <h3 class="section">{{ t('friends.incoming') }}</h3>
 
-        <span class="who">
-          <strong class="name">{{ nameOf(entry.name) }}</strong>
-          <span class="status">{{ t('friends.wantsToBeFriends') }}</span>
-        </span>
+      <ul class="list">
+        <li v-for="entry in friends.incoming" :key="entry.id" class="row request">
+          <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
 
-        <button
-          type="button"
-          class="icon-btn accept"
-          :aria-label="t('friends.accept')"
-          :title="t('friends.accept')"
-          @click="friends.accept(entry.id)"
-        >
-          <Check :size="16" />
-        </button>
+          <span class="who">
+            <strong class="name">{{ nameOf(entry.name) }}</strong>
+            <span class="status">{{ t('friends.wantsToBeFriends') }}</span>
+          </span>
 
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="t('friends.decline')"
-          :title="t('friends.decline')"
-          @click="friends.decline(entry.id)"
-        >
-          <X :size="16" />
-        </button>
-      </li>
-    </ul>
+          <button
+            type="button"
+            class="icon-btn accept"
+            :aria-label="t('friends.accept')"
+            :title="t('friends.accept')"
+            @click="friends.accept(entry.id)"
+          >
+            <Check :size="16" />
+          </button>
+
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="t('friends.decline')"
+            :title="t('friends.decline')"
+            @click="friends.decline(entry.id)"
+          >
+            <X :size="16" />
+          </button>
+        </li>
+      </ul>
+    </section>
 
     <ul v-if="friends.friends.length" class="list">
       <li
@@ -171,7 +175,7 @@ async function submit() {
       </li>
     </ul>
 
-    <p v-else class="muted">{{ t('friends.empty') }}</p>
+    <p v-if="!friends.friends.length && !friends.incoming.length" class="muted">{{ t('friends.empty') }}</p>
 
     <ul v-if="friends.outgoing.length" class="list">
       <li v-for="entry in friends.outgoing" :key="entry.id" class="row pending">
@@ -294,6 +298,21 @@ p {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 
 .list {

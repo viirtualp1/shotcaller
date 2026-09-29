@@ -67,6 +67,20 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.4.1',
+    date: '2026-09-29',
+    title: {
+      en: 'Damage taken',
+      ru: 'Полученный урон',
+    },
+    interface: [
+      {
+        en: 'Battle: damage taken has its own meter under damage and healing. On phones and tablets it is a third tab of that panel.',
+        ru: 'Бой: полученный урон — отдельной панелью под уроном и лечением. На телефонах и планшетах — третья вкладка той же панели.',
+      },
+    ],
+  },
+  {
     version: '8.4',
     date: '2026-09-29',
     title: {

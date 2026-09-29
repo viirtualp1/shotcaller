@@ -221,7 +221,7 @@ watch(
         <FightButton class="fight-dock" />
 
         <Transition name="swap" mode="out-in">
-          <BattlePanel v-if="store.phase === 'battle'" key="battle" />
+          <BattlePanel v-if="store.phase === 'battle'" key="battle" :tabbed="touch" />
           <ShopPanel v-else key="shop" class="shop-fill" />
         </Transition>
 

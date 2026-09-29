@@ -4,7 +4,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
-export type MeterStat = 'damageDealt' | 'healing'
+export type MeterStat = 'damageDealt' | 'healing' | 'damageReceived'
 
 const props = defineProps<{ stat: MeterStat }>()
 
@@ -13,12 +13,12 @@ const text = useGameText()
 const { t } = text
 
 /**
- * Only the player's own heroes while the round runs: the opponent's damage and healing are revealed in the
+ * Only the player's own heroes while the round runs: the opponent's numbers are revealed in the
  * round summary. Most heroes never heal, so the healing meter lists only those who did.
  */
 const rows = computed(() => {
   const heroes = [...(store.live?.heroes.values() ?? [])]
-    .filter((h) => h.team === 0 && (props.stat === 'damageDealt' || h.healing > 0))
+    .filter((h) => h.team === 0 && (props.stat !== 'healing' || h.healing > 0))
     .sort((a, b) => b[props.stat] - a[props.stat])
 
   const top = Math.max(1, heroes[0]?.[props.stat] ?? 1)
@@ -96,6 +96,11 @@ const rows = computed(() => {
 
 .healing .bar i {
   background: color-mix(in srgb, var(--heal) 40%, transparent);
+  box-shadow: inset 3px 0 0 var(--team);
+}
+
+.damageReceived .bar i {
+  background: color-mix(in srgb, var(--theirs) 35%, transparent);
   box-shadow: inset 3px 0 0 var(--team);
 }
 

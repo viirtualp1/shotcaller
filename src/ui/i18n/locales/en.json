@@ -206,6 +206,8 @@
     "meter": "Your heroes",
     "damageDealt": "Damage",
     "healing": "Healing",
+    "damageReceived": "Taken",
+    "takenMeter": "Damage taken",
     "noHealing": "Nobody has healed yet",
     "duelSpeed": "In a duel the battle runs at the same speed for both players",
     "placeHint": "Click a lane to place the hero",
@@ -676,7 +678,7 @@
       "error": "That did not work. Try again",
       "cooldown": "This player declined a request recently. Try again in a week"
     },
-    "incoming": "Friend requests",
+    "incoming": "Friends requests",
     "outgoing": "Waiting for an answer",
     "list": "Friends",
     "empty": "Nobody yet. Share your code or enter a friend’s.",

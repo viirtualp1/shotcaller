@@ -9,14 +9,24 @@ import HudPanel from '../common/HudPanel.vue'
 import DamageMeter, { type MeterStat } from './DamageMeter.vue'
 
 const SPEEDS: readonly BattleSpeed[] = [1, 2, 4]
-const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing']
+
+/**
+ * On a desktop damage taken gets a panel of its own under damage and healing. With `tabbed`, on phones and
+ * tablets, all three share one panel and its tabs.
+ */
+const props = defineProps<{ tabbed?: boolean }>()
 
 const store = useMatchStore()
 const { t } = useGameText()
 const meter = ref<MeterStat>('damageDealt')
 
+const meterStats = computed((): readonly MeterStat[] =>
+  props.tabbed ? ['damageDealt', 'healing', 'damageReceived'] : ['damageDealt', 'healing'],
+)
+
+/** Damage taken picked on a tablet falls back to damage once the layout gives it its own panel. */
 const meterModel = computed({
-  get: () => meter.value,
+  get: () => (meterStats.value.includes(meter.value) ? meter.value : 'damageDealt'),
   set: (value: string | undefined) => {
     if (value) {
       meter.value = value as MeterStat
@@ -72,13 +82,17 @@ const speedModel = computed({
           class="meter-tabs"
           :aria-label="t('battle.meter')"
         >
-          <ToggleGroupItem v-for="stat in METER_STATS" :key="stat" :value="stat" class="meter-tab">
+          <ToggleGroupItem v-for="stat in meterStats" :key="stat" :value="stat" class="meter-tab">
             {{ t(`battle.${stat}`) }}
           </ToggleGroupItem>
         </ToggleGroupRoot>
       </template>
 
-      <DamageMeter :stat="meter" />
+      <DamageMeter :stat="meterModel" />
+    </HudPanel>
+
+    <HudPanel v-if="!tabbed" :title="t('battle.takenMeter')">
+      <DamageMeter stat="damageReceived" />
     </HudPanel>
   </div>
 </template>
