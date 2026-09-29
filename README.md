@@ -1,4 +1,4 @@
-# Shotcaller
+# The Shotcaller
 
 An auto battler in the spirit of Dota. You are the coach: buy heroes, send them down the lanes and watch the fight play out.
 

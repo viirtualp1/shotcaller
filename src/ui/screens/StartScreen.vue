@@ -201,12 +201,14 @@ function forfeit() {
   flex-direction: column;
   gap: 12px;
   max-width: 30rem;
+  container-type: inline-size;
 }
 
 h1 {
-  font-size: clamp(64px, 10vw, 112px);
+  font-size: min(112px, 19cqi);
   line-height: 0.9;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .lede {

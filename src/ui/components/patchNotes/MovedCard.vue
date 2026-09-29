@@ -8,7 +8,7 @@ const LEGACY_HOST = 'shotcaller-nine.vercel.app'
 const NEW_ORIGIN = 'https://theshotcaller.online/'
 
 const { t } = useGameText()
-const show = true || globalThis.location.hostname === LEGACY_HOST
+const show = globalThis.location.hostname === LEGACY_HOST
 </script>
 
 <template>

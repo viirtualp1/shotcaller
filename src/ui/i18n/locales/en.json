@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Shotcaller"
+    "title": "The Shotcaller"
   },
   "start": {
     "lede": "You are the coach. Draft a team of up to five heroes, send them down the lanes and watch the match play itself. Break the enemy throne before they break yours.",
@@ -526,7 +526,7 @@
       "strategist": "Strategist",
       "commander": "Commander",
       "legend": "Legend",
-      "shotcaller": "Shotcaller"
+      "shotcaller": "The Shotcaller"
     },
     "ladder": "Ranks",
     "stats": {

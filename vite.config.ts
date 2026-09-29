@@ -18,8 +18,8 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
         id: './',
-        name: 'Shotcaller',
-        short_name: 'Shotcaller',
+        name: 'The Shotcaller',
+        short_name: 'The Shotcaller',
         description: 'Draft heroes, send them down three lanes and break the enemy throne.',
         lang: 'ru',
         start_url: './',
