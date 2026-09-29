@@ -4,12 +4,14 @@ import { Application, Container, Point, Sprite, Texture, type FederatedPointerEv
 import type { LaneId } from '@/content/ids'
 import { BATTLE } from '@/content/rules'
 import type { Vec2 } from '@/core/math/vec2'
+import type { LaneStances } from '@/domain/battle/contracts'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import type { LaneMap } from '@/simulation/map/LaneMap'
 import { paintBoardArt } from './art/paintBoardArt'
 import type { BoardLabels } from './labels'
 import { BattleLayer } from './layers/BattleLayer'
 import { EffectsLayer } from './layers/EffectsLayer'
+import { OrdersLayer } from './layers/OrdersLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
 import { fitMap, WHOLE_BOARD, type Insets } from './fitMap'
 import { Perspective } from './perspective'
@@ -34,6 +36,7 @@ export class BoardRenderer {
   private readonly world = new Container()
   /** Holds everything placed in battle coordinates; mirrored when the viewer fights as team 1. */
   private readonly board = new Container()
+  private readonly orders: OrdersLayer
   private readonly planning: PlanningLayer
   private readonly battle: BattleLayer
   private readonly effects: EffectsLayer
@@ -63,11 +66,12 @@ export class BoardRenderer {
     /* Every map is symmetric along its mirror, so the art looks the same from either side. */
     const art = new Sprite(Texture.from(paintBoardArt(map, labels)))
     art.width = art.height = BATTLE.worldSize
+    this.orders = new OrdersLayer(map, perspective)
     this.planning = new PlanningLayer(map, icons, perspective)
     this.battle = new BattleLayer(icons, perspective)
     this.effects = new EffectsLayer(labels, (strength) => this.shake(strength), perspective)
     perspective.orient(this.board)
-    this.board.addChild(this.planning, this.battle, this.effects)
+    this.board.addChild(this.orders, this.planning, this.battle, this.effects)
     this.world.addChild(art, this.board)
     this.camera.addChild(this.world)
     app.stage.addChild(this.camera)
@@ -160,6 +164,11 @@ export class BoardRenderer {
     this.setHovered(null)
     this.battle.attach(simulation)
     this.effects.attach(simulation.events)
+  }
+
+  /** The viewer's own lane orders; they stay on the map through planning and battle until changed. */
+  showOrders(stances: LaneStances) {
+    this.orders.show(stances)
   }
 
   laneAtClient(clientX: number, clientY: number) {
@@ -310,6 +319,7 @@ export class BoardRenderer {
   private onFrame(dt: number) {
     this.clock += dt
     this.effects.nextFrame()
+    this.orders.update(this.clock)
 
     if (this.mode === 'battle') {
       this.battle.update(dt, this.clock)

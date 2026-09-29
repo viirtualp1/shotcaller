@@ -5,6 +5,7 @@ import type {
   HeroId,
   ItemId,
   LaneId,
+  LaneStance,
   RoleId,
   StarLevel,
   StructureSlot,
@@ -44,6 +45,8 @@ export interface LaneFollower {
   path: LanePath
   waypoint: number
   avoidsTowers: boolean
+  /** The coach's order for the hero's lane; creeps and lanes without one have none. */
+  stance?: LaneStance
 }
 
 export interface Status {
@@ -97,6 +100,11 @@ export interface Defend {
 /** The enemy hero that hit this hero last; the hero turns on it for a short while. */
 export interface Threat {
   attacker: Unit
+  remaining: number
+}
+
+/** Set when the enemy heroes around outweigh the allies: the hero falls back along its lane for a while. */
+export interface Retreat {
   remaining: number
 }
 
@@ -222,6 +230,7 @@ export interface Entity {
   shield?: Shield
   dot?: DamageOverTime
   threat?: Threat
+  retreat?: Retreat
   defend?: Defend
   itemEffects?: ItemEffectsState
   crit?: CriticalStrike

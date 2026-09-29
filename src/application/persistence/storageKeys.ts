@@ -21,6 +21,8 @@ export const STORAGE_KEYS = {
   profile: `${PREFIX}/profile`,
   /** Whether the profile shows the account photo instead of a hero. */
   accountPhoto: `${PREFIX}/account-photo`,
+  /** Whether lane orders, still an experiment, are offered during planning. */
+  laneOrders: `${PREFIX}/lane-orders`,
   cloudSync: `${PREFIX}/cloud-sync`,
   cloudSavedAt: `${PREFIX}/cloud-saved-at`,
 } as const

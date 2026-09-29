@@ -96,6 +96,7 @@ export function replaySetup(record: MatchRecord, round: number): { side: TeamId;
       seed: tape.seed,
       lineups: fromSide(record.side, seen),
       structures: fromSide(record.side, tape.structures),
+      stances: tape.stances && fromSide(record.side, tape.stances),
     },
   }
 }

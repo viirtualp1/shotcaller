@@ -200,6 +200,7 @@ export class Match {
       seed: this.link ? `${this.link.seed}:${this.currentRound}` : this.deps.rng.next().toString(36).slice(2),
       lineups: fromSide(this.side, [this.human.roster.lineup(), this.opponent.roster.lineup()]),
       structures: fromSide(this.side, copyStructures(this.structureState)),
+      stances: fromSide(this.side, [this.human.roster.stances(), this.opponent.roster.stances()]),
     }
 
     return ok(this.battle)
@@ -239,6 +240,7 @@ export class Match {
     const replay = {
       seed: battle.seed,
       structures: fromSide(this.side, copyStructures(battle.structures)),
+      stances: fromSide(this.side, battle.stances ?? [{}, {}]),
     }
 
     this.battle = null

@@ -243,7 +243,8 @@ export class BattleSimulation {
           this.setup.mode,
         )
 
-        lineup.forEach((owned, slot) => factory.hero(owned, team, lane, report, slot))
+        const stance = this.setup.stances?.[team][lane]
+        lineup.forEach((owned, slot) => factory.hero(owned, team, lane, report, slot, stance))
       }
     }
   }

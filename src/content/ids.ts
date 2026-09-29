@@ -1,6 +1,10 @@
 export const LANE_IDS = ['top', 'mid', 'bot'] as const
 export type LaneId = (typeof LANE_IDS)[number]
 
+/** Orders a coach can give a lane before the fight; a lane without one is left to its heroes' judgement. */
+export const LANE_STANCES = ['push', 'hold', 'group'] as const
+export type LaneStance = (typeof LANE_STANCES)[number]
+
 /** A lane's tower is named after it; the one-lane map adds a second tower closer to the throne. */
 export const TOWER_SLOTS = ['top', 'mid', 'bot', 'inner'] as const
 export type TowerSlot = (typeof TOWER_SLOTS)[number]

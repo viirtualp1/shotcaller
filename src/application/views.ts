@@ -5,6 +5,7 @@ import {
   type HeroId,
   type ItemId,
   type LaneId,
+  type LaneStance,
   type ModeId,
   type StarLevel,
   type TeamId,
@@ -66,6 +67,8 @@ export interface SuggestionView extends SynergySuggestion {
 
 export interface LaneView {
   readonly lane: LaneId
+  /** The coach's order for the lane; null leaves it to the heroes. */
+  readonly stance: LaneStance | null
   readonly heroes: readonly HeroCardView[]
   readonly report: Pick<LaneReport, 'synergies'> & { readonly suggestions: readonly SuggestionView[] }
 }
@@ -157,6 +160,7 @@ function toLaneView(player: Player, lane: LaneId) {
 
   return {
     lane,
+    stance: player.roster.stances()[lane] ?? null,
     heroes: heroes.map(toCard),
     report: {
       synergies: report.synergies,

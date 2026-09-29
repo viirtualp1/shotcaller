@@ -164,6 +164,24 @@ export const BATTLE = {
     /** Defenders with nobody to fight wait this close to the throne. */
     holdDistance: 70,
   },
+  /**
+   * A hero with no ally hero around weighs up the enemy heroes before taking them on: health left times
+   * damage per second on each side.
+   */
+  skirmish: {
+    radius: 260,
+    /** The enemy side has to be this many times stronger for a hero to back off. */
+    outmatchedAt: 1.4,
+    /** Seconds a hero keeps falling back once it decided to, so it does not turn back and forth. */
+    retreatSeconds: 1.5,
+  },
+  /** Lane orders from the coach. */
+  stance: {
+    /** Under Hold heroes stay within this distance past their own outermost tower. */
+    holdMargin: 40,
+    /** Under Group no hero walks further than this ahead of the lane-mate furthest behind. */
+    groupSpread: 70,
+  },
   gank: {
     thinkInterval: 1.2,
     supportRadius: 320,

@@ -97,6 +97,7 @@ export function patchSnippet(patch: PatchNote, locale: Locale) {
       if (!text) {
         text = clip(line, fixes)
       }
+
       break
     }
 

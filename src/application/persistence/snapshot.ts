@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { HERO_IDS, ITEM_IDS, LANE_IDS, MODE_IDS, type ModeId } from '@/content/ids'
+import { HERO_IDS, ITEM_IDS, LANE_IDS, LANE_STANCES, MODE_IDS, type ModeId } from '@/content/ids'
 import { ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { DEFAULT_MODE, levelRules, MODES } from '@/content/modes'
 import { ROSTER } from '@/content/rules'
@@ -34,6 +34,8 @@ const lineup = z.object({
   bot: z.array(ownedHero),
 })
 
+const stances = z.partialRecord(z.enum(LANE_IDS), z.enum(LANE_STANCES))
+
 const structures = z.object({
   top: amount,
   mid: amount,
@@ -50,6 +52,8 @@ const player = z.object({
   roster: z.object({
     bench: z.array(ownedHero),
     lanes: lineup,
+    /** Lane orders came later; boards and saves without them leave every lane to its heroes. */
+    stances: stances.default({}),
   }),
   shop: z.array(heroId.nullable()),
   stash: z.array(itemId),
@@ -144,6 +148,7 @@ const roundPick = z
 const roundReplay = z.object({
   seed: z.string().min(1).max(80),
   structures: pair(structures),
+  stances: pair(stances).optional(),
 })
 
 const matchStats = z.object({
@@ -191,6 +196,7 @@ const matchState = z.object({
       seed: z.string(),
       lineups: pair(lineup),
       structures: pair(structures),
+      stances: pair(stances).optional(),
     })
     .nullable(),
   stats: matchStats.default(emptyMatchStats),

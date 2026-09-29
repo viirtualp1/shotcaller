@@ -236,9 +236,6 @@ watch(
           <ItemCard class="side-card" />
         </template>
       </aside>
-
-      <HeroCard v-if="!touch" class="floating" />
-      <ItemCard v-if="!touch" class="floating" />
     </template>
 
     <CompactDock v-else ref="dock" class="dock" />
@@ -249,6 +246,11 @@ watch(
           <MousePointerClick :size="15" /> {{ placementHint }}
         </p>
       </Transition>
+
+      <template v-if="wide && !touch">
+        <HeroCard />
+        <ItemCard />
+      </template>
     </div>
 
     <PhaseBanner />
@@ -394,23 +396,6 @@ watch(
 .wide .hud-right.card-open {
   overflow-x: hidden;
   overflow-y: auto;
-}
-
-.wide :deep(.floating) {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  z-index: 25;
-  width: min(380px, calc(100vw - 32px));
-  translate: -50% -50%;
-}
-
-.wide :deep(.floating.card-leave-active) {
-  position: fixed;
-  top: 50%;
-  bottom: auto;
-  left: 50%;
-  translate: -50% -50%;
 }
 
 .wide .hud-left {

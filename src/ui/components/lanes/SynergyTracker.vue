@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { LANE_STANCES } from '@/content/ids'
 import { MODES } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
 import { useMatchStore } from '../../stores/match'
+import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import HudPanel from '../common/HudPanel.vue'
+import { ORDER_ICONS } from './orderIcons'
 import SynergyChip from './SynergyChip.vue'
 
 const MAX_SUGGESTIONS = 2
 
 const store = useMatchStore()
+const settings = useSettingsStore()
 const drag = useDragStore()
 const text = useGameText()
 const { t } = text
@@ -61,6 +65,33 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
             />
           </TransitionGroup>
         </div>
+
+        <!-- Orders are given while planning; afterwards the lane just shows the one it got. -->
+        <div
+          v-if="settings.laneOrders && store.isPlanning"
+          class="orders"
+          role="group"
+          :aria-label="t('orders.label')"
+          @click.stop
+        >
+          <button
+            v-for="order in LANE_STANCES"
+            :key="order"
+            type="button"
+            class="order"
+            :aria-pressed="entry.ours.stance === order"
+            :title="t(`orders.${order}.hint`)"
+            @click="store.setStance(entry.lane, order)"
+          >
+            <component :is="ORDER_ICONS[order]" :size="13" />
+            {{ t(`orders.${order}.name`) }}
+          </button>
+        </div>
+
+        <span v-else-if="settings.laneOrders && entry.ours.stance" class="order given">
+          <component :is="ORDER_ICONS[entry.ours.stance]" :size="13" />
+          {{ t(`orders.${entry.ours.stance}.name`) }}
+        </span>
 
         <div class="chip-row">
           <div class="chips ours">
@@ -122,6 +153,44 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 .name {
   font-size: 22px;
   line-height: 1;
+}
+
+.orders {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.order {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.order[aria-pressed='true'],
+.order.given {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.order.given {
+  align-self: flex-start;
+  cursor: default;
 }
 
 .matchup {

@@ -102,39 +102,6 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
   min-height: 0;
 }
 
-.tab-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-weight: 600;
-  font-size: 12.5px;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.tab[data-state='active'] {
-  background: var(--panel-raised);
-  color: var(--chalk);
-  box-shadow: inset 0 0 0 1px var(--edge-strong);
-}
-
 .list {
   flex: 1 1 auto;
   min-height: 0;

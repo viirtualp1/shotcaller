@@ -28,12 +28,12 @@ import ReplayHeroCard from '../components/replay/ReplayHeroCard.vue'
 import ReplayHeroTooltip from '../components/replay/ReplayHeroTooltip.vue'
 import HeroAvatar from '../components/common/HeroAvatar.vue'
 import type { MeterStat } from '../components/battle/DamageMeter.vue'
+import MeterTabs from '../components/battle/MeterTabs.vue'
 import { useReplayStore } from '../stores/replay'
 
 const SPEEDS = [1, 2, 4] as const
 type Speed = (typeof SPEEDS)[number]
 
-const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
 const LIVE_REFRESH_SECONDS = 0.15
 
 const props = defineProps<{
@@ -51,7 +51,7 @@ const wide = useMediaQuery('(min-width: 1100px)')
 const { width: viewportW, height: viewportH } = useWindowSize()
 const topBox = useElementBounding(topEl)
 const sideBox = useElementBounding(sideEl)
-const avatarSize = computed(() => (wide.value ? 30 : 22))
+const avatarSize = 36
 
 const playing = ref(false)
 const speed = ref<Speed>(1)
@@ -168,6 +168,7 @@ function loadRound(round: number) {
   over.value = false
   structures.value = tapeStructures(round)
   renderer.value?.showBattle(session.simulation)
+  renderer.value?.showOrders(props.match.replays[round - 1]?.stances?.[0] ?? {})
   refreshLive()
   previous?.dispose()
 }
@@ -351,11 +352,11 @@ onBeforeUnmount(() => {
 
           <button
             type="button"
-            class="icon-btn"
+            class="speed reset"
             :aria-label="t('replay.restart')"
             @click="loadRound(replay.round)"
           >
-            <RotateCcw :size="16" />
+            <RotateCcw />
           </button>
 
           <button
@@ -377,21 +378,8 @@ onBeforeUnmount(() => {
         @close="selectedUid = null"
       />
 
-      <HudPanel :title="t('summary.heroes')">
-        <template #actions>
-          <div class="meter-tabs" role="group" :aria-label="t('summary.heroes')">
-            <button
-              v-for="stat in METER_STATS"
-              :key="stat"
-              type="button"
-              class="meter-tab"
-              :aria-pressed="meter === stat"
-              @click="meter = stat"
-            >
-              {{ t(`battle.${stat}`) }}
-            </button>
-          </div>
-        </template>
+      <HudPanel>
+        <MeterTabs v-model="meter" />
 
         <ol v-if="meterRows.length" class="meter" :class="meter">
           <li v-for="row in meterRows" :key="row.uid">
@@ -478,6 +466,19 @@ onBeforeUnmount(() => {
   color: var(--ink);
 }
 
+.reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* The icon is as tall as a line of text, so the button lines up with the speed buttons beside it. */
+.reset :deep(svg) {
+  width: 1em;
+  height: 1lh;
+}
+
 .top {
   position: absolute;
   top: 0;
@@ -561,31 +562,6 @@ onBeforeUnmount(() => {
   pointer-events: auto;
 }
 
-.meter-tabs {
-  display: flex;
-  gap: 2px;
-  margin-left: auto;
-  padding: 2px;
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.meter-tab {
-  padding: 3px 8px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.meter-tab[aria-pressed='true'] {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--chalk);
-}
-
 .meter {
   display: flex;
   flex-direction: column;
@@ -597,18 +573,19 @@ onBeforeUnmount(() => {
 
 .row {
   --team: var(--ours);
-  --avatar: 22px;
+  --avatar: 36px;
   display: grid;
   grid-template-columns: var(--avatar) 1fr auto;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
   text-align: left;
   cursor: pointer;
 }
@@ -627,8 +604,8 @@ onBeforeUnmount(() => {
 
 .track {
   position: relative;
-  height: 20px;
-  border-radius: 5px;
+  height: 36px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -641,18 +618,19 @@ onBeforeUnmount(() => {
 
 .healing .track i {
   background: color-mix(in srgb, var(--heal) 40%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .damageReceived .track i {
   background: color-mix(in srgb, var(--theirs) 35%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .label {
   position: relative;
-  padding-left: 8px;
-  line-height: 20px;
+  display: block;
+  padding-left: 12px;
+  line-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -757,23 +735,20 @@ onBeforeUnmount(() => {
     font-size: 15px;
   }
 
+  .side :deep(.tab) {
+    padding: 8px 10px;
+    font-size: 15px;
+  }
+
   .meter {
     gap: 10px;
   }
 
   .row {
-    --avatar: 30px;
-    gap: 10px;
     font-size: 15px;
   }
 
-  .track {
-    height: 28px;
-  }
-
   .label {
-    padding-left: 10px;
-    line-height: 28px;
     font-size: 15px;
   }
 

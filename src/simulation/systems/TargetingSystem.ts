@@ -3,6 +3,8 @@ import { distance } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import { creditedHero } from '../services/CombatService'
 import { withinLaneBand } from '../services/laneBand'
+import { beyondHoldLine } from '../services/laneOrders'
+import { isCaughtAlone } from '../services/skirmish'
 import { isThroneNearlyDown } from '../services/TowerSafety'
 import type { SimulationContext, System } from '../SimulationContext'
 
@@ -13,6 +15,7 @@ const PRIORITY = {
   siegePrefersStructures: -150,
   heroPrefersHeroes: -50,
   heroStructurePenalty: 80,
+  pushPrefersStructures: -150,
   roamerQuarry: -300,
   finishThrone: -400,
 } as const
@@ -37,6 +40,12 @@ export class TargetingSystem implements System {
 
       const targeting = unit.targeting
       const throne = this.throneToFinish(unit)
+      if (!throne && this.fallsBack(unit, dt)) {
+        targeting.target = null
+
+        continue
+      }
+
       const attacker = throne ? null : this.answerable(unit)
 
       if (throne) {
@@ -51,6 +60,35 @@ export class TargetingSystem implements System {
         targeting.chasing = true
       }
     }
+  }
+
+  /**
+   * Under Together a hero caught alone by stronger enemy heroes backs off, and keeps backing off for a moment
+   * after, so its lane-mates can catch up. Without that order heroes fight it out: backing off gives up the lane.
+   */
+  private fallsBack(unit: Unit, dt: number) {
+    if (unit.kind !== 'hero' || unit.roamer || unit.laneFollower?.stance !== 'group') {
+      return false
+    }
+
+    const { retreatSeconds } = BATTLE.skirmish
+    if (isCaughtAlone(this.ctx.queries.heroes, unit)) {
+      if (unit.retreat) {
+        unit.retreat.remaining = retreatSeconds
+      } else {
+        this.ctx.world.addComponent(unit, 'retreat', { remaining: retreatSeconds })
+      }
+
+      return true
+    }
+
+    if (!unit.retreat || unit.retreat.remaining <= 0) {
+      return false
+    }
+
+    unit.retreat.remaining -= dt
+
+    return true
   }
 
   /** Heroes hit by an enemy hero, directly or through its summons, remember who did it. */
@@ -134,6 +172,10 @@ export class TargetingSystem implements System {
       return false
     }
 
+    if (this.pastHoldLine(unit, target, gap)) {
+      return false
+    }
+
     if (target.kind === 'structure') {
       return this.mayHitStructure(unit, target)
     }
@@ -170,6 +212,11 @@ export class TargetingSystem implements System {
     }
 
     return !this.woundedUnderTower(hero) && this.ctx.safety.canHitStructure(hero, structure)
+  }
+
+  /** Under Hold a hero only takes on what is behind its line, or already within its reach from there. */
+  private pastHoldLine(hero: Unit, target: Unit, gap: number) {
+    return gap > (hero.attack?.range ?? 0) && beyondHoldLine(this.ctx.map, hero, target.position)
   }
 
   /** A hero standing in range of an untanked enemy tower backs off instead of picking fights. */
@@ -249,7 +296,7 @@ export class TargetingSystem implements System {
 
   private heroScore(hero: Unit, candidate: Unit, gap: number) {
     const quarry = hero.roamer?.quarry
-    if (quarry && candidate.kind !== 'hero') {
+    if ((quarry && candidate.kind !== 'hero') || this.pastHoldLine(hero, candidate, gap)) {
       return Infinity
     }
 
@@ -258,7 +305,14 @@ export class TargetingSystem implements System {
         return Infinity
       }
 
-      return gap + (isThroneNearlyDown(candidate) ? PRIORITY.finishThrone : PRIORITY.heroStructurePenalty)
+      if (isThroneNearlyDown(candidate)) {
+        return gap + PRIORITY.finishThrone
+      }
+
+      /* A lane told to push goes for the buildings whenever the creeps let it. */
+      const pushing = hero.laneFollower?.stance === 'push'
+
+      return gap + (pushing ? PRIORITY.pushPrefersStructures : PRIORITY.heroStructurePenalty)
     }
 
     const { safety } = this.ctx

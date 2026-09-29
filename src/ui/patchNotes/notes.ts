@@ -1,4 +1,4 @@
-import type { AbilityId, HeroId, ItemId, ModeId, RoleId } from '@/content/ids'
+import type { AbilityId, HeroId, ItemId, LaneStance, ModeId, RoleId } from '@/content/ids'
 import type { Locale } from '../i18n'
 
 /**
@@ -45,6 +45,10 @@ export type FeatureArt =
   | { readonly kind: 'modes' }
   | { readonly kind: 'ratings' }
   | { readonly kind: 'rounds' }
+  /** The lanes panel with an order on each lane. */
+  | { readonly kind: 'orders' }
+  /** What one order makes the heroes of a lane do. */
+  | { readonly kind: 'order'; readonly order: LaneStance }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -70,6 +74,129 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '8.5',
+    date: '2026-09-30',
+    title: {
+      en: 'Lane orders',
+      ru: 'Приказы линиям',
+    },
+    features: [
+      {
+        art: { kind: 'orders' },
+        title: {
+          en: 'An order for every lane',
+          ru: 'Приказ каждой линии',
+        },
+        text: {
+          en: 'Turn them on in **Settings → Experiments**. While planning, each lane on the lanes panel gets **Push**, **Defence** and **Together** under its heroes (on a phone, in the **Lanes** tab). Click an order again to take it back. The map shows the orders on your side of each lane.',
+          ru: 'Включаются в **Настройки → Эксперименты**. Во время подготовки у каждой линии на панели линий под героями появляются **Вперёд**, **Защита** и **Вместе** (на телефоне — во вкладке **Линии**). Нажми на приказ ещё раз, чтобы снять его. Карта показывает приказы на твоей стороне каждой линии.',
+        },
+      },
+      {
+        art: {
+          kind: 'order',
+          order: 'push',
+        },
+        title: {
+          en: 'Push',
+          ru: 'Вперёд',
+        },
+        text: {
+          en: 'The heroes go for the towers and the throne first, as soon as the creeps let them. Caught alone, they do not back off.',
+          ru: 'Герои первым делом бьют вышки и трон, как только крипы это позволяют. Оставшись одни, они не отступают.',
+        },
+      },
+      {
+        art: {
+          kind: 'order',
+          order: 'hold',
+        },
+        title: {
+          en: 'Defence',
+          ru: 'Защита',
+        },
+        text: {
+          en: 'The heroes stay by their own outer tower and fight whoever comes to it. They do not chase anyone past it, and walk back to the tower after a chase.',
+          ru: 'Герои стоят у своей внешней башни и бьют тех, кто к ней подойдёт. Дальше по линии ни за кем не гонятся и после погони возвращаются к башне.',
+        },
+      },
+      {
+        art: {
+          kind: 'order',
+          order: 'group',
+        },
+        title: {
+          en: 'Together',
+          ru: 'Вместе',
+        },
+        text: {
+          en: 'Nobody walks ahead of the lane-mate furthest behind. A hero who has fallen counts as back at the base, and one caught alone by stronger heroes steps back until the others catch up.',
+          ru: 'Никто не уходит вперёд отстающего напарника. Павший считается у своей базы, а герой, оставшийся один против более сильных, отходит, пока свои не подтянутся.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'An order lasts until you change it or take it back. A lane with no order fights as before: its heroes do not give the lane up.',
+        ru: 'Приказ держится, пока его не сменишь или не снимешь. Линия без приказа дерётся как раньше: герои её не отдают.',
+      },
+      {
+        en: 'The map shows each order on your side of its lane: arrows marching at the enemy for **Push**, a line across the lane for **Defence**, arrows closing in for **Together**.',
+        ru: 'Карта показывает приказ на твоей стороне линии: стрелки к врагу — **Вперёд**, черта поперёк линии — **Защита**, сходящиеся стрелки — **Вместе**.',
+      },
+      {
+        en: 'A ganker on a lane with an order stays on that lane instead of roaming.',
+        ru: 'Ганкер на линии с приказом остаётся на ней и не бродит по карте.',
+      },
+      {
+        en: '**Push**: towers and the throne come before heroes and creeps, as soon as the creeps let the heroes hit them. These heroes never back off, even caught alone.',
+        ru: '**Вперёд**: вышки и трон важнее героев и крипов, как только крипы позволяют по ним бить. Такие герои не отступают, даже оставшись одни.',
+      },
+      {
+        en: '**Defence**: the heroes stop by their own outer tower. They fight whoever is already in reach or steps up to them, and walk back to the tower after a chase.',
+        ru: '**Защита**: герои останавливаются у своей внешней башни. Бьют тех, до кого уже дотягиваются или кто сам подойдёт, и после погони возвращаются к башне.',
+      },
+      {
+        en: '**Together**: nobody walks ahead of the lane-mate furthest behind, and a hero who has fallen counts as back at the base. Left alone against stronger heroes, a hero steps back and keeps stepping back for a moment, so the others can catch up.',
+        ru: '**Вместе**: никто не уходит вперёд отстающего напарника, а павший считается у своей базы. Оставшись один против более сильных героев, герой отходит и ещё немного пятится, чтобы свои успели подойти.',
+      },
+      {
+        en: 'Replays recorded before 8.5 no longer open: fights now take lane orders into account.',
+        ru: 'Повторы, записанные до 8.5, больше не открываются: бой теперь учитывает приказы.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Tabs look alike everywhere: the shop, battle, round stats, the round summary, replays and match details.',
+        ru: 'Вкладки везде одинаковые: магазин, бой, статистика раунда, итог раунда, повторы и детали матча.',
+      },
+      {
+        en: 'Damage, healing and damage taken tabs have icons.',
+        ru: 'У вкладок урона, лечения и полученного урона есть иконки.',
+      },
+      {
+        en: 'Planning: the last round panel is called **Round N stats**.',
+        ru: 'Подготовка: панель прошлого раунда называется **Статистика раунда N**.',
+      },
+      {
+        en: 'Hero bars in damage, healing and damage taken are larger.',
+        ru: 'Полоски героев в уроне, лечении и полученном уроне крупнее.',
+      },
+      {
+        en: 'Round summary: the kills and deaths column is gone from the hero bars.',
+        ru: 'Итог раунда: колонки убийств и смертей у полосок героев больше нет.',
+      },
+      {
+        en: 'Desktop: hero and item cards open at the bottom of the map instead of its middle.',
+        ru: 'Десктоп: карточки героя и предмета открываются внизу карты, а не посередине.',
+      },
+      {
+        en: 'The empty lane warning before a fight shows only when you have heroes enough for every lane.',
+        ru: 'Предупреждение о пустой линии перед боем появляется, только если героев хватает на все линии.',
+      },
+    ],
+  },
   {
     version: '8.4.2',
     date: '2026-09-29',

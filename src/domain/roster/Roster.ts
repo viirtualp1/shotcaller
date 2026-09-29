@@ -1,5 +1,13 @@
 import { err, ok, type Result } from 'neverthrow'
-import { LANE_IDS, type HeroId, type ItemId, type LaneId, type StarLevel } from '@/content/ids'
+import {
+  LANE_IDS,
+  type HeroId,
+  type ItemId,
+  type LaneId,
+  type LaneStance,
+  type StarLevel,
+} from '@/content/ids'
+import type { LaneStances } from '../battle/contracts'
 import type { DomainError } from '../errors'
 
 export interface OwnedHero {
@@ -21,6 +29,7 @@ export interface HeroLocation {
 export interface RosterState {
   readonly bench: readonly OwnedHero[]
   readonly lanes: Lineup
+  readonly stances: LaneStances
 }
 
 const ALL_SLOTS = ['bench', ...LANE_IDS] as const
@@ -37,6 +46,8 @@ export class Roster {
     mid: [],
     bot: [],
   }
+
+  private orders: Partial<Record<LaneId, LaneStance>> = {}
 
   constructor(readonly benchSize: number) {}
 
@@ -156,10 +167,25 @@ export class Roster {
     }
   }
 
-  snapshot() {
+  /** The orders given to the lanes; they stay until the coach changes them. */
+  stances(): LaneStances {
+    return { ...this.orders }
+  }
+
+  /** Null takes the lane's order back and leaves it to its heroes. */
+  setStance(lane: LaneId, stance: LaneStance | null) {
+    if (stance) {
+      this.orders[lane] = stance
+    } else {
+      delete this.orders[lane]
+    }
+  }
+
+  snapshot(): RosterState {
     return {
       bench: this.slots.bench.map(cloneHero),
       lanes: this.lineup(),
+      stances: this.stances(),
     }
   }
 
@@ -169,5 +195,7 @@ export class Roster {
     for (const lane of LANE_IDS) {
       this.slots[lane] = state.lanes[lane].map(cloneHero)
     }
+
+    this.orders = { ...state.stances }
   }
 }

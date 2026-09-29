@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { HERO_IDS, ITEM_IDS, LANE_IDS, MODE_IDS, SYNERGY_IDS } from '@/content/ids'
+import { HERO_IDS, ITEM_IDS, LANE_IDS, LANE_STANCES, MODE_IDS, SYNERGY_IDS } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { PROFILE } from '@/content/profile'
 import { MATCH_END_REASONS } from '@/domain/match/judge'
@@ -67,6 +67,7 @@ const structureHp = z.object({
 const roundReplay = z.object({
   seed: z.string().min(1).max(80),
   structures: pair(structureHp),
+  stances: pair(z.partialRecord(z.enum(LANE_IDS), z.enum(LANE_STANCES))).optional(),
 })
 
 /** A hero as it fought one round: id, stars, lane and items. */

@@ -130,15 +130,15 @@ const combat = computed(() => [
         <TabsRoot v-model="tab" class="tabs">
           <TabsList class="tab-list" :aria-label="t('report.title')">
             <TabsTrigger value="heroes" class="tab"
-              ><Users :size="15" /> {{ t('report.tabs.heroes') }}</TabsTrigger
+              ><Users :size="14" /> {{ t('report.tabs.heroes') }}</TabsTrigger
             >
 
             <TabsTrigger value="combat" class="tab"
-              ><Swords :size="15" /> {{ t('report.tabs.combat') }}</TabsTrigger
+              ><Swords :size="14" /> {{ t('report.tabs.combat') }}</TabsTrigger
             >
 
             <TabsTrigger value="economy" class="tab"
-              ><Coins :size="15" /> {{ t('report.tabs.economy') }}</TabsTrigger
+              ><Coins :size="14" /> {{ t('report.tabs.economy') }}</TabsTrigger
             >
           </TabsList>
 
@@ -257,34 +257,8 @@ const combat = computed(() => [
 }
 
 .tab-list {
-  display: flex;
-  gap: 4px;
   align-self: center;
   width: min(520px, 100%);
-  padding: 3px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.tab {
-  display: inline-flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.tab[data-state='active'] {
-  background: var(--panel-raised);
-  color: var(--chalk);
-  box-shadow: inset 0 0 0 1px var(--edge-strong);
 }
 
 .panel {

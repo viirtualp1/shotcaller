@@ -2,7 +2,7 @@ import { MODES } from '@/content/modes'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 
-/** Starts the round, asking first when some lane would be left without a hero. */
+/** Starts the round, asking first when a lane is empty even though the board could cover every lane. */
 export function useFightRequest() {
   const match = useMatchStore()
   const menu = useMenuStore()
@@ -16,7 +16,9 @@ export function useFightRequest() {
 
     const { human } = view
     const lanes = MODES[view.mode].lanes
-    const emptyLane = human.boardCount > 0 && lanes.some((lane) => human.lanes[lane].heroes.length === 0)
+    const hasEmptyLane = lanes.some((lane) => human.lanes[lane].heroes.length === 0)
+    const canCoverEveryLane = human.boardCapacity >= lanes.length
+    const emptyLane = human.boardCount > 0 && hasEmptyLane && canCoverEveryLane
 
     if (emptyLane) {
       menu.confirmFight = true

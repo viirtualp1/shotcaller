@@ -87,7 +87,7 @@ const tabs = computed(() => [
         v-for="tab in tabs"
         :key="tab.id"
         type="button"
-        class="tab"
+        class="dock-tab"
         :class="{ active: dock.tab === tab.id }"
         :aria-pressed="dock.tab === tab.id"
         @click="dock.tab = tab.id"
@@ -149,7 +149,7 @@ const tabs = computed(() => [
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.tab {
+.dock-tab {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -167,7 +167,7 @@ const tabs = computed(() => [
     color 0.15s;
 }
 
-.tab.active {
+.dock-tab.active {
   background: var(--panel-raised);
   color: var(--chalk);
   box-shadow: inset 0 0 0 1px var(--edge-strong);

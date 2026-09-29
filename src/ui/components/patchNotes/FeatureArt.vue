@@ -10,6 +10,7 @@ import type { FeatureArt } from '../../patchNotes/notes'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeMap from '../modes/ModeMap.vue'
+import LaneOrderArt from './LaneOrderArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 const props = defineProps<{ art: FeatureArt }>()
@@ -81,6 +82,10 @@ onMounted(() => {
         <figcaption>{{ t(`modes.${id}.name`) }}</figcaption>
       </figure>
     </div>
+
+    <LaneOrderArt v-else-if="art.kind === 'orders'" />
+
+    <LaneOrderArt v-else-if="art.kind === 'order'" :order="art.order" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">

@@ -6,8 +6,6 @@ import {
   DialogPortal,
   DialogRoot,
   DialogTitle,
-  ToggleGroupItem,
-  ToggleGroupRoot,
 } from 'reka-ui'
 import { Castle } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
@@ -21,10 +19,10 @@ import { useMatchStore } from '../../stores/match'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import AnimatedNumber from '../common/AnimatedNumber.vue'
 import type { MeterStat } from '../battle/DamageMeter.vue'
+import MeterTabs from '../battle/MeterTabs.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
 const INCOME_STEP_MS = 220
-const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
 
 const store = useMatchStore()
 const timer = usePlanningTimerStore()
@@ -99,15 +97,6 @@ const structureRows = computed(() => {
 })
 
 const meter = ref<MeterStat>('damageDealt')
-
-const meterModel = computed({
-  get: () => meter.value,
-  set: (value: string | undefined) => {
-    if (value) {
-      meter.value = value as MeterStat
-    }
-  },
-})
 
 const valueTitle = computed(() =>
   t(
@@ -217,16 +206,7 @@ const incomeRows = computed(() => {
         </section>
 
         <section>
-          <ToggleGroupRoot
-            v-model="meterModel"
-            type="single"
-            class="meter-tabs"
-            :aria-label="t('summary.heroes')"
-          >
-            <ToggleGroupItem v-for="stat in METER_STATS" :key="stat" :value="stat" class="meter-tab">
-              {{ t(`battle.${stat}`) }}
-            </ToggleGroupItem>
-          </ToggleGroupRoot>
+          <MeterTabs v-model="meter" />
 
           <p v-if="meter === 'healing' && !heroRows.length" class="none">{{ t('summary.noHealing') }}</p>
 
@@ -238,7 +218,7 @@ const incomeRows = computed(() => {
               :class="hero.team === 0 ? 'ours' : 'theirs'"
               :style="{ '--i': i }"
             >
-              <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="24" />
+              <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="36" />
 
               <span class="bar">
                 <i :style="{ width: `${hero.share * 100}%` }" />
@@ -247,14 +227,6 @@ const incomeRows = computed(() => {
 
               <span class="num value" :title="valueTitle">
                 {{ meter === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}
-              </span>
-
-              <span
-                v-if="meter !== 'damageReceived'"
-                class="num kd"
-                :title="`${t('summary.heroKills')} / ${t('summary.heroDeaths')}`"
-              >
-                {{ hero.kills }}/{{ hero.deaths }}
               </span>
             </li>
           </ol>
@@ -385,7 +357,7 @@ const incomeRows = computed(() => {
 .graves {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 12px;
+  gap: 20px 28px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -395,8 +367,8 @@ const incomeRows = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  width: 58px;
+  gap: 8px;
+  width: 84px;
 }
 
 .portrait {
@@ -433,7 +405,7 @@ const incomeRows = computed(() => {
 
 .name {
   max-width: 100%;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--chalk-dim);
   text-align: center;
   line-height: 1.2;
@@ -463,24 +435,21 @@ section {
 .hero {
   --team: var(--ours);
   display: grid;
-  grid-template-columns: 24px 1fr auto 3.2em;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
 }
 
 .hero.theirs {
   --team: var(--theirs);
 }
 
-.heroes.damageReceived .hero {
-  grid-template-columns: 24px 1fr auto;
-}
-
 .bar {
   position: relative;
-  height: 22px;
-  border-radius: 5px;
+  height: 36px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -495,18 +464,17 @@ section {
 
 .label {
   position: relative;
-  padding-left: 8px;
-  line-height: 22px;
+  display: block;
+  padding-left: 12px;
+  line-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-
-.kd {
-  color: var(--chalk-dim);
 }
 
 .heroes.healing .value {
@@ -519,35 +487,6 @@ section {
 
 .heroes.damageReceived .bar i {
   background: color-mix(in srgb, var(--theirs) 35%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
-}
-
-.meter-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
-  width: 100%;
-  padding: 2px;
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.meter-tab {
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.meter-tab[data-state='on'] {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--chalk);
 }
 
 .structures {

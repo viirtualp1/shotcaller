@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, shallowRef, watch } from 'vue'
-import type { LaneId } from '@/content/ids'
+import { computed, ref, shallowRef, watch } from 'vue'
+import { LANE_IDS, type LaneId } from '@/content/ids'
+import type { LaneStances } from '@/domain/battle/contracts'
 import type { Insets } from '@/rendering/BoardRenderer'
 import type { PlanningModel } from '@/rendering/layers/PlanningLayer'
 import type { HeroHit } from '@/rendering/views/HeroToken'
@@ -42,7 +43,20 @@ function planningModel(): PlanningModel | null {
   }
 }
 
+const orders = computed<LaneStances>(() => {
+  const lanes = store.view?.human.lanes
+  if (!lanes) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    LANE_IDS.flatMap((lane) => (lanes[lane].stance ? [[lane, lanes[lane].stance]] : [])),
+  )
+})
+
 watch(renderer, (board) => boardStore.register(board), { immediate: true })
+
+watch([renderer, orders], ([board, stances]) => board?.showOrders(stances), { immediate: true })
 
 watch([renderer, () => props.insets], ([board, insets]) => board?.setInsets(insets), { immediate: true })
 

@@ -1,7 +1,7 @@
 import type { World } from 'miniplex'
 import { ABILITY_PARAMS } from '@/content/abilities'
 import { HEROES } from '@/content/heroes'
-import type { ItemId, LaneId, StructureSlot, TeamId, TowerSlot } from '@/content/ids'
+import type { ItemId, LaneId, LaneStance, StructureSlot, TeamId, TowerSlot } from '@/content/ids'
 import { ITEMS } from '@/content/items'
 import { combineModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
@@ -140,7 +140,7 @@ export class EntityFactory {
     }) as Unit
   }
 
-  hero(owned: OwnedHero, team: TeamId, lane: LaneId, report: LaneReport, slot: number) {
+  hero(owned: OwnedHero, team: TeamId, lane: LaneId, report: LaneReport, slot: number, stance?: LaneStance) {
     const definition = HEROES[owned.heroId]
     const role = ROLES[definition.role]
     const stats = definition.stats
@@ -191,6 +191,7 @@ export class EntityFactory {
         path: this.map.path(team, lane),
         waypoint: 1,
         avoidsTowers: true,
+        stance,
       },
       mana: {
         current: stats.mana * (role.startingManaRatio ?? 0),
@@ -218,7 +219,8 @@ export class EntityFactory {
         healing: 0,
         lastHits: 0,
       },
-      ...(role.roams
+      /* An order keeps a ganker on its lane: it holds, pushes or stays together with the others there. */
+      ...(role.roams && !stance
         ? {
             roamer: {
               thinkTimer: 0,

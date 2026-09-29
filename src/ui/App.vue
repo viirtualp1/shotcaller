@@ -43,8 +43,8 @@ useSystemNotificationsStore()
 <template>
   <TooltipProvider :delay-duration="250">
     <Transition name="screen" mode="out-in">
-      <GameScreen v-if="store.view" />
-      <PatchNotesScreen v-else-if="patchNotes.patch" />
+      <PatchNotesScreen v-if="patchNotes.patch" />
+      <GameScreen v-else-if="store.view" />
       <ProfileScreen v-else-if="profile.isOpen" />
       <StartScreen v-else />
     </Transition>

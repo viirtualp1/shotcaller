@@ -1,8 +1,11 @@
-import type { HeroId, ModeId, StarLevel, StructureSlot, TeamId } from '@/content/ids'
+import type { HeroId, LaneId, LaneStance, ModeId, StarLevel, StructureSlot, TeamId } from '@/content/ids'
 import type { Lineup } from '../roster/Roster'
 
 export type StructureState = Record<StructureSlot, number>
 export type PerTeam<T> = readonly [T, T]
+
+/** The order each lane got; a lane missing here is left to its heroes' judgement. */
+export type LaneStances = Readonly<Partial<Record<LaneId, LaneStance>>>
 
 export interface BattleSetup {
   readonly mode: ModeId
@@ -10,6 +13,8 @@ export interface BattleSetup {
   readonly seed: string
   readonly lineups: PerTeam<Lineup>
   readonly structures: PerTeam<StructureState>
+  /** Missing for fights set up without orders, such as the start screen's. */
+  readonly stances?: PerTeam<LaneStances>
 }
 
 export interface TeamBattleStats {

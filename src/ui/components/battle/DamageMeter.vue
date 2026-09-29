@@ -35,7 +35,7 @@ const rows = computed(() => {
       class="row"
       :class="[row.team === 0 ? 'ours' : 'theirs', { dead: row.dead }]"
     >
-      <HeroAvatar :hero-id="row.heroId" :team="row.team" :size="22" />
+      <HeroAvatar :hero-id="row.heroId" :team="row.team" :size="36" />
 
       <span class="bar">
         <i :style="{ width: `${row.share * 100}%` }" />
@@ -52,20 +52,25 @@ const rows = computed(() => {
 <style scoped>
 .meter {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 9px;
+  gap: 8px;
+  min-height: 0;
   margin: 0;
-  padding: 0;
+  padding: 4px 0 8px 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
   list-style: none;
 }
 
 .row {
   --team: var(--ours);
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
 }
 
 .row.theirs {
@@ -78,8 +83,8 @@ const rows = computed(() => {
 
 .bar {
   position: relative;
-  height: 20px;
-  border-radius: 5px;
+  height: 36px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -93,18 +98,19 @@ const rows = computed(() => {
 
 .healing .bar i {
   background: color-mix(in srgb, var(--heal) 40%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .damageReceived .bar i {
   background: color-mix(in srgb, var(--theirs) 35%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .label {
   position: relative;
-  padding-left: 8px;
-  line-height: 20px;
+  display: block;
+  padding-left: 12px;
+  line-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -112,12 +118,12 @@ const rows = computed(() => {
   min-width: 3.5em;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: var(--chalk-dim);
+  color: var(--chalk);
 }
 
 .empty {
   margin: 0;
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--chalk-faint);
 }
 

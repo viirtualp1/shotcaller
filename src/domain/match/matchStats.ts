@@ -7,7 +7,7 @@ import {
   type StarLevel,
   type TeamId,
 } from '@/content/ids'
-import type { BattleOutcome, PerTeam, StructureState } from '../battle/contracts'
+import type { BattleOutcome, LaneStances, PerTeam, StructureState } from '../battle/contracts'
 import type { IncomeBreakdown } from '../economy/income'
 import type { Lineup } from '../roster/Roster'
 import { emptyStructureState } from './structures'
@@ -22,6 +22,8 @@ export type RoundLineups = PerTeam<readonly RoundPick[]>
 export interface RoundReplay {
   readonly seed: string
   readonly structures: PerTeam<StructureState>
+  /** Lane orders, player's first; tapes from before orders have none. */
+  readonly stances?: PerTeam<LaneStances>
 }
 
 export const picksOf = (lineup: Lineup): RoundPick[] =>

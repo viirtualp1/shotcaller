@@ -23,6 +23,7 @@ export function useDocumentHead() {
       if (!patch) {
         document.title = i18n.global.t('app.title')
         meta?.setAttribute('content', homeDescription)
+
         return
       }
 

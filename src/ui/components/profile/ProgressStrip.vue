@@ -62,8 +62,6 @@ const signed = (value: number) =>
       <span v-else-if="progress.rated" class="muted"
         >{{ t(`profile.ranks.${progress.rank.tier}`) }} {{ '★'.repeat(progress.rank.stars) }}</span
       >
-
-      <span v-else class="muted">{{ t('profile.progress.duelsOnly') }}</span>
     </div>
 
     <div class="cell">

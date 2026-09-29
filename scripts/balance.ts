@@ -1,13 +1,16 @@
 import { parseArgs } from 'node:util'
 import { createMatch } from '@/application/createMatch'
 import { HEROES } from '@/content/heroes'
-import { MODE_IDS, type HeroId, type ModeId } from '@/content/ids'
-import { DEFAULT_MODE } from '@/content/modes'
+import { LANE_STANCES, MODE_IDS, opponentOf, type HeroId, type ModeId, type TeamId } from '@/content/ids'
+import { DEFAULT_MODE, MODES } from '@/content/modes'
 import { STAR_POWER } from '@/content/rules'
 import { sequentialIds } from '@/core/ids'
+import { distance } from '@/core/math/vec2'
 import { createRng } from '@/core/random/rng'
+import type { BattleSetup } from '@/domain/battle/contracts'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
-import { headlessResolver } from '@/simulation/BattleSimulation'
+import { BattleSimulation } from '@/simulation/BattleSimulation'
+import { isAlive } from '@/simulation/ecs/components'
 
 const { values } = parseArgs({
   options: {
@@ -23,6 +26,10 @@ const { values } = parseArgs({
       type: 'string',
       default: DEFAULT_MODE,
     },
+    /** An order team 0 gives every lane, to see what it is worth against lanes left to their heroes. */
+    order: {
+      type: 'string',
+    },
   },
 })
 
@@ -30,6 +37,11 @@ const matchCount = Number(values.matches)
 const mode = MODE_IDS.find((id) => id === values.mode)
 if (!mode) {
   throw new Error(`Unknown mode ${values.mode}; pick one of ${MODE_IDS.join(', ')}`)
+}
+
+const order = LANE_STANCES.find((id) => id === values.order) ?? null
+if (values.order && !order) {
+  throw new Error(`Unknown order ${values.order}; pick one of ${LANE_STANCES.join(', ')}`)
 }
 
 interface HeroTally {
@@ -57,6 +69,36 @@ const pace = {
   roundsPlayed: 0,
 }
 
+/** Heroes this close to a falling hero count as being in the fight with it. */
+const NEARBY = 250
+
+/* How heroes die: with no ally hero around, or against more enemy heroes than the allies at hand. */
+const deaths = {
+  total: 0,
+  alone: 0,
+  outnumbered: 0,
+}
+
+function resolve(setup: BattleSetup) {
+  const simulation = new BattleSimulation(setup)
+
+  simulation.events.on('heroKilled', ({ victim }) => {
+    const near = (team: TeamId) =>
+      simulation.queries.heroes.entities.filter(
+        (h) =>
+          h !== victim && h.team === team && isAlive(h) && distance(h.position, victim.position) <= NEARBY,
+      ).length
+
+    const allies = near(victim.team)
+    const enemies = near(opponentOf(victim.team))
+    deaths.total++
+    deaths.alone += allies === 0 ? 1 : 0
+    deaths.outnumbered += enemies > allies + 1 ? 1 : 0
+  })
+
+  return simulation.runToEnd()
+}
+
 const started = performance.now()
 
 for (let i = 0; i < matchCount; i++) {
@@ -79,8 +121,12 @@ for (let i = 0; i < matchCount; i++) {
       rng,
     })
 
+    for (const lane of MODES[mode].lanes) {
+      match.human.setStance(lane, order)
+    }
+
     const setup = match.startBattle()._unsafeUnwrap()
-    const outcome = headlessResolver.resolve(setup)
+    const outcome = resolve(setup)
     for (const hero of outcome.heroes) {
       const tally = tallies.get(hero.heroId) ?? {
         appearances: 0,
@@ -138,7 +184,10 @@ for (let i = 0; i < matchCount; i++) {
 
 rounds.sort((a, b) => a - b)
 const pct = (n: number) => `${Math.round((n / matchCount) * 100)}%`
-console.log(`mode ${mode}, matches: ${matchCount} in ${((performance.now() - started) / 1000).toFixed(1)}s`)
+console.log(
+  `mode ${mode}${order ? `, team0 order ${order}` : ''}, matches: ${matchCount} in ${((performance.now() - started) / 1000).toFixed(1)}s`,
+)
+
 console.log(`rounds: min ${rounds[0]}, median ${rounds[rounds.length >> 1]}, max ${rounds.at(-1)}`)
 console.log(`winner: team0 ${pct(results.human)}, team1 ${pct(results.opponent)}, draw ${pct(results.draw)}`)
 console.log(`decided by throne: ${pct(results.byThrone)}`)
@@ -146,6 +195,12 @@ console.log(`decided by throne: ${pct(results.byThrone)}`)
 console.log(
   `lead changes per match: ${(pace.leadChanges / matchCount).toFixed(2)}, comebacks: ${pct(pace.comebacks)}, ` +
     `drawn rounds: ${Math.round((pace.drawnRounds / pace.roundsPlayed) * 100)}%`,
+)
+
+console.log(
+  `hero deaths per round: ${(deaths.total / pace.roundsPlayed).toFixed(2)}, ` +
+    `alone: ${Math.round((deaths.alone / deaths.total) * 100)}%, ` +
+    `outnumbered: ${Math.round((deaths.outnumbered / deaths.total) * 100)}%`,
 )
 
 console.log('\nhero            picks  dmg/round(1★)  kills/round  deaths/round')

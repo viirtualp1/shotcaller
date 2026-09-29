@@ -237,15 +237,15 @@ const combat = computed<ComparisonRow[]>(() => {
     <TabsRoot v-model="tab" class="tabs">
       <TabsList class="tab-list" :aria-label="t('report.title')">
         <TabsTrigger value="heroes" class="tab">
-          <Users :size="15" /> {{ t('report.tabs.heroes') }}
+          <Users :size="14" /> {{ t('report.tabs.heroes') }}
         </TabsTrigger>
 
         <TabsTrigger value="lineups" class="tab">
-          <LayoutGrid :size="15" /> {{ t('matchDetails.tabs.lineups') }}
+          <LayoutGrid :size="14" /> {{ t('matchDetails.tabs.lineups') }}
         </TabsTrigger>
 
         <TabsTrigger v-if="detailed" value="combat" class="tab">
-          <Swords :size="15" /> {{ t('report.tabs.combat') }}
+          <Swords :size="14" /> {{ t('report.tabs.combat') }}
         </TabsTrigger>
       </TabsList>
 
@@ -498,34 +498,8 @@ button.pip:disabled {
 }
 
 .tab-list {
-  display: flex;
-  gap: 4px;
   align-self: center;
   width: min(520px, 100%);
-  padding: 3px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.tab {
-  display: inline-flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.tab[data-state='active'] {
-  background: var(--panel-raised);
-  color: var(--chalk);
-  box-shadow: inset 0 0 0 1px var(--edge-strong);
 }
 
 .panel {

@@ -7,22 +7,13 @@ import { useGameText } from '../../composables/useGameText'
 import { useMatchStore, type BattleSpeed } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
 import DamageMeter, { type MeterStat } from './DamageMeter.vue'
+import MeterTabs from './MeterTabs.vue'
 
 const SPEEDS: readonly BattleSpeed[] = [1, 2, 4]
-const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
 
 const store = useMatchStore()
 const { t } = useGameText()
 const meter = ref<MeterStat>('damageDealt')
-
-const meterModel = computed({
-  get: () => meter.value,
-  set: (value: string | undefined) => {
-    if (value) {
-      meter.value = value as MeterStat
-    }
-  },
-})
 
 const speedModel = computed({
   get: () => String(store.isDuel ? DUEL_BATTLE_SPEED : store.speed),
@@ -64,21 +55,10 @@ const speedModel = computed({
       </div>
     </HudPanel>
 
-    <HudPanel :title="t('battle.meter')">
-      <template #actions>
-        <ToggleGroupRoot
-          v-model="meterModel"
-          type="single"
-          class="meter-tabs"
-          :aria-label="t('battle.meter')"
-        >
-          <ToggleGroupItem v-for="stat in METER_STATS" :key="stat" :value="stat" class="meter-tab">
-            {{ t(`battle.${stat}`) }}
-          </ToggleGroupItem>
-        </ToggleGroupRoot>
-      </template>
+    <HudPanel class="meter-panel">
+      <MeterTabs v-model="meter" />
 
-      <DamageMeter :stat="meterModel" />
+      <DamageMeter :stat="meter" />
     </HudPanel>
   </div>
 </template>
@@ -86,8 +66,15 @@ const speedModel = computed({
 <style scoped>
 .battle {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
+}
+
+.meter-panel {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .controls {
@@ -132,32 +119,6 @@ const speedModel = computed({
 
 .speed[data-disabled]:not([data-state='on']) {
   opacity: 0.4;
-}
-
-.meter-tabs {
-  display: flex;
-  gap: 2px;
-  margin-left: auto;
-  padding: 2px;
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.meter-tab {
-  padding: 3px 8px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.meter-tab[data-state='on'] {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--chalk);
 }
 
 .skip {

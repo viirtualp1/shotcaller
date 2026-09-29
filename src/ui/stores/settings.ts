@@ -41,6 +41,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const firstVisit = !tutorialDone()
   const storedMode = useLocalStorage<string>(STORAGE_KEYS.mode, firstVisit ? TUTORIAL_MODE : DEFAULT_MODE)
 
+  /** Lane orders are an experiment: off until the coach turns them on. */
+  const laneOrders = useLocalStorage(STORAGE_KEYS.laneOrders, false)
+
   /** Whether the next match starts with the tutorial; asked again each time a match is set up. */
   const tutorialWanted = ref(firstVisit)
 
@@ -63,6 +66,7 @@ export const useSettingsStore = defineStore('settings', () => {
     difficulty,
     planningSeconds,
     mode,
+    laneOrders,
     tutorialWanted,
   }
 })

@@ -136,7 +136,7 @@
     "chainmail": "{damageTaken}% less damage taken",
     "vitality": "+{maxHp}% health",
     "boots": "+{speed}% movement speed",
-    "staff": "+{spellPower}% ability power (not healing)",
+    "staff": "+{spellPower}% ability power",
     "chalice": "+{healPower}% healing from abilities and the aura",
     "manaStone": "Mana builds {manaGain}% faster",
     "vampireFang": "Heals for {lifesteal}% of attack damage and {spellLifesteal}% of ability damage",
@@ -166,6 +166,21 @@
     "anyHero": "any hero",
     "vs": "VS",
     "recruit": "Click to send in {hero}"
+  },
+  "orders": {
+    "label": "Lane order",
+    "push": {
+      "name": "Push",
+      "hint": "Push: the heroes never back off, even when caught alone. Click again to take the order back."
+    },
+    "hold": {
+      "name": "Defence",
+      "hint": "Defence: the heroes stay by their own outer tower and fight whoever comes. Click again to take the order back."
+    },
+    "group": {
+      "name": "Together",
+      "hint": "Together: nobody walks ahead of the lane-mate furthest behind. Click again to take the order back."
+    }
   },
   "bench": {
     "title": "Heroes",
@@ -244,7 +259,7 @@
     "next": "Back to the shop",
     "nextIn": "Back to the shop · {s} s",
     "structures": "Towers and throne after the round",
-    "lastRound": "Round {round}",
+    "lastRound": "Round {round} stats",
     "noRound": "Stats appear after a round",
     "heroes": "Hero damage and healing",
     "heroDamage": "Damage",
@@ -402,7 +417,10 @@
     "difficultyHint": {
       "relaxed": "No timer: the battle starts when you press Fight.",
       "standard": "{s} s to plan. When time runs out, the battle starts on its own."
-    }
+    },
+    "experiments": "Experiments",
+    "laneOrders": "Lane orders",
+    "laneOrdersAbout": "How lane orders work"
   },
   "menu": {
     "resume": "Resume"
@@ -574,8 +592,7 @@
       "rating": "Rating",
       "xp": "XP",
       "rankUp": "New rank",
-      "levelUp": "Level up",
-      "duelsOnly": "Only duels change it"
+      "levelUp": "Level up"
     },
     "avatarPhoto": "Account photo",
     "bestMode": "Best in {mode}"
@@ -850,7 +867,7 @@
     "noRounds": "Round lineups are kept for the last 5 matches played since 8.0."
   },
   "replay": {
-    "watch": "Watch",
+    "watch": "Replay",
     "title": "Replay",
     "round": "Round {round}",
     "play": "Play",

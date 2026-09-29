@@ -1,7 +1,7 @@
 import { StorageSerializers, useLocalStorage } from '@vueuse/core'
 import type { Result } from 'neverthrow'
 import { defineStore } from 'pinia'
-import { computed, markRaw, ref, shallowRef } from 'vue'
+import { computed, markRaw, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import { createMatch, restoreMatch } from '@/application/createMatch'
 import { LocalStorageMatchRepository } from '@/application/persistence/MatchRepository'
@@ -14,7 +14,16 @@ import {
   type MatchView,
   type PlayerView,
 } from '@/application/views'
-import { LANE_IDS, type HeroId, type ItemId, type ModeId, type StarLevel, type TeamId } from '@/content/ids'
+import {
+  LANE_IDS,
+  type HeroId,
+  type ItemId,
+  type LaneId,
+  type LaneStance,
+  type ModeId,
+  type StarLevel,
+  type TeamId,
+} from '@/content/ids'
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
@@ -468,6 +477,16 @@ export const useMatchStore = defineStore('match', () => {
     apply(match.human.move(uid, slot))
   }
 
+  /** Gives a lane an order; picking the lane's current order again takes it back. */
+  function setStance(lane: LaneId, stance: LaneStance) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    const current = match.human.roster.stances()[lane]
+    apply(match.human.setStance(lane, current === stance ? null : stance))
+  }
+
   /** Clicking a hero equips the selected item, swaps with the selected hero or toggles selection. */
   function select(uid: string) {
     if (selectedItem.value !== null) {
@@ -758,6 +777,20 @@ export const useMatchStore = defineStore('match', () => {
     live.value = null
   }
 
+  /* Turning lane orders off takes back the ones given, so nothing unseen keeps steering the heroes. */
+  watch(
+    () => settings.laneOrders,
+    (on) => {
+      if (!on && match) {
+        for (const lane of LANE_IDS) {
+          match.human.roster.setStance(lane, null)
+        }
+
+        refresh()
+      }
+    },
+  )
+
   return {
     view,
     live,
@@ -797,6 +830,7 @@ export const useMatchStore = defineStore('match', () => {
     reroll,
     buyXp,
     move,
+    setStance,
     select,
     inspect,
     selectItem,

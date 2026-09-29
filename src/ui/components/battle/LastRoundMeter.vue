@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, ref } from 'vue'
 import { starsLabel, useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import type { MeterStat } from './DamageMeter.vue'
-
-const STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
+import MeterTabs from './MeterTabs.vue'
 
 defineProps<{ placeholder?: boolean }>()
 
@@ -17,15 +15,6 @@ const { t } = text
 const stat = ref<MeterStat>('damageDealt')
 
 const summary = computed(() => (store.phase === 'planning' ? (store.view?.summary ?? null) : null))
-
-const meterModel = computed({
-  get: () => stat.value,
-  set: (value: string | undefined) => {
-    if (value) {
-      stat.value = value as MeterStat
-    }
-  },
-})
 
 const rows = computed(() => {
   const key = stat.value
@@ -48,17 +37,13 @@ const rows = computed(() => {
   <p v-if="!summary && placeholder" class="empty">{{ t('summary.noRound') }}</p>
 
   <HudPanel v-else-if="summary" class="panel" :title="t('summary.lastRound', { round: summary.round })">
-    <ToggleGroupRoot v-model="meterModel" type="single" class="tabs" :aria-label="t('summary.heroes')">
-      <ToggleGroupItem v-for="item in STATS" :key="item" :value="item" class="tab">
-        {{ t(`battle.${item}`) }}
-      </ToggleGroupItem>
-    </ToggleGroupRoot>
+    <MeterTabs v-model="stat" />
 
     <p v-if="stat === 'healing' && !rows.length" class="empty">{{ t('summary.noHealing') }}</p>
 
     <ol v-else class="meter" :class="stat">
       <li v-for="hero in rows" :key="hero.uid" class="row" :class="hero.team === 0 ? 'ours' : 'theirs'">
-        <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="20" />
+        <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="36" />
 
         <span class="bar">
           <i :style="{ width: `${hero.share * 100}%` }" />
@@ -79,32 +64,6 @@ const rows = computed(() => {
   min-height: 0;
 }
 
-.tabs {
-  display: grid;
-  flex: none;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
-  padding: 2px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.tab {
-  padding: 4px 6px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.tab[data-state='on'] {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--chalk);
-}
-
 .meter {
   display: flex;
   flex: 1 1 auto;
@@ -122,10 +81,11 @@ const rows = computed(() => {
 .row {
   --team: var(--ours);
   display: grid;
-  grid-template-columns: 26px 1fr auto;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
-  column-gap: 8px;
-  font-size: 12px;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
 }
 
 .row.theirs {
@@ -134,8 +94,8 @@ const rows = computed(() => {
 
 .bar {
   position: relative;
-  height: 18px;
-  border-radius: 5px;
+  height: 36px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -148,31 +108,32 @@ const rows = computed(() => {
 
 .healing .bar i {
   background: color-mix(in srgb, var(--heal) 40%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .damageReceived .bar i {
   background: color-mix(in srgb, var(--theirs) 35%, transparent);
-  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .label {
   position: relative;
-  padding-left: 6px;
-  line-height: 18px;
+  display: block;
+  padding-left: 12px;
+  line-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .value {
-  min-width: 2.6em;
+  min-width: 3.5em;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: var(--chalk-dim);
+  color: var(--chalk);
 }
 
 .empty {
   margin: 0;
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--chalk-faint);
 }
 </style>

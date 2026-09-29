@@ -2,6 +2,7 @@ import { BATTLE } from '@/content/rules'
 import { direction, distance, offset, stepTowards, type Vec2 } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
+import { aheadOfLaneMates, holdLine } from '../services/laneOrders'
 import { isThroneNearlyDown } from '../services/TowerSafety'
 import { inReach } from './AttackSystem'
 
@@ -21,6 +22,13 @@ export class MovementSystem implements System {
 
       const slow = unit.status.slow > 0 ? 1 - unit.status.slowFactor : 1
       const step = unit.speed * slow * dt
+
+      if (unit.retreat && unit.retreat.remaining > 0 && !unit.defend) {
+        this.fallBack(unit, step)
+
+        continue
+      }
+
       const target = unit.targeting.target
       if (target && isAlive(target)) {
         if (inReach(unit, target)) {
@@ -94,7 +102,7 @@ export class MovementSystem implements System {
       return
     }
 
-    if (unit.kind === 'hero' && this.returnToLane(unit, step)) {
+    if (unit.kind === 'hero' && (this.returnToLane(unit, step) || this.keepsToOrders(unit, step))) {
       return
     }
 
@@ -144,6 +152,43 @@ export class MovementSystem implements System {
     stepTowards(unit.position, safety.isUnsafeFor(unit, probe) ? map.base(unit.team) : point, step)
 
     return true
+  }
+
+  /**
+   * Under Hold a hero stops at its line and walks back to it after a chase; under Group it waits for the
+   * lane-mate furthest behind. Returns true when the order kept the hero from walking on.
+   */
+  private keepsToOrders(unit: Unit, step: number) {
+    const { map, queries } = this.ctx
+    const line = holdLine(map, unit)
+
+    if (line !== null) {
+      const path = unit.laneFollower!.path
+      const along = map.project(path, unit.position).along
+      if (along < line) {
+        return false
+      }
+
+      if (along > line + WAYPOINT_REACHED) {
+        stepTowards(unit.position, map.pointAt(path, line), step)
+      }
+
+      return true
+    }
+
+    return aheadOfLaneMates(map, queries.heroes, unit)
+  }
+
+  /** Back along the lane the way it came, towards its allies and its own towers. */
+  private fallBack(unit: Unit, step: number) {
+    const follower = unit.laneFollower
+    if (!follower) {
+      return
+    }
+
+    const { segment } = this.ctx.map.project(follower.path, unit.position)
+    follower.waypoint = Math.min(segment + 1, follower.path.points.length - 1)
+    stepTowards(unit.position, follower.path.points[segment]!, step)
   }
 
   private rejoinLane(unit: Unit) {

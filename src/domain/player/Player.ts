@@ -1,6 +1,6 @@
 import { err, ok, type Result } from 'neverthrow'
 import { HEROES } from '@/content/heroes'
-import type { CoachLevel, ItemId, ModeId, TeamId } from '@/content/ids'
+import type { CoachLevel, ItemId, LaneId, LaneStance, ModeId, TeamId } from '@/content/ids'
 import { ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, ECONOMY, ROSTER } from '@/content/rules'
@@ -225,6 +225,17 @@ export class Player {
 
   swap(a: string, b: string): Result<void, DomainError> {
     return this.roster.swap(a, b)
+  }
+
+  /** An order for one of the mode's lanes; null leaves the lane to its heroes. */
+  setStance(lane: LaneId, stance: LaneStance | null): Result<void, DomainError> {
+    if (!this.lanes.includes(lane)) {
+      return err({ code: 'laneClosed' })
+    }
+
+    this.roster.setStance(lane, stance)
+
+    return ok(undefined)
   }
 
   prepareRound() {
