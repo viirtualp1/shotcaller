@@ -67,6 +67,20 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.1',
+    date: '2026-09-29',
+    title: {
+      en: 'Friends’ matches',
+      ru: 'Матчи друзей',
+    },
+    interface: [
+      {
+        en: 'Friend profile: a match opens right in the list, with the same breakdown as your own: heroes, lineups round by round, the fight. Who a duel was against stays hidden.',
+        ru: 'Профиль друга: матч раскрывается прямо в списке, с тем же разбором, что и свой: герои, составы по раундам, бой. С кем была дуэль, не видно.',
+      },
+    ],
+  },
+  {
     version: '8.0.2',
     date: '2026-09-29',
     title: {

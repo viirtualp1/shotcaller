@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { HERO_IDS, MODE_IDS } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
+import { matchRecordSchema } from '../persistence/profileSnapshot'
 import type { FriendRequestResult, FriendStatus, FriendsService, PresenceStatus } from '../social/friends'
 import type { Database } from './database'
 
@@ -92,6 +93,14 @@ const friendProfile = z
       twoLanes: 0,
       oneLane: 0,
     },
+  }))
+
+/** The server tells only whether it was a duel; the opponent's name stays with the friend. */
+const friendMatch = matchRecordSchema
+  .extend({ duel: z.boolean().catch(false) })
+  .transform(({ duel, ...rest }) => ({
+    ...rest,
+    duel: duel ? { opponentName: null } : null,
   }))
 
 /** Friends through the functions in `supabase/migrations`; the tables themselves are not readable directly. */
@@ -200,6 +209,21 @@ export class SupabaseFriends implements FriendsService {
     }
 
     const parsed = friendProfile.safeParse(data)
+
+    return parsed.success ? parsed.data : null
+  }
+
+  async match(coachId: string, matchId: string) {
+    const { data, error } = await this.client.rpc('coach_match', {
+      friend: coachId,
+      match_id: matchId,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    const parsed = friendMatch.safeParse(data)
 
     return parsed.success ? parsed.data : null
   }

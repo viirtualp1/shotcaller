@@ -764,6 +764,8 @@
   "coach": {
     "loading": "Загружаем профиль…",
     "unavailable": "Профиль недоступен",
+    "matchLoading": "Загружаем матч…",
+    "matchUnavailable": "Этот матч больше недоступен",
     "rating": "MMR",
     "matches": "Матчи",
     "winRate": "Доля побед",

@@ -10,6 +10,7 @@ import type {
   Presence,
   PresenceStatus,
 } from '@/application/social/friends'
+import type { MatchRecord } from '@/domain/profile/Profile'
 import { useCloudStore } from './cloud'
 import { useMatchStore } from './match'
 import { useNotificationsStore } from './notifications'
@@ -37,6 +38,8 @@ export const useFriendsStore = defineStore('friends', () => {
   const viewedId = ref<string | null>(null)
   const viewed = shallowRef<FriendProfile | null>(null)
   const viewLoading = ref(false)
+
+  let viewedMatches = new Map<string, Promise<MatchRecord | null>>()
 
   let service: FriendsService | null = null
   let presence: Presence | null = null
@@ -69,6 +72,7 @@ export const useFriendsStore = defineStore('friends', () => {
     viewedId.value = id
     viewed.value = null
     viewLoading.value = true
+    viewedMatches = new Map()
 
     const loaded = await service?.profile(id).catch(() => null)
     if (viewedId.value === id) {
@@ -81,6 +85,30 @@ export const useFriendsStore = defineStore('friends', () => {
     viewedId.value = null
     viewed.value = null
     viewLoading.value = false
+    viewedMatches = new Map()
+  }
+
+  /** A match of the open profile in full. Played matches do not change, so each is fetched once. */
+  function viewedMatch(matchId: string) {
+    const id = viewedId.value
+    if (!id || !service) {
+      return Promise.resolve(null)
+    }
+
+    const matches = viewedMatches
+    let loading = matches.get(matchId)
+
+    if (!loading) {
+      loading = service.match(id, matchId).catch(() => {
+        matches.delete(matchId)
+
+        return null
+      })
+
+      matches.set(matchId, loading)
+    }
+
+    return loading
   }
 
   function disconnect() {
@@ -265,6 +293,7 @@ export const useFriendsStore = defineStore('friends', () => {
     statusOf,
     openProfile,
     closeProfile,
+    viewedMatch,
     refresh,
     add,
     accept,

@@ -225,6 +225,10 @@ export interface Database {
         Args: { friend: string }
         Returns: Json
       }
+      coach_match: {
+        Args: { friend: string; match_id: string }
+        Returns: Json
+      }
       list_friends: {
         Args: Record<PropertyKey, never>
         Returns: {

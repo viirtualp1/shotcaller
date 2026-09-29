@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core'
-import { Ban, Crown, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
-import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
+import { Ban, ChevronDown, Crown, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
+import {
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionRoot,
+  AccordionTrigger,
+  DialogClose,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from 'reka-ui'
 import { computed, ref } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { levelFor, rankFor } from '@/domain/profile/progression'
@@ -16,6 +28,7 @@ import ModeRatings from '../modes/ModeRatings.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import { relativeTime } from '../profile/format'
 import RankMedal from '../profile/RankMedal.vue'
+import FriendMatchDetails from './FriendMatchDetails.vue'
 
 /** Removing and blocking ask once more; the question goes away on its own. */
 const CONFIRM_MS = 3000
@@ -182,42 +195,64 @@ function ask(action: 'remove' | 'block') {
           <section class="history">
             <h3 class="section-title">{{ t('coach.history') }}</h3>
 
-            <ol v-if="profile.recent.length" class="matches">
-              <li v-for="match in profile.recent" :key="match.id" class="match" :class="match.verdict">
-                <strong class="verdict">{{ t(`result.${match.verdict}`) }}</strong>
+            <AccordionRoot v-if="profile.recent.length" as="ol" type="single" collapsible class="matches">
+              <AccordionItem
+                v-for="match in profile.recent"
+                :key="match.id"
+                as="li"
+                :value="match.id"
+                class="match"
+                :class="match.verdict"
+              >
+                <AccordionHeader as="h4" class="match-head">
+                  <AccordionTrigger class="match-row" :title="t('matchDetails.open')">
+                    <strong class="verdict">{{ t(`result.${match.verdict}`) }}</strong>
 
-                <span
-                  class="delta"
-                  :class="{
-                    up: match.ratingAfter > match.ratingBefore,
-                    down: match.ratingAfter < match.ratingBefore,
-                  }"
-                >
-                  <!-- Only duels move the rating; the column stays for the row to line up. -->
-                  <template v-if="match.ratingAfter !== match.ratingBefore">
-                    {{ text.signed(match.ratingAfter - match.ratingBefore) }}
-                  </template>
-                </span>
+                    <span
+                      class="delta"
+                      :class="{
+                        up: match.ratingAfter > match.ratingBefore,
+                        down: match.ratingAfter < match.ratingBefore,
+                      }"
+                    >
+                      <!-- Only duels move the rating; the column stays for the row to line up. -->
+                      <template v-if="match.ratingAfter !== match.ratingBefore">
+                        {{ text.signed(match.ratingAfter - match.ratingBefore) }}
+                      </template>
+                    </span>
 
-                <ul class="lineup">
-                  <li v-for="(pick, i) in match.lineup" :key="i" class="hero">
-                    <Crown v-if="pick.heroId === match.mvp" :size="10" class="crown" />
-                    <HeroAvatar :hero-id="pick.heroId" :stars="pick.stars" :size="24" />
-                  </li>
-                </ul>
+                    <!-- Spans, not a list: a button holds only phrasing content. -->
+                    <span class="lineup">
+                      <span v-for="(pick, i) in match.lineup" :key="i" class="hero">
+                        <Crown v-if="pick.heroId === match.mvp" :size="10" class="crown" />
+                        <HeroAvatar :hero-id="pick.heroId" :stars="pick.stars" :size="24" />
+                      </span>
+                    </span>
 
-                <span class="meta">
-                  <span class="mode">
-                    <Swords v-if="match.duel" :size="11" :aria-label="t('matchDetails.duel')" />
-                    {{ t(`modes.${match.mode}.name`) }}
-                  </span>
-                  ·
-                  {{ t('profile.history.rounds', { won: match.roundsWon, lost: match.roundsLost }) }}
-                  ·
-                  <time :datetime="match.playedAt">{{ relativeTime(match.playedAt, settings.locale) }}</time>
-                </span>
-              </li>
-            </ol>
+                    <span class="meta">
+                      <span class="mode">
+                        <Swords v-if="match.duel" :size="11" :aria-label="t('matchDetails.duel')" />
+                        {{ t(`modes.${match.mode}.name`) }}
+                      </span>
+                      ·
+                      {{ t('profile.history.rounds', { won: match.roundsWon, lost: match.roundsLost }) }}
+                      ·
+                      <time :datetime="match.playedAt">{{
+                        relativeTime(match.playedAt, settings.locale)
+                      }}</time>
+                    </span>
+
+                    <ChevronDown :size="16" class="chevron" aria-hidden="true" />
+                  </AccordionTrigger>
+                </AccordionHeader>
+
+                <AccordionContent class="details">
+                  <div class="details-inner">
+                    <FriendMatchDetails :match-id="match.id" />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </AccordionRoot>
 
             <p v-else class="muted">{{ t('coach.noMatches') }}</p>
           </section>
@@ -361,17 +396,98 @@ function ask(action: 'remove' | 'block') {
   list-style: none;
 }
 
-/* One line per match: result, rating change, the lineup in a row, then rounds and when. */
 .match {
   --verdict: var(--chalk-faint);
-  display: grid;
-  grid-template-columns: 96px 56px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 12px;
   border-radius: 10px;
   background: linear-gradient(90deg, color-mix(in srgb, var(--verdict) 12%, transparent), transparent 45%);
   border-left: 3px solid var(--verdict);
+  transition: background-color 0.15s;
+}
+
+.match[data-state='open'] {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.match-head {
+  margin: 0;
+  font: inherit;
+}
+
+/* One line per match: result, rating change, the lineup in a row, then rounds and when. */
+.match-row {
+  display: grid;
+  grid-template-columns: 96px 56px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.match-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.match-row:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.chevron {
+  color: var(--chalk-faint);
+  transition:
+    color 0.15s,
+    rotate 0.2s ease;
+}
+
+.match-row:hover .chevron {
+  color: var(--chalk);
+}
+
+.match-row[data-state='open'] .chevron {
+  rotate: 180deg;
+}
+
+.details {
+  overflow: hidden;
+}
+
+.details[data-state='open'] {
+  animation: expand 0.2s ease-out;
+}
+
+.details[data-state='closed'] {
+  animation: collapse 0.2s ease-out;
+}
+
+.details-inner {
+  padding: 6px 12px 14px;
+}
+
+@keyframes expand {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--reka-accordion-content-height);
+  }
+}
+
+@keyframes collapse {
+  from {
+    height: var(--reka-accordion-content-height);
+  }
+
+  to {
+    height: 0;
+  }
 }
 
 .match.win {
@@ -435,12 +551,20 @@ function ask(action: 'remove' | 'block') {
 }
 
 @media (max-width: 600px) {
-  .match {
-    grid-template-columns: auto auto minmax(0, 1fr);
+  .match-row {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
   }
 
   .meta {
     grid-column: 1 / -1;
+  }
+
+  .chevron {
+    grid-area: 1 / 4;
+  }
+
+  .details-inner {
+    padding-inline: 8px;
   }
 }
 

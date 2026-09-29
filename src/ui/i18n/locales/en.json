@@ -764,6 +764,8 @@
   "coach": {
     "loading": "Loading the profile…",
     "unavailable": "The profile is not available",
+    "matchLoading": "Loading the match…",
+    "matchUnavailable": "This match is not available any more",
     "rating": "MMR",
     "matches": "Matches",
     "winRate": "Win rate",
@@ -832,7 +834,7 @@
     "duelWith": "Duel with {name}",
     "duel": "Duel",
     "final": "Final",
-    "noRounds": "Round lineups are kept for your last 5 matches played since 8.0."
+    "noRounds": "Round lineups are kept for the last 5 matches played since 8.0."
   },
   "modes": {
     "title": "Mode",

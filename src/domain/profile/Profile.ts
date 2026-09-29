@@ -145,7 +145,8 @@ export const bestMode = (ratings: ModeRatings) =>
 
 /** A match against a friend rather than the computer; only these move the rating. */
 export interface DuelInfo {
-  readonly opponentName: string
+  /** Null in a friend's match: who they played stays private. */
+  readonly opponentName: string | null
 }
 
 /** What the profile needs from a match once it is over. */
