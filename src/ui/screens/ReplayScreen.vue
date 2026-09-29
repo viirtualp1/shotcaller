@@ -48,8 +48,8 @@ const centerBox = useElementBounding(centerEl)
 const sideBox = useElementBounding(sideEl)
 const avatarSize = computed(() => (wide.value ? 30 : 22))
 
-const playing = ref(true)
-const speed = ref<Speed>(2)
+const playing = ref(false)
+const speed = ref<Speed>(1)
 const elapsed = ref(0)
 const over = ref(false)
 const meter = ref<MeterStat>('damageDealt')
@@ -174,7 +174,6 @@ function loadRound(round: number) {
   session = new BattleSession(new BattleSimulation(built.setup))
   elapsed.value = 0
   over.value = false
-  playing.value = true
   structures.value = tapeStructures(round)
   renderer.value?.showBattle(session.simulation)
   refreshLive()
@@ -209,6 +208,7 @@ function tick(seconds: number) {
 
 function toggle() {
   if (over.value) {
+    playing.value = true
     loadRound(replay.round)
 
     return

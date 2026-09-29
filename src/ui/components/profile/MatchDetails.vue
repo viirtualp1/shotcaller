@@ -54,7 +54,7 @@ const tab = ref('heroes')
 const sort = ref<HeroStatKey>('damageDealt')
 
 /** A round picked to look at; null shows the lineups the match ended with. */
-const round = defineModel<number | null>('round', { default: null })
+const round = ref<number | null>(null)
 
 const roundLineups = computed(() => props.match.roundLineups)
 const availability = computed(() => replayAvailability(props.match))
@@ -182,7 +182,7 @@ const sides = computed(() => {
 })
 
 function watchRound() {
-  replay.open(props.match, round.value ?? props.match.replays.length)
+  replay.open(props.match)
 }
 
 const total = (lines: readonly MatchHeroLine[], pick: (line: MatchHeroLine) => number) =>

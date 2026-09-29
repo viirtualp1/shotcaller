@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Play, X } from 'lucide-vue-next'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { replayAvailability } from '@/domain/replay/setup'
 import { useGameText } from '../../composables/useGameText'
@@ -17,7 +17,6 @@ const settings = useSettingsStore()
 const replay = useReplayStore()
 const text = useGameText()
 const { t } = text
-const round = ref<number | null>(null)
 
 const open = computed({
   get: () => match.value !== null,
@@ -66,12 +65,8 @@ function watchReplay() {
     return
   }
 
-  replay.open(record, round.value ?? record.replays.length)
+  replay.open(record)
 }
-
-watch(match, () => {
-  round.value = null
-})
 </script>
 
 <template>
@@ -116,7 +111,7 @@ watch(match, () => {
           </DialogClose>
         </header>
 
-        <MatchDetails :key="match.id" v-model:round="round" hide-watch :match="match" />
+        <MatchDetails :key="match.id" hide-watch :match="match" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>

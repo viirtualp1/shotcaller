@@ -7,9 +7,10 @@ export const useReplayStore = defineStore('replay', () => {
   const match = shallowRef<MatchRecord | null>(null)
   const round = ref(1)
 
-  function open(record: MatchRecord, at: number) {
+  function open(record: MatchRecord) {
     match.value = record
-    round.value = record.replays[at - 1] ? at : 1
+    const first = record.replays.findIndex((replay) => replay)
+    round.value = first === -1 ? 1 : first + 1
   }
 
   function close() {
