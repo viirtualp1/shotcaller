@@ -14,6 +14,7 @@ import { computed, ref, watch } from 'vue'
 import { accountProblem, type AccountProblem } from '@/application/cloud/accountProblem'
 import type { AccountMode } from '@/application/cloud/CloudStore'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useCloudStore } from '../../stores/cloud'
 
 /** Supabase lets one address get a new code about once a minute. */
@@ -21,6 +22,8 @@ const RESEND_AFTER_S = 60
 
 const cloud = useCloudStore()
 const { t } = useGameText()
+
+useModal(() => cloud.signInOpen)
 
 const step = ref<'email' | 'code'>('email')
 const email = ref('')

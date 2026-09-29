@@ -8,19 +8,12 @@ import { shallowRef } from 'vue'
 export function useHashPage<T>(parse: (hash: string) => T | null, format: (state: T) => string) {
   const read = () => parse(globalThis.location?.hash ?? '')
   const state = shallowRef<T | null>(read())
-  /** Set when the page was opened from inside the game, so closing it can step back in history. */
-  let pushed = false
 
   useEventListener(globalThis, 'hashchange', () => {
     state.value = read()
-
-    if (state.value === null) {
-      pushed = false
-    }
   })
 
   function open(next: T) {
-    pushed = true
     globalThis.location.hash = format(next)
   }
 
@@ -29,18 +22,13 @@ export function useHashPage<T>(parse: (hash: string) => T | null, format: (state
     state.value = next
   }
 
+  /** Goes to the main page the way a link does: a new history entry, so the back button comes here again. */
   function close() {
     if (state.value === null) {
       return
     }
 
-    if (pushed) {
-      globalThis.history.back()
-
-      return
-    }
-
-    globalThis.history.replaceState(null, '', globalThis.location.pathname + globalThis.location.search)
+    globalThis.history.pushState(null, '', globalThis.location.pathname + globalThis.location.search)
     state.value = null
   }
 

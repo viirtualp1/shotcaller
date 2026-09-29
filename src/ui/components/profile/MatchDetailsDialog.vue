@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { replayAvailability } from '@/domain/replay/setup'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { vOpticalAlign } from '../../directives/opticalAlign'
 import { useReplayStore } from '../../stores/replay'
 import { useSettingsStore } from '../../stores/settings'
@@ -27,6 +28,8 @@ const open = computed({
     }
   },
 })
+
+useModal(open)
 
 const reason = computed(() => {
   const record = match.value

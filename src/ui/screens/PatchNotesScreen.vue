@@ -23,6 +23,7 @@ import ItemIcon from '../components/common/ItemIcon.vue'
 import FeatureCard from '../components/patchNotes/FeatureCard.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
+import PatchPager from '../components/patchNotes/PatchPager.vue'
 import PatchPicker from '../components/patchNotes/PatchPicker.vue'
 import { useGameText } from '../composables/useGameText'
 import { vOpticalAlign } from '../directives/opticalAlign'
@@ -58,9 +59,9 @@ watch(
   <div class="patch-notes">
     <header class="topbar">
       <div class="bar">
-        <button type="button" class="btn" @click="notes.close()">
+        <a href="./" class="btn" @click.prevent="notes.close()">
           <ArrowLeft :size="16" /> {{ t('patchNotes.back') }}
-        </button>
+        </a>
 
         <PatchPicker />
       </div>
@@ -222,6 +223,8 @@ watch(
             <li v-for="(line, i) in patch.fixes" :key="i"><NoteLine :text="line" /></li>
           </ul>
         </section>
+
+        <PatchPager :patch="patch" class="pager" />
       </main>
     </Transition>
   </div>
@@ -300,6 +303,13 @@ watch(
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--chalk-faint);
+}
+
+/* After every change, set apart like the pages of a book. */
+.pager {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--edge);
 }
 
 .features {

@@ -56,12 +56,26 @@ const LANES_LEVELS: readonly LevelRules[] = [
 /* One fight needs a team from the start: three heroes at level 1, and the top comes two levels sooner. */
 const BRIDGE_LEVELS: readonly LevelRules[] = LANES_LEVELS.slice(1)
 
+/* Three lanes get a sixth hero at the top, two a lane. */
+const RIFT_LEVELS: readonly LevelRules[] = [
+  ...LANES_LEVELS.slice(0, -1),
+  {
+    ...LANES_LEVELS.at(-1)!,
+    xpToNext: 20,
+  },
+  {
+    board: 6,
+    odds: [0.2, 0.4, 0.4],
+    xpToNext: Infinity,
+  },
+]
+
 export const MODES: Readonly<Record<ModeId, ModeDefinition>> = {
   threeLanes: {
     id: 'threeLanes',
     lanes: ['top', 'mid', 'bot'],
     towers: ['top', 'mid', 'bot'],
-    levels: LANES_LEVELS,
+    levels: RIFT_LEVELS,
     maxRounds: 20,
     baseIncome: 5,
     killScore: 0,

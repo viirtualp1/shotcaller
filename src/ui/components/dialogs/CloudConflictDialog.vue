@@ -12,6 +12,7 @@ import { computed } from 'vue'
 import { avatarOf, type Profile } from '@/domain/profile/Profile'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useCloudStore } from '../../stores/cloud'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import RankMedal from '../profile/RankMedal.vue'
@@ -27,6 +28,8 @@ const open = computed({
     }
   },
 })
+
+useModal(open)
 
 const summary = (profile: Profile) => ({
   name: profile.name || t('profile.defaultName'),

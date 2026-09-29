@@ -19,6 +19,7 @@ import { HERO_IDS } from '@/content/ids'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useFriendStatus } from '../../composables/useFriendStatus'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
@@ -66,6 +67,8 @@ const open = computed({
     }
   },
 })
+
+useModal(open)
 
 const entry = computed(() => friends.friends.find((f) => f.id === friends.viewedId) ?? null)
 const profile = computed(() => friends.viewed)

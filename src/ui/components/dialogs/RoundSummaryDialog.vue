@@ -16,6 +16,7 @@ import { MODES } from '@/content/modes'
 import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
 import { starsLabel, useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import AnimatedNumber from '../common/AnimatedNumber.vue'
@@ -45,6 +46,8 @@ const open = computed({
     }
   },
 })
+
+useModal(open)
 
 const verdict = computed(() => {
   const winner = summary.value?.winner

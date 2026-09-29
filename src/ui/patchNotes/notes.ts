@@ -67,6 +67,32 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.4',
+    date: '2026-09-29',
+    title: {
+      en: 'Turning pages',
+      ru: 'Листаем патчи',
+    },
+    interface: [
+      {
+        en: 'Patch notes: the previous and the next patch at the bottom of the page. The latest one sums up the releases before it.',
+        ru: 'Патчноуты: внизу страницы предыдущий и следующий патч. У последнего — коротко о прошлых релизах.',
+      },
+      {
+        en: 'Patch notes and profile: **Main menu** always leads to the main screen; the browser’s back button returns to the page.',
+        ru: 'Патчноуты и профиль: **Главное меню** всегда ведёт на главный экран, кнопка «Назад» браузера возвращает на страницу.',
+      },
+      {
+        en: 'Start screen: the next mode fades in over the one before it.',
+        ru: 'Главный экран: следующий режим плавно проявляется поверх предыдущего.',
+      },
+      {
+        en: 'Friends and chat: the window closes when any other window opens.',
+        ru: 'Друзья и чат: окно закрывается, когда открывается любое другое окно.',
+      },
+    ],
+  },
+  {
     version: '8.3',
     date: '2026-09-29',
     title: {
@@ -1603,6 +1629,23 @@ export const PATCH_NOTES: readonly PatchNote[] = [
 ]
 
 export const LATEST_PATCH = PATCH_NOTES[0]!
+
+/** How many earlier releases the latest patch sums up. */
+const SUMMED_RELEASES = 3
+
+/** Releases before the latest patch, newest first; fixes on top of a release are left out. */
+const EARLIER_RELEASES = PATCH_NOTES.slice(1).filter((patch) => patch.version.split('.').length === 2)
+
+const titlesIn = (locale: Locale) =>
+  EARLIER_RELEASES.slice(0, SUMMED_RELEASES)
+    .map((patch) => patch.title[locale])
+    .join(' · ')
+
+/** What the last few releases brought, by their titles. */
+export const EARLIER_SUMMARY: NoteText = {
+  ru: titlesIn('ru'),
+  en: titlesIn('en'),
+}
 
 /** How long after its release date a patch is advertised as new. */
 const FRESH_FOR_MS = 3 * 24 * 60 * 60 * 1000

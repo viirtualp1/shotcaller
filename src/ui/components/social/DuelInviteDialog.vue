@@ -4,6 +4,7 @@ import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } f
 import { computed } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useDuelStore } from '../../stores/duel'
 import { useMatchStore } from '../../stores/match'
 import ModeMap from '../modes/ModeMap.vue'
@@ -18,6 +19,8 @@ const invite = computed(() => duel.incoming)
 const name = computed(() => invite.value?.opponent.name || t('profile.defaultName'))
 const hero = computed(() => HERO_IDS.find((id) => id === invite.value?.opponent.avatar) ?? 'spearman')
 /** Accepting leaves a match against the computer, which stays saved. */
+useModal(() => invite.value !== null)
+
 const leavesSolo = computed(() => match.view !== null && !match.isDuel)
 </script>
 

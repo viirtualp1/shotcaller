@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useMenuStore } from '../../stores/menu'
 import SettingsFields from '../settings/SettingsFields.vue'
 
 const menu = useMenuStore()
 const { t } = useGameText()
+
+useModal(() => menu.settings)
 </script>
 
 <template>

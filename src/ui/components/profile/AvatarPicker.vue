@@ -4,6 +4,7 @@ import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, Di
 import { HERO_IDS, type HeroId } from '@/content/ids'
 import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useProfileStore } from '../../stores/profile'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
@@ -12,6 +13,8 @@ const profile = useProfileStore()
 const photo = useAccountPhoto()
 const text = useGameText()
 const { t } = text
+
+useModal(open)
 
 function pick(heroId: HeroId | null) {
   photo.use(false)

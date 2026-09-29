@@ -12,6 +12,7 @@ import {
 import { computed, watch } from 'vue'
 import { TUTORIAL_MODE } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { useMenuStore } from '../../stores/menu'
 import { useSettingsStore } from '../../stores/settings'
@@ -26,6 +27,8 @@ const tour = useTutorial()
 const { t } = useGameText()
 
 /** Offered until the tutorial is done, and only on its mode: another mode picked means the coach knows the way. */
+useModal(() => menu.newMatch)
+
 const withTutorial = computed({
   get: () => settings.tutorialWanted && settings.mode === TUTORIAL_MODE,
   set: (value: boolean) => {

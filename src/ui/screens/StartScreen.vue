@@ -25,11 +25,35 @@ const settings = useSettingsStore()
 const duel = useDuelStore()
 const { t } = useGameText()
 
-const demoMode = ref<ModeId>(MODE_IDS[0])
+interface DemoLayer {
+  readonly id: number
+  readonly mode: ModeId
+}
+
+/** The board on show, and for a moment the next mode's board fading in over it. */
+const demos = ref<DemoLayer[]>([
+  {
+    id: 0,
+    mode: MODE_IDS[0],
+  },
+])
 
 useIntervalFn(() => {
-  demoMode.value = MODE_IDS[(MODE_IDS.indexOf(demoMode.value) + 1) % MODE_IDS.length]!
+  const current = demos.value.at(-1)!
+
+  demos.value = [
+    current,
+    {
+      id: current.id + 1,
+      mode: MODE_IDS[(MODE_IDS.indexOf(current.mode) + 1) % MODE_IDS.length]!,
+    },
+  ]
 }, DEMO_MODE_MS)
+
+/** The new board covers the old one now, so the old one can go. */
+function demoShown(id: number) {
+  demos.value = demos.value.filter((layer) => layer.id >= id)
+}
 
 const rival = computed(() => duel.resumable?.opponent.name || t('profile.defaultName'))
 /** Giving up asks once more; the question goes away on its own. */
@@ -105,9 +129,12 @@ function forfeit() {
 
     <section class="preview">
       <BoardFrame>
-        <Transition name="fade" mode="out-in">
-          <DemoBattle :key="`${settings.locale}:${demoMode}`" :mode="demoMode" />
-        </Transition>
+        <DemoBattle
+          v-for="layer in demos"
+          :key="`${settings.locale}:${layer.id}`"
+          :mode="layer.mode"
+          @shown="demoShown(layer.id)"
+        />
       </BoardFrame>
     </section>
 

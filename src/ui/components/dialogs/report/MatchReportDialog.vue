@@ -16,6 +16,7 @@ import type { TeamId } from '@/content/ids'
 import { structureSlotsOf } from '@/domain/match/structures'
 import type { TeamReportView } from '@/application/views'
 import { useGameText } from '../../../composables/useGameText'
+import { useModal } from '../../../composables/useModal'
 import { vOpticalAlign } from '../../../directives/opticalAlign'
 import { useMatchStore } from '../../../stores/match'
 import HeroAvatar from '../../common/HeroAvatar.vue'
@@ -33,6 +34,8 @@ const report = computed(() => store.view?.report ?? null)
 const open = computed(() => store.phase === 'finished' && result.value !== null && report.value !== null)
 const tab = ref('heroes')
 const sort = ref<HeroStatKey>('damageDealt')
+
+useModal(open)
 
 const verdict = computed(() =>
   result.value?.winner === 0 ? 'win' : result.value?.winner === 1 ? 'loss' : 'draw',

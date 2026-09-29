@@ -101,8 +101,10 @@ button {
   border: 1px solid var(--edge-strong);
   border-radius: 8px;
   background: var(--panel-raised);
+  color: inherit;
   font-weight: 600;
   font-size: 13px;
+  text-decoration: none;
   cursor: pointer;
   transition:
     background 0.15s,

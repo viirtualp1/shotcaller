@@ -5,6 +5,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
+import { useModalsStore } from '../../stores/modals'
 import { useSystemNotificationsStore } from '../../stores/systemNotifications'
 import ChatPanel from './ChatPanel.vue'
 import FriendsList from './FriendsList.vue'
@@ -16,6 +17,7 @@ import FriendsList from './FriendsList.vue'
 const friends = useFriendsStore()
 const chat = useChatStore()
 const duel = useDuelStore()
+const modals = useModalsStore()
 const system = useSystemNotificationsStore()
 const { t } = useGameText()
 
@@ -63,11 +65,11 @@ watch(
   },
 )
 
-/* A profile takes the stage; its "message" button brings the chat back. */
+/* Any dialog takes the stage, a friend's profile too; its "message" button brings the chat back. */
 watch(
-  () => friends.viewedId,
-  (id) => {
-    if (id) {
+  () => modals.anyOpen,
+  (open) => {
+    if (open) {
       close()
     }
   },

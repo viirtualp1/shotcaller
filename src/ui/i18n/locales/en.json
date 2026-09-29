@@ -473,6 +473,10 @@
     "latest": "Latest update",
     "new": "New",
     "read": "Read the patch notes",
+    "earlier": "In earlier patches",
+    "older": "Previous patch",
+    "newer": "Next patch",
+    "openPatch": "Open patch {version}",
     "sections": {
       "general": "General updates",
       "items": "Item updates",

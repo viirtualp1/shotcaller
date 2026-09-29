@@ -105,9 +105,9 @@ function play() {
   <div class="profile-page">
     <header class="topbar">
       <div class="bar">
-        <button type="button" class="btn ghost" @click="profile.close()">
+        <a href="./" class="btn ghost" @click.prevent="profile.close()">
           <ArrowLeft :size="16" /> {{ t('profile.back') }}
-        </button>
+        </a>
       </div>
     </header>
 

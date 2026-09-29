@@ -7,12 +7,16 @@ import { demoBattle } from '@/domain/demo/demoBattle'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
 import { useBoardRenderer } from '../../composables/useBoardRenderer'
 
-/** Two bots fighting on the mode's map, for show. When a fight ends, a new one starts. */
+/**
+ * Two bots fighting on the mode's map, for show. When a fight ends, a new one starts.
+ * The board fades in once it is drawn and says so, so the one underneath can go.
+ */
 const props = defineProps<{ mode: ModeId }>()
+const emit = defineEmits<{ shown: [] }>()
 
 const host = ref<HTMLElement | null>(null)
 const renderer = useBoardRenderer(host, 0, props.mode)
-/* With reduced motion the fight is only set up, never played. */
+/* With reduced motion the fight is only set up, never played, and the board shows at once. */
 const still = useMediaQuery('(prefers-reduced-motion: reduce)')
 
 let session: BattleSession | null = null
@@ -28,7 +32,13 @@ function nextFight() {
   board.showBattle(session.simulation)
 }
 
-watch(renderer, nextFight)
+watch(renderer, () => {
+  nextFight()
+
+  if (still.value) {
+    emit('shown')
+  }
+})
 
 useRafFn(({ delta }) => {
   if (!session || still.value) {
@@ -46,13 +56,25 @@ onBeforeUnmount(() => session?.dispose())
 </script>
 
 <template>
-  <div ref="host" class="demo" aria-hidden="true" />
+  <div
+    ref="host"
+    class="demo"
+    :class="{ ready: renderer }"
+    aria-hidden="true"
+    @transitionend.self="emit('shown')"
+  />
 </template>
 
 <style scoped>
 .demo {
   position: absolute;
   inset: 0;
+  opacity: 0;
+  transition: opacity 0.9s ease;
   pointer-events: none;
+}
+
+.demo.ready {
+  opacity: 1;
 }
 </style>

@@ -4,6 +4,7 @@ import { CircleHelp, Flag, GraduationCap, LogOut, Play, RotateCcw, Settings } fr
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useDuelStore } from '../../stores/duel'
 import { useMatchStore } from '../../stores/match'
 import { useMenuStore } from '../../stores/menu'
@@ -13,6 +14,8 @@ const store = useMatchStore()
 const duel = useDuelStore()
 const { t } = useGameText()
 /** Giving up a duel asks once more; the question goes away on its own. */
+useModal(() => menu.gameMenu)
+
 const confirmingForfeit = ref(false)
 
 const { start: expireForfeit } = useTimeoutFn(() => (confirmingForfeit.value = false), 3000, {

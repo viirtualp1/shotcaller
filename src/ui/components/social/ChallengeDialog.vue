@@ -4,6 +4,7 @@ import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } f
 import { computed, ref, watch } from 'vue'
 import type { ModeId } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
 import { useSettingsStore } from '../../stores/settings'
@@ -34,6 +35,8 @@ const open = computed({
     }
   },
 })
+
+useModal(open)
 
 const name = computed(
   () => friends.friends.find((f) => f.id === duel.challenging)?.name || t('profile.defaultName'),

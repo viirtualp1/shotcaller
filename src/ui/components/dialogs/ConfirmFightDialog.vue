@@ -11,12 +11,15 @@ import {
   AlertDialogTitle,
 } from 'reka-ui'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { useMenuStore } from '../../stores/menu'
 
 const match = useMatchStore()
 const menu = useMenuStore()
 const { t } = useGameText()
+
+useModal(() => menu.confirmFight)
 </script>
 
 <template>

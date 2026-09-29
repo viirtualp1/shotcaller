@@ -27,6 +27,7 @@ import { ECONOMY, MATCH, MERGE_COUNT, STAR_POWER } from '@/content/rules'
 import { SYNERGY_BY_ID } from '@/content/synergies'
 import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
+import { useModal } from '../../composables/useModal'
 import { ROLE_ICONS } from '../../icons'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ItemIcon from '../common/ItemIcon.vue'
@@ -36,6 +37,8 @@ const open = defineModel<boolean>('open', { required: true })
 const text = useGameText()
 const { t } = text
 const store = useMatchStore()
+
+useModal(open)
 
 /** Round limit and income follow the mode of the match being played. */
 const mode = computed(() => MODES[store.view?.mode ?? DEFAULT_MODE])
