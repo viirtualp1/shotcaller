@@ -27,6 +27,14 @@ export interface MapDefinition {
   readonly river: readonly Point[] | null
   /** Where heal relics appear; empty on maps without them. */
   readonly relics: readonly Point[]
+  /**
+   * Solid deck of a bridge map. Units stay on it: the lane is `width` across, with a round platform
+   * around each base. A shove cannot carry a body past the sides.
+   */
+  readonly deck?: {
+    readonly width: number
+    readonly platform: number
+  }
   readonly laneLabels: Readonly<Partial<Record<LaneId, Point>>>
   readonly baseLabels: Readonly<Record<TeamId, Point>>
 }
@@ -177,6 +185,10 @@ const ABYSS: MapDefinition = {
     [440, 560],
     [560, 440],
   ],
+  deck: {
+    width: 124,
+    platform: 170,
+  },
   laneLabels: {
     mid: [405, 525],
   },

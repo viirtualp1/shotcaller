@@ -5,6 +5,10 @@ import type { Locale } from '../i18n'
  * Patch notes, newest first. They are history, so numbers are written out by hand
  * instead of read from content: a later balance change must not rewrite an old patch.
  * Every line states a change; what stayed the same is left out.
+ * A line is what the player gets, not how the screen is built. Never mention which
+ * device, panel or tab holds a change, or how a phone differs from a desktop.
+ * "On phones and tablets it is a third tab of that panel" is the sort of line that
+ * does not belong: it is a detail, and the player does not care.
  * `**text**` marks a value to highlight.
  */
 export type NoteText = Readonly<Record<Locale, string>>
@@ -75,8 +79,12 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     },
     interface: [
       {
-        en: 'Battle: damage taken has its own meter under damage and healing. On phones and tablets it is a third tab of that panel.',
-        ru: 'Бой: полученный урон — отдельной панелью под уроном и лечением. На телефонах и планшетах — третья вкладка той же панели.',
+        en: 'Battle and the round summary: damage taken sits beside damage and healing.',
+        ru: 'Бой и итог раунда: полученный урон стоит рядом с уроном и лечением.',
+      },
+      {
+        en: 'Destroyed towers are no longer labeled under the top bar.',
+        ru: 'Снесённые вышки больше не подписаны под верхней панелью.',
       },
     ],
   },

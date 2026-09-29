@@ -222,7 +222,7 @@ watch(
         <FightButton class="fight-dock" />
 
         <Transition name="swap" mode="out-in">
-          <BattlePanel v-if="store.phase === 'battle'" key="battle" :tabbed="touch" />
+          <BattlePanel v-if="store.phase === 'battle'" key="battle" />
 
           <div v-else key="planning" class="planning" :class="{ split: store.view?.summary }">
             <ShopPanel />
@@ -309,6 +309,12 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* The card shadow falls into the gap and reads as a strip between panels. */
+.hud-left :deep(.hud-panel),
+.hud-right :deep(.hud-panel) {
+  box-shadow: none;
 }
 
 .hud-bottom {

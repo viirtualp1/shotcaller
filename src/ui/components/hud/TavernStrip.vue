@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { TowerControl } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { TEAM_IDS } from '@/content/ids'
-import { MODES } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -14,17 +12,14 @@ const { t } = text
 /** Dota-style top bar: fallen heroes wait out their respawn under their team's side of the scoreboard. */
 const sides = computed(() => {
   const heroes = [...(store.live?.heroes.values() ?? [])].filter((h) => h.dead)
-  const structures = store.live?.structures ?? store.view!.structures
-  const towers = MODES[store.view!.mode].towers
 
   return TEAM_IDS.map((team) => ({
     team,
     fallen: heroes.filter((h) => h.team === team).sort((a, b) => a.respawnIn - b.respawnIn),
-    towersDown: towers.filter((slot) => structures[team][slot] <= 0),
   }))
 })
 
-const visible = computed(() => sides.value.some((side) => side.fallen.length || side.towersDown.length))
+const visible = computed(() => sides.value.some((side) => side.fallen.length))
 </script>
 
 <template>
@@ -46,13 +41,6 @@ const visible = computed(() => sides.value.some((side) => side.fallen.length || 
             <span class="name">{{ text.heroName(hero.heroId) }}</span>
           </li>
         </TransitionGroup>
-
-        <ul v-if="side.towersDown.length" class="towers">
-          <li v-for="lane in side.towersDown" :key="lane" class="tower anim-pop">
-            <TowerControl :size="12" />
-            {{ text.slotName(lane) }}
-          </li>
-        </ul>
       </div>
     </div>
   </Transition>
@@ -79,8 +67,7 @@ const visible = computed(() => sides.value.some((side) => side.fallen.length || 
   align-items: flex-end;
 }
 
-.fallen,
-.towers {
+.fallen {
   display: flex;
   gap: 8px;
   margin: 0;
@@ -88,8 +75,7 @@ const visible = computed(() => sides.value.some((side) => side.fallen.length || 
   list-style: none;
 }
 
-.theirs .fallen,
-.theirs .towers {
+.theirs .fallen {
   flex-direction: row-reverse;
 }
 
@@ -136,19 +122,5 @@ const visible = computed(() => sides.value.some((side) => side.fallen.length || 
   font-size: 10.5px;
   font-weight: 600;
   color: var(--chalk-dim);
-}
-
-.tower {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(17, 24, 21, 0.9);
-  border: 1px solid color-mix(in srgb, var(--team) 55%, transparent);
-  color: var(--team);
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: line-through;
 }
 </style>

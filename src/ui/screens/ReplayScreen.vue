@@ -27,13 +27,13 @@ import HudPanel from '../components/common/HudPanel.vue'
 import ReplayHeroCard from '../components/replay/ReplayHeroCard.vue'
 import ReplayHeroTooltip from '../components/replay/ReplayHeroTooltip.vue'
 import HeroAvatar from '../components/common/HeroAvatar.vue'
+import type { MeterStat } from '../components/battle/DamageMeter.vue'
 import { useReplayStore } from '../stores/replay'
 
 const SPEEDS = [1, 2, 4] as const
 type Speed = (typeof SPEEDS)[number]
-type MeterStat = 'damageDealt' | 'healing'
 
-const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing']
+const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
 const LIVE_REFRESH_SECONDS = 0.15
 
 const props = defineProps<{
@@ -97,7 +97,7 @@ const meterRows = computed(() => {
         value: status?.[meter.value] ?? 0,
       }
     })
-    .filter((row) => meter.value === 'damageDealt' || row.value > 0)
+    .filter((row) => meter.value !== 'healing' || row.value > 0)
     .sort((a, b) => b.value - a.value)
 
   const top = Math.max(1, rows[0]?.value ?? 1)
@@ -414,7 +414,7 @@ onBeforeUnmount(() => {
           </li>
         </ol>
 
-        <p v-else class="empty">{{ t('battle.noHealing') }}</p>
+        <p v-else-if="meter === 'healing'" class="empty">{{ t('battle.noHealing') }}</p>
       </HudPanel>
     </aside>
   </div>
@@ -641,6 +641,11 @@ onBeforeUnmount(() => {
 
 .healing .track i {
   background: color-mix(in srgb, var(--heal) 40%, transparent);
+  box-shadow: inset 3px 0 0 var(--team);
+}
+
+.damageReceived .track i {
+  background: color-mix(in srgb, var(--theirs) 35%, transparent);
   box-shadow: inset 3px 0 0 var(--team);
 }
 

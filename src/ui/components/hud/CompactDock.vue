@@ -48,7 +48,7 @@ const tabs = computed(() => [
           <ItemCard docked />
         </div>
 
-        <BattlePanel v-else-if="battling" key="battle" tabbed />
+        <BattlePanel v-else-if="battling" key="battle" />
         <ShopPanel v-else-if="dock.tab === 'shop'" key="shop" />
 
         <div v-else-if="dock.tab === 'heroes'" key="heroes" class="stack">

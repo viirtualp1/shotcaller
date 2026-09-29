@@ -24,7 +24,7 @@ import type { MeterStat } from '../battle/DamageMeter.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
 const INCOME_STEP_MS = 220
-const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing']
+const METER_STATS: readonly MeterStat[] = ['damageDealt', 'healing', 'damageReceived']
 
 const store = useMatchStore()
 const timer = usePlanningTimerStore()
@@ -111,12 +111,22 @@ const meterModel = computed({
   },
 })
 
+const valueTitle = computed(() =>
+  t(
+    meter.value === 'healing'
+      ? 'summary.heroHealing'
+      : meter.value === 'damageReceived'
+        ? 'summary.heroTaken'
+        : 'summary.heroDamage',
+  ),
+)
+
 /** Both teams, by the stat picked; the healing list has only those who healed. */
 const heroRows = computed(() => {
   const stat = meter.value
 
   const heroes = (summary.value?.heroes ?? [])
-    .filter((hero) => stat === 'damageDealt' || hero.healing > 0)
+    .filter((hero) => stat !== 'healing' || hero.healing > 0)
     .sort((a, b) => b[stat] - a[stat])
 
   const top = Math.max(1, heroes[0]?.[stat] ?? 1)
@@ -224,7 +234,7 @@ const incomeRows = computed(() => {
             </ToggleGroupRoot>
           </header>
 
-          <p v-if="!heroRows.length" class="none">{{ t('summary.noHealing') }}</p>
+          <p v-if="meter === 'healing' && !heroRows.length" class="none">{{ t('summary.noHealing') }}</p>
 
           <ol v-else class="heroes" :class="meter">
             <li
@@ -243,7 +253,7 @@ const incomeRows = computed(() => {
 
               <span
                 class="num value"
-                :title="meter === 'healing' ? t('summary.heroHealing') : t('summary.heroDamage')"
+                :title="valueTitle"
               >
                 {{ meter === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}
               </span>
@@ -505,6 +515,11 @@ section {
 
 .heroes.healing .bar i {
   background: color-mix(in srgb, var(--heal) 38%, transparent);
+}
+
+.heroes.damageReceived .bar i {
+  background: color-mix(in srgb, var(--theirs) 35%, transparent);
+  box-shadow: inset 3px 0 0 var(--team);
 }
 
 .heroes-head {

@@ -11,8 +11,6 @@ const WORLD = BATTLE.worldSize
 
 const TREE_ATTEMPTS = 1400
 const TREE_LIMIT = 170
-const BRIDGE_WIDTH = 124
-const BASE_PLATFORM = 170
 
 const toVec = ([x, y]: Point) => ({
   x,
@@ -162,6 +160,11 @@ function paintLanes(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
 
 /** Howling Abyss: a stone bridge over the dark, with a platform around each base. */
 function paintAbyss(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
+  const deck = map.definition.deck
+  if (!deck) {
+    return
+  }
+
   const gradient = ctx.createRadialGradient(WORLD / 2, WORLD / 2, 80, WORLD / 2, WORLD / 2, WORLD * 0.75)
   gradient.addColorStop(0, cssColor(PALETTE.abyssCenter))
   gradient.addColorStop(1, cssColor(PALETTE.abyssEdge))
@@ -183,7 +186,7 @@ function paintAbyss(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
   for (const team of TEAM_IDS) {
     const base = map.base(team)
     ctx.beginPath()
-    ctx.arc(base.x, base.y, BASE_PLATFORM, 0, Math.PI * 2)
+    ctx.arc(base.x, base.y, deck.platform, 0, Math.PI * 2)
     ctx.fillStyle = cssColor(PALETTE.bridge)
     ctx.fill()
     ctx.strokeStyle = cssColor(PALETTE.chalk, 0.18)
@@ -197,14 +200,14 @@ function paintAbyss(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
     const points = map.path(0, lane).points
     strokePath(ctx, points)
     ctx.strokeStyle = cssColor(PALETTE.bridge)
-    ctx.lineWidth = BRIDGE_WIDTH
+    ctx.lineWidth = deck.width
     ctx.stroke()
 
     const path = map.path(0, lane)
     for (let along = 0; along < path.length; along += 26) {
       const at = map.pointAt(path, along)
       const tangent = map.tangentAt(path, along)
-      const half = BRIDGE_WIDTH / 2 - 6
+      const half = deck.width / 2 - 6
       ctx.beginPath()
       ctx.moveTo(at.x - tangent.y * half, at.y + tangent.x * half)
       ctx.lineTo(at.x + tangent.y * half, at.y - tangent.x * half)
@@ -219,8 +222,8 @@ function paintAbyss(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
       for (let along = 0; along <= path.length; along += 20) {
         const at = map.pointAt(path, along)
         const tangent = map.tangentAt(path, along)
-        const x = at.x - tangent.y * side * (BRIDGE_WIDTH / 2)
-        const y = at.y + tangent.x * side * (BRIDGE_WIDTH / 2)
+        const x = at.x - tangent.y * side * (deck.width / 2)
+        const y = at.y + tangent.x * side * (deck.width / 2)
         if (along) {
           ctx.lineTo(x, y)
         } else {
