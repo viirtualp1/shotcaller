@@ -11,6 +11,7 @@ const { t } = useGameText()
 
 <template>
   <PatchCard
+    class="latest"
     :href="`#/patches/${LATEST_PATCH.version}`"
     :icon="ScrollText"
     :eyebrow="`${t('patchNotes.latest')} · ${t('patchNotes.patch', { version: LATEST_PATCH.version })}`"
