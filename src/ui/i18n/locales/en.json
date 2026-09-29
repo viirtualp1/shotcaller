@@ -239,6 +239,7 @@
     "next": "Back to the shop",
     "nextIn": "Back to the shop · {s} s",
     "structures": "Towers and throne after the round",
+    "lastRound": "Round {round}",
     "heroes": "Hero damage and healing",
     "heroDamage": "Damage",
     "heroHealing": "Healing",

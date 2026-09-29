@@ -34,7 +34,7 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 
 <template>
   <HudPanel class="shop" data-drop="sell">
-    <EconomyBar />
+    <EconomyBar class="economy" />
 
     <TabsRoot v-model="tab" class="tabs">
       <TabsList class="tab-list" :aria-label="t('shop.heroes')">
@@ -85,11 +85,18 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 <style scoped>
 .shop {
   position: relative;
+  flex: 1 1 auto;
   gap: 10px;
+  min-height: 0;
+}
+
+.economy {
+  flex: none;
 }
 
 .tabs {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 8px;
   min-height: 0;
@@ -129,6 +136,7 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 }
 
 .list {
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
 }
@@ -136,7 +144,8 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 .offers {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding: 4px 0 8px 4px;
 }
 
 .sold {

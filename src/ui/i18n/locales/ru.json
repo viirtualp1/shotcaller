@@ -239,6 +239,7 @@
     "next": "К закупке",
     "nextIn": "К закупке · {s} с",
     "structures": "Вышки и трон после раунда",
+    "lastRound": "Раунд {round}",
     "heroes": "Урон и лечение героев",
     "heroDamage": "Урон",
     "heroHealing": "Лечение",

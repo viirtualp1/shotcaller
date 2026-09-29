@@ -14,6 +14,7 @@ import type { Insets } from '@/rendering/BoardRenderer'
 import { fitMap, WHOLE_BOARD } from '@/rendering/fitMap'
 import { laneMapFor } from '@/simulation/map/LaneMap'
 import BattlePanel from '../components/battle/BattlePanel.vue'
+import LastRoundMeter from '../components/battle/LastRoundMeter.vue'
 import BoardView from '../components/board/BoardView.vue'
 import ConfirmFightDialog from '../components/dialogs/ConfirmFightDialog.vue'
 import GameMenuDialog from '../components/dialogs/GameMenuDialog.vue'
@@ -222,7 +223,11 @@ watch(
 
         <Transition name="swap" mode="out-in">
           <BattlePanel v-if="store.phase === 'battle'" key="battle" :tabbed="touch" />
-          <ShopPanel v-else key="shop" class="shop-fill" />
+
+          <div v-else key="planning" class="planning" :class="{ split: store.view?.summary }">
+            <ShopPanel />
+            <LastRoundMeter />
+          </div>
         </Transition>
 
         <!-- Beside the map, never over it: on a tablet the map is too small to spare the room. -->
@@ -391,9 +396,20 @@ watch(
   order: 1;
 }
 
-.shop-fill {
+.planning {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 12px;
   min-height: 0;
+}
+
+/* Hug the content. A stretched card leaves an empty panel between the shop and the round. */
+.planning.split > :deep(.shop),
+.planning.split > :deep(.panel) {
+  flex: 0 1 auto;
+  max-height: calc((100% - 12px) / 2);
+  overflow: hidden;
 }
 
 /* Between the shop and the fight button; the shop gives up the height. */
