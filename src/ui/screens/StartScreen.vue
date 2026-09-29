@@ -155,7 +155,7 @@ function forfeit() {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   align-items: center;
   gap: 40px;
-  max-width: 1200px;
+  max-width: 1480px;
   min-height: 100%;
   margin: 0 auto;
   padding: 32px 24px;
