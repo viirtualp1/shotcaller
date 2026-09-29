@@ -14,7 +14,7 @@
     "continue": "Continue · round {round}",
     "move": {
       "eyebrow": "We've moved",
-      "title": "Please install the new one soon. This address shuts down shortly.",
+      "title": "This address shuts down shortly.",
       "action": "Open theshotcaller.online"
     }
   },
