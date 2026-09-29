@@ -11,7 +11,12 @@
       "grow": "Save gold, buy experience and items: every level lets one more hero onto the map."
     },
     "newMatch": "New match",
-    "continue": "Continue · round {round}"
+    "continue": "Continue · round {round}",
+    "move": {
+      "eyebrow": "We've moved",
+      "title": "Please install the new one soon. This address shuts down shortly.",
+      "action": "Open theshotcaller.online"
+    }
   },
   "phase": {
     "planning": "Planning",

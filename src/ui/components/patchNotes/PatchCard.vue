@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
-import type { Component } from 'vue'
+import { computed, type Component } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import type { NoteText } from '../../patchNotes/notes'
 import NoteLine from './NoteLine.vue'
 
 /** A small link to a patch: an icon, a line above the title and a call to read on. */
-defineProps<{
+const props = defineProps<{
   href: string
   icon: Component
   eyebrow: string
-  title: NoteText
+  title: NoteText | string
   action: string
   fresh?: boolean
 }>()
+
+const titleText = computed<NoteText>(() =>
+  typeof props.title === 'string'
+    ? {
+        en: props.title,
+        ru: props.title,
+      }
+    : props.title,
+)
 
 const { t } = useGameText()
 </script>
@@ -27,7 +36,7 @@ const { t } = useGameText()
     <span class="body">
       <span class="eyebrow">{{ eyebrow }}</span>
 
-      <NoteLine :text="title" class="title" />
+      <NoteLine :text="titleText" class="title" />
 
       <span class="more">
         {{ action }}

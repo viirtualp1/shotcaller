@@ -6,6 +6,7 @@ import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import DemoBattle from '../components/board/DemoBattle.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
+import MovedCard from '../components/patchNotes/MovedCard.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
 import SignInButton from '../components/profile/SignInButton.vue'
 import FriendsButton from '../components/social/FriendsButton.vue'
@@ -138,7 +139,10 @@ function forfeit() {
       </BoardFrame>
     </section>
 
-    <LatestPatchCard class="news" />
+    <div class="news">
+      <MovedCard />
+      <LatestPatchCard />
+    </div>
 
     <LanguageSwitch compact class="language" />
   </main>
@@ -236,6 +240,11 @@ h1 {
   top: 24px;
   right: 24px;
   z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  max-width: calc(100% - 48px);
 }
 
 .coach {
@@ -271,7 +280,10 @@ h1 {
   .news {
     position: relative;
     inset: auto;
+    flex-direction: column;
+    align-items: stretch;
     width: auto;
+    max-width: none;
   }
 
   .coach {
