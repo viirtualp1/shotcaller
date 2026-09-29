@@ -12,10 +12,7 @@ const store = useMatchStore()
 const text = useGameText()
 const { t } = text
 
-/**
- * Only the player's own heroes while the round runs: the opponent's numbers are revealed in the
- * round summary. Most heroes never heal, so the healing meter lists only those who did.
- */
+/** Your heroes only. Most never heal, so that list keeps only those who did. */
 const rows = computed(() => {
   const heroes = [...(store.live?.heroes.values() ?? [])]
     .filter((h) => h.team === 0 && (props.stat !== 'healing' || h.healing > 0))

@@ -79,6 +79,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     },
     interface: [
       {
+        en: 'Damage, healing and damage taken list only your heroes.',
+        ru: 'Урон, лечение и полученный урон показывают только твоих героев.',
+      },
+      {
         en: 'Round summary: damage, healing and damage taken fill the width. The heading above them is gone.',
         ru: 'Итог раунда: урон, лечение и полученный урон на всю ширину. Заголовка над ними больше нет.',
       },

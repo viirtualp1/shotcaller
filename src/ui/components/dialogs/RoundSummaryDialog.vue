@@ -119,12 +119,12 @@ const valueTitle = computed(() =>
   ),
 )
 
-/** Both teams, by the stat picked; the healing list has only those who healed. */
+/** Your heroes, by the stat picked. Healing lists only those who healed. */
 const heroRows = computed(() => {
   const stat = meter.value
 
   const heroes = (summary.value?.heroes ?? [])
-    .filter((hero) => stat !== 'healing' || hero.healing > 0)
+    .filter((hero) => hero.team === 0 && (stat !== 'healing' || hero.healing > 0))
     .sort((a, b) => b[stat] - a[stat])
 
   const top = Math.max(1, heroes[0]?.[stat] ?? 1)

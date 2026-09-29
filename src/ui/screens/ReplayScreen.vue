@@ -97,7 +97,7 @@ const meterRows = computed(() => {
         value: status?.[meter.value] ?? 0,
       }
     })
-    .filter((row) => meter.value !== 'healing' || row.value > 0)
+    .filter((row) => row.team === 0 && (meter.value !== 'healing' || row.value > 0))
     .sort((a, b) => b.value - a.value)
 
   const top = Math.max(1, rows[0]?.value ?? 1)

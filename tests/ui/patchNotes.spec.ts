@@ -60,7 +60,7 @@ describe('patch notes', () => {
     expect(patchSnippet(latest, 'en')).not.toContain('past the sides of the bridge')
 
     const ring = findPatch('8.4.2')!
-    expect(patchSnippet(ring, 'en')).toContain('fill the width')
+    expect(patchSnippet(ring, 'en')).toContain('only your heroes')
     expect(patchSnippet(ring, 'en')).toMatch(/Bug fixes$/)
     expect(patchSnippet(ring, 'en')).not.toContain('selection ring')
     expect(patchSnippet(ring, 'ru')).toMatch(/Исправления$/)

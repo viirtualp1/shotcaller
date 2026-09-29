@@ -30,7 +30,9 @@ const meterModel = computed({
 const rows = computed(() => {
   const key = stat.value
 
-  const heroes = (summary.value?.heroes ?? []).filter((hero) => hero[key] > 0).sort((a, b) => b[key] - a[key])
+  const heroes = (summary.value?.heroes ?? [])
+    .filter((hero) => hero.team === 0 && hero[key] > 0)
+    .sort((a, b) => b[key] - a[key])
 
   const top = Math.max(1, heroes[0]?.[key] ?? 1)
 
