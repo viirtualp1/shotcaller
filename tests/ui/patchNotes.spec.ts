@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { LATEST_PATCH, PATCH_NOTES, type NoteText } from '@/ui/patchNotes/notes'
+import { LATEST_PATCH, PATCH_NOTES, findPatch, type NoteText } from '@/ui/patchNotes/notes'
+import { patchSnippet } from '@/ui/patchNotes/seo'
 import pkg from '../../package.json'
 
 const isNoteText = (value: unknown): value is NoteText =>
@@ -39,6 +40,29 @@ describe('patch notes', () => {
       expect(patch.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       expect(new Date(patch.date).toISOString().slice(0, 10)).toBe(patch.date)
     }
+  })
+
+  it('describes a patch with a short list of its changes', () => {
+    const latest = findPatch('8.4.1')!
+    const pages = findPatch('8.4')!
+    const modes = findPatch('8.0')!
+
+    for (const locale of ['en', 'ru'] as const) {
+      const snippet = patchSnippet(latest, locale)
+      expect(snippet.length).toBeLessThanOrEqual(160)
+      expect(snippet).not.toContain('**')
+      expect(snippet.split(' · ').length).toBeGreaterThan(1)
+    }
+
+    expect(patchSnippet(latest, 'en')).toContain('damage taken sits beside damage and healing')
+    expect(patchSnippet(latest, 'en')).toMatch(/Bug fixes$/)
+    expect(patchSnippet(latest, 'ru')).toMatch(/Исправления$/)
+    expect(patchSnippet(latest, 'en')).not.toContain('past the sides of the bridge')
+    expect(patchSnippet(pages, 'en')).not.toContain('Bug fixes')
+    expect(patchSnippet(modes, 'en').length).toBeLessThanOrEqual(160)
+    expect(patchSnippet(modes, 'en')).toContain('Three ways to play')
+    expect(patchSnippet(modes, 'en')).toMatch(/Bug fixes$/)
+    expect(patchSnippet(modes, 'en')).not.toContain('Hand-lettered titles')
   })
 
   it('has every line in both languages with matching highlights', () => {

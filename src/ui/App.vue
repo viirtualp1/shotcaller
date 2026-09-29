@@ -21,12 +21,14 @@ import { useDuelStore } from './stores/duel'
 import { useSystemNotificationsStore } from './stores/systemNotifications'
 import { useFriendsStore } from './stores/friends'
 import { useMatchStore } from './stores/match'
+import { useDocumentHead } from './composables/useDocumentHead'
 import { usePatchNotesStore } from './stores/patchNotes'
 import { useProfileStore } from './stores/profile'
 import { useReplayStore } from './stores/replay'
 
 const store = useMatchStore()
 const patchNotes = usePatchNotesStore()
+useDocumentHead()
 const profile = useProfileStore()
 const replay = useReplayStore()
 /* Started with the app: it picks up a sign-in link and pulls progress saved on other devices. */

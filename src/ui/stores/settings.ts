@@ -54,7 +54,6 @@ export const useSettingsStore = defineStore('settings', () => {
     (value) => {
       i18n.global.locale.value = value
       document.documentElement.lang = value
-      document.title = i18n.global.t('app.title')
     },
     { immediate: true },
   )
