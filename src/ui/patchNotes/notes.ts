@@ -75,6 +75,38 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.5.1',
+    date: '2026-09-30',
+    title: {
+      en: 'Twins',
+      ru: 'Двойники',
+    },
+    interface: [
+      {
+        en: 'Stats show stars. Two copies of one hero are told apart by their lanes or, in one lane, by their items.',
+        ru: 'Статистика показывает звёзды. Две копии одного героя различаются линией, а на одной линии — предметами.',
+      },
+      {
+        en: 'Phone: notices pop up above the dock, not over it.',
+        ru: 'Телефон: уведомления всплывают над нижней панелью, а не поверх неё.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Phone: notices and the update card no longer squeeze into half the screen and wrap.',
+        ru: 'Телефон: уведомления и карточка обновления больше не сжимаются в полэкрана с переносами.',
+      },
+      {
+        en: 'Patch notes, the profile and other screens open at their top, not scrolled down.',
+        ru: 'Патчноуты, профиль и другие экраны открываются с начала, а не прокрученными вниз.',
+      },
+      {
+        en: 'iPad and iPhone app: buttons at the top of the screen no longer go under the status bar.',
+        ru: 'Приложение на iPad и iPhone: кнопки сверху больше не заходят под строку состояния.',
+      },
+    ],
+  },
+  {
     version: '8.5',
     date: '2026-09-30',
     title: {
@@ -1832,8 +1864,10 @@ export const LATEST_PATCH = PATCH_NOTES[0]!
 /** How many earlier releases the latest patch sums up. */
 const SUMMED_RELEASES = 3
 
+const isRelease = (patch: PatchNote) => patch.version.split('.').length === 2
+
 /** Releases before the latest patch, newest first; fixes on top of a release are left out. */
-const EARLIER_RELEASES = PATCH_NOTES.slice(1).filter((patch) => patch.version.split('.').length === 2)
+const EARLIER_RELEASES = PATCH_NOTES.slice(1).filter(isRelease)
 
 const titlesIn = (locale: Locale) =>
   EARLIER_RELEASES.slice(0, SUMMED_RELEASES)
@@ -1850,6 +1884,13 @@ export const EARLIER_SUMMARY: NoteText = {
 const FRESH_FOR_MS = 3 * 24 * 60 * 60 * 1000
 
 export const isFresh = (patch: PatchNote, now = Date.now()) => now - Date.parse(patch.date) < FRESH_FOR_MS
+
+/** The release a fix builds on, like 8.5 for 8.5.1; null for a release itself. */
+export const releaseOf = (patch: PatchNote) =>
+  isRelease(patch)
+    ? null
+    : (PATCH_NOTES.find((release) => isRelease(release) && patch.version.startsWith(`${release.version}.`)) ??
+      null)
 
 export const findPatch = (version: string | null | undefined) =>
   PATCH_NOTES.find((patch) => patch.version === version)

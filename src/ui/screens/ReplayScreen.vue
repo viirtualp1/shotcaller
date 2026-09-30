@@ -21,6 +21,7 @@ import type { Insets } from '@/rendering/BoardRenderer'
 import type { HeroHit } from '@/rendering/views/HeroToken'
 import { BattleSimulation, type HeroStatus } from '@/simulation/BattleSimulation'
 import { useBoardRenderer } from '../composables/useBoardRenderer'
+import { useFighterLabels } from '../composables/useFighterLabels'
 import { useGameText } from '../composables/useGameText'
 import BaseStatus from '../components/hud/BaseStatus.vue'
 import HudPanel from '../components/common/HudPanel.vue'
@@ -28,6 +29,7 @@ import ReplayHeroCard from '../components/replay/ReplayHeroCard.vue'
 import ReplayHeroTooltip from '../components/replay/ReplayHeroTooltip.vue'
 import HeroAvatar from '../components/common/HeroAvatar.vue'
 import type { MeterStat } from '../components/battle/DamageMeter.vue'
+import FighterLabel from '../components/battle/FighterLabel.vue'
 import MeterTabs from '../components/battle/MeterTabs.vue'
 import { useReplayStore } from '../stores/replay'
 
@@ -67,6 +69,7 @@ let session: BattleSession | null = null
 let sinceRefresh = 0
 
 const cast = computed(() => replayRoundHeroes(props.match, replay.round) ?? [])
+const fighterLabel = useFighterLabels(cast)
 const selected = computed(() => cast.value.find((hero) => hero.uid === selectedUid.value) ?? null)
 
 const selectedStatus = computed(() =>
@@ -394,7 +397,7 @@ onBeforeUnmount(() => {
 
               <span class="track">
                 <i :style="{ width: `${row.share * 100}%` }" />
-                <span class="label">{{ text.heroName(row.heroId) }}</span>
+                <FighterLabel v-bind="fighterLabel(row)" class="label" />
               </span>
 
               <span class="value">{{ text.number(row.value) }}</span>
@@ -481,7 +484,7 @@ onBeforeUnmount(() => {
 
 .top {
   position: absolute;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   left: 50%;
   translate: -50% 0;
   z-index: 3;
@@ -546,7 +549,7 @@ onBeforeUnmount(() => {
 
 .side {
   position: absolute;
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top, 0px));
   right: 12px;
   bottom: 12px;
   z-index: 2;
@@ -626,11 +629,9 @@ onBeforeUnmount(() => {
 
 .label {
   position: relative;
-  display: block;
   padding-left: 12px;
   line-height: 36px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

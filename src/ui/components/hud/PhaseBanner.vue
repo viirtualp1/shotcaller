@@ -55,9 +55,11 @@ watch(
 <style scoped>
 .banner {
   position: fixed;
-  left: 50%;
+  inset-inline: 0;
   top: 38%;
-  translate: -50% -50%;
+  translate: 0 -50%;
+  width: fit-content;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -85,6 +85,8 @@ const heroReport = z.object({
   team,
   heroId,
   stars,
+  lane: z.enum(LANE_IDS).optional(),
+  items: z.array(itemId).optional(),
   damageDealt: amount,
   damageReceived: amount.default(0),
   structureDamage: amount.default(0),

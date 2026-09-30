@@ -158,7 +158,7 @@ function forfeit() {
   max-width: 1480px;
   min-height: 100%;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: calc(32px + env(safe-area-inset-top, 0px)) 24px 32px;
 }
 
 .duel {
@@ -240,7 +240,7 @@ h1 {
 
 .news {
   position: absolute;
-  top: 24px;
+  top: calc(24px + env(safe-area-inset-top, 0px));
   right: 24px;
   z-index: 1;
   display: flex;
@@ -251,7 +251,7 @@ h1 {
 
 .coach {
   position: absolute;
-  top: 24px;
+  top: calc(24px + env(safe-area-inset-top, 0px));
   left: 24px;
   z-index: 1;
   display: flex;
@@ -281,7 +281,7 @@ h1 {
 @media (max-width: 860px) {
   .start {
     grid-template-columns: minmax(0, 1fr);
-    padding: 24px 16px;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 24px;
     gap: 24px;
   }
 

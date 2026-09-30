@@ -160,6 +160,7 @@ function play() {
   position: sticky;
   top: 0;
   z-index: 20;
+  padding-top: env(safe-area-inset-top, 0px);
   background: rgba(19, 27, 24, 0.86);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--edge);

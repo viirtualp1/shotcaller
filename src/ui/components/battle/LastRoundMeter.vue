@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { starsLabel, useGameText } from '../../composables/useGameText'
+import { useFighterLabels } from '../../composables/useFighterLabels'
+import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import type { MeterStat } from './DamageMeter.vue'
+import FighterLabel from './FighterLabel.vue'
 import MeterTabs from './MeterTabs.vue'
 
 defineProps<{ placeholder?: boolean }>()
@@ -15,6 +17,7 @@ const { t } = text
 const stat = ref<MeterStat>('damageDealt')
 
 const summary = computed(() => (store.phase === 'planning' ? (store.view?.summary ?? null) : null))
+const fighterLabel = useFighterLabels(() => summary.value?.heroes ?? [])
 
 const rows = computed(() => {
   const key = stat.value
@@ -47,7 +50,7 @@ const rows = computed(() => {
 
         <span class="bar">
           <i :style="{ width: `${hero.share * 100}%` }" />
-          <span class="label">{{ text.heroName(hero.heroId) }} {{ starsLabel(hero.stars) }}</span>
+          <FighterLabel v-bind="fighterLabel(hero)" class="label" />
         </span>
 
         <span class="value">{{
@@ -116,11 +119,9 @@ const rows = computed(() => {
 
 .label {
   position: relative;
-  display: block;
   padding-left: 12px;
   line-height: 36px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

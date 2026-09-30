@@ -38,11 +38,14 @@ useFriendsStore()
 useChatStore()
 useDuelStore()
 useSystemNotificationsStore()
+
+/** Each screen opens at its top, as a new page does, not where the one before was scrolled to. */
+const scrollToTop = () => globalThis.scrollTo({ top: 0 })
 </script>
 
 <template>
   <TooltipProvider :delay-duration="250">
-    <Transition name="screen" mode="out-in">
+    <Transition name="screen" mode="out-in" @after-leave="scrollToTop">
       <PatchNotesScreen v-if="patchNotes.patch" />
       <GameScreen v-else-if="store.view" />
       <ProfileScreen v-else-if="profile.isOpen" />

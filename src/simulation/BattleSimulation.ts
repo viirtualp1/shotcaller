@@ -1,6 +1,6 @@
 import { World } from 'miniplex'
 import mitt from 'mitt'
-import { TEAM_IDS, type HeroId, type StarLevel, type TeamId } from '@/content/ids'
+import { TEAM_IDS, type HeroId, type ItemId, type LaneId, type StarLevel, type TeamId } from '@/content/ids'
 import { MODES } from '@/content/modes'
 import { BATTLE } from '@/content/rules'
 import { createRng } from '@/core/random/rng'
@@ -41,6 +41,8 @@ export interface HeroStatus {
   readonly heroId: HeroId
   readonly stars: StarLevel
   readonly team: TeamId
+  readonly lane: LaneId
+  readonly items: readonly ItemId[]
   readonly healthRatio: number
   readonly manaRatio: number
   readonly dead: boolean
@@ -174,6 +176,8 @@ export class BattleSimulation {
         team: h.team,
         heroId: h.hero.heroId,
         stars: h.hero.stars,
+        lane: h.hero.lane,
+        items: [...h.hero.items],
         damageDealt: Math.round(h.hero.damageDealt),
         damageReceived: Math.round(h.hero.damageReceived),
         structureDamage: Math.round(h.hero.structureDamage),
@@ -202,6 +206,8 @@ export class BattleSimulation {
         heroId: h.hero.heroId,
         stars: h.hero.stars,
         team: h.team,
+        lane: h.hero.lane,
+        items: h.hero.items,
         healthRatio: h.dead ? 0 : h.health.current / h.health.max,
         manaRatio: h.mana.current / h.mana.max,
         dead: Boolean(h.dead),

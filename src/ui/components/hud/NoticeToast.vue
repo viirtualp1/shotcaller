@@ -68,18 +68,12 @@ watch(
 
 <style scoped>
 .toast {
-  position: fixed;
-  left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  translate: -50% 0;
-  max-width: calc(100vw - 32px);
   padding: 10px 16px;
   border-radius: 10px;
   background: #0f1614;
   border: 1px solid var(--edge-strong);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   font-weight: 600;
-  z-index: 60;
 }
 
 .toast.error {

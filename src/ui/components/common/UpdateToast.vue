@@ -96,15 +96,16 @@ async function applyUpdate() {
 </template>
 
 <style scoped>
+/* Centred between the screen's edges: pinned at left: 50% instead, it could only grow to half the screen. */
 .toast {
   position: fixed;
-  left: 50%;
+  inset-inline: 16px;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  translate: -50% 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: calc(100vw - 32px);
+  width: fit-content;
+  margin-inline: auto;
   padding: 8px 10px 8px 14px;
   border-radius: 12px;
   background: #0f1614;

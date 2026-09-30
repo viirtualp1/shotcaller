@@ -1,4 +1,13 @@
-import type { HeroId, LaneId, LaneStance, ModeId, StarLevel, StructureSlot, TeamId } from '@/content/ids'
+import type {
+  HeroId,
+  ItemId,
+  LaneId,
+  LaneStance,
+  ModeId,
+  StarLevel,
+  StructureSlot,
+  TeamId,
+} from '@/content/ids'
 import type { Lineup } from '../roster/Roster'
 
 export type StructureState = Record<StructureSlot, number>
@@ -28,6 +37,9 @@ export interface HeroBattleReport {
   readonly team: TeamId
   readonly heroId: HeroId
   readonly stars: StarLevel
+  /** Lane and items are missing on round summaries saved before 8.5. */
+  readonly lane?: LaneId
+  readonly items?: readonly ItemId[]
   readonly damageDealt: number
   readonly damageReceived: number
   readonly structureDamage: number

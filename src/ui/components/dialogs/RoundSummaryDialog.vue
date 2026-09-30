@@ -13,12 +13,14 @@ import { structureSlotsOf } from '@/domain/match/structures'
 import { MODES } from '@/content/modes'
 import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
-import { starsLabel, useGameText } from '../../composables/useGameText'
+import { useFighterLabels } from '../../composables/useFighterLabels'
+import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import AnimatedNumber from '../common/AnimatedNumber.vue'
 import type { MeterStat } from '../battle/DamageMeter.vue'
+import FighterLabel from '../battle/FighterLabel.vue'
 import MeterTabs from '../battle/MeterTabs.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
@@ -97,6 +99,7 @@ const structureRows = computed(() => {
 })
 
 const meter = ref<MeterStat>('damageDealt')
+const fighterLabel = useFighterLabels(() => summary.value?.heroes ?? [])
 
 const valueTitle = computed(() =>
   t(
@@ -222,7 +225,7 @@ const incomeRows = computed(() => {
 
               <span class="bar">
                 <i :style="{ width: `${hero.share * 100}%` }" />
-                <span class="label">{{ text.heroName(hero.heroId) }} {{ starsLabel(hero.stars) }}</span>
+                <FighterLabel v-bind="fighterLabel(hero)" class="label" />
               </span>
 
               <span class="num value" :title="valueTitle">
@@ -464,11 +467,9 @@ section {
 
 .label {
   position: relative;
-  display: block;
   padding-left: 12px;
   line-height: 36px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

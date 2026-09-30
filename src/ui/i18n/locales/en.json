@@ -502,6 +502,7 @@
     "new": "New",
     "read": "Read the patch notes",
     "earlier": "In earlier patches",
+    "release": "Major update {version}",
     "older": "Previous patch",
     "newer": "Next patch",
     "openPatch": "Open patch {version}",

@@ -2,11 +2,14 @@
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
-import { EARLIER_SUMMARY, PATCH_NOTES, type PatchNote } from '../../patchNotes/notes'
+import { EARLIER_SUMMARY, PATCH_NOTES, releaseOf, type PatchNote } from '../../patchNotes/notes'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import PatchCard from './PatchCard.vue'
 
-/** The patches either side of this one. The latest points back with a summary of the releases before it. */
+/**
+ * The patches either side of this one. The latest points back with a summary: a fix to the release it builds on,
+ * a release to the few releases before it.
+ */
 const props = defineProps<{ patch: PatchNote }>()
 
 const notes = usePatchNotesStore()
@@ -15,20 +18,47 @@ const { t } = useGameText()
 const index = computed(() => PATCH_NOTES.indexOf(props.patch))
 const older = computed(() => PATCH_NOTES[index.value + 1] ?? null)
 const newer = computed(() => (index.value > 0 ? PATCH_NOTES[index.value - 1]! : null))
-const isLatest = computed(() => index.value === 0)
+
+const back = computed(() => {
+  if (!older.value) {
+    return null
+  }
+
+  if (index.value > 0) {
+    return {
+      patch: older.value,
+      eyebrow: t('patchNotes.older'),
+      title: older.value.title,
+    }
+  }
+
+  const release = releaseOf(props.patch)
+
+  return release
+    ? {
+        patch: release,
+        eyebrow: t('patchNotes.release', { version: release.version }),
+        title: release.title,
+      }
+    : {
+        patch: older.value,
+        eyebrow: t('patchNotes.earlier'),
+        title: EARLIER_SUMMARY,
+      }
+})
 </script>
 
 <template>
   <nav v-if="older || newer" class="pager" :aria-label="t('patchNotes.choose')">
     <PatchCard
-      v-if="older"
+      v-if="back"
       class="older"
-      :href="`#/patches/${older.version}`"
+      :href="`#/patches/${back.patch.version}`"
       :icon="ChevronLeft"
-      :eyebrow="isLatest ? t('patchNotes.earlier') : t('patchNotes.older')"
-      :title="isLatest ? EARLIER_SUMMARY : older.title"
-      :action="t('patchNotes.openPatch', { version: older.version })"
-      @click.prevent="notes.open(older.version)"
+      :eyebrow="back.eyebrow"
+      :title="back.title"
+      :action="t('patchNotes.openPatch', { version: back.patch.version })"
+      @click.prevent="notes.open(back.patch.version)"
     />
 
     <PatchCard

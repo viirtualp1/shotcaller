@@ -240,7 +240,10 @@ watch(
 
     <CompactDock v-else ref="dock" class="dock" />
 
+    <!-- Over the map, clear of the dock: notices, the placement hint and, on desktop, the open card. -->
     <div class="hud-bottom">
+      <NoticeToast />
+
       <Transition name="fade">
         <p v-if="placementHint" class="placement-hint">
           <MousePointerClick :size="15" /> {{ placementHint }}
@@ -260,7 +263,6 @@ watch(
     <MatchReportDialog />
     <HelpDrawer v-model:open="menu.help" />
     <GameMenuDialog />
-    <NoticeToast />
   </div>
 </template>
 
@@ -279,7 +281,7 @@ watch(
 
 .hud-top {
   position: absolute;
-  inset: 0 0 auto;
+  inset: env(safe-area-inset-top, 0px) 0 auto;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -326,9 +328,8 @@ watch(
 
 .hud-bottom {
   position: fixed;
-  left: 50%;
+  inset-inline: 16px;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  translate: -50% 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -379,7 +380,7 @@ watch(
 .wide .hud-left,
 .wide .hud-right {
   position: absolute;
-  top: 84px;
+  top: calc(84px + env(safe-area-inset-top, 0px));
   bottom: var(--gutter);
   padding: 0;
   /* A sideways slide must not open a scrollbar for a moment and shove the column. */
@@ -512,7 +513,7 @@ watch(
 }
 
 .landscape .hud-bottom {
-  left: calc((100% - var(--dock-width)) / 2);
+  right: calc(var(--dock-width) + 16px);
 }
 
 .swap-enter-active,

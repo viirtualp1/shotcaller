@@ -1,25 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useFighterLabels } from '../../composables/useFighterLabels'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import FighterLabel from './FighterLabel.vue'
 
 export type MeterStat = 'damageDealt' | 'healing' | 'damageReceived'
 
 const props = defineProps<{ stat: MeterStat }>()
 
 const store = useMatchStore()
-const text = useGameText()
-const { t } = text
+const { t } = useGameText()
+const heroes = computed(() => [...(store.live?.heroes.values() ?? [])])
+const fighterLabel = useFighterLabels(heroes)
 
 /** Your heroes only. Most never heal, so that list keeps only those who did. */
 const rows = computed(() => {
-  const heroes = [...(store.live?.heroes.values() ?? [])]
+  const shown = heroes.value
     .filter((h) => h.team === 0 && (props.stat !== 'healing' || h.healing > 0))
     .sort((a, b) => b[props.stat] - a[props.stat])
 
-  const top = Math.max(1, heroes[0]?.[props.stat] ?? 1)
-  return heroes.map((h) => ({
+  const top = Math.max(1, shown[0]?.[props.stat] ?? 1)
+  return shown.map((h) => ({
     ...h,
     value: h[props.stat],
     share: h[props.stat] / top,
@@ -39,7 +42,7 @@ const rows = computed(() => {
 
       <span class="bar">
         <i :style="{ width: `${row.share * 100}%` }" />
-        <span class="label">{{ text.heroName(row.heroId) }}</span>
+        <FighterLabel v-bind="fighterLabel(row)" class="label" />
       </span>
 
       <span class="value">{{ row.value }}</span>
@@ -106,11 +109,9 @@ const rows = computed(() => {
 
 .label {
   position: relative;
-  display: block;
   padding-left: 12px;
   line-height: 36px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
