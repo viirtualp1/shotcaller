@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Map } from 'lucide-vue-next'
+import { Map } from '@lucide/vue'
 import { RadioGroupItem, RadioGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'

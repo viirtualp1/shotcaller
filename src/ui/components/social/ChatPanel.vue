@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onClickOutside, useTextareaAutosize } from '@vueuse/core'
-import { ArrowLeft, SendHorizontal, Smile, Swords, X } from 'lucide-vue-next'
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { ArrowDown, ArrowLeft, SendHorizontal, Smile, Swords, X } from '@lucide/vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { MESSAGE_MAX_LENGTH } from '@/application/social/chat'
 import type { FriendEntry } from '@/application/social/friends'
 import { HERO_IDS } from '@/content/ids'
@@ -16,7 +16,7 @@ import EmojiPicker from './EmojiPicker.vue'
 
 const SHOW_COUNTER_FROM = MESSAGE_MAX_LENGTH - 100
 
-const props = defineProps<{ friend: FriendEntry }>()
+const props = defineProps<{ friend: FriendEntry; active: boolean }>()
 const emit = defineEmits<{ back: []; close: [] }>()
 
 const chat = useChatStore()
@@ -27,8 +27,65 @@ const { t } = useGameText()
 const statusText = useFriendStatus()
 const list = useTemplateRef<HTMLElement>('list')
 const field = useTemplateRef<HTMLTextAreaElement>('field')
-const { input } = useTextareaAutosize({ element: field })
+
+const draft = computed({
+  get: () => chat.drafts[props.friend.id] ?? '',
+  set: (value: string) => {
+    chat.drafts[props.friend.id] = value
+  },
+})
+
+const { input } = useTextareaAutosize({
+  element: field,
+  input: draft,
+})
+
+function focusComposer() {
+  if (props.active) {
+    field.value?.focus({ preventScroll: true })
+  }
+}
+
+defineExpose({ focusComposer })
+
 const picking = ref(false)
+const following = ref(true)
+const unseen = ref(0)
+let initialized = false
+
+function trackScroll() {
+  const el = list.value
+  following.value = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 40
+  chat.atEnd = following.value
+
+  if (following.value) {
+    unseen.value = 0
+  }
+}
+
+onMounted(() => {
+  if (props.active) {
+    field.value?.focus({ preventScroll: true })
+  }
+})
+
+watch(
+  () => props.active,
+  (active) => {
+    if (active) {
+      chat.atEnd = following.value
+
+      if (following.value) {
+        scrollToEnd()
+      }
+
+      field.value?.focus({ preventScroll: true })
+    } else {
+      picking.value = false
+    }
+  },
+  { flush: 'post' },
+)
 
 onClickOutside(useTemplateRef<HTMLElement>('emoji'), () => (picking.value = false), {
   ignore: ['.emoji-toggle'],
@@ -47,11 +104,28 @@ const online = computed(() => friends.isOnline(props.friend.id))
 const canSend = computed(() => input.value.trim().length > 0 && !chat.sending)
 
 function scrollToEnd() {
+  following.value = true
+  unseen.value = 0
+  chat.atEnd = true
   void nextTick(() => list.value?.scrollTo({ top: list.value.scrollHeight }))
 }
 
-/* New messages scroll into view; older ones loaded above keep the reader where they were. */
-watch(() => chat.messages.at(-1)?.id, scrollToEnd, { immediate: true })
+/* Incoming messages keep the reader's place until they choose to catch up. */
+watch(
+  () => chat.messages.at(-1)?.id,
+  (id) => {
+    if (!id) {
+      return
+    }
+
+    if (!initialized || following.value) {
+      initialized = true
+      scrollToEnd()
+    } else {
+      unseen.value++
+    }
+  },
+)
 
 async function showOlder() {
   const el = list.value
@@ -69,8 +143,19 @@ async function submit() {
     return
   }
 
-  if (await chat.send(input.value)) {
-    input.value = ''
+  const body = input.value
+  if (await chat.send(body)) {
+    if (input.value === body) {
+      input.value = ''
+    }
+
+    if (chat.friendId !== props.friend.id) {
+      return
+    }
+
+    scrollToEnd()
+    await nextTick()
+    field.value?.focus({ preventScroll: true })
   }
 }
 
@@ -100,7 +185,11 @@ async function insertEmoji(emoji: string) {
 </script>
 
 <template>
-  <section class="chat">
+  <section
+    class="chat"
+    :data-emoji-open="picking"
+    @keydown.escape="picking && ((picking = false), $event.preventDefault(), $event.stopPropagation())"
+  >
     <header class="head">
       <button
         type="button"
@@ -152,7 +241,14 @@ async function insertEmoji(emoji: string) {
       </button>
     </header>
 
-    <ol ref="list" class="messages" aria-live="polite">
+    <ol
+      ref="list"
+      class="messages"
+      role="log"
+      :aria-label="t('chat.open', { name: friend.name || t('profile.defaultName') })"
+      :aria-busy="chat.loading"
+      @scroll="trackScroll"
+    >
       <li v-if="chat.hasOlder" class="older">
         <button type="button" class="btn ghost" :disabled="chat.loading" @click="showOlder">
           {{ t('chat.older') }}
@@ -175,6 +271,10 @@ async function insertEmoji(emoji: string) {
         }}</time>
       </li>
     </ol>
+
+    <button v-if="unseen" type="button" class="catch-up" @click="scrollToEnd">
+      <ArrowDown :size="14" /> {{ t('notifications.messages', { n: unseen }, unseen) }}
+    </button>
 
     <div v-if="picking" ref="emoji" class="emoji">
       <EmojiPicker @pick="insertEmoji" />
@@ -209,7 +309,17 @@ async function insertEmoji(emoji: string) {
       </button>
     </form>
 
-    <p v-if="chat.failure" class="failure" role="alert">{{ t(`chat.failures.${chat.failure}`) }}</p>
+    <p v-if="chat.failure" class="failure" role="alert">
+      {{ t(`chat.failures.${chat.failure}`) }}
+      <button
+        v-if="!chat.messages.length && chat.failure === 'failed'"
+        type="button"
+        class="btn ghost"
+        @click="chat.open(friend.id, true)"
+      >
+        {{ t('friends.retry') }}
+      </button>
+    </p>
 
     <p v-else-if="input.length > SHOW_COUNTER_FROM" class="counter">
       {{ input.length }}/{{ MESSAGE_MAX_LENGTH }}
@@ -331,6 +441,8 @@ async function insertEmoji(emoji: string) {
   margin: 0;
   padding: 2px 2px 4px;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   list-style: none;
 }
 
@@ -350,7 +462,8 @@ async function insertEmoji(emoji: string) {
   flex-direction: column;
   gap: 2px;
   align-self: flex-start;
-  max-width: 82%;
+  min-width: 0;
+  max-width: 88%;
   padding: 7px 11px 5px;
   border-radius: 12px 12px 12px 4px;
   background: var(--panel-raised);
@@ -440,5 +553,18 @@ async function insertEmoji(emoji: string) {
 .counter {
   text-align: right;
   color: var(--chalk-faint);
+}
+.catch-up {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(244, 197, 91, 0.5);
+  border-radius: 999px;
+  background: var(--panel-raised);
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 12px;
 }
 </style>

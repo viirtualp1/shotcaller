@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Axe, BowArrow, Heart, Sparkles, Sword } from 'lucide-vue-next'
+import { Axe, BowArrow, Heart, Sparkles, Sword } from '@lucide/vue'
 import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, StarLevel } from '@/content/ids'

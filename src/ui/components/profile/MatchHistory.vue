@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight, Crown, Swords } from 'lucide-vue-next'
+import { ChevronRight, Crown, Swords } from '@lucide/vue'
 import { ref } from 'vue'
 import { isRated, type MatchRecord } from '@/domain/profile/Profile'
 import { earnedMatchXp } from '@/domain/profile/career'

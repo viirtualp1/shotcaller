@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
-import { RefreshCw } from 'lucide-vue-next'
+import { RefreshCw } from '@lucide/vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 import { ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'

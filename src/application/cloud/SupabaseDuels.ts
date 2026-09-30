@@ -105,7 +105,7 @@ export class SupabaseDuels implements DuelService {
   }
 
   async mine() {
-    const { data, error } = await this.client.rpc('my_duels')
+    const { data, error } = await this.client.rpc('my_duels').abortSignal(AbortSignal.timeout(12_000))
     if (error) {
       throw failure(error)
     }
@@ -131,7 +131,13 @@ export class SupabaseDuels implements DuelService {
   }
 
   async find(duelId: string) {
-    const { data, error } = await this.client.from('duels').select('*').eq('id', duelId).maybeSingle()
+    const { data, error } = await this.client
+      .from('duels')
+      .select('*')
+      .eq('id', duelId)
+      .abortSignal(AbortSignal.timeout(12_000))
+      .maybeSingle()
+
     if (error) {
       throw failure(error)
     }
@@ -142,11 +148,13 @@ export class SupabaseDuels implements DuelService {
   }
 
   async submitBoard(duelId: string, round: number, board: unknown) {
-    const { data, error } = await this.client.rpc('submit_board', {
-      duel: duelId,
-      board_round: round,
-      payload: asJson(board),
-    })
+    const { data, error } = await this.client
+      .rpc('submit_board', {
+        duel: duelId,
+        board_round: round,
+        payload: asJson(board),
+      })
+      .abortSignal(AbortSignal.timeout(12_000))
 
     if (error) {
       throw failure(error, { P0409: 'wrongRound' })
@@ -156,10 +164,12 @@ export class SupabaseDuels implements DuelService {
   }
 
   async opponentBoard(duelId: string, round: number) {
-    const { data, error } = await this.client.rpc('duel_board', {
-      duel: duelId,
-      board_round: round,
-    })
+    const { data, error } = await this.client
+      .rpc('duel_board', {
+        duel: duelId,
+        board_round: round,
+      })
+      .abortSignal(AbortSignal.timeout(12_000))
 
     if (error) {
       throw failure(error)
@@ -169,11 +179,13 @@ export class SupabaseDuels implements DuelService {
   }
 
   async report(duelId: string, winningSide: TeamId | null, byThrone: boolean) {
-    const { error } = await this.client.rpc('report_duel', {
-      duel: duelId,
-      winning_side: winningSide,
-      by_throne: byThrone,
-    })
+    const { error } = await this.client
+      .rpc('report_duel', {
+        duel: duelId,
+        winning_side: winningSide,
+        by_throne: byThrone,
+      })
+      .abortSignal(AbortSignal.timeout(12_000))
 
     if (error) {
       throw failure(error)

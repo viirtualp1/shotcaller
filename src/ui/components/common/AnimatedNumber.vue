@@ -22,7 +22,7 @@ watch(
 
 const animated = useTransition(source, {
   duration: props.duration,
-  transition: TransitionPresets.easeOutCubic,
+  easing: TransitionPresets.easeOutCubic,
 })
 
 const shown = computed(() => Math.round(animated.value))

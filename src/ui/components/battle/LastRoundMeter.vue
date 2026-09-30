@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChartColumn } from 'lucide-vue-next'
+import { ChartColumn } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'

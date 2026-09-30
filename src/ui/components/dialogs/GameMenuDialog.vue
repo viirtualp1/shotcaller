@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core'
-import { CircleHelp, Flag, GraduationCap, LogOut, Play, RotateCcw, Settings } from 'lucide-vue-next'
+import { CircleHelp, Flag, GraduationCap, LogOut, Play, RotateCcw, Settings } from '@lucide/vue'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'

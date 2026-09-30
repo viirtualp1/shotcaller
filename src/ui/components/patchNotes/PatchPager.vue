@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { EARLIER_SUMMARY, PATCH_NOTES, releaseOf, type PatchNote } from '../../patchNotes/notes'
@@ -53,7 +53,7 @@ const back = computed(() => {
     <PatchCard
       v-if="back"
       class="older"
-      :href="`#/patches/${back.patch.version}`"
+      :href="`/patches/${back.patch.version}/`"
       :icon="ChevronLeft"
       :eyebrow="back.eyebrow"
       :title="back.title"
@@ -64,7 +64,7 @@ const back = computed(() => {
     <PatchCard
       v-if="newer"
       class="newer"
-      :href="`#/patches/${newer.version}`"
+      :href="`/patches/${newer.version}/`"
       :icon="ChevronRight"
       :eyebrow="t('patchNotes.newer')"
       :title="newer.title"

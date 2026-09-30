@@ -17,7 +17,7 @@ export function useHotkeys({ reroll, buyXp, fight, sell, cancel }: Hotkeys) {
     onKeyStroke(
       (e) => e.code === code,
       (e) => {
-        if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e)) {
+        if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e)) {
           return
         }
 

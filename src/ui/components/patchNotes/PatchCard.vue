@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight } from 'lucide-vue-next'
+import { ArrowRight } from '@lucide/vue'
 import { computed, type Component } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import type { NoteText } from '../../patchNotes/notes'

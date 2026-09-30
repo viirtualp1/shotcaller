@@ -338,7 +338,6 @@
     "roundScore": "Round score",
     "buildingDamage": "Building damage",
     "casualties": "Heroes who died",
-    "meterScale": "Full bar: the leading hero’s {value} in this round",
     "openReport": "Open the full round report",
     "closeReport": "Back to planning",
     "details": "Details",
@@ -870,6 +869,7 @@
       "disputed": "Your results did not match; the duel does not count"
     },
     "badBoard": "Your opponent sent a board the rules do not allow. The duel is stopped",
+    "reconnecting": "Reconnecting… Your board is saved.",
     "waiting": "Waiting for your opponent…",
     "opponentReady": "Opponent is ready",
     "claim": "Claim the win",

@@ -14,7 +14,7 @@ export const MUSIC_TRACKS = {
     fadeInMs: 1000,
   },
   climax: {
-    url: 'audio/music/determined-pursuit.wav',
+    url: 'audio/music/determined-pursuit.m4a',
     volume: 1,
     fadeInMs: 1000,
   },
@@ -42,7 +42,7 @@ const JINGLE_URLS = ['HIT', 'NES', 'PIZZI', 'SAX', 'STEEL'].flatMap((group) =>
 
 export const SOUND_EFFECTS = {
   towerCollapse: {
-    urls: ['audio/sfx/tower-collapse.wav'],
+    urls: ['audio/sfx/tower-collapse.m4a'],
     volume: 0.82,
     cooldownMs: 2200,
   },
@@ -66,7 +66,7 @@ export const SOUND_EFFECTS = {
     pitchSemitones: -2.5,
   },
   heal: {
-    urls: ['audio/sfx/health-restore.wav'],
+    urls: ['audio/sfx/health-restore.m4a'],
     volume: 0.5,
     cooldownMs: 2600,
   },

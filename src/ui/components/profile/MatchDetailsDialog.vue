@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Play, X } from 'lucide-vue-next'
+import { Play, X } from '@lucide/vue'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed } from 'vue'
 import type { MatchRecord } from '@/domain/profile/Profile'

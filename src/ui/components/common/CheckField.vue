@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next'
+import { Check } from '@lucide/vue'
 import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 
 /** A checkbox with its label; the whole line toggles it. */

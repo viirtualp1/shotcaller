@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Swords } from 'lucide-vue-next'
+import { Swords } from '@lucide/vue'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 import type { ModeId } from '@/content/ids'

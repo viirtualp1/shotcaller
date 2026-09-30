@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Flag, LoaderCircle, Swords } from 'lucide-vue-next'
+import { Flag, LoaderCircle, Swords } from '@lucide/vue'
 import { useFightRequest } from '../../composables/useFightRequest'
 import { useGameText } from '../../composables/useGameText'
 import { useDuelStore } from '../../stores/duel'
@@ -26,7 +26,8 @@ const fight = useFightRequest()
       </button>
 
       <button v-else-if="store.awaiting" key="waiting" type="button" class="btn block fight waiting" disabled>
-        <LoaderCircle :size="18" class="spin" /> {{ t('duel.waiting') }}
+        <LoaderCircle :size="18" class="spin" />
+        {{ t(duel.reconnecting ? 'duel.reconnecting' : 'duel.waiting') }}
       </button>
 
       <button

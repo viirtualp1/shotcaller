@@ -1,0 +1,89 @@
+{
+  "machine": {
+    "cpu": "Apple M1 Pro",
+    "arch": "arm64",
+    "platform": "darwin",
+    "node": "v24.14.0"
+  },
+  "stepSeconds": 0.03333333333333333,
+  "results": [
+    {
+      "mode": "threeLanes",
+      "scenario": "preview",
+      "runs": 5,
+      "steps": 6750,
+      "maxEntities": 108,
+      "meanStepMs": 0.094,
+      "p95StepMs": 0.155,
+      "p99StepMs": 0.291,
+      "maxStepMs": 1.51,
+      "p95CpuMsPer60HzFrameAt2x": 0.155,
+      "longestFullRoundMs": 135.057
+    },
+    {
+      "mode": "threeLanes",
+      "scenario": "late-round",
+      "runs": 5,
+      "steps": 6750,
+      "maxEntities": 106,
+      "meanStepMs": 0.087,
+      "p95StepMs": 0.135,
+      "p99StepMs": 0.259,
+      "maxStepMs": 0.832,
+      "p95CpuMsPer60HzFrameAt2x": 0.135,
+      "longestFullRoundMs": 123.682
+    },
+    {
+      "mode": "twoLanes",
+      "scenario": "preview",
+      "runs": 5,
+      "steps": 6750,
+      "maxEntities": 75,
+      "meanStepMs": 0.062,
+      "p95StepMs": 0.098,
+      "p99StepMs": 0.173,
+      "maxStepMs": 0.474,
+      "p95CpuMsPer60HzFrameAt2x": 0.098,
+      "longestFullRoundMs": 93.405
+    },
+    {
+      "mode": "twoLanes",
+      "scenario": "late-round",
+      "runs": 5,
+      "steps": 6750,
+      "maxEntities": 78,
+      "meanStepMs": 0.057,
+      "p95StepMs": 0.088,
+      "p99StepMs": 0.155,
+      "maxStepMs": 0.563,
+      "p95CpuMsPer60HzFrameAt2x": 0.088,
+      "longestFullRoundMs": 80.374
+    },
+    {
+      "mode": "oneLane",
+      "scenario": "preview",
+      "runs": 5,
+      "steps": 6750,
+      "maxEntities": 59,
+      "meanStepMs": 0.051,
+      "p95StepMs": 0.085,
+      "p99StepMs": 0.162,
+      "maxStepMs": 1.517,
+      "p95CpuMsPer60HzFrameAt2x": 0.085,
+      "longestFullRoundMs": 80.601
+    },
+    {
+      "mode": "oneLane",
+      "scenario": "late-round",
+      "runs": 5,
+      "steps": 6750,
+      "maxEntities": 46,
+      "meanStepMs": 0.038,
+      "p95StepMs": 0.057,
+      "p99StepMs": 0.104,
+      "maxStepMs": 0.43,
+      "p95CpuMsPer60HzFrameAt2x": 0.057,
+      "longestFullRoundMs": 55.137
+    }
+  ]
+}

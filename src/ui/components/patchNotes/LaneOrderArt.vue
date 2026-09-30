@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, ChevronsRight, Shield } from 'lucide-vue-next'
+import { ArrowLeft, ChevronsRight, Shield } from '@lucide/vue'
 import { LANE_STANCES, type HeroId, type LaneId, type LaneStance } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
 import HeroAvatar from '../common/HeroAvatar.vue'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FlaskConical, Gauge, Info, Languages, Volume2 } from 'lucide-vue-next'
+import { FlaskConical, Gauge, Info, Languages, Volume2 } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { DIFFICULTIES, type Difficulty } from '@/content/rules'
@@ -143,7 +143,7 @@ function openOrdersPatch() {
 
           <a
             class="about"
-            :href="`#/patches/${LANE_ORDERS_PATCH}`"
+            :href="`/patches/${LANE_ORDERS_PATCH}/`"
             :aria-label="t('settings.laneOrdersAbout')"
             @click.prevent="openOrdersPatch"
           >

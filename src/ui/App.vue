@@ -10,6 +10,7 @@ import ChallengeDialog from './components/social/ChallengeDialog.vue'
 import DuelInviteDialog from './components/social/DuelInviteDialog.vue'
 import NotificationStack from './components/social/NotificationStack.vue'
 import SocialWindow from './components/social/SocialWindow.vue'
+import FriendsButton from './components/social/FriendsButton.vue'
 import GameScreen from './screens/GameScreen.vue'
 import ReplayScreen from './screens/ReplayScreen.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
@@ -69,9 +70,31 @@ const scrollToTop = () => globalThis.scrollTo({ top: 0 })
       <CloudConflictDialog />
       <CoachProfileDialog />
       <SocialWindow />
+
+      <div
+        v-if="replay.match || (!store.view && (profile.isOpen || profile.isCareer || patchNotes.patch))"
+        class="social-launcher"
+        :class="{ 'in-replay': replay.match }"
+      >
+        <FriendsButton compact />
+      </div>
+
       <ChallengeDialog />
       <DuelInviteDialog />
       <NotificationStack />
     </template>
   </TooltipProvider>
 </template>
+
+<style scoped>
+.social-launcher {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 39;
+}
+.social-launcher.in-replay {
+  right: auto;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+}
+</style>

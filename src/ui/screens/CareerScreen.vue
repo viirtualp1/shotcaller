@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft } from '@lucide/vue'
 import CareerPanel from '../components/profile/CareerPanel.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import { useGameText } from '../composables/useGameText'
@@ -13,7 +13,7 @@ const { t } = useGameText()
   <div class="career-page">
     <header class="topbar">
       <nav class="bar" :aria-label="t('career.title')">
-        <a href="./" class="btn ghost" @click.prevent="profile.close()">
+        <a href="/" class="btn ghost" @click.prevent="profile.close()">
           <ArrowLeft :size="16" /> {{ t('profile.back') }}
         </a>
       </nav>
@@ -55,10 +55,14 @@ const { t } = useGameText()
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   max-width: 1160px;
   margin: 0 auto;
-  padding: 28px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+  padding: 16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+.page :deep(.header) {
+  padding-block: 12px;
 }
 
 @media (max-width: 720px) {

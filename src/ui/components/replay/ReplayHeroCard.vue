@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
+import { X } from '@lucide/vue'
 import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
 import { ITEM_SLOTS } from '@/content/items'

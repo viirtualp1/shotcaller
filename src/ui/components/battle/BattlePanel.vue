@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FastForward, SkipForward } from 'lucide-vue-next'
+import { FastForward, SkipForward } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, ref } from 'vue'
 import { DUEL_BATTLE_SPEED } from '@/content/rules'

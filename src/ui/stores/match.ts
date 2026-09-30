@@ -653,7 +653,7 @@ export const useMatchStore = defineStore('match', () => {
 
     const startedAt = duel.value ? duelClock.value?.battleStartedAt : null
     if (startedAt) {
-      session.catchUp(((Date.now() - startedAt) / 1000) * DUEL_BATTLE_SPEED)
+      session.catchUp(((Date.now() - startedAt) / 1000) * DUEL_BATTLE_SPEED, 8)
     } else {
       session.advance(realSeconds, speed.value)
     }

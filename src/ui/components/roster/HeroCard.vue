@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
-import { Coins, X } from 'lucide-vue-next'
+import { Coins, X } from '@lucide/vue'
 import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
 import { ITEM_SLOTS } from '@/content/items'

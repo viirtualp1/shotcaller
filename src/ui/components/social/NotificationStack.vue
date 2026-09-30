@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, MessageCircle, Swords, UserPlus, X } from 'lucide-vue-next'
+import { Check, MessageCircle, Swords, UserPlus, X } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useNotificationText } from '../../composables/useNotificationText'
@@ -68,7 +68,7 @@ function viewProfile(item: SocialNotification, coachId: string) {
     tag="ol"
     name="notification"
     class="notifications"
-    :class="{ 'in-match': match.view !== null, 'beside-window': friends.open || chat.friendId !== null }"
+    :class="{ 'in-match': match.view !== null, 'beside-window': chat.windowOpen }"
     aria-live="polite"
   >
     <li v-if="duel.outgoing" key="outgoing-duel" class="card duel sticky">

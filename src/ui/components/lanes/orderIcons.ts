@@ -1,4 +1,4 @@
-import { ChevronsRight, Shield, Users } from 'lucide-vue-next'
+import { ChevronsRight, Shield, Users } from '@lucide/vue'
 import type { Component } from 'vue'
 import type { LaneStance } from '@/content/ids'
 

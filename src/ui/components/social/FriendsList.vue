@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
-import { Ban, Check, ChevronDown, ChevronUp, Copy, Swords, UserPlus, X } from 'lucide-vue-next'
+import { Ban, Check, ChevronDown, ChevronUp, Copy, Info, Swords, UserPlus, X } from '@lucide/vue'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import {
   formatFriendCode,
@@ -26,7 +26,7 @@ const chat = useChatStore()
 const duel = useDuelStore()
 const { t } = useGameText()
 const statusText = useFriendStatus()
-const { copy, copied } = useClipboard({ legacy: true })
+const { copy, copied, isSupported: canCopy } = useClipboard()
 
 const adding = ref(false)
 const showBlocked = ref(false)
@@ -130,9 +130,8 @@ async function submit() {
         <button
           type="button"
           class="profile"
-          :aria-label="t('friends.openProfile', { name: nameOf(entry.name) })"
-          :title="t('friends.openProfile', { name: nameOf(entry.name) })"
-          @click="friends.openProfile(entry.id)"
+          :aria-label="t('chat.open', { name: nameOf(entry.name) })"
+          @click="chat.open(entry.id)"
         >
           <RankMedal :tier="rankFor(entry.rating).tier" :stars="rankFor(entry.rating).stars" :size="30" />
 
@@ -160,6 +159,16 @@ async function submit() {
           >
             {{ chat.unreadFrom(entry.id) }}
           </span>
+        </button>
+
+        <button
+          type="button"
+          class="icon-btn"
+          :aria-label="t('friends.openProfile', { name: nameOf(entry.name) })"
+          :title="t('friends.openProfile', { name: nameOf(entry.name) })"
+          @click="friends.openProfile(entry.id)"
+        >
+          <Info :size="16" />
         </button>
 
         <button
@@ -210,6 +219,7 @@ async function submit() {
             class="icon-btn"
             :aria-label="t('friends.copy')"
             :title="copied ? t('friends.copied') : t('friends.copy')"
+            :disabled="!canCopy"
             @click="copy(ownCode)"
           >
             <Check v-if="copied" :size="16" class="good" />

@@ -1,5 +1,5 @@
 import type { AbilityId, HeroId, ItemId, LaneStance, ModeId, RoleId } from '@/content/ids'
-import type { Locale } from '../i18n'
+import type { Locale } from '../i18n/index.ts'
 
 /**
  * Patch notes, newest first. They are history, so numbers are written out by hand
@@ -77,6 +77,40 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '8.6.1',
+    date: '2026-10-01',
+    title: {
+      en: 'A little smoother',
+      ru: 'Чуть плавнее',
+    },
+    general: [
+      {
+        en: 'Optimization improved.',
+        ru: 'Оптимизация улучшена.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Chat stays within reach while you play. Drafts and unread messages are easier to keep track of.',
+        ru: 'Чат всегда под рукой во время игры. Черновики и непрочитанные сообщения теперь проще отслеживать.',
+      },
+      {
+        en: 'Career and friends look tidier. Combat stats are easier to read.',
+        ru: 'Карьера и друзья выглядят аккуратнее. Боевую статистику стало проще читать.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Fixed unwanted scrolling and flickering when viewing match details and career progress.',
+        ru: 'Исправлены лишняя прокрутка и мерцание при просмотре подробностей матча и прогресса карьеры.',
+      },
+      {
+        en: 'Duels recover more reliably after a brief connection interruption.',
+        ru: 'Дуэли надёжнее восстанавливаются после кратковременного обрыва связи.',
+      },
+    ],
+  },
   {
     version: '8.6',
     date: '2026-09-30',

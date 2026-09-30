@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Binoculars, Compass, Crown, Flag, Map as MapIcon, Megaphone, Sprout } from 'lucide-vue-next'
+import { Binoculars, Compass, Crown, Flag, Map as MapIcon, Megaphone, Sprout } from '@lucide/vue'
 import { computed, type Component } from 'vue'
 import { RANK, type RankTier } from '@/content/profile'
 import { cssColor } from '@/rendering/theme'

@@ -13,7 +13,7 @@ const PROFILE_VERSION = 2
 const heroId = z.enum(HERO_IDS)
 const synergyId = z.enum(SYNERGY_IDS)
 const stars = z.union([z.literal(1), z.literal(2), z.literal(3)])
-const amount = z.number().finite().nonnegative()
+const amount = z.number().nonnegative()
 const count = z.number().int().nonnegative()
 const verdict = z.enum(['win', 'loss', 'draw'])
 

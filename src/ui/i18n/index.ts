@@ -29,8 +29,8 @@ export function detectLocale() {
   return preferred.startsWith('ru') ? 'ru' : 'en'
 }
 
+/** The Vite i18n plugin enforces Composition API mode with `compositionOnly: true`. */
 export const i18n = createI18n<[MessageSchema], Locale, false>({
-  legacy: false,
   locale: detectLocale(),
   fallbackLocale: 'en',
   messages: {

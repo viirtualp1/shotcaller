@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Coins, Swords, Users } from 'lucide-vue-next'
+import { Coins, Swords, Users } from '@lucide/vue'
 import {
   DialogContent,
   DialogOverlay,

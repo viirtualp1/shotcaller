@@ -42,7 +42,7 @@ const leads = (row: ComparisonRow, team: TeamId) => row.values[team] > row.value
 
 .row {
   display: grid;
-  grid-template-columns: 5.5em minmax(0, 1fr) minmax(10em, auto) minmax(0, 1fr) 5.5em;
+  grid-template-columns: minmax(3em, 5.5em) minmax(0, 1fr) minmax(0, 10em) minmax(0, 1fr) minmax(3em, 5.5em);
   align-items: center;
   gap: 10px;
   font-size: 13px;
@@ -62,6 +62,7 @@ const leads = (row: ComparisonRow, team: TeamId) => row.values[team] > row.value
 }
 
 .label {
+  overflow-wrap: anywhere;
   text-align: center;
   color: var(--chalk-dim);
 }

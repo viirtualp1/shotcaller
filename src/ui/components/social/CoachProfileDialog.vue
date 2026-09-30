@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core'
-import { Ban, ChevronDown, Crown, MessageCircle, Swords, UserMinus, X } from 'lucide-vue-next'
+import { Ban, ChevronDown, Crown, MessageCircle, Swords, UserMinus, X } from '@lucide/vue'
 import {
   AccordionContent,
   AccordionHeader,

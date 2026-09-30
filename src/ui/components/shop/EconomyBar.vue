@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronsUp, RefreshCw } from 'lucide-vue-next'
+import { ChevronsUp, RefreshCw } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { ECONOMY } from '@/content/rules'
 import { useGameText } from '../../composables/useGameText'

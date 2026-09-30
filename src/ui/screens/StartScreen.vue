@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { useElementSize, useIntervalFn, useTimeoutFn } from '@vueuse/core'
-import { Flag, Play, Swords } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import {
+  useDocumentVisibility,
+  useElementSize,
+  useElementVisibility,
+  useIntervalFn,
+  useTimeoutFn,
+} from '@vueuse/core'
+import { Flag, Play, Swords } from '@lucide/vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
-import DemoBattle from '../components/board/DemoBattle.vue'
+
+const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
 import CareerChip from '../components/profile/CareerChip.vue'
@@ -26,6 +33,9 @@ const menu = useMenuStore()
 const settings = useSettingsStore()
 const duel = useDuelStore()
 const { t } = useGameText()
+const previewHost = ref<HTMLElement | null>(null)
+const previewVisible = useElementVisibility(previewHost)
+const visibility = useDocumentVisibility()
 const patchCard = ref<InstanceType<typeof LatestPatchCard> | null>(null)
 
 const patchSize = useElementSize(
@@ -51,6 +61,10 @@ const demos = ref<DemoLayer[]>([
 ])
 
 useIntervalFn(() => {
+  if (!previewVisible.value || visibility.value !== 'visible') {
+    return
+  }
+
   const current = demos.value.at(-1)!
 
   demos.value = [
@@ -140,10 +154,10 @@ function forfeit() {
       </nav>
     </section>
 
-    <section class="preview">
+    <section ref="previewHost" class="preview">
       <BoardFrame>
         <DemoBattle
-          v-for="layer in demos"
+          v-for="layer in previewVisible ? demos : []"
           :key="`${settings.locale}:${layer.id}`"
           :mode="layer.mode"
           @shown="demoShown(layer.id)"

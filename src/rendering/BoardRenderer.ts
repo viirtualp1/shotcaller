@@ -15,6 +15,7 @@ import { OrdersLayer } from './layers/OrdersLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
 import { fitMap, WHOLE_BOARD, type Insets } from './fitMap'
 import { Perspective } from './perspective'
+import { boardResolution } from './quality'
 import { loadRoleIcons, type RoleIcons } from './roleIcons'
 import { TOKEN_RADIUS, type HeroHit } from './views/HeroToken'
 
@@ -33,6 +34,7 @@ const CAMERA_TWEEN = 0.45
 export class BoardRenderer {
   readonly events = mitt<BoardEvents>()
   private readonly camera = new Container()
+  private readonly artTexture: Texture
   private readonly world = new Container()
   /** Holds everything placed in battle coordinates; mirrored when the viewer fights as team 1. */
   private readonly board = new Container()
@@ -64,7 +66,8 @@ export class BoardRenderer {
     perspective: Perspective,
   ) {
     /* Every map is symmetric along its mirror, so the art looks the same from either side. */
-    const art = new Sprite(Texture.from(paintBoardArt(map, labels)))
+    this.artTexture = Texture.from(paintBoardArt(map, labels))
+    const art = new Sprite(this.artTexture)
     art.width = art.height = BATTLE.worldSize
     this.orders = new OrdersLayer(map, perspective)
     this.planning = new PlanningLayer(map, icons, perspective)
@@ -101,13 +104,27 @@ export class BoardRenderer {
       backgroundAlpha: 0,
       antialias: true,
       autoDensity: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      resolution: boardResolution(host.clientWidth, host.clientHeight, window.devicePixelRatio),
     })
+
+    app.ticker.maxFPS = 60
 
     const icons = await loadRoleIcons()
     host.appendChild(app.canvas)
 
     return new BoardRenderer(app, host, map, labels, icons, perspective)
+  }
+
+  setActive(active: boolean) {
+    if (active) {
+      this.app.start()
+    } else {
+      this.app.stop()
+    }
+  }
+
+  setMaxFPS(fps: number) {
+    this.app.ticker.maxFPS = fps
   }
 
   /** Space covered by HUD panels; the map is fitted into what is left. */
@@ -238,9 +255,11 @@ export class BoardRenderer {
       { removeView: true },
       {
         children: true,
-        texture: true,
+        texture: false,
       },
     )
+
+    this.artTexture.destroy(true)
   }
 
   private leaveBattle() {

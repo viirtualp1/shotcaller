@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, Pencil, X } from 'lucide-vue-next'
+import { Check, Pencil, X } from '@lucide/vue'
 import { useMediaQuery } from '@vueuse/core'
 import { computed, nextTick, ref } from 'vue'
 import { PROFILE } from '@/content/profile'
@@ -91,7 +91,7 @@ function save() {
         <CoachAvatar
           :hero-id="profile.avatar"
           :level="profile.level.level"
-          :size="compact ? 48 : 104"
+          :size="compact ? 48 : linked ? 76 : 104"
           :photo="photo.shown.value"
         />
 
@@ -154,7 +154,7 @@ function save() {
     </div>
 
     <div class="rank">
-      <RankDropdown :rank="profile.rank" :size="compact ? 48 : 112" />
+      <RankDropdown :rank="profile.rank" :size="compact ? 48 : linked ? 76 : 112" />
 
       <div class="rank-text">
         <strong class="rank-name">{{ t(`profile.ranks.${profile.rank.tier}`) }}</strong>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Globe } from 'lucide-vue-next'
+import { Globe } from '@lucide/vue'
 import { useGameText } from '../../composables/useGameText'
 import PatchCard from './PatchCard.vue'
 

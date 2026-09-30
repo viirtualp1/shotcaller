@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Target } from 'lucide-vue-next'
+import { Target } from '@lucide/vue'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import InfoTooltip from '../common/InfoTooltip.vue'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, LayoutGrid, Play, Swords, Users } from 'lucide-vue-next'
+import { Crown, LayoutGrid, Play, Swords, Users } from '@lucide/vue'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { computed, ref } from 'vue'
 import type { ModeId, TeamId } from '@/content/ids'
@@ -504,9 +504,15 @@ button.pip:disabled {
 }
 
 .panel {
+  min-width: 0;
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.panel[data-state='inactive'] {
+  display: none;
 }
 
 .side {

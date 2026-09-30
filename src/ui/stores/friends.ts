@@ -33,7 +33,7 @@ export const useFriendsStore = defineStore('friends', () => {
   const entries = shallowRef<FriendEntry[]>([])
   const blocked = shallowRef<CoachCard[]>([])
   const online = shallowRef<ReadonlyMap<string, PresenceStatus>>(new Map())
-  /** The friends panel on the start screen. */
+  /** The friends panel shared by every screen. */
   const open = ref(false)
   /** The friend whose profile is open, and the profile once it has loaded. */
   const viewedId = ref<string | null>(null)

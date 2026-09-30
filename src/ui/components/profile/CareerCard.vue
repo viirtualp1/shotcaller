@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowUpRight, Trophy } from 'lucide-vue-next'
+import { ArrowUpRight, Trophy } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'

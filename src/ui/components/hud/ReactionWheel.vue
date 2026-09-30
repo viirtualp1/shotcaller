@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onClickOutside, onKeyStroke } from '@vueuse/core'
-import { BellOff, Bell, Smile } from 'lucide-vue-next'
+import { BellOff, Bell, Smile } from '@lucide/vue'
 import { ref, useTemplateRef } from 'vue'
 import { REACTIONS, type ReactionId } from '@/application/social/reactions'
 import { useGameText } from '../../composables/useGameText'

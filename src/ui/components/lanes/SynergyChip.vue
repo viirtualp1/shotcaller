@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, UserRound } from 'lucide-vue-next'
+import { Plus, UserRound } from '@lucide/vue'
 import { computed } from 'vue'
 import { ROLE_IDS, type HeroId, type RoleId, type SynergyId } from '@/content/ids'
 import { ROLES } from '@/content/roles'

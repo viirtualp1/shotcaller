@@ -66,6 +66,14 @@ export class AudioEngine {
     for (const voice of this.musicVoices) {
       this.updateVoiceVolume(voice)
     }
+
+    if (this.musicVolume === 0) {
+      for (const voice of [...this.musicVoices]) {
+        this.stopVoice(voice)
+      }
+    } else if (this.unlocked) {
+      this.startDesiredMusic()
+    }
   }
 
   setEffectsVolume(volume: number) {
@@ -190,6 +198,10 @@ export class AudioEngine {
   }
 
   private startDesiredMusic() {
+    if (this.musicVolume <= 0 || document.visibilityState === 'hidden') {
+      return
+    }
+
     const trackId = this.desiredTrack
     const track = trackId ? MUSIC_TRACKS[trackId] : null
     if (this.currentMusic && this.currentMusic.track === trackId) {
@@ -208,7 +220,10 @@ export class AudioEngine {
       return
     }
 
-    const audio = new Audio(new URL(track.url, document.baseURI).toString())
+    const audio = new Audio(
+      new URL(track.url, new URL(import.meta.env.BASE_URL, document.baseURI)).toString(),
+    )
+
     audio.loop = true
     audio.preload = 'auto'
 
@@ -281,7 +296,7 @@ export class AudioEngine {
       }
     }
 
-    const audio = new Audio(new URL(path, document.baseURI).toString())
+    const audio = new Audio(new URL(path, new URL(import.meta.env.BASE_URL, document.baseURI)).toString())
     audio.preload = 'auto'
     audio.volume = this.clamp(this.effectsVolume * gain)
 

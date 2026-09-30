@@ -19,9 +19,11 @@ export class BattleSession {
     })
   }
 
-  /** Steps until the battle reaches the given time, however far behind it fell. */
-  catchUp(elapsed: number) {
-    while (!this.simulation.isOver && this.simulation.elapsed + BATTLE.step <= elapsed) {
+  /** Replay fixed steps toward the wall clock; a frame may limit catch-up work to keep input responsive. */
+  catchUp(elapsed: number, maxSteps = Infinity) {
+    let steps = 0
+    while (!this.simulation.isOver && this.simulation.elapsed + BATTLE.step <= elapsed && steps < maxSteps) {
+      steps++
       this.simulation.step()
     }
   }

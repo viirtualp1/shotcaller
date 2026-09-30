@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
-import { Mail } from 'lucide-vue-next'
+import { Mail } from '@lucide/vue'
 import {
   DialogClose,
   DialogContent,

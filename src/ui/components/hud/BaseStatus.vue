@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown } from 'lucide-vue-next'
+import { Crown } from '@lucide/vue'
 import { computed } from 'vue'
 import type { ModeId, TeamId } from '@/content/ids'
 import { MODES } from '@/content/modes'

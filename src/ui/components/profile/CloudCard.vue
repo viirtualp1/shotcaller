@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HardDrive, LogIn, LogOut, RotateCw } from 'lucide-vue-next'
+import { HardDrive, LogIn, LogOut, RotateCw } from '@lucide/vue'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'

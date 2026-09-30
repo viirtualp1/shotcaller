@@ -10,7 +10,7 @@ import {
   WandSparkles,
   Wrench,
   Zap,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 import { computed, watch } from 'vue'
 import { ABILITY_NAMES } from '@/content/abilities'
 import { HERO_IDS, type RoleId } from '@/content/ids'
@@ -60,7 +60,7 @@ watch(
   <div class="patch-notes">
     <header class="topbar">
       <div class="bar">
-        <a href="./" class="btn" @click.prevent="notes.close()">
+        <a href="/" class="btn" @click.prevent="notes.close()">
           <ArrowLeft :size="16" /> {{ t('patchNotes.back') }}
         </a>
 

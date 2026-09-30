@@ -11,7 +11,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from 'reka-ui'
-import { Castle, ChevronDown, Coins, LayoutDashboard, Skull, Swords, Users, X } from 'lucide-vue-next'
+import { Castle, ChevronDown, Coins, LayoutDashboard, Skull, Swords, Users, X } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { structureSlotsOf } from '@/domain/match/structures'
 import { MODES } from '@/content/modes'
@@ -310,7 +310,7 @@ const incomeRows = computed(() => {
 
           <TabsContent value="heroes" class="panel">
             <MeterTabs v-model="meter" />
-            <HeroMeterList :heroes="summary.heroes" :stat="meter" scale-hint />
+            <HeroMeterList :heroes="summary.heroes" :stat="meter" />
           </TabsContent>
 
           <TabsContent value="income" class="panel">

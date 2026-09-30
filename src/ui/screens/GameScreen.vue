@@ -8,7 +8,7 @@ import {
   useTimeoutFn,
   useWindowSize,
 } from '@vueuse/core'
-import { MousePointerClick } from 'lucide-vue-next'
+import { MousePointerClick } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
 import { fitMap, WHOLE_BOARD } from '@/rendering/fitMap'

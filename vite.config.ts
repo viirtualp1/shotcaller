@@ -3,6 +3,7 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
+import { seoPlugin } from './scripts/seoPlugin.ts'
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url))
 
@@ -12,6 +13,7 @@ const YEAR_SECONDS = 60 * 60 * 24 * 365
 export default defineConfig({
   plugins: [
     vue(),
+    seoPlugin(),
     VitePWA({
       /* A new version waits for the player's go-ahead: reloading on its own could cut into a duel. */
       registerType: 'prompt',
@@ -55,10 +57,24 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globIgnores: ['**/patches/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         /* Supabase is never cached: saves, friends and duels have to be live. */
         runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/audio/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'game-audio',
+              rangeRequests: true,
+              cacheableResponse: { statuses: [200] },
+              expiration: {
+                maxEntries: 128,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
+            },
+          },
           {
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
             handler: 'StaleWhileRevalidate',
@@ -87,7 +103,7 @@ export default defineConfig({
       dropMessageCompiler: true,
     }),
   ],
-  base: './',
+  base: '/',
   resolve: { alias: { '@': src('') } },
   build: {
     chunkSizeWarningLimit: 600,
@@ -95,6 +111,11 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
+            {
+              /* Keep the shared dynamic-import helper out of the otherwise lazy Pixi chunk. */
+              name: 'preload',
+              test: /\0vite\/preload-helper/,
+            },
             {
               name: 'pixi',
               test: /node_modules[\\/](pixi\.js|@pixi|earcut|eventemitter3|parse-svg-path|gifuct-js|ismobilejs)/,

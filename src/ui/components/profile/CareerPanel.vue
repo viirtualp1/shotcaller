@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, LockKeyhole, Play, Target, Trophy } from 'lucide-vue-next'
+import { Check, LockKeyhole, Play, Target, Trophy } from '@lucide/vue'
 import {
   DialogContent,
   DialogDescription,
@@ -188,7 +188,7 @@ function start() {
         </div>
       </TabsContent>
 
-      <TabsContent value="milestones" class="content">
+      <TabsContent value="milestones" class="content milestones">
         <div class="cards">
           <article
             v-for="milestone in milestones"
@@ -196,9 +196,8 @@ function start() {
             class="card"
             :class="{ complete: milestone.completed }"
           >
-            <div class="card-top">
-              <span class="tag">{{ t('career.tabs.milestones') }}</span>
-              <Check v-if="milestone.completed" :size="17" :aria-label="t('career.completed')" />
+            <div v-if="milestone.completed" class="card-top">
+              <Check :size="17" :aria-label="t('career.completed')" />
             </div>
 
             <h3>{{ t(`career.achievements.${milestone.id}.name`) }}</h3>
@@ -264,7 +263,7 @@ function start() {
 
 <style scoped>
 .career {
-  padding: 24px;
+  padding: 20px;
   border: 1px solid var(--edge-strong);
   border-radius: 18px;
   background: linear-gradient(140deg, rgba(244, 197, 91, 0.06), var(--panel) 55%);
@@ -274,7 +273,7 @@ function start() {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .eyebrow {
   display: inline-flex;
@@ -295,7 +294,7 @@ function start() {
 .career-tabs {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 .tab-list {
   width: fit-content;
@@ -440,6 +439,26 @@ time {
   flex-direction: column;
   gap: 8px;
 }
+.milestones .cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.milestones .card {
+  position: relative;
+  gap: 6px;
+  padding: 12px;
+}
+.milestones .card-top {
+  justify-content: flex-end;
+}
+.milestones .card-top {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+.milestones .card.complete h3 {
+  padding-right: 24px;
+}
+
 @media (max-width: 720px) {
   .career {
     padding: 18px 14px;

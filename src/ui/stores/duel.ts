@@ -1,6 +1,15 @@
-import { StorageSerializers, useIntervalFn, useLocalStorage, useNow } from '@vueuse/core'
+import {
+  StorageSerializers,
+  useDocumentVisibility,
+  useEventListener,
+  useIntervalFn,
+  useLocalStorage,
+  useNow,
+  useOnline,
+} from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
+import { BoardExchange } from '@/application/social/BoardExchange'
 import { parseRemoteBoard } from '@/application/persistence/snapshot'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import {
@@ -13,7 +22,7 @@ import {
   type DuelService,
 } from '@/application/social/duels'
 import type { ReactionId, ReactionLink } from '@/application/social/reactions'
-import { opponentOf, type ModeId } from '@/content/ids'
+import { opponentOf, type ModeId, type TeamId } from '@/content/ids'
 import type { MatchResult } from '@/domain/match/judge'
 import type { PlayerState } from '@/domain/player/Player'
 import { useCloudStore } from './cloud'
@@ -35,13 +44,6 @@ export interface ShownReaction {
 
 /** Realtime should bring the other board; this is the safety net if a message is lost. */
 const BOARD_POLL_MS = 5000
-
-interface PendingBoard {
-  readonly duelId: string
-  readonly round: number
-  readonly resolve: (board: PlayerState) => void
-  readonly reject: (error: Error) => void
-}
 
 const secondsSince = (iso: string | null, now: number) => (iso ? (now - Date.parse(iso)) / 1000 : 0)
 
@@ -81,8 +83,18 @@ export const useDuelStore = defineStore('duel', () => {
   let reactionLink: ReactionLink | null = null
   let reactionKey = 0
   let lastReceived = 0
-  let pending: PendingBoard | null = null
+  let boards: BoardExchange | null = null
+  const recovering = ref(false)
+  const online = useOnline()
+  const visibility = useDocumentVisibility()
+  const reconnecting = computed(() => recovering.value || !online.value)
   let generation = 0
+
+  let pendingReport: {
+    readonly id: string
+    readonly winner: TeamId | null
+    readonly byThrone: boolean
+  } | null = null
 
   const mySide = computed(() => (active.value && userId ? sideOf(active.value.duel, userId) : 0))
 
@@ -156,7 +168,35 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     const me = userId
-    const entries = await service.mine()
+    const connection = service
+    let entries = await connection.mine()
+    if (service !== connection || userId !== me) {
+      return
+    }
+
+    const runningHere = entries.find((entry) => entry.duel.id === active.value?.duel.id)
+    if (runningHere) {
+      onDuel(runningHere.duel)
+    }
+
+    if (outgoing.value) {
+      const outgoingNow = await connection.find(outgoing.value.duel.id)
+      if (service !== connection || userId !== me) {
+        return
+      }
+
+      if (outgoingNow) {
+        onDuel(outgoingNow)
+
+        if (outgoingNow.status === 'active') {
+          return
+        }
+
+        entries = entries.filter(
+          (entry) => entry.duel.id !== outgoingNow.id || entry.duel.status === outgoingNow.status,
+        )
+      }
+    }
 
     incoming.value = entries.find((e) => e.duel.status === 'invited' && e.duel.guest === me) ?? null
     outgoing.value = entries.find((e) => e.duel.status === 'invited' && e.duel.host === me) ?? null
@@ -214,11 +254,6 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     playing.value = null
-  }
-
-  function rejectPending(reason: string) {
-    pending?.reject(new Error(reason))
-    pending = null
   }
 
   function showReaction(reaction: ReactionId, mine: boolean) {
@@ -280,8 +315,9 @@ export const useDuelStore = defineStore('duel', () => {
   function stopDuel() {
     stopBoards?.()
     stopBoards = null
-    rejectPending('duel stopped')
+    boards?.cancel('duel stopped')
     active.value = null
+    pendingReport = null
   }
 
   /** A board from the other device, checked against the rules of the duel's mode. */
@@ -312,75 +348,123 @@ export const useDuelStore = defineStore('duel', () => {
     matchStore.leaveToMenu()
   }
 
-  function deliver(raw: unknown) {
-    const waiting = pending
-    if (!waiting) {
-      return
-    }
-
-    pending = null
-    const board = checkBoard(raw)
-
-    if (board) {
-      waiting.resolve(board)
-    } else {
-      waiting.reject(new Error('bad board'))
-      rejectBoard(waiting.duelId)
-    }
-  }
-
   async function exchange(duelId: string, round: number, board: PlayerState) {
-    if (!service) {
+    const exchange = boards
+    if (!exchange) {
       throw new DuelError('failed')
     }
 
     let theirs: unknown
-
     try {
-      theirs = await service.submitBoard(duelId, round, board)
+      theirs = await exchange.wait(duelId, round, board)
     } catch (error) {
-      fail(error)
+      if (error instanceof DuelError) {
+        fail(error)
+      }
 
       throw error
     }
 
-    if (theirs !== null) {
-      const accepted = checkBoard(theirs)
-      if (!accepted) {
-        rejectBoard(duelId)
-
-        throw new Error('bad board')
-      }
-
-      return accepted
+    if (boards !== exchange || active.value?.duel.id !== duelId) {
+      throw new Error('duel stopped')
     }
 
-    return new Promise<PlayerState>((resolve, reject) => {
-      pending = {
-        duelId,
-        round,
-        resolve,
-        reject,
-      }
-    })
+    const accepted = checkBoard(theirs)
+    if (!accepted) {
+      rejectBoard(duelId)
+
+      throw new Error('bad board')
+    }
+
+    return accepted
   }
 
-  useIntervalFn(async () => {
-    const waiting = pending
-    if (!waiting || !service) {
+  let polling = false
+  /** Recover boards and terminal duel state even when Realtime misses events during a disconnect. */
+  async function poll() {
+    const connection = service
+    const current = active.value
+    if (polling || !connection || !online.value) {
       return
     }
 
-    const theirs = await service.opponentBoard(waiting.duelId, waiting.round).catch(() => null)
-    if (theirs !== null && pending === waiting) {
-      deliver(theirs)
+    polling = true
+
+    try {
+      if (current) {
+        await Promise.all([
+          boards?.retry(),
+          retryReport(),
+          connection.find(current.duel.id).then((duel) => {
+            if (connection === service && duel) {
+              onDuel(duel)
+            }
+          }),
+        ])
+      } else if (outgoing.value || incoming.value || resumable.value) {
+        await load()
+      }
+    } catch {
+      /* A later poll retries; no repeated error toast while the network is unavailable. */
+    } finally {
+      polling = false
     }
-  }, BOARD_POLL_MS)
+  }
+
+  useIntervalFn(poll, BOARD_POLL_MS)
+
+  useEventListener(globalThis, 'online', () => {
+    void poll()
+    void load().catch(() => undefined)
+  })
+
+  watch(visibility, (state) => {
+    if (state === 'visible') {
+      void poll()
+    }
+  })
+
+  let reporting = false
+
+  async function retryReport() {
+    const queued = pendingReport
+    const connection = service
+    if (!queued || !connection || reporting) {
+      return
+    }
+
+    reporting = true
+
+    try {
+      await connection.report(queued.id, queued.winner, queued.byThrone)
+
+      if (pendingReport === queued) {
+        pendingReport = null
+      }
+    } catch (error) {
+      if (
+        pendingReport === queued &&
+        error instanceof DuelError &&
+        error.reason !== 'failed' &&
+        error.reason !== 'rateLimited'
+      ) {
+        pendingReport = null
+        fail(error)
+      }
+    } finally {
+      reporting = false
+    }
+  }
 
   function report(duelId: string, { winner, reason }: MatchResult) {
     const side = mySide.value
-    const winningSide = winner === null ? null : winner === 0 ? side : opponentOf(side)
-    void service?.report(duelId, winningSide, reason === 'throne').catch(() => undefined)
+    pendingReport = {
+      id: duelId,
+      winner: winner === null ? null : winner === 0 ? side : opponentOf(side),
+      byThrone: reason === 'throne',
+    }
+
+    void retryReport()
   }
 
   function binding(entry: DuelEntry): DuelBinding {
@@ -397,12 +481,8 @@ export const useDuelStore = defineStore('duel', () => {
 
     stopBoards =
       service?.watchBoards(entry.duel.id, (round, side) => {
-        if (pending && pending.duelId === entry.duel.id && pending.round === round && side !== mySide.value) {
-          /* Realtime only says a board arrived; it is fetched through the checked function. */
-          void service?.opponentBoard(entry.duel.id, round).then(
-            (theirs) => theirs !== null && deliver(theirs),
-            () => undefined,
-          )
+        if (boards?.matches(entry.duel.id, round) && side !== mySide.value) {
+          void boards.retry()
         }
       }) ?? null
   }
@@ -444,6 +524,10 @@ export const useDuelStore = defineStore('duel', () => {
     watchBoards(entry)
     listenForReactions(entry)
     matchStore.resumeDuel(binding(entry), state)
+
+    if (matchStore.phase === 'finished' && matchStore.view?.result) {
+      report(entry.duel.id, matchStore.view.result)
+    }
 
     const sent = entry.duel.boardRounds[sideOf(entry.duel, userId)]
     if (matchStore.phase === 'planning' && sent >= (matchStore.view?.round ?? Infinity)) {
@@ -617,6 +701,7 @@ export const useDuelStore = defineStore('duel', () => {
 
     stops = []
     stopDuel()
+    boards = null
     service = null
     userId = null
     incoming.value = null
@@ -637,6 +722,11 @@ export const useDuelStore = defineStore('duel', () => {
 
     userId = id
     service = cloudClient.duels(id)
+
+    boards = new BoardExchange(service, (value) => {
+      recovering.value = value
+    })
+
     stops = [service.watch(onDuel)]
     await load().catch(() => undefined)
   }
@@ -647,7 +737,7 @@ export const useDuelStore = defineStore('duel', () => {
       disconnect()
 
       if (id) {
-        void connectAs(id)
+        void connectAs(id).catch(() => undefined)
       }
     },
     { immediate: true },
@@ -663,6 +753,7 @@ export const useDuelStore = defineStore('duel', () => {
     busy,
     opponentReady,
     canClaim,
+    reconnecting,
     inviteSecondsLeft,
     reactionsShown,
     reactionsMuted,

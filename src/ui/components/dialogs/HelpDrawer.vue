@@ -16,7 +16,7 @@ import {
   Trophy,
   Users,
   Wand2,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed, type Component } from 'vue'
 import { ITEM_IDS, ROLE_IDS, SYNERGY_IDS } from '@/content/ids'
@@ -181,7 +181,7 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
           <h3 class="section-title"><Route :size="15" /> {{ t('settings.laneOrders') }}</h3>
           <p>{{ t('help.ordersGuide') }}</p>
 
-          <a href="#/patches/8.5" class="btn" @click.prevent="openOrdersGuide">
+          <a href="/patches/8.5/" class="btn" @click.prevent="openOrdersGuide">
             <Route :size="16" /> {{ t('settings.laneOrdersAbout') }} <ArrowRight :size="15" />
           </a>
         </section>

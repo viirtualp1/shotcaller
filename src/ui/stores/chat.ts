@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { computed, ref, shallowRef, watch } from 'vue'
+import { useDocumentVisibility } from '@vueuse/core'
+import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import {
   CONVERSATION_PAGE,
   ChatError,
@@ -10,6 +11,7 @@ import {
 import { useCloudStore } from './cloud'
 import { useFriendsStore } from './friends'
 import { useNotificationsStore } from './notifications'
+import { useModalsStore } from './modals'
 
 /** The server keeps this many messages per conversation; the screen never needs more. */
 const KEPT_MESSAGES = 200
@@ -19,6 +21,20 @@ const messageKey = (friendId: string) => `message:${friendId}`
 export const useChatStore = defineStore('chat', () => {
   const cloud = useCloudStore()
   const friends = useFriendsStore()
+  const modals = useModalsStore()
+  const documentVisibility = useDocumentVisibility()
+  const minimized = ref(false)
+  const atEnd = ref(true)
+  const drafts = reactive<Record<string, string>>({})
+
+  const windowOpen = computed(
+    () => cloud.signedIn && (friends.open || friendId.value !== null) && !minimized.value && !modals.anyOpen,
+  )
+
+  const reading = computed(
+    () => windowOpen.value && !loading.value && atEnd.value && documentVisibility.value === 'visible',
+  )
+
   const unread = shallowRef<ReadonlyMap<string, number>>(new Map())
   /** The friend whose conversation is open. */
   const friendId = ref<string | null>(null)
@@ -33,11 +49,15 @@ export const useChatStore = defineStore('chat', () => {
   let stop: (() => void) | null = null
   let userId: string | null = null
   let generation = 0
+  let conversationGeneration = 0
+  let pendingConnection: Promise<void> | null = null
+  const changedUnread = new Set<string>()
 
   const totalUnread = computed(() => [...unread.value.values()].reduce((sum, n) => sum + n, 0))
   const unreadFrom = (id: string) => unread.value.get(id) ?? 0
 
   function setUnread(id: string, count: number) {
+    changedUnread.add(id)
     const next = new Map(unread.value)
 
     if (count > 0) {
@@ -64,11 +84,15 @@ export const useChatStore = defineStore('chat', () => {
     if (other === friendId.value) {
       append(message)
 
-      if (!mine) {
+      if (!mine && reading.value) {
         void service?.markRead(other).catch(() => undefined)
+
+        return
       }
 
-      return
+      if (mine) {
+        return
+      }
     }
 
     if (!mine) {
@@ -88,45 +112,112 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function open(id: string) {
-    friendId.value = id
+  async function acknowledge(id: string) {
+    if (!service || !reading.value || friendId.value !== id) {
+      return
+    }
+
+    setUnread(id, 0)
     notifications.dismissKey(messageKey(id))
+    await service.markRead(id).catch(() => undefined)
+  }
+
+  async function open(id: string, reload = false) {
+    if (friendId.value === id && !reload) {
+      minimized.value = false
+      friends.open = true
+      void acknowledge(id)
+
+      return
+    }
+
+    const attempt = ++conversationGeneration
+    const connection = service
+    loading.value = true
+    friendId.value = id
+    minimized.value = false
+    friends.open = true
+    atEnd.value = true
     messages.value = []
     hasOlder.value = false
     failure.value = null
 
-    if (!service) {
+    if (!connection) {
+      const accountId = cloud.signedIn ? cloud.account?.id : null
+      if (accountId) {
+        void connectAs(accountId).catch(() => {
+          if (attempt === conversationGeneration) {
+            loading.value = false
+            failure.value = 'failed'
+          }
+        })
+      } else {
+        loading.value = false
+      }
+
       return
     }
 
-    loading.value = true
-
     try {
-      const page = await service.conversation(id)
-      if (friendId.value !== id) {
+      const page = await connection.conversation(id)
+      if (attempt !== conversationGeneration) {
         return
       }
 
-      messages.value = page
+      /* Realtime may deliver a message while the first page is still loading. */
+      messages.value = [...new Map([...page, ...messages.value].map((m) => [m.id, m])).values()].sort(
+        (a, b) => a.id - b.id,
+      )
+
       hasOlder.value = page.length === CONVERSATION_PAGE
-      setUnread(id, 0)
-      await service.markRead(id)
+      await acknowledge(id)
     } catch {
-      failure.value = 'failed'
+      if (attempt === conversationGeneration) {
+        failure.value = 'failed'
+      }
     } finally {
-      loading.value = false
+      if (attempt === conversationGeneration) {
+        loading.value = false
+      }
     }
   }
 
   function close() {
+    conversationGeneration++
     friendId.value = null
     messages.value = []
     failure.value = null
+    loading.value = false
+    hasOlder.value = false
   }
+
+  function minimize() {
+    minimized.value = true
+  }
+
+  function toggleWindow() {
+    if (windowOpen.value) {
+      minimize()
+    } else {
+      minimized.value = false
+      friends.open = true
+    }
+  }
+
+  watch(
+    reading,
+    (active) => {
+      if (active && friendId.value) {
+        void acknowledge(friendId.value)
+      }
+    },
+    { flush: 'sync' },
+  )
 
   async function loadOlder() {
     const id = friendId.value
     const oldest = messages.value[0]
+    const attempt = conversationGeneration
     if (!service || !id || !oldest || loading.value) {
       return
     }
@@ -135,14 +226,18 @@ export const useChatStore = defineStore('chat', () => {
 
     try {
       const page = await service.conversation(id, oldest.id)
-      if (friendId.value === id) {
+      if (attempt === conversationGeneration) {
         messages.value = [...page, ...messages.value]
         hasOlder.value = page.length === CONVERSATION_PAGE
       }
     } catch {
-      failure.value = 'failed'
+      if (attempt === conversationGeneration) {
+        failure.value = 'failed'
+      }
     } finally {
-      loading.value = false
+      if (attempt === conversationGeneration) {
+        loading.value = false
+      }
     }
   }
 
@@ -153,38 +248,73 @@ export const useChatStore = defineStore('chat', () => {
       return false
     }
 
+    const attempt = conversationGeneration
+    const connectionGeneration = generation
+    const connection = service
     sending.value = true
     failure.value = null
 
     try {
-      append(await service.send(id, body))
+      const message = await connection.send(id, body)
+      if (attempt === conversationGeneration && connectionGeneration === generation) {
+        append(message)
+      }
 
       return true
     } catch (error) {
-      failure.value = error instanceof ChatError ? error.reason : 'failed'
+      const reason = error instanceof ChatError ? error.reason : 'failed'
+      if (attempt === conversationGeneration && connectionGeneration === generation) {
+        failure.value = reason
+      }
 
       /* Most likely they removed or blocked us; the friends list catches up. */
-      if (failure.value === 'forbidden') {
+      if (reason === 'forbidden' && connectionGeneration === generation) {
         void friends.refresh()
       }
 
       return false
     } finally {
-      sending.value = false
+      if (connectionGeneration === generation) {
+        sending.value = false
+      }
     }
   }
 
   function disconnect() {
     generation++
+    pendingConnection = null
+    changedUnread.clear()
     stop?.()
     stop = null
     service = null
     userId = null
     unread.value = new Map()
+    sending.value = false
+    minimized.value = false
+
+    for (const id of Object.keys(drafts)) {
+      delete drafts[id]
+    }
+
     close()
   }
 
-  async function connectAs(id: string) {
+  function connectAs(id: string): Promise<void> {
+    if (pendingConnection) {
+      return pendingConnection
+    }
+
+    const attempt = generation
+    pendingConnection = connectTo(id).finally(() => {
+      if (attempt === generation) {
+        pendingConnection = null
+      }
+    })
+
+    return pendingConnection
+  }
+
+  async function connectTo(id: string) {
     const attempt = generation
     const cloudClient = await cloud.connect()
     if (attempt !== generation) {
@@ -193,12 +323,21 @@ export const useChatStore = defineStore('chat', () => {
 
     userId = id
     service = cloudClient.chat(id)
-    stop = service.watch(onMessage)
+
+    stop = service.watch((message) => {
+      if (attempt === generation) {
+        onMessage(message)
+      }
+    })
+
+    if (friendId.value) {
+      void open(friendId.value, true)
+    }
 
     try {
       const counts = await service.unread()
       if (attempt === generation) {
-        unread.value = counts
+        unread.value = new Map([...counts].filter(([id]) => !changedUnread.has(id)).concat([...unread.value]))
       }
     } catch {
       /* Unread badges are a nicety; the conversations still load when opened. */
@@ -211,7 +350,13 @@ export const useChatStore = defineStore('chat', () => {
       disconnect()
 
       if (id) {
-        void connectAs(id)
+        const attempt = generation
+        void connectAs(id).catch(() => {
+          if (attempt === generation) {
+            failure.value = 'failed'
+            loading.value = false
+          }
+        })
       }
     },
     { immediate: true },
@@ -225,6 +370,12 @@ export const useChatStore = defineStore('chat', () => {
         close()
       }
 
+      for (const id of Object.keys(drafts)) {
+        if (!ids.includes(id)) {
+          delete drafts[id]
+        }
+      }
+
       if ([...unread.value.keys()].some((id) => !ids.includes(id))) {
         unread.value = new Map([...unread.value].filter(([id]) => ids.includes(id)))
       }
@@ -233,6 +384,12 @@ export const useChatStore = defineStore('chat', () => {
 
   return {
     friendId,
+    minimized,
+    windowOpen,
+    atEnd,
+    drafts,
+    minimize,
+    toggleWindow,
     messages,
     hasOlder,
     loading,

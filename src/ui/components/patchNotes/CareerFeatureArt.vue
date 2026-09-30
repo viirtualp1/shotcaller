@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, ChevronRight, Crown, Flag, Shield, Star, Target, Trophy } from 'lucide-vue-next'
+import { Check, ChevronRight, Crown, Flag, Shield, Star, Target, Trophy } from '@lucide/vue'
 import { computed } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMediaQuery, useRafFn } from '@vueuse/core'
+import { useDocumentVisibility, useMediaQuery, useRafFn } from '@vueuse/core'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import type { ModeId } from '@/content/ids'
@@ -18,6 +18,7 @@ const host = ref<HTMLElement | null>(null)
 const renderer = useBoardRenderer(host, 0, props.mode)
 /* With reduced motion the fight is only set up, never played, and the board shows at once. */
 const still = useMediaQuery('(prefers-reduced-motion: reduce)')
+const visibility = useDocumentVisibility()
 
 let session: BattleSession | null = null
 
@@ -33,6 +34,7 @@ function nextFight() {
 }
 
 watch(renderer, () => {
+  renderer.value?.setMaxFPS(30)
   nextFight()
 
   if (still.value) {
@@ -41,7 +43,7 @@ watch(renderer, () => {
 })
 
 useRafFn(({ delta }) => {
-  if (!session || still.value) {
+  if (!session || still.value || visibility.value !== 'visible') {
     return
   }
 

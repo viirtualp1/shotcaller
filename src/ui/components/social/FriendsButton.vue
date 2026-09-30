@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Users } from 'lucide-vue-next'
+import { Users } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
@@ -12,6 +12,8 @@ const cloud = useCloudStore()
 const friends = useFriendsStore()
 const chat = useChatStore()
 const { t } = useGameText()
+
+withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
 /** New friend requests and unread messages. */
 const news = computed(() => friends.incoming.length + chat.totalUnread)
@@ -29,7 +31,15 @@ const label = computed(() =>
 
 <template>
   <InfoTooltip v-if="cloud.signedIn" side="bottom">
-    <button type="button" class="friends" :aria-label="label" @click="friends.open = true">
+    <button
+      type="button"
+      class="friends"
+      :class="{ compact }"
+      :aria-label="label"
+      :aria-expanded="chat.windowOpen"
+      aria-controls="social-window"
+      @click="chat.toggleWindow()"
+    >
       <span class="icon" aria-hidden="true">
         <Users :size="20" />
         <span v-if="news" class="badge">{{ news }}</span>
@@ -86,8 +96,8 @@ const label = computed(() =>
 
 .badge {
   position: absolute;
-  top: -6px;
-  right: -8px;
+  bottom: -5px;
+  right: -5px;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
@@ -103,13 +113,20 @@ const label = computed(() =>
 
 .dot {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
+  right: 6px;
+  top: 5px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #7fe0b4;
   box-shadow: 0 0 6px rgba(127, 224, 180, 0.8);
   outline: 2px solid var(--board-deep);
+}
+.friends.compact {
+  width: 48px;
+  min-height: 48px;
+  padding: 4px;
+  border-radius: 14px;
+  animation: none;
 }
 </style>

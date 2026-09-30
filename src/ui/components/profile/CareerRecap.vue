@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, Target, Trophy } from 'lucide-vue-next'
+import { Check, Target, Trophy } from '@lucide/vue'
 import { computed } from 'vue'
 import { trialPassed } from '@/domain/profile/career'
 import type { CareerReward } from '@/domain/profile/career'

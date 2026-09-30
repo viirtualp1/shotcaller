@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChartColumn, Route, Store, Users } from 'lucide-vue-next'
+import { ChartColumn, Route, Store, Users } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useDockStore, type DockTab } from '../../stores/dock'

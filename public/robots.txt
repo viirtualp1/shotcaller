@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /game/
+Disallow: /replay/
+Disallow: /profile/
+Disallow: /career/
+Disallow: /audio/
+
+# Hash-based personal screens are not separate crawlable URLs.
+# The app also marks matches, replays, profiles and career screens noindex.
+Sitemap: https://theshotcaller.online/sitemap.xml

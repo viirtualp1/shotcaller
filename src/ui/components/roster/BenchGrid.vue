@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Wand2 } from 'lucide-vue-next'
+import { Wand2 } from '@lucide/vue'
 import { computed } from 'vue'
 import type { HeroCardView } from '@/application/views'
 import { useGameText } from '../../composables/useGameText'

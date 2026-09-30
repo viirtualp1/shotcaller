@@ -57,7 +57,9 @@ const history = computed(() =>
       <span class="round">{{ t('hud.round', { round: view.round, max: view.maxRounds }) }}</span>
 
       <Transition name="phase" mode="out-in">
-        <span v-if="store.awaiting" key="awaiting" class="phase awaiting">{{ t('duel.waiting') }}</span>
+        <span v-if="store.awaiting" key="awaiting" class="phase awaiting">{{
+          t(duel.reconnecting ? 'duel.reconnecting' : 'duel.waiting')
+        }}</span>
 
         <span v-else-if="store.phase === 'battle' && secondsLeft !== null" key="timer" class="phase battle">
           {{ t('battle.timeLeft', { s: secondsLeft }) }}

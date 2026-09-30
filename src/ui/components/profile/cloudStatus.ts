@@ -1,4 +1,4 @@
-import { CloudAlert, CloudCheck, CloudOff, CloudUpload, RotateCw } from 'lucide-vue-next'
+import { CloudAlert, CloudCheck, CloudOff, CloudUpload, RotateCw } from '@lucide/vue'
 import type { Component } from 'vue'
 import type { CloudStatus } from '../../stores/cloud'
 

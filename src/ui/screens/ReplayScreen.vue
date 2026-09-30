@@ -7,7 +7,7 @@ import {
   useScrollLock,
   useWindowSize,
 } from '@vueuse/core'
-import { Pause, Play, RotateCcw, X } from 'lucide-vue-next'
+import { Pause, Play, RotateCcw, X } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import { MODES } from '@/content/modes'
@@ -31,6 +31,8 @@ import HeroAvatar from '../components/common/HeroAvatar.vue'
 import type { MeterStat } from '../components/battle/DamageMeter.vue'
 import FighterLabel from '../components/battle/FighterLabel.vue'
 import MeterTabs from '../components/battle/MeterTabs.vue'
+import { useChatStore } from '../stores/chat'
+import { useModalsStore } from '../stores/modals'
 import { useReplayStore } from '../stores/replay'
 
 const SPEEDS = [1, 2, 4] as const
@@ -43,6 +45,8 @@ const props = defineProps<{
 }>()
 
 const replay = useReplayStore()
+const chat = useChatStore()
+const modals = useModalsStore()
 const text = useGameText()
 const { t } = text
 const host = ref<HTMLElement | null>(null)
@@ -214,6 +218,15 @@ function toggle() {
 }
 
 function onKey(event: KeyboardEvent) {
+  if (
+    event.defaultPrevented ||
+    chat.windowOpen ||
+    modals.anyOpen ||
+    (event.target instanceof HTMLElement && event.target.closest('input, textarea, [contenteditable="true"]'))
+  ) {
+    return
+  }
+
   if (event.key === 'Escape') {
     event.preventDefault()
 
@@ -416,8 +429,8 @@ onBeforeUnmount(() => {
   --side: 0px;
   position: fixed;
   inset: 0;
-  /* Above the social windows, below item tooltips portaled to the body. */
-  z-index: 49;
+  /* Social controls and dialogs remain available while watching. */
+  z-index: 38;
   overflow: hidden;
   background: var(--board);
   pointer-events: auto;

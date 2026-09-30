@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Cloud, Smartphone } from 'lucide-vue-next'
+import { Cloud, Smartphone } from '@lucide/vue'
 import {
   DialogContent,
   DialogDescription,

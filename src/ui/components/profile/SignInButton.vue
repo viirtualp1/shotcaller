@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CloudUpload } from 'lucide-vue-next'
+import { CloudUpload } from '@lucide/vue'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
 

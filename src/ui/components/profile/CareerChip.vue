@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trophy } from 'lucide-vue-next'
+import { Trophy } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
@@ -68,9 +68,8 @@ const progressLabel = computed(() =>
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   min-height: var(--coach-card-height, 66px);
-  padding: 0 22px;
+  padding: 12px 20px;
   border-radius: 14px;
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
@@ -107,8 +106,9 @@ const progressLabel = computed(() =>
 }
 
 .content {
+  min-width: 0;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
 }
 
@@ -162,7 +162,7 @@ const progressLabel = computed(() =>
     flex-direction: column;
     gap: 6px;
     width: 80px;
-    padding: 0 20px;
+    padding: 12px 20px;
   }
 
   .body {

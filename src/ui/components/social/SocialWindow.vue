@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Bell, BellOff, X } from 'lucide-vue-next'
-import { computed, watch } from 'vue'
+import { Bell, BellOff, X } from '@lucide/vue'
+import { useEventListener } from '@vueuse/core'
+import { computed, nextTick, useTemplateRef, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
-import { useModalsStore } from '../../stores/modals'
 import { useSystemNotificationsStore } from '../../stores/systemNotifications'
 import ChatPanel from './ChatPanel.vue'
 import FriendsList from './FriendsList.vue'
@@ -17,7 +17,6 @@ import FriendsList from './FriendsList.vue'
 const friends = useFriendsStore()
 const chat = useChatStore()
 const duel = useDuelStore()
-const modals = useModalsStore()
 const system = useSystemNotificationsStore()
 const { t } = useGameText()
 
@@ -43,7 +42,37 @@ function toggleBell() {
 }
 
 const chatting = computed(() => friends.friends.find((f) => f.id === chat.friendId) ?? null)
-const visible = computed(() => friends.open || chatting.value !== null)
+const window = useTemplateRef<HTMLElement>('window')
+const panel = useTemplateRef<InstanceType<typeof ChatPanel>>('chatPanel')
+const focusChat = () => panel.value?.focusComposer()
+
+useEventListener(
+  document,
+  'keydown',
+  (event) => {
+    if (event.key !== 'Escape' || event.defaultPrevented || !chat.windowOpen) {
+      return
+    }
+
+    if (window.value?.querySelector('[data-emoji-open="true"]')) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    close()
+  },
+  { capture: true },
+)
+
+watch(
+  () => chat.windowOpen,
+  (open) => {
+    if (!open && window.value?.contains(document.activeElement)) {
+      ;(document.activeElement as HTMLElement).blur()
+    }
+  },
+)
 
 /* The list catches up on anything Realtime cannot report, such as being removed by a friend. */
 watch(
@@ -60,17 +89,7 @@ watch(
   () => duel.active?.duel.id,
   (id) => {
     if (id) {
-      close()
-    }
-  },
-)
-
-/* Any dialog takes the stage, a friend's profile too; its "message" button brings the chat back. */
-watch(
-  () => modals.anyOpen,
-  (open) => {
-    if (open) {
-      close()
+      chat.minimize()
     }
   },
 )
@@ -81,18 +100,29 @@ function back() {
 }
 
 function close() {
-  chat.close()
-  friends.open = false
+  chat.minimize()
+
+  void nextTick(() =>
+    document.querySelector<HTMLElement>('[aria-controls="social-window"]')?.focus({ preventScroll: true }),
+  )
 }
 </script>
 
 <template>
-  <Transition name="social-window">
-    <aside v-if="visible" class="social-window">
+  <Transition name="social-window" @after-enter="focusChat">
+    <aside
+      v-show="chat.windowOpen"
+      id="social-window"
+      ref="window"
+      class="social-window"
+      :aria-label="t('friends.title')"
+    >
       <ChatPanel
         v-if="chatting"
+        ref="chatPanel"
         :key="chatting.id"
         :friend="chatting"
+        :active="chat.windowOpen"
         class="panel"
         @back="back"
         @close="close"

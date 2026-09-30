@@ -18,7 +18,7 @@ const heroId = z.enum(HERO_IDS)
 const itemId = z.enum(ITEM_IDS)
 const stars = z.union([z.literal(1), z.literal(2), z.literal(3)])
 const level = z.number().int().min(1).max(5)
-const amount = z.number().finite().nonnegative()
+const amount = z.number().nonnegative()
 /** Matches saved before game modes were all three lanes. */
 const mode = z.enum(MODE_IDS).default(DEFAULT_MODE)
 

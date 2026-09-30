@@ -97,6 +97,26 @@ describe('game audio engine', () => {
     },
   )
 
+  it('does not download muted music and starts the current track when unmuted', async () => {
+    engine.setMusicVolume(0)
+    engine.setMusic('battle')
+    engine.setMusic('climax')
+    gestures.dispatchEvent(new Event('pointerdown'))
+    expect(FakeAudio.instances).toHaveLength(0)
+    engine.setMusicVolume(0.2)
+    await vi.advanceTimersByTimeAsync(1100)
+    expect(active()).toHaveLength(1)
+    expect(active()[0]!.src).toContain('determined-pursuit.m4a')
+    engine.setMusicVolume(0)
+    expect(active()).toHaveLength(0)
+  })
+
+  it('loads audio from the site root when a patch page is open', () => {
+    page.baseURI = 'https://shotcaller.test/patches/8.6.1/'
+    engine.setMusic('battle')
+    expect(active()[0]!.src).toBe('https://shotcaller.test/audio/music/battle-theme-a.mp3')
+  })
+
   it('retries blocked music on a later gesture', async () => {
     FakeAudio.rejectNextPlay = true
     engine.setMusic('preparation')

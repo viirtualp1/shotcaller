@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowUpRight, Flag, Layers3, Shield, Sparkles, Swords, Target, Trophy } from 'lucide-vue-next'
+import { ArrowUpRight, Flag, Layers3, Shield, Sparkles, Swords, Target, Trophy } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'

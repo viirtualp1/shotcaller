@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Swords, Wand2 } from 'lucide-vue-next'
+import { Swords, Wand2 } from '@lucide/vue'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { computed } from 'vue'
 import type { ShopOfferView } from '@/application/views'

@@ -7,13 +7,9 @@ import HeroAvatar from '../common/HeroAvatar.vue'
 import FighterLabel from './FighterLabel.vue'
 import type { MeterHero, MeterStat } from './meter'
 
-const props = withDefaults(
-  defineProps<{ heroes: readonly MeterHero[]; stat: MeterStat; team?: TeamId; scaleHint?: boolean }>(),
-  {
-    team: 0,
-    scaleHint: false,
-  },
-)
+const props = withDefaults(defineProps<{ heroes: readonly MeterHero[]; stat: MeterStat; team?: TeamId }>(), {
+  team: 0,
+})
 
 const text = useGameText()
 const { t } = text
@@ -33,10 +29,6 @@ const share = (hero: MeterHero) =>
 
 <template>
   <div class="hero-meter" :class="[stat, { enemy: team === 1 }]">
-    <p v-if="scaleHint && maximum > 0" class="scale">
-      {{ t('summary.meterScale', { value: text.number(Math.round(maximum)) }) }}
-    </p>
-
     <ol v-if="rows.length" class="meter">
       <li v-for="hero in rows" :key="hero.uid" class="row" :class="{ dead: hero.dead }">
         <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="30" />
@@ -77,7 +69,6 @@ const share = (hero: MeterHero) =>
 .hero-meter.healing {
   --meter-color: var(--heal);
 }
-.scale,
 .empty {
   margin: 0;
   font-size: 11px;

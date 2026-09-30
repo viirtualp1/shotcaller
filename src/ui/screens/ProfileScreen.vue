@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer } from 'lucide-vue-next'
+import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer } from '@lucide/vue'
 import { computed, ref, type Component } from 'vue'
 import AvatarPicker from '../components/profile/AvatarPicker.vue'
 import CloudCard from '../components/profile/CloudCard.vue'
@@ -100,7 +100,7 @@ function play() {
   <div class="profile-page">
     <header class="topbar">
       <div class="bar">
-        <a href="./" class="btn ghost" @click.prevent="profile.close()">
+        <a href="/" class="btn ghost" @click.prevent="profile.close()">
           <ArrowLeft :size="16" /> {{ t('profile.back') }}
         </a>
       </div>

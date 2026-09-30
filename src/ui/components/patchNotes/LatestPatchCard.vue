@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ScrollText } from 'lucide-vue-next'
+import { ScrollText } from '@lucide/vue'
 import { useGameText } from '../../composables/useGameText'
 import { isFresh, LATEST_PATCH } from '../../patchNotes/notes'
 import { usePatchNotesStore } from '../../stores/patchNotes'
@@ -11,7 +11,7 @@ const { t } = useGameText()
 
 <template>
   <PatchCard
-    :href="`#/patches/${LATEST_PATCH.version}`"
+    :href="`/patches/${LATEST_PATCH.version}/`"
     :icon="ScrollText"
     :eyebrow="`${t('patchNotes.latest')} · ${t('patchNotes.patch', { version: LATEST_PATCH.version })}`"
     :title="LATEST_PATCH.title"
