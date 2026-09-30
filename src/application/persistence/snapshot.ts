@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { TRIAL_IDS } from '@/content/career'
 import { HERO_IDS, ITEM_IDS, LANE_IDS, LANE_STANCES, MODE_IDS, type ModeId } from '@/content/ids'
 import { ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { DEFAULT_MODE, levelRules, MODES } from '@/content/modes'
@@ -174,6 +175,7 @@ const remoteLink = z.object({
 
 const matchState = z.object({
   mode,
+  trialId: z.enum(TRIAL_IDS).optional(),
   round: z.number().int().positive(),
   phase: z.enum(['planning', 'battle', 'summary', 'finished']),
   rng: z.object({

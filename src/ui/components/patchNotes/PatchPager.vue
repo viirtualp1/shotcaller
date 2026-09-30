@@ -15,7 +15,7 @@ const props = defineProps<{ patch: PatchNote }>()
 const notes = usePatchNotesStore()
 const { t } = useGameText()
 
-const index = computed(() => PATCH_NOTES.indexOf(props.patch))
+const index = computed(() => PATCH_NOTES.findIndex((entry) => entry.version === props.patch.version))
 const older = computed(() => PATCH_NOTES[index.value + 1] ?? null)
 const newer = computed(() => (index.value > 0 ? PATCH_NOTES[index.value - 1]! : null))
 

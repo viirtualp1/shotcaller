@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
+import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed, shallowRef } from 'vue'
 import { LocalStorageProfileRepository } from '@/application/persistence/ProfileRepository'
 import type { HeroId } from '@/content/ids'
 import { PROFILE } from '@/content/profile'
+import { TRIALS } from '@/content/career'
+import { careerWeek, weeklyContracts, weeklyProgress, type advanceCareer } from '@/domain/profile/career'
 import { randomIds } from '@/core/ids'
 import type { Match } from '@/domain/match/Match'
 import {
@@ -23,18 +26,38 @@ export const useProfileStore = defineStore('profile', () => {
   const repository = new LocalStorageProfileRepository()
   const settings = useSettingsStore()
 
-  const page = useHashPage(
-    (hash) => (/^#\/profile\/?$/.test(hash) ? true : null),
-    () => '#/profile',
+  const page = useHashPage<'profile' | 'career'>(
+    (hash) => {
+      if (/^#\/profile\/?$/.test(hash)) {
+        return 'profile'
+      }
+
+      return /^#\/career\/?$/.test(hash) ? 'career' : null
+    },
+    (section) => `#/${section}`,
   )
 
   const profile = shallowRef<Profile>(repository.load() ?? createProfile(new Date().toISOString()))
   /** The match that just ended, for the post-game screen. */
   const lastRecord = shallowRef<MatchRecord | null>(null)
+  const lastProgress = shallowRef<ReturnType<typeof advanceCareer> | null>(null)
+  const now = useNow({ scheduler: (tick) => useIntervalFn(tick, 60_000) })
+  const week = computed(() => careerWeek(now.value))
 
   const rank = computed(() => rankFor(profile.value.rating))
   const level = computed(() => levelFor(profile.value.xp))
   const avatar = computed(() => avatarOf(profile.value))
+  const nextTrial = computed(() => TRIALS.find((trial) => trial.level > level.value.level) ?? null)
+
+  const contracts = computed(() => {
+    const progress = weeklyProgress(profile.value.career, week.value)
+
+    return weeklyContracts(week.value).map((contract) => ({
+      ...contract,
+      progress: Math.min(contract.target, progress.progress[contract.id]),
+      completed: Boolean(progress.completed[contract.id]),
+    }))
+  })
 
   function update(next: Profile) {
     profile.value = next
@@ -62,6 +85,8 @@ export const useProfileStore = defineStore('profile', () => {
       return null
     }
 
+    lastProgress.value = result.progress ?? null
+
     update(result.profile)
 
     return result.record
@@ -70,6 +95,7 @@ export const useProfileStore = defineStore('profile', () => {
   /** A new match has no result yet; the post-game screen must not show the previous one. */
   function forgetLast() {
     lastRecord.value = null
+    lastProgress.value = null
   }
 
   /** Takes a profile the cloud settled on; unlike the other actions it is not queued for sync. */
@@ -79,7 +105,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   /** A fresh profile, for signing out of an account. */
   function reset() {
-    lastRecord.value = null
+    forgetLast()
     update(createProfile(new Date().toISOString()))
   }
 
@@ -100,11 +126,17 @@ export const useProfileStore = defineStore('profile', () => {
   return {
     profile,
     lastRecord,
+    lastProgress,
     rank,
     level,
     avatar,
+    nextTrial,
+    week,
+    contracts,
     isOpen: computed(() => page.state.value !== null),
-    open: () => page.open(true),
+    isCareer: computed(() => page.state.value === 'career'),
+    open: () => page.open('profile'),
+    openCareer: () => page.open('career'),
     close: page.close,
     record,
     forgetLast,

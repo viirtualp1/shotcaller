@@ -1,4 +1,76 @@
 {
+  "career": {
+    "eyebrow": "Coach progression",
+    "title": "Career",
+    "intro": "Play, explore new lineups and unlock tactical trials.",
+    "open": "Career and trials",
+    "contractProgress": "Contracts: {completed}/{total}",
+    "levelProgress": "Profile XP to the next level",
+    "nextUnlock": "Level {level} unlocks {name}",
+    "allUnlocked": "All trials unlocked. Improve your records!",
+    "unlocked": "Trial unlocked: {name}",
+    "tabs": { "trials": "Trials", "weekly": "Contracts", "milestones": "Milestones" },
+    "resets": "New contracts: {date}",
+    "completed": "Completed",
+    "locked": "Level {level} required",
+    "bestRounds": "Best clear: {n} rounds",
+    "firstClear": "+{xp} XP for your first clear",
+    "xpReward": "+{xp} XP",
+    "rewardReceived": "Reward received",
+    "rewardBreakdown": "Match: {match} · rewards: {bonus}",
+    "play": "Start trial",
+    "retry": "Replay",
+    "trialSetup": "Mode: {mode}. Standard difficulty, the same starting conditions each attempt. Regular combat rules.",
+    "replaceSave": "Starting this trial will replace your saved solo match.",
+    "trialPassed": "Trial cleared",
+    "trialMissed": "Objective not met. You can try again",
+    "weeklyCompleted": "contracts completed",
+    "trials": {
+      "siege": {
+        "name": "Throne assault",
+        "objective": "Win by destroying the bot's throne on two lanes. A round-limit victory does not count."
+      },
+      "synergy": {
+        "name": "Better together",
+        "objective": "Win on two lanes with three different active synergies in your final lineup."
+      },
+      "arsenal": {
+        "name": "Full arsenal",
+        "objective": "Win on one lane with three heroes carrying two items each in your final lineup."
+      },
+      "threeFronts": {
+        "name": "Three fronts",
+        "objective": "Win on three lanes. Occupy all three lanes and activate at least three different synergies in your final lineup."
+      }
+    },
+    "contracts": {
+      "matches": { "name": "On the field", "objective": "Finish {n} matches." },
+      "rounds": { "name": "Combat practice", "objective": "Play {n} rounds in finished matches." },
+      "towers": { "name": "Siege work", "objective": "Destroy {n} towers in finished matches." },
+      "kills": { "name": "Team effort", "objective": "Kill {n} enemy heroes in finished matches." },
+      "synergies": {
+        "name": "Make connections",
+        "objective": "Finish {n} matches with two different active synergies in your final lineup."
+      },
+      "upgrades": {
+        "name": "A stronger lineup",
+        "objective": "Finish {n} matches with two heroes at two stars or higher in your final lineup."
+      }
+    },
+    "achievements": {
+      "regular": { "name": "Finding your feet", "objective": "Finish {n} matches." },
+      "throneBreaker": {
+        "name": "Throne breaker",
+        "objective": "Win {n} matches by destroying the enemy throne."
+      },
+      "explorer": { "name": "A broad roster", "objective": "Field {n} different heroes across your career." },
+      "strategist": {
+        "name": "Tactical range",
+        "objective": "Win with {n} different synergies across your career."
+      },
+      "threeStar": { "name": "Three stars", "objective": "Field a three-star hero in combat." }
+    }
+  },
   "app": {
     "title": "The Shotcaller"
   },
@@ -258,6 +330,18 @@
     "total": "Total",
     "next": "Back to the shop",
     "nextIn": "Back to the shop · {s} s",
+    "tabs": { "overview": "Overview" },
+    "income": "Gold earned",
+    "incomeBreakdown": "Income this round",
+    "buildings": "Buildings",
+    "hpRemaining": "HP left · damage this round",
+    "roundScore": "Round score",
+    "buildingDamage": "Building damage",
+    "casualties": "Heroes who died",
+    "meterScale": "Full bar: the leading hero’s {value} in this round",
+    "openReport": "Open the full round report",
+    "closeReport": "Back to planning",
+    "details": "Details",
     "structures": "Towers and throne after the round",
     "lastRound": "Round {round} stats",
     "noRound": "Stats appear after a round",
@@ -293,6 +377,7 @@
   },
   "help": {
     "title": "Help",
+    "ordersGuide": "Enable lane orders in Settings → Experiments. During planning, choose Push, Defence or Together for each lane. Open the illustrated guide to see how each order works.",
     "how": "How to play",
     "roles": "Roles",
     "synergies": "Lane synergies",

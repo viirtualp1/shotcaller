@@ -45,6 +45,7 @@ export type FeatureArt =
   | { readonly kind: 'modes' }
   | { readonly kind: 'ratings' }
   | { readonly kind: 'rounds' }
+  | { readonly kind: 'career'; readonly focus: 'trials' | 'contracts' | 'milestones' | 'rewards' }
   /** The lanes panel with an order on each lane. */
   | { readonly kind: 'orders' }
   /** What one order makes the heroes of a lane do. */
@@ -63,6 +64,8 @@ export interface PatchNote {
   /** ISO date, `YYYY-MM-DD`. */
   readonly date: string
   readonly title: NoteText
+  /** A release-specific visual introduction, kept alongside its historical notes. */
+  readonly campaign?: 'career'
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
   readonly general?: readonly NoteText[]
@@ -74,6 +77,147 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '8.6',
+    date: '2026-09-30',
+    title: {
+      en: 'A level above',
+      ru: 'На шаг выше',
+    },
+    campaign: 'career',
+    features: [
+      {
+        art: {
+          kind: 'career',
+          focus: 'trials',
+        },
+        title: {
+          en: 'Your level opens new challenges',
+          ru: 'Уровень открывает новые вызовы',
+        },
+        text: {
+          en: '**Four solo trials** unlock at levels **2, 4, 6 and 8**. Take the throne, build synergies, equip your squad and master three lanes. Earn **150–300 XP** for each first clear, then come back to beat your best round record.',
+          ru: '**Четыре одиночных испытания** открываются на уровнях **2, 4, 6 и 8**. Снеси трон, собери синергии, вооружи отряд и освой три линии. Получи **150–300 XP** за первое прохождение, затем возвращайся улучшать рекорд по раундам.',
+        },
+      },
+      {
+        art: {
+          kind: 'career',
+          focus: 'contracts',
+        },
+        title: {
+          en: 'A new week. Three new goals.',
+          ru: 'Новая неделя. Три новые цели.',
+        },
+        text: {
+          en: '**Three weekly contracts**, **120 XP each**. Finish matches, take towers, fight and experiment with your squad. Progress counts in regular matches, trials and duels — even after a defeat. Complete all three for **360 bonus XP**.',
+          ru: '**Три контракта в неделю**, по **120 XP за каждый**. Завершай матчи, забирай вышки, сражайся и экспериментируй с отрядом. Прогресс идёт в обычных матчах, испытаниях и дуэлях — даже при поражении. Закрой все три и получи **360 бонусных XP**.',
+        },
+      },
+      {
+        art: {
+          kind: 'career',
+          focus: 'milestones',
+        },
+        title: {
+          en: 'Make your career count',
+          ru: 'Собери свою историю побед',
+        },
+        text: {
+          en: '**Five lifetime milestones** reward your first steps and discoveries: five matches, three thrones, ten different heroes, four winning synergies and a three-star hero. Each grants a one-time reward of **100–200 XP**. Previous accomplishments count too.',
+          ru: '**Пять целей карьеры** награждают за первые шаги и открытия: пять матчей, три трона, десять разных героев, четыре победные синергии и герой с тремя звёздами. За каждую — разовая награда **100–200 XP**. Прежние достижения тоже учитываются.',
+        },
+      },
+      {
+        art: {
+          kind: 'career',
+          focus: 'rewards',
+        },
+        title: {
+          en: 'One match. More ways to progress.',
+          ru: 'Один матч. Больше поводов расти.',
+        },
+        text: {
+          en: 'Match XP, completed contracts, milestones and a first trial clear **add up automatically**. After the game, see every reward, your total XP and newly unlocked trials. Your next goal is already waiting.',
+          ru: 'Опыт за матч, закрытые контракты, цели карьеры и первое прохождение испытания **складываются автоматически**. После игры видны все награды, общий XP и новые доступные испытания. Следующая цель уже ждёт.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'Weekly contracts refresh on **Monday, 00:00 UTC**; the next refresh is shown in your local time. Forfeits do not advance contracts.',
+        ru: 'Недельные контракты обновляются в **понедельник, 00:00 UTC**; время следующего обновления показано в твоём часовом поясе. Сдача матча не продвигает контракты.',
+      },
+      {
+        en: 'Trials use a fixed starting seed and Standard difficulty. Repeat attempts let you refine your strategy under the same starting conditions.',
+        ru: 'Испытания проходят на стандартной сложности с фиксированным стартом. Повторные попытки позволяют оттачивать стратегию в одинаковых начальных условиях.',
+      },
+      {
+        en: 'Career progress, trial records and earned rewards are included in cloud saves.',
+        ru: 'Прогресс карьеры, рекорды испытаний и полученные награды сохраняются в облаке.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Career has its own destination from the main menu, with weekly contract progress visible before you open it.',
+        ru: 'Карьера открывается отдельно из главного меню. Прогресс недельных контрактов виден ещё до перехода.',
+      },
+      {
+        en: 'Your profile brings together cloud saves, ranks in each mode and match stats, with a direct link to your career and weekly contract progress. Ratings, rating changes and points to the next rank are consistently labelled **MMR**.',
+        ru: 'Профиль объединяет облачные сохранения, ранги по режимам и статистику матчей. Рядом — ссылка на карьеру с прогрессом недельных контрактов. Рейтинг, его изменения и очки до следующего ранга теперь везде подписаны **MMR**.',
+      },
+      {
+        en: 'Hover over your highest rank to explore the rank ladder. Clicking or tapping the rank opens it too.',
+        ru: 'Наведи на свой высший ранг, чтобы посмотреть лестницу рангов. Её также можно открыть нажатием.',
+      },
+      {
+        en: 'Profile, Career and Friends share a more compact look in the main menu. Friends now uses a gold icon with presence and notification indicators.',
+        ru: 'Профиль, Карьера и Друзья получили более лаконичный вид в главном меню. У друзей — золотая иконка с индикаторами онлайна и уведомлений.',
+      },
+      {
+        en: 'Round results are easier to scan: see income, kills and losses at a glance, then explore buildings, hero stats and the full income breakdown. The verdict explanation and casualties expand when you need them. Reopen the previous round report during preparation.',
+        ru: 'Итоги раунда стало проще читать: доход, убийства и потери видны сразу, а здоровье построек, статистику героев и полный расчёт дохода можно изучить отдельно. Объяснение результата и список погибших раскрываются по запросу. Отчёт прошлого раунда можно снова открыть во время подготовки.',
+      },
+      {
+        en: 'Hero stat bars now share a consistent width. **100%** represents your leading hero in the selected stat for that round; the scale is shown in the report. Building bars show health remaining against full health, with damage this round listed separately.',
+        ru: 'Полоски статистики героев получили одинаковую ширину. **100%** — результат твоего лучшего героя по выбранному показателю за раунд; максимум указан в отчёте. Полоски построек показывают оставшееся здоровье относительно полного, а урон за раунд указан отдельно.',
+      },
+      {
+        en: 'The lane orders guide is available from in-game Help. During a trial, its name stays visible above the round counter, with the objective in its tooltip.',
+        ru: 'Руководство по приказам линиям доступно из игровой справки. В испытании его название видно над счётчиком раундов, а условие — в подсказке.',
+      },
+      {
+        en: 'Friend profiles also let you explore the rank ladder. Profile stats and most-played heroes have fewer repeated labels, making the numbers easier to read.',
+        ru: 'В профиле друга тоже можно посмотреть лестницу рангов. В статистике профиля и списке популярных героев убраны повторяющиеся подписи, чтобы цифры было проще читать.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Fixed music and effects going silent during battle or round preparation. Music resumes after returning to the game.',
+        ru: 'Исправлено исчезновение музыки и эффектов во время боя и подготовки к раунду. Музыка возобновляется после возвращения в игру.',
+      },
+      {
+        en: 'Skipping a round no longer plays its end-of-round sounds or delayed combat effects.',
+        ru: 'При пропуске раунда больше не звучат его финальные звуки и отложенные эффекты боя.',
+      },
+      {
+        en: 'Victory and defeat music stops when you return to the main menu or start a new match.',
+        ru: 'Музыка победы и поражения прекращается при выходе в главное меню или начале нового матча.',
+      },
+      {
+        en: 'Synergy suggestion tooltips no longer intercept clicks on chips or flicker when covering another suggestion.',
+        ru: 'Подсказки предложенных связок больше не перехватывают нажатия на чипы и не мигают, перекрывая соседнее предложение.',
+      },
+      {
+        en: 'The rank ladder is centred beneath the rank medal and remains visible above an open profile dialog.',
+        ru: 'Лестница рангов открывается по центру под медалью ранга и больше не скрывается за открытым профилем.',
+      },
+      {
+        en: 'Rating values and their MMR labels now line up consistently. Removed the duplicate rating from friend profiles.',
+        ru: 'Значения рейтинга и подписи MMR теперь выровнены по одной линии. Из профиля друга убран дублирующий рейтинг.',
+      },
+    ],
+  },
   {
     version: '8.5.2',
     date: '2026-09-30',
@@ -778,8 +922,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     },
     general: [
       {
-        en: 'Giving up a duel counts as a loss: **−20** rating. The opponent gets the win and **+25**.',
-        ru: 'Сдача в дуэли — это поражение: **−20** рейтинга. Соперник получает победу и **+25**.',
+        en: 'Giving up a duel counts as a loss: **−20 MMR**. The opponent gets the win and **+25 MMR**.',
+        ru: 'Сдача в дуэли — это поражение: **−20 MMR**. Соперник получает победу и **+25 MMR**.',
       },
       {
         en: 'The same goes for a coach who goes silent and gets timed out, even if they come back later.',
@@ -1677,16 +1821,16 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Семь рангов, как медали в доте: **Новичок**, **Разведчик**, **Тактик**, **Стратег**, **Командир**, **Легенда** и **Шотколлер**.',
       },
       {
-        en: 'Every rank but the last has **5** stars, and each star takes **40** rating. Shotcaller has no stars: it is the top.',
-        ru: 'У каждого ранга, кроме последнего, по **5** звёзд, и каждая звезда стоит **40** рейтинга. У Шотколлера звёзд нет, это вершина.',
+        en: 'Every rank but the last has **5** stars, and each star takes **40 MMR**. Shotcaller has no stars: it is the top.',
+        ru: 'У каждого ранга, кроме последнего, по **5** звёзд, и каждая звезда стоит **40 MMR**. У Шотколлера звёзд нет, это вершина.',
       },
       {
-        en: 'A win gives **+25** rating, or **+30** when you break the enemy throne before the round limit. A loss takes **20**, a draw changes nothing.',
-        ru: 'Победа даёт **+25** рейтинга, а если сломать трон соперника до лимита раундов — **+30**. Поражение отнимает **20**, ничья ничего не меняет.',
+        en: 'A win gives **+25 MMR**, or **+30 MMR** when you break the enemy throne before the round limit. A loss takes **20 MMR**, a draw changes nothing.',
+        ru: 'Победа даёт **+25 MMR**, а если сломать трон соперника до лимита раундов — **+30 MMR**. Поражение отнимает **20 MMR**, ничья ничего не меняет.',
       },
       {
-        en: 'On the **Relaxed** difficulty, without the planning timer, rating gains are **20%** smaller: **+20** and **+24**. Losses stay the same.',
-        ru: 'На сложности **Спокойная**, без таймера подготовки, прирост рейтинга на **20%** меньше: **+20** и **+24**. Потери те же.',
+        en: 'On the **Relaxed** difficulty, without the planning timer, rating gains are **20%** smaller: **+20 MMR** and **+24 MMR**. Losses stay the same.',
+        ru: 'На сложности **Спокойная**, без таймера подготовки, прирост рейтинга на **20%** меньше: **+20 MMR** и **+24 MMR**. Потери те же.',
       },
       {
         en: 'Coach level grows with experience: **60** for every match, **15** for every round won and **60** more for a win.',

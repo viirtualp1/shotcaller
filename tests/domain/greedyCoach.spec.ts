@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createMatch } from '@/application/createMatch'
 import { sequentialIds } from '@/core/ids'
+import { GreedyCoach } from '@/domain/coach/GreedyCoach'
+import { createRng } from '@/core/random/rng'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
 describe('GreedyCoach', () => {
@@ -37,5 +39,30 @@ describe('GreedyCoach', () => {
 
     expect(match.opponent.ledger.rerolls).toBe(0)
     expect(match.opponent.ledger.heroesBought).toBeGreaterThan(0)
+  })
+
+  it('buys and equips one item before it spends the round on the shop', () => {
+    const match = createMatch({
+      seed: 'items',
+      ids: sequentialIds('items'),
+    })
+
+    const opponent = match.opponent
+    opponent.wallet.earn(20)
+
+    new GreedyCoach(undefined, {
+      itemsFromRound: 3,
+      goldReserveForItems: 4,
+      levelFromRound: Infinity,
+      rerollFromRound: Infinity,
+      maxRerolls: 0,
+    }).playTurn(opponent, {
+      round: 3,
+      rng: createRng('items'),
+    })
+
+    expect(opponent.ledger.itemsBought).toBe(1)
+    expect(opponent.wallet.gold).toBeGreaterThanOrEqual(4)
+    expect(opponent.roster.boardHeroes().flatMap((hero) => hero.items)).toHaveLength(1)
   })
 })

@@ -1,4 +1,5 @@
 import { randomIds, type IdGenerator } from '@/core/ids'
+import { trialById, type TrialId } from '@/content/career'
 import type { ModeId } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { OPPONENT, type Difficulty } from '@/content/rules'
@@ -16,6 +17,7 @@ export interface MatchOptions {
   /** Plays against a person on another device instead of the computer. */
   readonly link?: RemoteLink
   readonly mode?: ModeId
+  readonly trialId?: TrialId
 }
 
 function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
@@ -33,11 +35,17 @@ function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
 }
 
 export function createMatch(options: MatchOptions = {}) {
+  const trial = !options.link && options.trialId ? trialById(options.trialId) : null
+
   return new Match({
-    rng: createRng(options.seed),
+    rng: createRng(options.seed ?? (trial ? `career-trial-v1:${trial.id}` : undefined)),
     ids: options.ids ?? randomIds,
-    rival: rivalFor(options),
-    mode: options.mode ?? DEFAULT_MODE,
+    rival: rivalFor({
+      ...options,
+      difficulty: trial ? 'standard' : options.difficulty,
+    }),
+    mode: trial?.mode ?? options.mode ?? DEFAULT_MODE,
+    ...(trial ? { trialId: trial.id } : {}),
   })
 }
 
@@ -48,9 +56,11 @@ export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'see
       ids: options.ids ?? randomIds,
       rival: rivalFor({
         ...options,
+        ...(state.trialId ? { difficulty: 'standard' } : {}),
         link: state.link,
       }),
       mode: state.mode,
+      ...(state.trialId ? { trialId: state.trialId } : {}),
     },
     state,
   )

@@ -1,11 +1,14 @@
 import { z } from 'zod'
+import { ACHIEVEMENT_IDS, CONTRACT_IDS, TRIAL_IDS } from '@/content/career'
 import { HERO_IDS, ITEM_IDS, LANE_IDS, LANE_STANCES, MODE_IDS, SYNERGY_IDS } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { PROFILE } from '@/content/profile'
 import { MATCH_END_REASONS } from '@/domain/match/judge'
 import { emptyRatings, type Profile } from '@/domain/profile/Profile'
+import { migrateCareer } from '@/domain/profile/career'
 
-const PROFILE_VERSION = 1
+/** Older clients must not load and then overwrite a career they cannot preserve. */
+const PROFILE_VERSION = 2
 
 const heroId = z.enum(HERO_IDS)
 const synergyId = z.enum(SYNERGY_IDS)
@@ -13,6 +16,51 @@ const stars = z.union([z.literal(1), z.literal(2), z.literal(3)])
 const amount = z.number().finite().nonnegative()
 const count = z.number().int().nonnegative()
 const verdict = z.enum(['win', 'loss', 'draw'])
+
+const rewards = z.array(
+  z.discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('achievement'),
+      id: z.enum(ACHIEVEMENT_IDS),
+      xp: amount,
+    }),
+    z.object({
+      kind: z.literal('weekly'),
+      id: z.enum(CONTRACT_IDS),
+      xp: amount,
+    }),
+    z.object({
+      kind: z.literal('trial'),
+      id: z.enum(TRIAL_IDS),
+      xp: amount,
+    }),
+  ]),
+)
+
+const career = z.object({
+  achievements: z.partialRecord(z.enum(ACHIEVEMENT_IDS), z.iso.datetime()),
+  weeks: z.record(
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    z.object({
+      progress: z.object({
+        matches: count,
+        rounds: count,
+        towers: count,
+        kills: count,
+        synergies: count,
+        upgrades: count,
+      }),
+      completed: z.partialRecord(z.enum(CONTRACT_IDS), z.iso.datetime()),
+    }),
+  ),
+  trials: z.partialRecord(
+    z.enum(TRIAL_IDS),
+    z.object({
+      completedAt: z.iso.datetime(),
+      bestRounds: count.positive(),
+    }),
+  ),
+})
 
 /** The detailed stats came later; profiles saved before read as zero. */
 const heroRecord = z.object({
@@ -115,6 +163,8 @@ const matchRecord = z.object({
   ratingBefore: amount,
   ratingAfter: amount,
   xp: amount,
+  rewards: rewards.default([]),
+  trialId: z.enum(TRIAL_IDS).nullable().default(null),
 })
 
 const modeRatings = z.object({
@@ -132,6 +182,7 @@ const profile = z.object({
   rating: amount,
   peakRating: amount,
   xp: amount,
+  career: career.optional(),
   totals: z.object({
     matches: count,
     wins: count,
@@ -150,20 +201,22 @@ const profile = z.object({
 })
 
 /* Before game modes there was one rating, earned on three lanes. */
-const migratedProfile = profile.transform(({ ratings, peakRatings, ...rest }) => ({
-  ...rest,
-  ratings: ratings ?? {
-    ...emptyRatings(),
-    threeLanes: rest.rating,
-  },
-  peakRatings: peakRatings ?? {
-    ...emptyRatings(),
-    threeLanes: rest.peakRating,
-  },
-}))
+const migratedProfile = profile.transform(({ ratings, peakRatings, ...rest }) =>
+  migrateCareer({
+    ...rest,
+    ratings: ratings ?? {
+      ...emptyRatings(),
+      threeLanes: rest.rating,
+    },
+    peakRatings: peakRatings ?? {
+      ...emptyRatings(),
+      threeLanes: rest.peakRating,
+    },
+  }),
+)
 
 const envelope = z.object({
-  version: z.literal(PROFILE_VERSION),
+  version: z.union([z.literal(1), z.literal(PROFILE_VERSION)]),
   profile: migratedProfile,
 })
 

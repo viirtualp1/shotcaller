@@ -20,6 +20,7 @@ const progress = computed(() => {
   const before = rankFor(record.ratingBefore)
   const after = rankFor(record.ratingAfter)
   const level = levelFor(profile.profile.xp)
+  const bonus = record.rewards.reduce((sum, reward) => sum + reward.xp, 0)
 
   return {
     record,
@@ -28,12 +29,12 @@ const progress = computed(() => {
     delta: record.ratingAfter - record.ratingBefore,
     rankUp: rankStep(after) > rankStep(before),
     level: level.level,
-    levelUp: level.level > levelFor(profile.profile.xp - record.xp).level,
+    bonus,
+    levelUp: profile.lastProgress
+      ? profile.lastProgress.afterLevel > profile.lastProgress.beforeLevel
+      : level.level > levelFor(profile.profile.xp - record.xp - bonus).level,
   }
 })
-
-const signed = (value: number) =>
-  value > 0 ? `+${text.number(value)}` : value < 0 ? `−${text.number(-value)}` : '±0'
 </script>
 
 <template>
@@ -44,13 +45,13 @@ const signed = (value: number) =>
       <span class="eyebrow">{{ t('profile.progress.rating') }}</span>
 
       <span class="line">
-        <strong>{{ text.number(progress.record.ratingAfter) }}</strong>
+        <strong>{{ text.mmr(progress.record.ratingAfter) }}</strong>
 
         <span
           v-if="progress.rated"
           class="delta"
           :class="{ up: progress.delta > 0, down: progress.delta < 0 }"
-          >{{ signed(progress.delta) }}</span
+          >{{ text.mmr(progress.delta, true) }}</span
         >
       </span>
 
@@ -68,7 +69,7 @@ const signed = (value: number) =>
       <span class="eyebrow">{{ t('profile.progress.xp') }}</span>
 
       <span class="line">
-        <strong>+{{ text.number(progress.record.xp) }}</strong>
+        <strong>+{{ text.number(progress.record.xp + progress.bonus) }}</strong>
       </span>
 
       <span v-if="progress.levelUp" class="badge">
@@ -76,6 +77,10 @@ const signed = (value: number) =>
       </span>
 
       <span v-else class="muted">{{ t('profile.level', { level: progress.level }) }}</span>
+
+      <span v-if="progress.bonus" class="muted">{{
+        t('career.rewardBreakdown', { match: progress.record.xp, bonus: progress.bonus })
+      }}</span>
     </div>
   </section>
 </template>

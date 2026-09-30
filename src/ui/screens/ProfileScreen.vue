@@ -3,12 +3,12 @@ import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer } from 'lucide-
 import { computed, ref, type Component } from 'vue'
 import AvatarPicker from '../components/profile/AvatarPicker.vue'
 import CloudCard from '../components/profile/CloudCard.vue'
+import CareerCard from '../components/profile/CareerCard.vue'
 import { winRate } from '../components/profile/format'
 import HeroTable from '../components/profile/HeroTable.vue'
 import ModeRatings from '../components/modes/ModeRatings.vue'
 import MatchHistory from '../components/profile/MatchHistory.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
-import RankLadder from '../components/profile/RankLadder.vue'
 import FriendsCard from '../components/social/FriendsCard.vue'
 import { useGameText } from '../composables/useGameText'
 import { useCloudStore } from '../stores/cloud'
@@ -20,7 +20,7 @@ interface Tile {
   readonly icon: Component
   readonly label: string
   readonly value: string
-  readonly note: string
+  readonly note?: string
 }
 
 const profile = useProfileStore()
@@ -43,7 +43,6 @@ const streak = computed(() => {
 
 const tiles = computed<Tile[]>(() => {
   const s = totals.value
-  const perMatch = s.matches ? Math.round((s.heroKills / s.matches) * 10) / 10 : 0
 
   return [
     {
@@ -62,7 +61,6 @@ const tiles = computed<Tile[]>(() => {
       icon: Percent,
       label: t('profile.stats.winRate'),
       value: `${winRate(s.wins, s.matches)}%`,
-      note: t('profile.stats.peak') + ': ' + text.number(profile.profile.peakRating),
     },
     {
       key: 'streak',
@@ -76,21 +74,18 @@ const tiles = computed<Tile[]>(() => {
       icon: Timer,
       label: t('profile.stats.fastestWin'),
       value: s.fastestWin === null ? '—' : t('profile.stats.rounds', { n: s.fastestWin }, s.fastestWin),
-      note: t('profile.stats.rounds', { n: s.roundsPlayed }, s.roundsPlayed),
     },
     {
       key: 'thrones',
       icon: Castle,
       label: t('profile.stats.thrones'),
       value: text.number(s.throneWins),
-      note: t('profile.stats.thronesHint'),
     },
     {
       key: 'kills',
       icon: Skull,
       label: t('profile.stats.kills'),
       value: text.number(s.heroKills),
-      note: t('profile.stats.perMatch', { n: text.number(perMatch) }),
     },
   ]
 })
@@ -112,16 +107,20 @@ function play() {
     </header>
 
     <main class="page">
-      <ProfileHeader @pick-avatar="picking = true" />
       <CloudCard />
+
+      <div class="profile-overview">
+        <ProfileHeader class="profile-header" @pick-avatar="picking = true" />
+        <CareerCard class="career-link" />
+      </div>
+
       <ModeRatings :ratings="profile.profile.ratings" />
-      <RankLadder class="ladder" />
 
       <section class="tiles">
         <article v-for="tile in tiles" :key="tile.key" class="tile">
           <span class="tile-label"><component :is="tile.icon" :size="14" /> {{ tile.label }}</span>
           <strong class="tile-value">{{ tile.value }}</strong>
-          <span class="tile-note">{{ tile.note }}</span>
+          <span v-if="tile.note" class="tile-note">{{ tile.note }}</span>
         </article>
       </section>
 
@@ -186,8 +185,25 @@ function play() {
   padding: 28px 20px calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
-.ladder {
-  margin-top: -4px;
+.profile-overview {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.profile-header {
+  flex: 4 1 0;
+  min-width: 0;
+  gap: 24px;
+}
+
+.profile-header :deep(.level .bar) {
+  width: 120px;
+}
+
+.career-link {
+  flex: 1 1 0;
+  min-width: 180px;
 }
 
 .tiles {
@@ -266,6 +282,10 @@ function play() {
 }
 
 @media (max-width: 900px) {
+  .profile-overview {
+    flex-direction: column;
+  }
+
   .columns {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -285,6 +305,10 @@ function play() {
 }
 
 @media (max-width: 720px) {
+  .profile-header {
+    gap: 12px;
+  }
+
   .page {
     padding-inline: 16px;
   }

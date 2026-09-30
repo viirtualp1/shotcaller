@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RANK, RANK_TIERS } from '@/content/profile'
+import type { Rank } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
-import { useProfileStore } from '../../stores/profile'
 import RankMedal from './RankMedal.vue'
 
-const profile = useProfileStore()
+const props = defineProps<{ rank: Rank }>()
 const text = useGameText()
 const { t } = text
-const current = computed(() => RANK_TIERS.indexOf(profile.rank.tier))
+const current = computed(() => RANK_TIERS.indexOf(props.rank.tier))
 const floorOf = (index: number) => index * RANK.starsPerTier * RANK.pointsPerStar
 </script>
 
@@ -21,15 +21,11 @@ const floorOf = (index: number) => index * RANK.starsPerTier * RANK.pointsPerSta
         :class="{ reached: i < current, current: i === current }"
         :aria-current="i === current ? 'step' : undefined"
       >
-        <RankMedal
-          :tier="tier"
-          :stars="i === current ? profile.rank.stars : 0"
-          :size="46"
-          :dim="i > current"
-        />
+        <RankMedal :tier="tier" :stars="i === current ? rank.stars : 0" :size="46" :dim="i > current" />
 
         <span class="tier">{{ t(`profile.ranks.${tier}`) }}</span>
-        <span class="floor">{{ text.number(floorOf(i)) }}</span>
+
+        <span class="floor">{{ text.mmr(floorOf(i)) }}</span>
       </li>
     </ol>
   </section>
@@ -37,6 +33,7 @@ const floorOf = (index: number) => index * RANK.starsPerTier * RANK.pointsPerSta
 
 <style scoped>
 .ladder {
+  container-type: inline-size;
   overflow-x: auto;
 }
 
@@ -97,5 +94,35 @@ li.reached:not(:last-child)::after {
   font-size: 11px;
   color: var(--chalk-faint);
   font-variant-numeric: tabular-nums;
+}
+
+@container (max-width: 660px) {
+  ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    min-width: 0;
+  }
+  li {
+    min-width: 0;
+  }
+  li:not(:last-child)::after {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  ol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+  li {
+    min-width: 0;
+    padding: 8px 4px;
+    gap: 4px;
+  }
+  li:not(:last-child)::after {
+    display: none;
+  }
 }
 </style>

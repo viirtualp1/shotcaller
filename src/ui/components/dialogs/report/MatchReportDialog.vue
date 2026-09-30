@@ -21,6 +21,7 @@ import { vOpticalAlign } from '../../../directives/opticalAlign'
 import { useMatchStore } from '../../../stores/match'
 import HeroAvatar from '../../common/HeroAvatar.vue'
 import ProgressStrip from '../../profile/ProgressStrip.vue'
+import CareerRecap from '../../profile/CareerRecap.vue'
 import HeroStatsTable from './HeroStatsTable.vue'
 import StatComparison from './StatComparison.vue'
 import type { ComparisonRow, HeroStatKey } from './reportModel'
@@ -126,6 +127,7 @@ const combat = computed(() => [
         </header>
 
         <ProgressStrip />
+        <CareerRecap />
 
         <TabsRoot v-model="tab" class="tabs">
           <TabsList class="tab-list" :aria-label="t('report.title')">
@@ -172,7 +174,9 @@ const combat = computed(() => [
             v-if="!store.isDuel"
             type="button"
             class="btn primary big"
-            @click="store.newMatch(store.view?.mode)"
+            @click="
+              store.view?.trialId ? store.startTrial(store.view.trialId) : store.newMatch(store.view?.mode)
+            "
           >
             {{ t('result.again') }}
           </button>

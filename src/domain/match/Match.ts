@@ -1,4 +1,5 @@
 import { err, ok, type Result } from 'neverthrow'
+import type { TrialId } from '@/content/career'
 import { opponentOf, TEAM_IDS, type ModeId, type StructureSlot, type TeamId } from '@/content/ids'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng, RngState } from '@/core/random/rng'
@@ -60,11 +61,13 @@ export interface MatchDependencies {
   readonly ids: IdGenerator
   readonly rival: Rival
   readonly mode: ModeId
+  readonly trialId?: TrialId
 }
 
 /** Everything needed to rebuild a match exactly, including the random stream and an unfinished battle. */
 export interface MatchState {
   readonly mode: ModeId
+  readonly trialId?: TrialId
   readonly round: number
   readonly phase: MatchPhase
   readonly rng: RngState
@@ -135,6 +138,10 @@ export class Match {
 
   get mode() {
     return this.deps.mode
+  }
+
+  get trialId() {
+    return this.deps.trialId ?? null
   }
 
   /** Online, the battle waits until the other player sends their board. */
@@ -293,6 +300,7 @@ export class Match {
   snapshot(): MatchState {
     return {
       mode: this.mode,
+      ...(this.trialId ? { trialId: this.trialId } : {}),
       round: this.currentRound,
       phase: this.currentPhase,
       rng: this.deps.rng.state(),

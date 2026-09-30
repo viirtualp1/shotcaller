@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CloudProfile, CloudStore } from '@/application/cloud/CloudStore'
 import { ConflictLoopError, ProfileSync } from '@/application/cloud/ProfileSync'
 import { createProfile, type MatchRecord, type Profile, type SettledRatings } from '@/domain/profile/Profile'
+import { earnedMatchXp } from '@/domain/profile/career'
 import { duelMatch, LOSS, play, WIN } from '../helpers/profile'
 
 function memoryStorage() {
@@ -104,6 +105,34 @@ class Device {
 }
 
 describe('ProfileSync', () => {
+  it('settles a milestone and contract crossed on two devices only once', async () => {
+    const cloud = new MemoryCloud()
+    const phone = new Device()
+    phone.play()
+    phone.play()
+    await phone.push(cloud)
+    const laptop = new Device()
+    await laptop.push(cloud)
+
+    phone.play()
+    laptop.play()
+    expect(phone.profile.recent[0]?.rewards.some((reward) => reward.id === 'throneBreaker')).toBe(true)
+    expect(laptop.profile.recent[0]?.rewards.some((reward) => reward.id === 'throneBreaker')).toBe(true)
+
+    await phone.push(cloud)
+    await laptop.push(cloud)
+    await phone.push(cloud)
+    const settled = cloud.row!.profile
+    const rewards = settled.recent.flatMap((record) => record.rewards)
+    expect(
+      rewards.filter((reward) => reward.kind === 'achievement' && reward.id === 'throneBreaker'),
+    ).toHaveLength(1)
+
+    expect(rewards.filter((reward) => reward.kind === 'weekly' && reward.id === 'matches')).toHaveLength(1)
+    expect(settled.xp).toBe(settled.recent.reduce((sum, record) => sum + earnedMatchXp(record), 0))
+    expect(phone.profile).toEqual(settled)
+  })
+
   it('uploads the first profile with its matches and empties the queue', async () => {
     const cloud = new MemoryCloud()
     const phone = new Device()

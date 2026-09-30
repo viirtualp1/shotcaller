@@ -13,6 +13,7 @@ import {
 } from '@/domain/profile/Profile'
 import type { RoundPick } from '@/domain/match/matchStats'
 import { replayAvailability } from '@/domain/replay/setup'
+import { earnedMatchXp } from '@/domain/profile/career'
 import { resolveLane } from '@/domain/synergy/resolveLane'
 import { useGameText } from '../../composables/useGameText'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -69,8 +70,8 @@ const tiles = computed((): Tile[] => {
     {
       key: 'rating',
       label: t('matchDetails.rating'),
-      value: text.signed(delta),
-      note: `${text.number(record.ratingBefore)} → ${text.number(record.ratingAfter)}`,
+      value: text.mmr(delta, true),
+      note: `${text.mmr(record.ratingBefore)} → ${text.mmr(record.ratingAfter)}`,
       tone: delta > 0 ? 'up' : delta < 0 ? 'down' : undefined,
     },
   ]
@@ -80,7 +81,7 @@ const tiles = computed((): Tile[] => {
     {
       key: 'xp',
       label: t('profile.progress.xp'),
-      value: `+${text.number(record.xp)}`,
+      value: `+${text.number(earnedMatchXp(record))}`,
     },
     {
       key: 'rounds',

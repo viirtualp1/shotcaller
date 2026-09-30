@@ -11,6 +11,7 @@ import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import LaneOrderArt from './LaneOrderArt.vue'
+import CareerFeatureArt from './CareerFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 const props = defineProps<{ art: FeatureArt }>()
@@ -66,7 +67,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="art" aria-hidden="true">
+  <div class="art" :class="{ career: art.kind === 'career' }" aria-hidden="true">
     <img v-if="art.kind === 'map' && picture" class="map" :src="picture" alt="" />
 
     <div v-else-if="art.kind === 'modes'" class="row">
@@ -86,6 +87,8 @@ onMounted(() => {
     <LaneOrderArt v-else-if="art.kind === 'orders'" />
 
     <LaneOrderArt v-else-if="art.kind === 'order'" :order="art.order" />
+
+    <CareerFeatureArt v-else-if="art.kind === 'career'" :focus="art.focus" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">
@@ -131,6 +134,10 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.art.career {
+  min-height: 310px;
 }
 
 .row {

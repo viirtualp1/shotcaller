@@ -29,7 +29,7 @@ import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeRatings from '../modes/ModeRatings.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import { relativeTime } from '../profile/format'
-import RankMedal from '../profile/RankMedal.vue'
+import RankDropdown from '../profile/RankDropdown.vue'
 import FriendMatchDetails from './FriendMatchDetails.vue'
 
 /** Removing and blocking ask once more; the question goes away on its own. */
@@ -86,13 +86,6 @@ const level = computed(() => (profile.value ? levelFor(profile.value.xp).level :
 const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
 
 const tiles = computed(() => {
-  const mmr = {
-    key: 'mmr',
-    label: t('coach.rating'),
-    value: text.number(rating.value),
-    note: '',
-  }
-
   /* A coach who has not played yet still has a record: all zeros. */
   const totals = profile.value?.totals ?? {
     matches: 0,
@@ -105,7 +98,6 @@ const tiles = computed(() => {
   const winRate = totals.matches ? Math.round((totals.wins / totals.matches) * 100) : 0
 
   return [
-    mmr,
     {
       key: 'matches',
       label: t('coach.matches'),
@@ -176,7 +168,7 @@ function ask(action: 'remove' | 'block') {
       <DialogContent class="sheet coach-profile" :aria-describedby="undefined">
         <header class="head">
           <span class="medal">
-            <RankMedal :tier="rank.tier" :stars="rank.stars" :size="54" />
+            <RankDropdown :rank="rank" :size="54" />
             <span class="medal-name">{{ t(`profile.ranks.${rank.tier}`) }}</span>
           </span>
 
@@ -240,7 +232,7 @@ function ask(action: 'remove' | 'block') {
                     >
                       <!-- Only duels move the rating; the column stays for the row to line up. -->
                       <template v-if="match.ratingAfter !== match.ratingBefore">
-                        {{ text.signed(match.ratingAfter - match.ratingBefore) }}
+                        {{ text.mmr(match.ratingAfter - match.ratingBefore, true) }}
                       </template>
                     </span>
 
@@ -439,7 +431,7 @@ function ask(action: 'remove' | 'block') {
 /* One line per match: result, rating change, the lineup in a row, then rounds and when. */
 .match-row {
   display: grid;
-  grid-template-columns: 96px 56px minmax(0, 1fr) auto auto;
+  grid-template-columns: 96px 86px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   width: 100%;

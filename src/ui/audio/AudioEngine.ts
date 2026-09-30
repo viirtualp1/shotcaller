@@ -14,8 +14,18 @@ export type RoundResult = 'win' | 'loss' | 'draw'
 
 interface MusicVoice {
   readonly audio: HTMLAudioElement
+  readonly track: MusicTrackId
   gain: number
+  starting: boolean
   fadeTimer: ReturnType<typeof setInterval> | null
+}
+
+type EffectGroup = 'combat' | 'round' | 'match'
+
+interface EffectVoice {
+  readonly audio: HTMLAudioElement
+  readonly group: EffectGroup
+  readonly gain: number
 }
 
 const randomItem = <T>(items: readonly T[]) => items[Math.floor(Math.random() * items.length)]!
@@ -27,17 +37,26 @@ export class AudioEngine {
   private unlocked = false
   private currentMusic: MusicVoice | null = null
   private readonly musicVoices = new Set<MusicVoice>()
+  private readonly effectVoices = new Set<EffectVoice>()
+  private readonly delayedEffects = new Set<ReturnType<typeof setTimeout>>()
   private readonly lastEffectAt = new Map<string, number>()
   private detachSimulation: (() => void) | null = null
   private readonly unlock = () => {
     this.unlocked = true
     this.startDesiredMusic()
   }
+  private readonly restoreMusic = () => {
+    if (document.visibilityState === 'visible' && this.unlocked) {
+      this.startDesiredMusic()
+    }
+  }
 
   constructor() {
     if (typeof window !== 'undefined') {
       window.addEventListener('pointerdown', this.unlock)
       window.addEventListener('keydown', this.unlock)
+      window.addEventListener('pageshow', this.restoreMusic)
+      document.addEventListener('visibilitychange', this.restoreMusic)
     }
   }
 
@@ -51,6 +70,10 @@ export class AudioEngine {
 
   setEffectsVolume(volume: number) {
     this.effectsVolume = this.clamp(volume)
+
+    for (const voice of this.effectVoices) {
+      voice.audio.volume = this.clamp(this.effectsVolume * voice.gain)
+    }
   }
 
   setMusic(track: MusicTrack) {
@@ -69,6 +92,13 @@ export class AudioEngine {
     this.detachSimulation?.()
     this.detachSimulation = null
     this.lastEffectAt.clear()
+    this.stopEffects('combat')
+
+    for (const timer of this.delayedEffects) {
+      clearTimeout(timer)
+    }
+
+    this.delayedEffects.clear()
 
     if (!events) {
       return
@@ -81,10 +111,13 @@ export class AudioEngine {
       }
 
       if (this.playEffect('towerCollapse')) {
-        window.setTimeout(() => {
+        const timer = setTimeout(() => {
+          this.delayedEffects.delete(timer)
           this.playEffect('towerMiningImpact')
           this.playEffect('towerPlateImpact')
         }, AUDIO_TIMING.towerImpactDelayMs)
+
+        this.delayedEffects.add(timer)
       }
     }
 
@@ -118,30 +151,50 @@ export class AudioEngine {
   }
 
   playRoundResult(result: RoundResult) {
-    this.playEffect(result === 'draw' ? 'roundDrawn' : 'roundWon')
+    this.stopRoundResult()
+    this.playEffect(result === 'draw' ? 'roundDrawn' : 'roundWon', 'round')
   }
 
   playMatchResult(result: 'win' | 'loss') {
-    this.playEffect(result === 'win' ? 'matchWon' : 'matchLost')
+    this.stopRoundResult()
+    this.stopMatchResult()
+    this.playEffect(result === 'win' ? 'matchWon' : 'matchLost', 'match')
+  }
+
+  stopRoundResult() {
+    this.stopEffects('round')
+  }
+
+  stopMatchResult() {
+    this.stopEffects('match')
   }
 
   dispose() {
-    this.detachSimulation?.()
-    this.detachSimulation = null
+    this.bindSimulation(undefined, 0)
+    this.desiredTrack = null
+    this.unlocked = false
 
     if (typeof window !== 'undefined') {
       window.removeEventListener('pointerdown', this.unlock)
       window.removeEventListener('keydown', this.unlock)
+      window.removeEventListener('pageshow', this.restoreMusic)
+      document.removeEventListener('visibilitychange', this.restoreMusic)
     }
 
     for (const voice of this.musicVoices) {
       this.stopVoice(voice)
     }
+
+    this.stopRoundResult()
+    this.stopMatchResult()
   }
 
   private startDesiredMusic() {
-    const track = this.desiredTrack ? MUSIC_TRACKS[this.desiredTrack] : null
-    if (this.currentMusic?.audio.src.endsWith(track?.url ?? '\u0000')) {
+    const trackId = this.desiredTrack
+    const track = trackId ? MUSIC_TRACKS[trackId] : null
+    if (this.currentMusic && this.currentMusic.track === trackId) {
+      this.playMusic(this.currentMusic)
+
       return
     }
 
@@ -151,17 +204,19 @@ export class AudioEngine {
 
     this.currentMusic = null
 
-    if (!track || typeof Audio === 'undefined' || typeof document === 'undefined') {
+    if (!trackId || !track || typeof Audio === 'undefined' || typeof document === 'undefined') {
       return
     }
 
     const audio = new Audio(new URL(track.url, document.baseURI).toString())
     audio.loop = true
-    audio.preload = 'none'
+    audio.preload = 'auto'
 
     const voice: MusicVoice = {
       audio,
+      track: trackId,
       gain: 0,
+      starting: false,
       fadeTimer: null,
     }
 
@@ -169,38 +224,61 @@ export class AudioEngine {
     this.currentMusic = voice
     /* HTMLAudioElement starts at volume 1; apply the silent fade-in position before playback. */
     this.updateVoiceVolume(voice)
+    audio.onerror = () => this.stopVoice(voice)
+    this.playMusic(voice)
+  }
 
-    void audio
+  private playMusic(voice: MusicVoice) {
+    if (voice.starting || !voice.audio.paused) {
+      return
+    }
+
+    voice.starting = true
+
+    void voice.audio
       .play()
       .then(() => {
+        voice.starting = false
+
         if (this.currentMusic === voice) {
+          const track = MUSIC_TRACKS[voice.track]
           this.fade(voice, track.volume, track.fadeInMs)
         }
       })
       .catch(() => {
         /* A later user gesture retries playback if the browser delayed its audio permission. */
+        voice.starting = false
+        this.stopVoice(voice)
       })
   }
 
-  private playEffect(effect: SoundEffect) {
+  private playEffect(effect: SoundEffect, group: EffectGroup = 'combat') {
     const clip: AudioClip = SOUND_EFFECTS[effect]
     if (clip.cooldownMs && !this.allowEffect(effect, clip.cooldownMs)) {
       return false
     }
 
-    this.play(randomItem(clip.urls), clip.volume, clip.pitchSemitones)
-
-    return true
+    return this.play(randomItem(clip.urls), clip.volume, group, clip.pitchSemitones)
   }
 
-  private play(path: string, gain: number, detune = 0) {
+  private play(path: string, gain: number, group: EffectGroup, detune = 0) {
     if (
       !this.unlocked ||
       this.effectsVolume <= 0 ||
       typeof Audio === 'undefined' ||
       typeof document === 'undefined'
     ) {
-      return
+      return false
+    }
+
+    // A long battle must not exhaust the browser's media players.
+    if (this.effectVoices.size >= AUDIO_TIMING.maxEffectVoices) {
+      const oldestCombat = [...this.effectVoices].find((voice) => voice.group === 'combat')
+      if (oldestCombat) {
+        this.stopEffect(oldestCombat)
+      } else {
+        return false
+      }
     }
 
     const audio = new Audio(new URL(path, document.baseURI).toString())
@@ -211,7 +289,31 @@ export class AudioEngine {
       audio.playbackRate = 2 ** (detune / 12)
     }
 
-    void audio.play().catch(() => undefined)
+    const voice: EffectVoice = {
+      audio,
+      group,
+      gain,
+    }
+
+    this.effectVoices.add(voice)
+    audio.onended = () => this.stopEffect(voice)
+    audio.onerror = () => this.stopEffect(voice)
+    void audio.play().catch(() => this.stopEffect(voice))
+
+    return true
+  }
+
+  private stopEffects(group: EffectGroup) {
+    for (const voice of this.effectVoices) {
+      if (voice.group === group) {
+        this.stopEffect(voice)
+      }
+    }
+  }
+
+  private stopEffect(voice: EffectVoice) {
+    this.effectVoices.delete(voice)
+    this.releaseAudio(voice.audio)
   }
 
   private allowEffect(name: string, cooldown: number) {
@@ -261,8 +363,21 @@ export class AudioEngine {
       voice.fadeTimer = null
     }
 
-    voice.audio.pause()
     this.musicVoices.delete(voice)
+
+    if (this.currentMusic === voice) {
+      this.currentMusic = null
+    }
+
+    this.releaseAudio(voice.audio)
+  }
+
+  private releaseAudio(audio: HTMLAudioElement) {
+    audio.onended = null
+    audio.onerror = null
+    audio.pause()
+    audio.removeAttribute('src')
+    audio.load()
   }
 
   private clamp(value: number) {

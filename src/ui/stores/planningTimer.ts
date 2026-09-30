@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { DUEL_PLANNING_SECONDS } from '@/content/rules'
+import { DIFFICULTIES, DUEL_PLANNING_SECONDS } from '@/content/rules'
 import { useMatchStore } from './match'
 import { usePauseStore } from './pause'
 import { useSettingsStore } from './settings'
@@ -17,7 +17,14 @@ export const usePlanningTimerStore = defineStore('planningTimer', () => {
   /** The duel deadline already acted on, so a board that failed to send is not sent again every frame. */
   let spentDeadline: number | null = null
 
-  const total = computed(() => (match.isDuel ? DUEL_PLANNING_SECONDS : settings.planningSeconds))
+  const total = computed(() =>
+    match.isDuel
+      ? DUEL_PLANNING_SECONDS
+      : match.view?.trialId
+        ? DIFFICULTIES.standard.planningSeconds
+        : settings.planningSeconds,
+  )
+
   const paused = computed(() => pause.paused && !match.isDuel)
 
   const duelSecondsLeft = () =>

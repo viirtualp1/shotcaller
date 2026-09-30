@@ -35,7 +35,8 @@ const { t } = useGameText()
   align-items: center;
   gap: 12px;
   max-width: 100%;
-  padding: 10px 16px 12px 12px;
+  min-height: var(--coach-card-height, 66px);
+  padding: 10px 20px 12px;
   border-radius: 14px;
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));

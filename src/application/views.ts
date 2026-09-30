@@ -1,4 +1,5 @@
 import { HEROES } from '@/content/heroes'
+import type { TrialId } from '@/content/career'
 import {
   ITEM_IDS,
   opponentOf,
@@ -112,6 +113,7 @@ export interface MatchReportView {
 
 export interface MatchView {
   readonly mode: ModeId
+  readonly trialId: TrialId | null
   readonly round: number
   readonly maxRounds: number
   readonly phase: MatchPhase
@@ -248,6 +250,7 @@ function toMatchReport(match: Match): MatchReportView {
 export function toMatchView(match: Match): MatchView {
   return {
     mode: match.mode,
+    trialId: match.trialId,
     round: match.round,
     maxRounds: MODES[match.mode].maxRounds,
     phase: match.phase,

@@ -54,6 +54,8 @@ export const useAudioStore = defineStore('audio', () => {
       engine.bindSimulation(events, humanSide),
     playRoundResult: (result: RoundResult) => engine.playRoundResult(result),
     playMatchResult: (result: 'win' | 'loss') => engine.playMatchResult(result),
+    stopRoundResult: () => engine.stopRoundResult(),
+    stopMatchResult: () => engine.stopMatchResult(),
     dispose: () => engine.dispose(),
   }
 })

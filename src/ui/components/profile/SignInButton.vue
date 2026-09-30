@@ -28,7 +28,7 @@ const { t } = useGameText()
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 66px;
+  min-height: var(--coach-card-height, 66px);
   padding: 0 18px;
   border-radius: 14px;
   border: 1px solid rgba(244, 197, 91, 0.5);

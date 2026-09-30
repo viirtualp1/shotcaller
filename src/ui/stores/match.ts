@@ -3,6 +3,7 @@ import type { Result } from 'neverthrow'
 import { defineStore } from 'pinia'
 import { computed, markRaw, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
+import { trialById, type TrialId } from '@/content/career'
 import { createMatch, restoreMatch } from '@/application/createMatch'
 import { LocalStorageMatchRepository } from '@/application/persistence/MatchRepository'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
@@ -126,6 +127,7 @@ export const useMatchStore = defineStore('match', () => {
   const view = shallowRef<MatchView | null>(null)
   const live = shallowRef<LiveBattleView | null>(null)
   const simulation = shallowRef<BattleSimulation | null>(null)
+  const battleSkipped = ref(false)
   const notice = shallowRef<Notice | null>(null)
   /** The match against the computer saved on this device, for the start screen. */
   const saved = shallowRef<MatchState | null>(repository.load())
@@ -250,7 +252,7 @@ export const useMatchStore = defineStore('match', () => {
     inspectedUid.value = null
   }
 
-  function newMatch(mode: ModeId = settings.mode) {
+  function newMatch(mode: ModeId = settings.mode, trialId?: TrialId) {
     disposeBattle()
     profile.forgetLast()
     duel.value = null
@@ -258,11 +260,21 @@ export const useMatchStore = defineStore('match', () => {
     match = createMatch({
       difficulty: settings.difficulty,
       mode,
+      trialId,
     })
 
     clearSelection()
     shopTab.value = 'heroes'
     refresh()
+  }
+
+  function startTrial(trialId: TrialId) {
+    const trial = trialById(trialId)
+    if (profile.level.level < trial.level || duel.value) {
+      return
+    }
+
+    newMatch(trial.mode, trialId)
   }
 
   function continueMatch() {
@@ -600,6 +612,7 @@ export const useMatchStore = defineStore('match', () => {
   const liveView = (sim: BattleSimulation) => toLiveBattleView(sim, match?.side ?? 0)
 
   function launchBattle(setup: BattleSetup) {
+    battleSkipped.value = false
     const sim = markRaw(new BattleSimulation(setup))
     session = new BattleSession(sim)
     simulation.value = sim
@@ -662,6 +675,8 @@ export const useMatchStore = defineStore('match', () => {
       return
     }
 
+    // Audio detaches synchronously before the remaining simulation events are emitted.
+    battleSkipped.value = true
     session.finish()
     finishBattle()
   }
@@ -795,6 +810,7 @@ export const useMatchStore = defineStore('match', () => {
     view,
     live,
     simulation,
+    battleSkipped,
     notice,
     saved,
     savedRound,
@@ -815,6 +831,7 @@ export const useMatchStore = defineStore('match', () => {
     awaiting,
     planningEndsAt,
     newMatch,
+    startTrial,
     continueMatch,
     startDuel,
     savedDuel,

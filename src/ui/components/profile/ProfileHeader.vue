@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Check, Pencil, X } from 'lucide-vue-next'
+import { useMediaQuery } from '@vueuse/core'
 import { computed, nextTick, ref } from 'vue'
 import { PROFILE } from '@/content/profile'
 import { bestMode } from '@/domain/profile/Profile'
@@ -9,7 +10,9 @@ import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
 import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import CoachAvatar from './CoachAvatar.vue'
-import RankMedal from './RankMedal.vue'
+import RankDropdown from './RankDropdown.vue'
+
+withDefaults(defineProps<{ linked?: boolean }>(), { linked: false })
 
 const emit = defineEmits<{ pickAvatar: [] }>()
 
@@ -22,6 +25,7 @@ const { t } = text
 const editing = ref(false)
 const draft = ref('')
 const input = ref<HTMLInputElement | null>(null)
+const compact = useMediaQuery('(max-width: 720px)')
 
 const name = computed(() => profile.profile.name || t('profile.defaultName'))
 
@@ -43,7 +47,7 @@ const nextStep = computed(() => {
     return t('profile.topRank')
   }
 
-  const points = text.number(next - profile.profile.rating)
+  const points = text.mmr(next - profile.profile.rating)
   const upcoming = rankFor(next)
   return upcoming.tier === tier
     ? t('profile.toNextStar', { points })
@@ -67,26 +71,40 @@ function save() {
 </script>
 
 <template>
-  <section class="header">
+  <section class="header" :class="{ linked }">
+    <a
+      v-if="linked"
+      href="#/profile"
+      class="profile-link"
+      :aria-label="`${t('profile.title')} · ${name}`"
+      @click.prevent="profile.open()"
+    />
+
     <div class="identity">
-      <button
-        type="button"
+      <component
+        :is="linked ? 'div' : 'button'"
+        :type="linked ? undefined : 'button'"
         class="avatar"
-        :aria-label="t('profile.changeAvatar')"
-        @click="emit('pickAvatar')"
+        :aria-label="linked ? undefined : t('profile.changeAvatar')"
+        @click="!linked && emit('pickAvatar')"
       >
         <CoachAvatar
           :hero-id="profile.avatar"
           :level="profile.level.level"
-          :size="104"
+          :size="compact ? 48 : 104"
           :photo="photo.shown.value"
         />
 
-        <span class="avatar-edit"><Pencil :size="16" /></span>
-      </button>
+        <span v-if="!linked" class="avatar-edit"><Pencil :size="16" /></span>
+      </component>
 
       <div class="who">
-        <form v-if="editing" class="rename" @submit.prevent="save" @keydown.esc.stop="editing = false">
+        <form
+          v-if="!linked && editing"
+          class="rename"
+          @submit.prevent="save"
+          @keydown.esc.stop="editing = false"
+        >
           <input
             ref="input"
             v-model="draft"
@@ -103,9 +121,11 @@ function save() {
           </button>
         </form>
 
-        <h1 v-else class="name">
-          {{ name }}
+        <component :is="linked ? 'h2' : 'h1'" v-else class="name">
+          <span class="name-label">{{ name }}</span>
+
           <button
+            v-if="!linked"
             type="button"
             class="icon-btn rename-btn"
             :aria-label="t('profile.rename')"
@@ -113,13 +133,13 @@ function save() {
           >
             <Pencil :size="15" />
           </button>
-        </h1>
+        </component>
 
         <div class="level">
           <span class="level-label">{{ t('profile.level', { level: profile.level.level }) }}</span>
           <span class="bar"><span class="fill xp" :style="{ width: `${xpShare}%` }" /></span>
 
-          <span class="muted">
+          <span class="muted xp-value">
             {{
               t('profile.xp', {
                 into: text.number(profile.level.into),
@@ -134,17 +154,22 @@ function save() {
     </div>
 
     <div class="rank">
-      <RankMedal :tier="profile.rank.tier" :stars="profile.rank.stars" :size="112" />
+      <RankDropdown :rank="profile.rank" :size="compact ? 48 : 112" />
 
       <div class="rank-text">
         <strong class="rank-name">{{ t(`profile.ranks.${profile.rank.tier}`) }}</strong>
-        <span class="rating">{{ text.number(profile.profile.rating) }}</span>
+
+        <span class="rating">
+          <span>{{ text.number(profile.profile.rating) }}</span>
+          <span class="mmr">MMR</span>
+        </span>
 
         <span v-if="profile.profile.rating > 0" class="best-mode">
           {{ t('profile.bestMode', { mode: t(`modes.${bestMode(profile.profile.ratings)}.name`) }) }}
         </span>
 
         <span class="bar"><span class="fill" :style="{ width: `${rankShare}%` }" /></span>
+
         <span class="muted">{{ nextStep }}</span>
       </div>
     </div>
@@ -160,6 +185,8 @@ function save() {
 }
 
 .header {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -171,6 +198,26 @@ function save() {
   background:
     radial-gradient(ellipse 70% 140% at 100% 0%, rgba(244, 197, 91, 0.1), transparent 60%),
     linear-gradient(180deg, var(--panel), rgba(31, 43, 39, 0.6));
+}
+
+.header.linked {
+  transition: border-color 0.15s;
+}
+
+.header.linked:hover {
+  border-color: var(--gold);
+}
+
+.profile-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.profile-link:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
 }
 
 .identity {
@@ -291,6 +338,12 @@ function save() {
   display: flex;
   align-items: center;
   gap: 20px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }
 
 .rank-text {
@@ -300,17 +353,33 @@ function save() {
 }
 
 .rank-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 22px;
   font-weight: 800;
   line-height: 1.1;
 }
 
 .rating {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2em;
+  white-space: nowrap;
   font-size: 30px;
   font-weight: 800;
   line-height: 1;
   color: var(--gold);
   font-variant-numeric: tabular-nums;
+}
+
+.rating > span {
+  line-height: 1;
+}
+
+.mmr {
+  font-size: 0.5em;
+  line-height: 1;
 }
 
 .rank-text .bar {
@@ -320,11 +389,101 @@ function save() {
 
 @media (max-width: 720px) {
   .header {
-    padding: 20px;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 14px 12px;
   }
 
   .identity {
-    gap: 16px;
+    flex: 1;
+    gap: 8px;
+  }
+
+  .avatar {
+    flex: none;
+  }
+
+  .who {
+    flex: 1;
+    gap: 5px;
+  }
+
+  .name {
+    gap: 4px;
+    font-size: 18px;
+  }
+
+  .name-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rename-btn {
+    flex: none;
+    width: 22px;
+    height: 22px;
+  }
+
+  .name-input {
+    width: 100%;
+    min-width: 0;
+    padding: 4px;
+    font-size: 14px;
+  }
+
+  .rename {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .level {
+    gap: 4px 6px;
+    font-size: 10px;
+  }
+
+  .level .bar {
+    order: 1;
+    flex-basis: 100%;
+    max-width: 100%;
+    height: 4px;
+  }
+
+  .xp-value,
+  .since,
+  .rank-text .muted {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .rank {
+    flex: none;
+    gap: 8px;
+  }
+
+  .rank-text {
+    width: 80px;
+    gap: 3px;
+  }
+
+  .rank-name {
+    font-size: 12px;
+  }
+
+  .rating {
+    font-size: 20px;
+  }
+
+  .best-mode {
+    font-size: 9px;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .rank-text .bar {
+    width: 100%;
+    height: 4px;
   }
 }
 </style>

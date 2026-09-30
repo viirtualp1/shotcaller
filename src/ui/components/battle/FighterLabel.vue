@@ -3,7 +3,7 @@ import type { ItemId } from '@/content/ids'
 import ItemIcon from '../common/ItemIcon.vue'
 
 /** A hero's name on a stats bar, with the items that tell it from its twin when both share a lane. */
-defineProps<{ name: string; items: readonly ItemId[] }>()
+withDefaults(defineProps<{ name: string; items: readonly ItemId[]; itemSize?: number }>(), { itemSize: 22 })
 </script>
 
 <template>
@@ -11,7 +11,7 @@ defineProps<{ name: string; items: readonly ItemId[] }>()
     <span class="name">{{ name }}</span>
 
     <span v-if="items.length" class="items">
-      <ItemIcon v-for="(id, i) in items" :key="i" :item-id="id" :size="22" />
+      <ItemIcon v-for="(id, i) in items" :key="i" :item-id="id" :size="itemSize" />
     </span>
   </span>
 </template>

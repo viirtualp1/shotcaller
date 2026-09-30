@@ -2,6 +2,7 @@
 import { ChevronRight, Crown, Swords } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { isRated, type MatchRecord } from '@/domain/profile/Profile'
+import { earnedMatchXp } from '@/domain/profile/career'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
@@ -47,10 +48,10 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
               down: match.ratingAfter < match.ratingBefore,
             }"
           >
-            {{ text.signed(match.ratingAfter - match.ratingBefore) }}
+            {{ text.mmr(match.ratingAfter - match.ratingBefore, true) }}
           </span>
 
-          <span class="muted">+{{ text.number(match.xp) }} {{ t('profile.progress.xp') }}</span>
+          <span class="muted">+{{ text.number(earnedMatchXp(match)) }} {{ t('profile.progress.xp') }}</span>
         </div>
 
         <div class="team">

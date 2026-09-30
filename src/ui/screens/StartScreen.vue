@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useIntervalFn, useTimeoutFn } from '@vueuse/core'
+import { useElementSize, useIntervalFn, useTimeoutFn } from '@vueuse/core'
 import { Flag, Play, Swords } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
@@ -7,6 +7,7 @@ import BoardFrame from '../components/board/BoardFrame.vue'
 import DemoBattle from '../components/board/DemoBattle.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
+import CareerChip from '../components/profile/CareerChip.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
 import SignInButton from '../components/profile/SignInButton.vue'
 import FriendsButton from '../components/social/FriendsButton.vue'
@@ -25,6 +26,16 @@ const menu = useMenuStore()
 const settings = useSettingsStore()
 const duel = useDuelStore()
 const { t } = useGameText()
+const patchCard = ref<InstanceType<typeof LatestPatchCard> | null>(null)
+
+const patchSize = useElementSize(
+  () => patchCard.value?.$el as HTMLElement | undefined,
+  {
+    width: 0,
+    height: 96,
+  },
+  { box: 'border-box' },
+)
 
 interface DemoLayer {
   readonly id: number
@@ -79,8 +90,9 @@ function forfeit() {
 
 <template>
   <main class="start">
-    <div class="coach">
+    <div class="coach" :style="{ '--coach-card-height': `${patchSize.height.value || 96}px` }">
       <ProfileChip />
+      <CareerChip />
       <SignInButton />
       <FriendsButton />
     </div>
@@ -141,7 +153,7 @@ function forfeit() {
 
     <div class="news">
       <MovedCard />
-      <LatestPatchCard />
+      <LatestPatchCard ref="patchCard" />
     </div>
 
     <LanguageSwitch compact class="language" />
@@ -246,7 +258,7 @@ h1 {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  max-width: calc(100% - 48px);
+  max-width: calc(100% - 688px);
 }
 
 .coach {
@@ -258,6 +270,12 @@ h1 {
   flex-wrap: wrap;
   align-items: stretch;
   gap: 10px;
+  max-width: calc(100% - 472px);
+}
+
+.coach :deep(.chip) {
+  min-width: 0;
+  max-width: min(320px, calc(100% - 90px));
 }
 
 .language {
@@ -268,9 +286,10 @@ h1 {
   animation: fade-in 0.4s 0.2s ease-out both;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .news {
     display: block;
+    max-width: 400px;
   }
 
   .news :deep(.patch-card + .patch-card) {
@@ -310,6 +329,7 @@ h1 {
     position: relative;
     inset: auto;
     justify-self: start;
+    max-width: 100%;
   }
 
   .language {

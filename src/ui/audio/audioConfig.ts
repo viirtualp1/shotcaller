@@ -91,6 +91,7 @@ export const SOUND_EFFECTS = {
 export type SoundEffect = keyof typeof SOUND_EFFECTS
 
 export const AUDIO_TIMING = {
+  maxEffectVoices: 8,
   musicFadeOutMs: 650,
   towerImpactDelayMs: 500,
   /** Small heals happen too often to deserve a musical cue. */

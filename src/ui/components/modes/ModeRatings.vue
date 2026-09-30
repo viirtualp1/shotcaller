@@ -16,12 +16,19 @@ const { t } = text
 <template>
   <section class="mode-ratings" :aria-label="t('modes.ratings')">
     <article v-for="id in MODE_IDS" :key="id" class="mode">
-      <ModeMap :mode="id" :size="40" />
+      <span class="mode-content">
+        <ModeMap :mode="id" :size="40" />
 
-      <span class="about">
-        <span class="name">{{ t(`modes.${id}.name`) }}</span>
-        <strong class="rating">{{ text.number(ratings[id]) }}</strong>
-        <span class="tier">{{ t(`profile.ranks.${rankFor(ratings[id]).tier}`) }}</span>
+        <span class="about">
+          <span class="name">{{ t(`modes.${id}.name`) }}</span>
+
+          <strong class="rating">
+            <span>{{ text.number(ratings[id]) }}</span>
+            <span class="mmr">MMR</span>
+          </strong>
+
+          <span class="tier">{{ t(`profile.ranks.${rankFor(ratings[id]).tier}`) }}</span>
+        </span>
       </span>
 
       <RankMedal :tier="rankFor(ratings[id]).tier" :stars="rankFor(ratings[id]).stars" :size="38" />
@@ -53,6 +60,18 @@ const { t } = text
   min-width: 0;
 }
 
+.mode-content {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+}
+
+.mode-content :deep(.mode-map) {
+  flex: none;
+}
+
 .name {
   font-size: 11px;
   font-weight: 700;
@@ -62,13 +81,29 @@ const { t } = text
 }
 
 .rating {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2em;
+  white-space: nowrap;
   font-size: 20px;
   font-weight: 800;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.rating > span {
+  line-height: 1;
 }
 
 .tier {
   font-size: 12px;
+  color: var(--chalk-faint);
+}
+
+.mmr {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
   color: var(--chalk-faint);
 }
 </style>

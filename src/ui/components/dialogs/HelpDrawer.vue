@@ -32,11 +32,21 @@ import { ROLE_ICONS } from '../../icons'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ItemIcon from '../common/ItemIcon.vue'
 import { useMatchStore } from '../../stores/match'
+import { useMenuStore } from '../../stores/menu'
+import { usePatchNotesStore } from '../../stores/patchNotes'
 
 const open = defineModel<boolean>('open', { required: true })
 const text = useGameText()
 const { t } = text
 const store = useMatchStore()
+const menu = useMenuStore()
+const notes = usePatchNotesStore()
+
+function openOrdersGuide() {
+  open.value = false
+  menu.gameMenu = false
+  notes.open('8.5')
+}
 
 useModal(open)
 
@@ -165,6 +175,15 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
               <p>{{ t(`start.steps.${step.key}`) }}</p>
             </li>
           </ol>
+        </section>
+
+        <section>
+          <h3 class="section-title"><Route :size="15" /> {{ t('settings.laneOrders') }}</h3>
+          <p>{{ t('help.ordersGuide') }}</p>
+
+          <a href="#/patches/8.5" class="btn" @click.prevent="openOrdersGuide">
+            <Route :size="16" /> {{ t('settings.laneOrdersAbout') }} <ArrowRight :size="15" />
+          </a>
         </section>
 
         <section>

@@ -5,6 +5,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useChatStore } from '../../stores/chat'
 import { useCloudStore } from '../../stores/cloud'
 import { useFriendsStore } from '../../stores/friends'
+import InfoTooltip from '../common/InfoTooltip.vue'
 
 /** Sits next to the profile card on the start screen once signed in; shows who is online and new requests at a glance. */
 const cloud = useCloudStore()
@@ -14,36 +15,40 @@ const { t } = useGameText()
 
 /** New friend requests and unread messages. */
 const news = computed(() => friends.incoming.length + chat.totalUnread)
+
+const label = computed(() =>
+  [
+    t('friends.button'),
+    friends.onlineCount ? t('friends.onlineCount', { n: friends.onlineCount }) : null,
+    news.value ? t('friends.incomingBadge', { n: news.value }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · '),
+)
 </script>
 
 <template>
-  <button v-if="cloud.signedIn" type="button" class="friends" @click="friends.open = true">
-    <span class="icon">
-      <Users :size="20" />
-
-      <span v-if="news" class="badge" :aria-label="t('friends.incomingBadge', { n: news })">
-        {{ news }}
+  <InfoTooltip v-if="cloud.signedIn" side="bottom">
+    <button type="button" class="friends" :aria-label="label" @click="friends.open = true">
+      <span class="icon" aria-hidden="true">
+        <Users :size="20" />
+        <span v-if="news" class="badge">{{ news }}</span>
+        <span v-if="friends.onlineCount" class="dot" />
       </span>
-    </span>
+    </button>
 
-    <span class="label">
-      <span>{{ t('friends.button') }}</span>
-
-      <span v-if="friends.onlineCount" class="online">
-        <i class="dot" />
-        {{ t('friends.onlineCount', { n: friends.onlineCount }) }}
-      </span>
-    </span>
-  </button>
+    <template #content>{{ label }}</template>
+  </InfoTooltip>
 </template>
 
 <style scoped>
 .friends {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 66px;
-  padding: 0 18px 0 14px;
+  justify-content: center;
+  width: 80px;
+  min-height: var(--coach-card-height, 66px);
+  padding: 0 20px;
   border-radius: 14px;
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
@@ -64,15 +69,19 @@ const news = computed(() => friends.incoming.length + chat.totalUnread)
   transform: translateY(-1px);
 }
 
+.friends:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
 .icon {
   position: relative;
   display: grid;
   place-items: center;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: rgba(108, 196, 255, 0.14);
-  color: var(--ours);
+  flex: none;
+  color: var(--gold);
 }
 
 .badge {
@@ -92,27 +101,15 @@ const news = computed(() => friends.incoming.length + chat.totalUnread)
   box-shadow: 0 0 0 2px var(--board-deep);
 }
 
-.label {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.online {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--chalk-dim);
-}
-
 .dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #7fe0b4;
   box-shadow: 0 0 6px rgba(127, 224, 180, 0.8);
+  outline: 2px solid var(--board-deep);
 }
 </style>

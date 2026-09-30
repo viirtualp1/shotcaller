@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, reactive } from 'vue'
 
-export type PauseReason = 'menu' | 'tutorial' | 'help' | 'settings' | 'newMatch' | 'confirm'
+export type PauseReason = 'menu' | 'tutorial' | 'help' | 'settings' | 'newMatch' | 'confirm' | 'roundReport'
 
 /** Anything that covers the board pauses both the battle and the planning countdown. */
 export const usePauseStore = defineStore('pause', () => {

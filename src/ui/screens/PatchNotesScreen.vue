@@ -21,6 +21,7 @@ import { cssColor } from '@/rendering/theme'
 import HeroAvatar from '../components/common/HeroAvatar.vue'
 import ItemIcon from '../components/common/ItemIcon.vue'
 import FeatureCard from '../components/patchNotes/FeatureCard.vue'
+import CareerRelease from '../components/patchNotes/CareerRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
@@ -75,6 +76,8 @@ watch(
           <time :datetime="patch.date" class="date">{{ date }}</time>
         </section>
 
+        <CareerRelease v-if="patch.campaign === 'career'" />
+
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>
 
@@ -83,8 +86,8 @@ watch(
               v-for="(feature, i) in patch.features"
               :key="i"
               :feature="feature"
-              :wide="i === 0"
-              :class="{ lead: i === 0 }"
+              :wide="i === 0 && !patch.campaign"
+              :class="{ lead: i === 0 && !patch.campaign }"
             />
           </div>
         </section>

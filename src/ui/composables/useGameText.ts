@@ -89,11 +89,15 @@ export const starsLabel = (stars: StarLevel) => '★'.repeat(stars)
 export function useGameText() {
   const { t, locale } = useI18n<{ message: MessageSchema }>()
   const number: Format = (value) => formatNumber(locale.value, value)
+  const signed: Format = (value) => (value > 0 ? `+${number(value)}` : value < 0 ? `−${number(-value)}` : '0')
+
   return {
     t,
     number,
     /** A change such as a rating delta: "+12", "−8", "0". */
-    signed: (value: number) => (value > 0 ? `+${number(value)}` : value < 0 ? `−${number(-value)}` : '0'),
+    signed,
+    /** Every numeric rating, including changes and rank thresholds, carries its MMR unit. */
+    mmr: (value: number, withSign = false) => `${withSign ? signed(value) : number(value)}\u00a0MMR`,
     heroName: (id: HeroId) => HEROES[id].name,
     roleName: (id: RoleId) => t(`roles.${id}.name`),
     rolePassive: (id: RoleId) => t(`roles.${id}.passive`, roleParams(number, id)),

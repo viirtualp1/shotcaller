@@ -6,9 +6,13 @@ import {
   DialogPortal,
   DialogRoot,
   DialogTitle,
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from 'reka-ui'
-import { Castle } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { Castle, ChevronDown, Coins, LayoutDashboard, Skull, Swords, Users, X } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
 import { structureSlotsOf } from '@/domain/match/structures'
 import { MODES } from '@/content/modes'
 import { MATCH } from '@/content/rules'
@@ -18,16 +22,18 @@ import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
+import { useRoundReportStore } from '../../stores/roundReport'
 import AnimatedNumber from '../common/AnimatedNumber.vue'
-import type { MeterStat } from '../battle/DamageMeter.vue'
+import type { MeterStat } from '../battle/meter'
+import HeroMeterList from '../battle/HeroMeterList.vue'
 import FighterLabel from '../battle/FighterLabel.vue'
 import MeterTabs from '../battle/MeterTabs.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
-const INCOME_STEP_MS = 220
-
 const store = useMatchStore()
 const timer = usePlanningTimerStore()
+const roundReport = useRoundReportStore()
+const tab = ref('overview')
 const text = useGameText()
 const { t } = text
 
@@ -38,16 +44,14 @@ const duelSecondsLeft = computed(() =>
   store.isDuel && timer.remaining !== null ? Math.ceil(timer.remaining) : null,
 )
 
-const open = computed({
-  get: () => store.phase === 'summary' && summary.value !== null,
-  set: (value) => {
-    if (!value) {
-      store.nextRound()
-    }
-  },
-})
+useModal(() => roundReport.open)
 
-useModal(open)
+watch(
+  () => summary.value?.round,
+  () => {
+    tab.value = 'overview'
+  },
+)
 
 const verdict = computed(() => {
   const winner = summary.value?.winner
@@ -85,13 +89,14 @@ const structureRows = computed(() => {
       const lost = Math.round(summary.value!.laneDamage[slot][team === 0 ? 1 : 0])
       return {
         hp,
-        ratio: hp / max,
+        ratio: Math.min(1, Math.max(0, hp / max)),
         lost,
       }
     }
 
     return {
       slot,
+      max,
       ours: side(0),
       theirs: side(1),
     }
@@ -100,33 +105,6 @@ const structureRows = computed(() => {
 
 const meter = ref<MeterStat>('damageDealt')
 const fighterLabel = useFighterLabels(() => summary.value?.heroes ?? [])
-
-const valueTitle = computed(() =>
-  t(
-    meter.value === 'healing'
-      ? 'summary.heroHealing'
-      : meter.value === 'damageReceived'
-        ? 'summary.heroTaken'
-        : 'summary.heroDamage',
-  ),
-)
-
-/** Your heroes, by the stat picked. Healing lists only those who healed. */
-const heroRows = computed(() => {
-  const stat = meter.value
-
-  const heroes = (summary.value?.heroes ?? [])
-    .filter((hero) => hero.team === 0 && (stat !== 'healing' || hero.healing > 0))
-    .sort((a, b) => b[stat] - a[stat])
-
-  const top = Math.max(1, heroes[0]?.[stat] ?? 1)
-
-  return heroes.map((hero) => ({
-    ...hero,
-    value: hero[stat],
-    share: hero[stat] / top,
-  }))
-})
 
 const fallen = computed(() => {
   const heroes = (summary.value?.heroes ?? []).filter((h) => h.deaths > 0)
@@ -166,132 +144,212 @@ const incomeRows = computed(() => {
 </script>
 
 <template>
-  <DialogRoot v-model:open="open">
+  <DialogRoot v-model:open="roundReport.open">
     <DialogPortal>
       <DialogOverlay class="overlay" />
 
       <DialogContent v-if="summary && income" class="sheet summary">
-        <DialogTitle class="title hand" :data-verdict="verdict">
-          {{ t(`summary.${verdict}`, { round: summary.round }) }}
-        </DialogTitle>
+        <header class="head">
+          <DialogTitle class="title hand" :data-verdict="verdict">
+            {{ t(`summary.${verdict}`, { round: summary.round }) }}
+          </DialogTitle>
 
-        <DialogDescription class="reason">
-          <Castle :size="15" />
-          <span>{{ reason }}</span>
-        </DialogDescription>
-
-        <section class="fallen">
-          <div v-for="side in ['theirs', 'ours'] as const" :key="side" class="fallen-side" :class="side">
-            <h3 class="eyebrow">
-              {{ t(side === 'theirs' ? 'summary.enemiesKilled' : 'summary.ourLosses') }} ·
-              {{ side === 'theirs' ? summary.heroKills[0] : summary.heroKills[1] }}
-            </h3>
-
-            <ul v-if="fallen[side].length" class="graves">
-              <li
-                v-for="(hero, i) in fallen[side]"
-                :key="hero.uid"
-                class="grave anim-pop"
-                :style="{ animationDelay: `${i * 70}ms` }"
-              >
-                <span class="portrait">
-                  <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="40" />
-                  <span class="skull" aria-hidden="true">💀</span>
-                  <span v-if="hero.deaths > 1" class="times">×{{ hero.deaths }}</span>
-                </span>
-
-                <span class="name">{{ text.heroName(hero.heroId) }}</span>
-              </li>
-            </ul>
-
-            <p v-else class="none">{{ t('summary.noLosses') }}</p>
-          </div>
-        </section>
-
-        <section>
-          <MeterTabs v-model="meter" />
-
-          <p v-if="meter === 'healing' && !heroRows.length" class="none">{{ t('summary.noHealing') }}</p>
-
-          <ol v-else class="heroes" :class="meter">
-            <li
-              v-for="(hero, i) in heroRows"
-              :key="hero.uid"
-              class="hero anim-slide"
-              :class="hero.team === 0 ? 'ours' : 'theirs'"
-              :style="{ '--i': i }"
-            >
-              <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="36" />
-
-              <span class="bar">
-                <i :style="{ width: `${hero.share * 100}%` }" />
-                <FighterLabel v-bind="fighterLabel(hero)" class="label" />
-              </span>
-
-              <span class="num value" :title="valueTitle">
-                {{ meter === 'healing' ? `+${text.number(hero.value)}` : text.number(hero.value) }}
-              </span>
-            </li>
-          </ol>
-        </section>
-
-        <section>
-          <h3 class="eyebrow">{{ t('summary.structures') }}</h3>
-
-          <ul class="structures">
-            <li v-for="row in structureRows" :key="row.slot" class="structure">
-              <span class="side ours" :class="{ down: !row.ours.hp }">
-                <span v-if="row.ours.lost" class="lost">−{{ text.number(row.ours.lost) }}</span>
-                <span class="meter"><i :style="{ width: `${row.ours.ratio * 100}%` }" /></span>
-                <span class="hp">{{ row.ours.hp ? text.number(row.ours.hp) : t('summary.destroyed') }}</span>
-              </span>
-
-              <span class="slot">{{ text.slotName(row.slot) }}</span>
-
-              <span class="side theirs" :class="{ down: !row.theirs.hp }">
-                <span class="hp">{{
-                  row.theirs.hp ? text.number(row.theirs.hp) : t('summary.destroyed')
-                }}</span>
-
-                <span class="meter"><i :style="{ width: `${row.theirs.ratio * 100}%` }" /></span>
-                <span v-if="row.theirs.lost" class="lost">−{{ text.number(row.theirs.lost) }}</span>
-              </span>
-            </li>
-          </ul>
-        </section>
-
-        <ul class="income">
-          <li
-            v-for="(row, i) in incomeRows"
-            :key="row.key"
-            class="income-row"
-            :class="{ empty: !row.amount }"
-            :style="{ animationDelay: `${i * INCOME_STEP_MS}ms` }"
+          <button
+            v-if="roundReport.reviewing"
+            type="button"
+            class="icon-btn"
+            :aria-label="t('summary.closeReport')"
+            @click="roundReport.open = false"
           >
-            <span>{{ t(`summary.${row.key}`) }}</span>
-            <span class="amount">+{{ row.amount }} <span class="coin" /></span>
-          </li>
+            <X :size="18" />
+          </button>
+        </header>
 
-          <li class="income-row total" :style="{ animationDelay: `${incomeRows.length * INCOME_STEP_MS}ms` }">
-            <span>{{ t('summary.total') }}</span>
+        <div class="highlights">
+          <div class="highlight gold">
+            <span class="highlight-label"><Coins :size="14" /> {{ t('summary.income') }}</span>
+            <strong>+<AnimatedNumber :value="income.total" :from="0" :duration="500" /></strong>
+          </div>
 
-            <span class="amount">
-              <span
-                >+<AnimatedNumber
-                  :value="income.total"
-                  :from="0"
-                  :delay="incomeRows.length * INCOME_STEP_MS"
-                  :duration="700"
-              /></span>
+          <div class="highlight">
+            <span class="highlight-label"><Swords :size="14" /> {{ t('summary.enemiesKilled') }}</span>
+            <strong>{{ text.number(summary.heroKills[0]) }}</strong>
+          </div>
 
-              <span class="coin" />
-            </span>
-          </li>
-        </ul>
+          <div class="highlight">
+            <span class="highlight-label"><Skull :size="14" /> {{ t('summary.ourLosses') }}</span>
+            <strong>{{ text.number(summary.heroKills[1]) }}</strong>
+          </div>
+        </div>
 
-        <button type="button" class="btn primary next" @click="store.nextRound()">
-          {{ duelSecondsLeft === null ? t('summary.next') : t('summary.nextIn', { s: duelSecondsLeft }) }}
-        </button>
+        <details :key="summary.round" class="judgement">
+          <summary class="score-line">
+            <Castle :size="14" />
+
+            <span>{{
+              t(MODES[store.view!.mode].killScore ? 'summary.roundScore' : 'summary.buildingDamage')
+            }}</span>
+
+            <span class="score"
+              ><b class="ours">{{ text.number(Math.round(summary.score[0])) }}</b>
+
+              <span>:</span>
+
+              <b class="theirs">{{ text.number(Math.round(summary.score[1])) }}</b></span
+            >
+
+            <ChevronDown :size="14" class="chevron" />
+          </summary>
+
+          <DialogDescription class="reason">{{ reason }}</DialogDescription>
+        </details>
+
+        <TabsRoot v-model="tab" class="tabs">
+          <TabsList class="tab-list" :aria-label="t('summary.lastRound', { round: summary.round })">
+            <TabsTrigger value="overview" class="tab"
+              ><LayoutDashboard :size="14" /> {{ t('summary.tabs.overview') }}</TabsTrigger
+            >
+
+            <TabsTrigger value="heroes" class="tab"
+              ><Users :size="14" /> {{ t('report.tabs.heroes') }}</TabsTrigger
+            >
+
+            <TabsTrigger value="income" class="tab"
+              ><Coins :size="14" /> {{ t('summary.income') }}</TabsTrigger
+            >
+          </TabsList>
+
+          <TabsContent value="overview" class="panel">
+            <section class="building-status" :aria-label="t('summary.structures')">
+              <div class="section-head">
+                <h3>{{ t('summary.buildings') }}</h3>
+                <span>{{ t('summary.hpRemaining') }}</span>
+              </div>
+
+              <div class="team-labels">
+                <span class="ours">{{ t('report.ours') }}</span>
+
+                <span class="theirs">{{ t('report.theirs') }}</span>
+              </div>
+
+              <ul class="structures">
+                <li v-for="row in structureRows" :key="row.slot" class="structure">
+                  <div class="side ours" :class="{ down: !row.ours.hp }">
+                    <div class="structure-reading">
+                      <span class="hp"
+                        >{{ row.ours.hp ? text.number(row.ours.hp) : t('summary.destroyed')
+                        }}<small v-if="row.ours.hp"> / {{ text.number(row.max) }}</small></span
+                      >
+
+                      <span class="lost" :class="{ zero: !row.ours.lost }">{{
+                        row.ours.lost ? `−${text.number(row.ours.lost)}` : '—'
+                      }}</span>
+                    </div>
+
+                    <span class="health-track" aria-hidden="true"
+                      ><i :style="{ width: `${row.ours.ratio * 100}%` }"
+                    /></span>
+                  </div>
+
+                  <span class="slot">{{ text.slotName(row.slot) }}</span>
+
+                  <div class="side theirs" :class="{ down: !row.theirs.hp }">
+                    <div class="structure-reading">
+                      <span class="hp"
+                        >{{ row.theirs.hp ? text.number(row.theirs.hp) : t('summary.destroyed')
+                        }}<small v-if="row.theirs.hp"> / {{ text.number(row.max) }}</small></span
+                      >
+
+                      <span class="lost" :class="{ zero: !row.theirs.lost }">{{
+                        row.theirs.lost ? `−${text.number(row.theirs.lost)}` : '—'
+                      }}</span>
+                    </div>
+
+                    <span class="health-track" aria-hidden="true"
+                      ><i :style="{ width: `${row.theirs.ratio * 100}%` }"
+                    /></span>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            <details :key="summary.round" class="casualties">
+              <summary class="casualties-toggle">
+                {{ t('summary.casualties') }} <ChevronDown :size="14" />
+              </summary>
+
+              <section class="fallen" :aria-label="t('summary.casualties')">
+                <div
+                  v-for="side in ['theirs', 'ours'] as const"
+                  :key="side"
+                  class="fallen-side"
+                  :class="side"
+                >
+                  <h3>{{ t(side === 'theirs' ? 'summary.enemiesKilled' : 'summary.ourLosses') }}</h3>
+
+                  <ul v-if="fallen[side].length" class="graves">
+                    <li v-for="hero in fallen[side]" :key="hero.uid" class="grave">
+                      <HeroAvatar :hero-id="hero.heroId" :team="hero.team" :size="24" />
+
+                      <FighterLabel
+                        v-bind="fighterLabel(hero)"
+                        :item-size="14"
+                        class="fallen-name"
+                        :title="fighterLabel(hero).name"
+                      />
+
+                      <span class="deaths">×{{ hero.deaths }}</span>
+                    </li>
+                  </ul>
+
+                  <p v-else class="none">{{ t('summary.noLosses') }}</p>
+                </div>
+              </section>
+            </details>
+          </TabsContent>
+
+          <TabsContent value="heroes" class="panel">
+            <MeterTabs v-model="meter" />
+            <HeroMeterList :heroes="summary.heroes" :stat="meter" scale-hint />
+          </TabsContent>
+
+          <TabsContent value="income" class="panel">
+            <section class="economy">
+              <div class="section-head">
+                <h3>{{ t('summary.incomeBreakdown') }}</h3>
+              </div>
+
+              <dl class="income">
+                <div
+                  v-for="row in incomeRows"
+                  :key="row.key"
+                  class="income-row"
+                  :class="{ empty: !row.amount }"
+                >
+                  <dt>{{ t(`summary.${row.key}`) }}</dt>
+                  <dd>+{{ text.number(row.amount) }} <span class="coin" /></dd>
+                </div>
+
+                <div class="income-row total">
+                  <dt>{{ t('summary.total') }}</dt>
+                  <dd>+{{ text.number(income.total) }} <span class="coin" /></dd>
+                </div>
+              </dl>
+            </section>
+          </TabsContent>
+        </TabsRoot>
+
+        <footer class="actions">
+          <button type="button" class="btn primary next" @click="roundReport.open = false">
+            {{
+              roundReport.reviewing
+                ? t('summary.closeReport')
+                : duelSecondsLeft === null
+                  ? t('summary.next')
+                  : t('summary.nextIn', { s: duelSecondsLeft })
+            }}
+          </button>
+        </footer>
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -302,327 +360,386 @@ const incomeRows = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: min(600px, calc(100vw - 32px));
-  /* Rows slide in from the right; that must not open a horizontal bar for a moment. */
-  overflow-x: hidden;
+  width: min(660px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  overflow: hidden;
 }
-
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.head,
+.highlights,
+.judgement,
+.actions,
+.tab-list {
+  flex: none;
+}
 .title {
-  font-size: 42px;
+  font-size: 38px;
   line-height: 1.05;
 }
-
 .title[data-verdict='win'] {
   color: var(--ours);
 }
-
 .title[data-verdict='loss'] {
   color: var(--theirs);
 }
-
-.reason {
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+}
+.highlight + .highlight {
+  border-left: 1px solid var(--edge);
+}
+.highlight-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--chalk-dim);
+}
+.highlight-label svg {
+  flex: none;
+}
+.highlight strong {
+  font-size: 24px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.gold {
+  color: var(--gold);
+}
+.score-line {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: -4px 0 0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
   color: var(--chalk-dim);
-  font-size: 13px;
 }
-
-.reason svg {
-  flex: none;
+.score-line::-webkit-details-marker {
+  display: none;
+}
+.score-line > svg:first-child {
   color: var(--gold);
+  flex: none;
 }
-
-.fallen {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.fallen-side {
-  display: flex;
-  flex-direction: column;
+.score {
+  display: inline-flex;
+  align-items: baseline;
   gap: 8px;
+  margin-left: auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
-
-.fallen-side.theirs .eyebrow {
+.ours {
   color: var(--ours);
 }
-
-.fallen-side.ours .eyebrow {
+.theirs {
   color: var(--theirs);
 }
-
-.graves {
+.judgement[open] .chevron {
+  rotate: 180deg;
+}
+.reason {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--gold);
+  background: rgba(244, 197, 91, 0.04);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--chalk-dim);
+}
+.tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px 28px;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  max-height: min(420px, 50dvh);
+  overflow: auto;
+  padding: 2px;
+  overscroll-behavior: contain;
+}
+.panel[data-state='inactive'] {
+  display: none;
+}
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--chalk-dim);
+}
+.section-head > span {
+  font-size: 10px;
+  color: var(--chalk-faint);
+}
+.team-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.structures {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-
-.grave {
-  display: flex;
-  flex-direction: column;
+.structure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  width: 84px;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
 }
-
-.portrait {
-  position: relative;
-  display: grid;
-  place-items: center;
+.side {
+  min-width: 0;
 }
-
-.portrait :deep(.disc) {
-  filter: grayscale(0.7) brightness(0.55);
+.side.down {
+  opacity: 0.5;
 }
-
-.skull {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  line-height: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+.structure-reading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 6px;
 }
-
-.times {
-  position: absolute;
-  right: -8px;
-  bottom: -4px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--ink);
-  border: 1px solid var(--edge-strong);
+.hp {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--chalk);
+  white-space: nowrap;
+}
+.hp small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--chalk-faint);
+}
+.lost {
   font-size: 10px;
   font-weight: 700;
+  color: var(--theirs);
 }
-
-.name {
-  max-width: 100%;
-  font-size: 13px;
-  color: var(--chalk-dim);
+.theirs .lost {
+  color: var(--gold);
+}
+.lost.zero {
+  color: var(--chalk-faint);
+  font-weight: 400;
+}
+.health-track {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.health-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ours);
+}
+.theirs .health-track i {
+  background: var(--theirs);
+}
+.slot {
   text-align: center;
-  line-height: 1.2;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chalk-dim);
 }
-
+.casualties {
+  padding-top: 12px;
+  border-top: 1px solid var(--edge);
+}
+.casualties-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chalk-dim);
+  cursor: pointer;
+  list-style: none;
+}
+.casualties-toggle::-webkit-details-marker {
+  display: none;
+}
+.casualties[open] .casualties-toggle svg {
+  rotate: 180deg;
+}
+.fallen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding-top: 14px;
+}
+.fallen-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.graves {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+}
+.grave {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.fallen-name {
+  font-size: 11px;
+  color: var(--chalk-dim);
+}
+.deaths {
+  color: var(--chalk-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
 .none {
   margin: 0;
   font-size: 12px;
   color: var(--chalk-faint);
 }
-
-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.heroes {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.hero {
-  --team: var(--ours);
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  font-size: 13.5px;
-  font-weight: 700;
-}
-
-.hero.theirs {
-  --team: var(--theirs);
-}
-
-.bar {
-  position: relative;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-.bar i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: color-mix(in srgb, var(--team) 42%, transparent);
-  animation: grow 0.6s ease-out both;
-  transform-origin: left;
-}
-
-.label {
-  position: relative;
-  padding-left: 12px;
-  line-height: 36px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.heroes.healing .value {
-  color: var(--heal);
-}
-
-.heroes.healing .bar i {
-  background: color-mix(in srgb, var(--heal) 38%, transparent);
-}
-
-.heroes.damageReceived .bar i {
-  background: color-mix(in srgb, var(--theirs) 35%, transparent);
-}
-
-.structures {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.structure {
-  display: grid;
-  grid-template-columns: 1fr 64px 1fr;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.side {
-  --team: var(--ours);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
-.side.theirs {
-  --team: var(--theirs);
-  justify-content: flex-start;
-}
-
-.side.down {
-  opacity: 0.45;
-}
-
-.meter {
-  flex: 1;
-  max-width: 130px;
-  height: 7px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-  display: flex;
-}
-
-.side.ours .meter {
-  justify-content: flex-end;
-}
-
-.meter i {
-  display: block;
-  height: 100%;
-  background: var(--team);
-}
-
-.hp {
-  min-width: 3.4em;
-  color: var(--chalk-dim);
-}
-
-.side.ours .hp {
-  text-align: right;
-}
-
-.lost {
-  padding: 0 6px;
-  border-radius: 999px;
-  background: rgba(255, 112, 96, 0.16);
-  color: var(--theirs);
-  font-weight: 700;
-  animation: pop-in 0.35s ease-out both;
-}
-
-.side.theirs .lost {
-  background: rgba(244, 197, 91, 0.16);
-  color: var(--gold);
-}
-
-.slot {
-  text-align: center;
-  font-weight: 700;
-}
-
 .income {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   margin: 0;
-  padding: 0;
-  list-style: none;
-  font-variant-numeric: tabular-nums;
 }
-
 .income-row {
   display: flex;
   justify-content: space-between;
-  color: var(--chalk-dim);
-  animation: income-in 0.35s ease-out both;
-}
-
-.amount {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  padding: 10px 0;
+  font-size: 13px;
+  color: var(--chalk-dim);
 }
-
-.income-row.empty {
-  opacity: 0.5;
-}
-
-.income-row.total {
-  margin-top: 4px;
-  padding-top: 6px;
+.income-row + .income-row {
   border-top: 1px solid var(--edge);
+}
+.income-row dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.income-row.empty {
+  color: var(--chalk-faint);
+}
+.income-row.total {
   font-size: 16px;
   font-weight: 800;
   color: var(--gold);
 }
-
-@keyframes income-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+.actions {
+  padding-top: 12px;
+  border-top: 1px solid var(--edge);
 }
-
 .next {
   width: 100%;
 }
-
-@keyframes grow {
-  from {
-    transform: scaleX(0);
+@media (max-width: 560px) {
+  .summary {
+    gap: 12px;
+    padding: 16px;
+  }
+  .title {
+    font-size: 30px;
+  }
+  .highlight {
+    padding: 10px 8px;
+  }
+  .highlight-label {
+    gap: 4px;
+    font-size: 10px;
+  }
+  .highlight strong {
+    font-size: 22px;
+  }
+  .structure {
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
+  }
+  .hp {
+    font-size: 11px;
+  }
+  .hp small,
+  .lost {
+    font-size: 9px;
+  }
+  .fallen {
+    gap: 12px;
+  }
+  .grave {
+    gap: 6px;
+  }
+}
+@media (max-width: 360px) {
+  .structure-reading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+}
+@media (max-height: 540px) {
+  .summary {
+    gap: 8px;
+    padding: 12px;
+  }
+  .title {
+    font-size: 26px;
+  }
+  .highlight {
+    padding-block: 8px;
+    gap: 4px;
+  }
+  .highlight strong {
+    font-size: 20px;
+  }
+  .tabs {
+    gap: 8px;
+  }
+  .actions {
+    padding-top: 8px;
   }
 }
 </style>

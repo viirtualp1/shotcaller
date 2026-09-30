@@ -5,6 +5,7 @@ import { useMatchStore } from '../../stores/match'
 import { useDuelStore } from '../../stores/duel'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import BaseStatus from './BaseStatus.vue'
+import TrialObjective from './TrialObjective.vue'
 
 const URGENT_SECONDS = 10
 
@@ -48,10 +49,11 @@ const history = computed(() =>
 </script>
 
 <template>
-  <div class="scoreboard" data-tour="scoreboard">
+  <div class="scoreboard" :class="{ trial: !!view.trialId }" data-tour="scoreboard">
     <BaseStatus :team="0" :structures="structures[0]" :mode="store.view!.mode" />
 
     <div class="center">
+      <TrialObjective />
       <span class="round">{{ t('hud.round', { round: view.round, max: view.maxRounds }) }}</span>
 
       <Transition name="phase" mode="out-in">
@@ -125,6 +127,14 @@ const history = computed(() =>
   align-items: center;
   min-width: 140px;
   gap: 2px;
+}
+
+.scoreboard.trial {
+  padding-top: 0;
+}
+
+.trial .center {
+  align-self: flex-start;
 }
 
 .round {

@@ -32,21 +32,25 @@ export class GreedyCoach implements CoachStrategy {
   }
 
   playTurn(player: Player, context: CoachContext) {
+    /* Reserve one item before shopping can spend the whole round's income on heroes and rerolls. */
+    const itemBought = this.outfit(player, context)
+    const goldFloor = itemBought ? this.options.goldReserveForItems : 0
+
     let rerolls = 0
     for (let action = 0; action < MAX_ACTIONS_PER_TURN; action++) {
-      if (this.buyCopy(player, context)) {
+      if (this.buyCopy(player, context, goldFloor)) {
         continue
       }
 
-      if (this.levelUp(player, context)) {
+      if (this.levelUp(player, context, goldFloor)) {
         continue
       }
 
-      if (this.recruit(player, context)) {
+      if (this.recruit(player, context, goldFloor)) {
         continue
       }
 
-      if (rerolls < this.options.maxRerolls && this.reroll(player, context)) {
+      if (rerolls < this.options.maxRerolls && this.reroll(player, context, goldFloor)) {
         rerolls++
         continue
       }
@@ -56,10 +60,9 @@ export class GreedyCoach implements CoachStrategy {
 
     this.trimBench(player)
     arrangeStrongestLineup(player, this.optimizer, context.rng)
-    this.outfit(player, context)
   }
 
-  private buyCopy(player: Player, { round }: CoachContext) {
+  private buyCopy(player: Player, { round }: CoachContext, goldFloor: number) {
     if (round < this.options.copiesFromRound) {
       return false
     }
@@ -67,19 +70,20 @@ export class GreedyCoach implements CoachStrategy {
     const owned = new Set(player.roster.all().map((h) => h.heroId))
 
     const slot = player.shop.slots.findIndex(
-      (id) => id !== null && owned.has(id) && HEROES[id].tier <= player.wallet.gold,
+      (id) => id !== null && owned.has(id) && HEROES[id].tier <= player.wallet.gold - goldFloor,
     )
 
     return slot >= 0 && player.buy(slot).isOk()
   }
 
-  private levelUp(player: Player, { round }: CoachContext) {
-    const affordable = player.wallet.gold >= ECONOMY.xpCost + this.options.goldReserveForXp
+  private levelUp(player: Player, { round }: CoachContext, goldFloor: number) {
+    const reserve = Math.max(this.options.goldReserveForXp, goldFloor)
+    const affordable = player.wallet.gold >= ECONOMY.xpCost + reserve
     const hasTeam = player.roster.all().length >= player.boardCapacity
     return round >= this.options.levelFromRound && affordable && hasTeam && player.buyXp().isOk()
   }
 
-  private recruit(player: Player, { rng, round }: CoachContext) {
+  private recruit(player: Player, { rng, round }: CoachContext, goldFloor: number) {
     const owned = player.roster.all()
     if (owned.length >= player.boardCapacity + this.options.spareHeroes) {
       return false
@@ -98,15 +102,18 @@ export class GreedyCoach implements CoachStrategy {
       }))
       .filter(
         (o): o is { id: HeroId; slot: number } =>
-          o.id !== null && HEROES[o.id].tier <= player.wallet.gold && (allowCopies || !ownedIds.has(o.id)),
+          o.id !== null &&
+          HEROES[o.id].tier <= player.wallet.gold - goldFloor &&
+          (allowCopies || !ownedIds.has(o.id)),
       )
       .sort((a, b) => score(b.id) - score(a.id))[0]
 
     return best !== undefined && player.buy(best.slot).isOk()
   }
 
-  private reroll(player: Player, { round }: CoachContext) {
-    if (round < this.options.rerollFromRound || player.wallet.gold < this.options.rerollAboveGold) {
+  private reroll(player: Player, { round }: CoachContext, goldFloor: number) {
+    const requiredGold = Math.max(this.options.rerollAboveGold, ECONOMY.rerollCost + goldFloor)
+    if (round < this.options.rerollFromRound || player.wallet.gold < requiredGold) {
       return false
     }
 
@@ -130,24 +137,24 @@ export class GreedyCoach implements CoachStrategy {
       .forEach((h) => player.sell(h.uid))
   }
 
-  /** Buys at most one item per turn for the strongest hero on the map that still has a free slot. */
+  /** Buys at most one item per turn, keeping the gold reserve for its next shop and level purchase. */
   private outfit(player: Player, { round }: CoachContext) {
     const carrier = [...player.roster.boardHeroes()]
       .filter((h) => h.items.length < ITEM_SLOTS)
       .sort((a, b) => heroPower(b) - heroPower(a))[0]
 
     if (!carrier) {
-      return
+      return false
     }
 
     if (player.stash.items.length) {
       player.equip(0, carrier.uid)
 
-      return
+      return false
     }
 
     if (round < this.options.itemsFromRound) {
-      return
+      return false
     }
 
     const budget = player.wallet.gold - this.options.goldReserveForItems
@@ -158,6 +165,10 @@ export class GreedyCoach implements CoachStrategy {
 
     if (wanted && player.buyItem(wanted).isOk()) {
       player.equip(player.stash.items.length - 1, carrier.uid)
+
+      return true
     }
+
+    return false
   }
 }

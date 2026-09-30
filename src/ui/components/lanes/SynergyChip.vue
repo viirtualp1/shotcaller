@@ -23,7 +23,7 @@ const recruitable = computed(() => Boolean(props.missing && props.recruit))
 </script>
 
 <template>
-  <InfoTooltip side="right">
+  <InfoTooltip side="right" pass-through>
     <component
       :is="recruitable ? 'button' : 'span'"
       :type="recruitable ? 'button' : undefined"

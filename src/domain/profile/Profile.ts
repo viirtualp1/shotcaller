@@ -18,6 +18,8 @@ import type { Match } from '../match/Match'
 import type { MatchStats, RoundLineups, RoundReplay } from '../match/matchStats'
 import type { Lineup } from '../roster/Roster'
 import { resolveLane } from '../synergy/resolveLane'
+import type { TrialId } from '@/content/career'
+import { advanceCareer, emptyCareer, type Career, type CareerReward } from './career'
 import { matchXp, ratingChange, verdictOf, type Verdict } from './progression'
 
 export interface HeroRecord {
@@ -99,6 +101,9 @@ export interface MatchRecord {
   readonly ratingBefore: number
   readonly ratingAfter: number
   readonly xp: number
+  /** Base match XP stays separate from rewards, which cloud replay recomputes. */
+  readonly rewards: readonly CareerReward[]
+  readonly trialId: TrialId | null
 }
 
 export interface ProfileTotals {
@@ -129,6 +134,7 @@ export interface Profile {
   readonly rating: number
   readonly peakRating: number
   readonly xp: number
+  readonly career: Career
   readonly totals: ProfileTotals
   readonly heroes: Partial<Record<HeroId, HeroRecord>>
   readonly synergies: Partial<Record<SynergyId, SynergyRecord>>
@@ -182,6 +188,7 @@ export interface FinishedMatch {
   readonly side: TeamId
   readonly towersDestroyed: number
   readonly duel: DuelInfo | null
+  readonly trialId?: TrialId | null
 }
 
 export const createProfile = (createdAt: string): Profile => ({
@@ -193,6 +200,7 @@ export const createProfile = (createdAt: string): Profile => ({
   rating: 0,
   peakRating: 0,
   xp: 0,
+  career: emptyCareer(),
   totals: {
     matches: 0,
     wins: 0,
@@ -221,7 +229,7 @@ export function finishedMatch(
 
   return {
     mode: match.mode,
-    difficulty,
+    difficulty: match.trialId ? 'standard' : difficulty,
     result: match.result,
     stats: match.stats,
     lineup: match.human.roster.lineup(),
@@ -229,6 +237,7 @@ export function finishedMatch(
     side: match.side,
     towersDestroyed: MODES[match.mode].towers.filter((slot) => match.structures[1][slot] <= 0).length,
     duel,
+    trialId: match.trialId,
   }
 }
 
@@ -326,6 +335,8 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
     ratingBefore: 0,
     ratingAfter: 0,
     xp: matchXp(verdict, roundsWon),
+    rewards: [],
+    trialId: finished.trialId ?? null,
   }
 }
 
@@ -382,7 +393,7 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
     [mode]: Math.max(profile.peakRatings[mode], rating),
   }
 
-  const record: MatchRecord = {
+  let record: MatchRecord = {
     ...played,
     ratingBefore,
     ratingAfter: rating,
@@ -435,22 +446,36 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
     }))
   }
 
+  const next: Profile = {
+    ...profile,
+    ratings,
+    peakRatings,
+    rating: bestRating(ratings),
+    peakRating: bestRating(peakRatings),
+    xp: profile.xp + record.xp,
+    totals,
+    heroes: heroRecords,
+    synergies: synergyRecords,
+    recent: [record, ...profile.recent]
+      .slice(0, PROFILE.recentMatches)
+      .map((kept, i) => (i < PROFILE.roundDetailMatches ? kept : withoutRounds(kept))),
+  }
+
+  const progress = advanceCareer(profile, next, record)
+  record = {
+    ...record,
+    rewards: progress.rewards,
+  }
+
   return {
     record,
     profile: {
-      ...profile,
-      ratings,
-      peakRatings,
-      rating: bestRating(ratings),
-      peakRating: bestRating(peakRatings),
-      xp: profile.xp + record.xp,
-      totals,
-      heroes: heroRecords,
-      synergies: synergyRecords,
-      recent: [record, ...profile.recent]
-        .slice(0, PROFILE.recentMatches)
-        .map((kept, i) => (i < PROFILE.roundDetailMatches ? kept : withoutRounds(kept))),
-    } satisfies Profile,
+      ...next,
+      xp: progress.xp,
+      career: progress.career,
+      recent: [record, ...next.recent.slice(1)],
+    },
+    progress,
     duplicate: false,
   }
 }
