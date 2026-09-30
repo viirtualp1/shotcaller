@@ -418,6 +418,9 @@
       "relaxed": "No timer: the battle starts when you press Fight.",
       "standard": "{s} s to plan. When time runs out, the battle starts on its own."
     },
+    "audio": "Audio",
+    "musicVolume": "Music",
+    "effectsVolume": "Effects",
     "experiments": "Experiments",
     "laneOrders": "Lane orders",
     "laneOrdersAbout": "How lane orders work"

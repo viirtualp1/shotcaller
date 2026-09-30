@@ -75,6 +75,34 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.5.2',
+    date: '2026-09-30',
+    title: {
+      en: 'Sound check',
+      ru: 'Проверка звука',
+    },
+    general: [
+      {
+        en: 'Music now follows the match: a peaceful loop during planning, battle music during the fight and a faster track as the throne falls low or time runs out. The main menu stays quiet.',
+        ru: 'Музыка теперь следует за матчем: спокойная петля на подготовке, боевая в сражении и быстрая, когда трон почти пал или время выходит. В главном меню тихо.',
+      },
+      {
+        en: 'Towers falling, heroes dying, healing, round results and the final victory or defeat now have their own sounds.',
+        ru: 'У падения вышек, гибели героев, лечения, итога раунда, победы и поражения появились свои звуки.',
+      },
+      {
+        en: 'Settings has separate Music and Effects volume controls, both capped at 30%.',
+        ru: 'В настройках появились отдельные громкости музыки и эффектов, обе с пределом в 30%.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Music no longer begins with a brief full-volume burst when a match starts.',
+        ru: 'Музыка больше не начинает матч коротким всплеском на полной громкости.',
+      },
+    ],
+  },
+  {
     version: '8.5.1',
     date: '2026-09-30',
     title: {

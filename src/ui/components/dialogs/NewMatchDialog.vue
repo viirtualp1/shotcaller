@@ -66,7 +66,7 @@ function start() {
           <p v-if="withTutorial" class="note">{{ t('modes.tutorialNote') }}</p>
         </div>
 
-        <SettingsFields :language="false">
+        <SettingsFields :language="false" :sound="false">
           <template #beforeExperiments>
             <CheckField v-model="withTutorial">{{ t('newMatch.tutorial') }}</CheckField>
           </template>

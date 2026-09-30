@@ -13,6 +13,9 @@ export const STORAGE_KEYS = {
   /** The duel this device is playing, so one that ends while it is away still counts. */
   duelPlaying: `${PREFIX}/duel-playing`,
   speed: `${PREFIX}/speed`,
+  musicVolume: `${PREFIX}/music-volume`,
+  effectsVolume: `${PREFIX}/effects-volume`,
+  audioVolumeVersion: `${PREFIX}/audio-volume-version`,
   locale: `${PREFIX}/locale`,
   difficulty: `${PREFIX}/difficulty`,
   /** The game mode picked last, for the next match or duel. */
