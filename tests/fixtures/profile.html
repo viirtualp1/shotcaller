@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile cloud and telemetry preview</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Onest:wght@400;500;600;700&display=swap"
+    />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // Local preview with an isolated account and service stubs; no network requests to either service.
+      import { createApp, h } from 'vue'
+      import { createPinia } from 'pinia'
+      import { TooltipProvider } from 'reka-ui'
+      import { createProfile } from '/src/domain/profile/Profile.ts'
+      import { TRIALS } from '/src/content/career.ts'
+      import { picksOf } from '/src/domain/match/matchStats.ts'
+      import { emptyStructureState } from '/src/domain/match/structures.ts'
+      import { finishedMatch, play, WIN } from '/tests/helpers/profile.ts'
+      import { i18n } from '/src/ui/i18n/index.ts'
+      import { useCloudStore } from '/src/ui/stores/cloud.ts'
+      import { usePrivacyStore } from '/src/ui/stores/privacy.ts'
+      import { useProfileStore } from '/src/ui/stores/profile.ts'
+      import { useSettingsStore } from '/src/ui/stores/settings.ts'
+      import { useReplayStore } from '/src/ui/stores/replay.ts'
+      import TelemetryConsentDialog from '/src/ui/components/dialogs/TelemetryConsentDialog.vue'
+      import ProfileScreen from '/src/ui/screens/ProfileScreen.vue'
+      import StartScreen from '/src/ui/screens/StartScreen.vue'
+      import CareerScreen from '/src/ui/screens/CareerScreen.vue'
+      import ReplayScreen from '/src/ui/screens/ReplayScreen.vue'
+      import '/src/ui/styles/base.css'
+
+      const query = new URLSearchParams(location.search)
+      const pinia = createPinia()
+      const app = createApp({
+        render: () =>
+          h(TooltipProvider, null, {
+            default: () => [
+              h(
+                query.get('screen') === 'start'
+                  ? StartScreen
+                  : query.get('screen') === 'career'
+                    ? CareerScreen
+                    : ProfileScreen,
+              ),
+              h(TelemetryConsentDialog),
+              ...(replay.match ? [h(ReplayScreen, { match: replay.match, key: replay.match.id })] : []),
+            ],
+          }),
+      })
+        .use(pinia)
+        .use(i18n)
+
+      const cloud = useCloudStore(pinia)
+      const profile = useProfileStore(pinia)
+      const settings = useSettingsStore(pinia)
+      const replay = useReplayStore(pinia)
+      settings.locale = query.get('lang') === 'en' ? 'en' : 'ru'
+      i18n.global.locale.value = settings.locale
+      profile.profile = { ...createProfile('2026-10-01T12:00:00.000Z'), name: 'Preview coach' }
+
+      if (query.get('screen') === 'career') {
+        const game = finishedMatch(WIN)
+        const recorded = {
+          ...game,
+          mode: TRIALS[0].mode,
+          trialId: TRIALS[0].id,
+          stats: {
+            ...game.stats,
+            winners: [0, 1, 0, 1, 0, 0],
+            lineups: Array.from({ length: 6 }, () => [picksOf(game.lineup), picksOf(game.opponentLineup)]),
+            replays: Array.from({ length: 6 }, (_, i) => ({
+              seed: 'trial-preview-' + i,
+              structures: [emptyStructureState(), emptyStructureState()],
+            })),
+          },
+        }
+        profile.profile = play({ ...profile.profile, xp: 4000 }, recorded).profile
+      }
+
+      let stored = { version: 2, telemetry: false, telemetrySince: null }
+      cloud.connect = async () => ({
+        duels: () => ({ mine: async () => [], watch: () => () => undefined }),
+        chat: () => ({ unread: async () => new Map(), watch: () => () => undefined }),
+        sendFeedback: async () => {
+          if (query.get('submit') === 'error') {
+            throw new Error('Preview submission error')
+          }
+        },
+        privacy: () => ({
+          load: async () => {
+            if (query.get('consent') === 'error') {
+              throw new Error('Preview consent error')
+            }
+
+            return stored
+          },
+          save: async (telemetry) => {
+            stored = { version: 2, telemetry, telemetrySince: telemetry ? new Date().toISOString() : null }
+
+            return stored
+          },
+          collect: async () => undefined,
+        }),
+        friends: () => ({
+          setPhoto: async () => undefined,
+          card: async () => ({
+            id: 'fixture',
+            name: 'Preview coach',
+            code: 'PREVIEW',
+            rating: 0,
+            avatar: null,
+          }),
+          list: async () => [],
+          blocked: async () => [],
+          presence: () => ({ onChange: () => undefined, update: () => undefined, leave: () => undefined }),
+          watch: () => () => undefined,
+        }),
+      })
+      cloud.enabled = true
+      cloud.status = 'synced'
+      cloud.account = query.has('guest')
+        ? null
+        : { id: 'fixture', anonymous: false, email: 'preview@example.invalid', photo: null }
+      usePrivacyStore(pinia)
+      app.mount('#app')
+    </script>
+  </body>
+</html>

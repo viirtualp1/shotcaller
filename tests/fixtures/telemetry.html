@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Telemetry consent preview</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // Local UI fixture: no requests to Supabase or PostHog and no real account.
+      import { createApp, h } from 'vue'
+      import { createPinia } from 'pinia'
+      import { i18n } from '/src/ui/i18n/index.ts'
+      import { useCloudStore } from '/src/ui/stores/cloud.ts'
+      import { usePrivacyStore } from '/src/ui/stores/privacy.ts'
+      import { useSettingsStore } from '/src/ui/stores/settings.ts'
+      import TelemetryConsentDialog from '/src/ui/components/dialogs/TelemetryConsentDialog.vue'
+      import TelemetrySettings from '/src/ui/components/settings/TelemetrySettings.vue'
+      import '/src/ui/styles/base.css'
+      const pinia = createPinia()
+      const app = createApp({
+        render: () =>
+          h('main', { style: 'max-width:600px;margin:40px auto;padding:24px' }, [
+            h('h1', { class: 'hand' }, 'The Shotcaller'),
+            h('p', 'Предпросмотр согласия · тестовый аккаунт'),
+            h(TelemetrySettings),
+            h(TelemetryConsentDialog),
+          ]),
+      })
+        .use(pinia)
+        .use(i18n)
+      i18n.global.locale.value = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ru'
+      const cloud = useCloudStore(pinia)
+      useSettingsStore(pinia).locale = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ru'
+      let stored = null
+      cloud.connect = async () => ({
+        privacy: () => ({
+          load: async () => stored,
+          save: async (enabled) => {
+            stored = {
+              version: 2,
+              telemetry: enabled,
+              telemetrySince: enabled ? new Date().toISOString() : null,
+            }
+            return stored
+          },
+          collect: async () => undefined,
+        }),
+      })
+      cloud.account = { id: 'fixture', anonymous: false, email: null, photo: null }
+      usePrivacyStore(pinia)
+      app.mount('#app')
+    </script>
+  </body>
+</html>

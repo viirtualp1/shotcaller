@@ -5,6 +5,7 @@ import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
 import SignInDialog from './components/dialogs/SignInDialog.vue'
 import SettingsDialog from './components/dialogs/SettingsDialog.vue'
+import TelemetryConsentDialog from './components/dialogs/TelemetryConsentDialog.vue'
 import CoachProfileDialog from './components/social/CoachProfileDialog.vue'
 import ChallengeDialog from './components/social/ChallengeDialog.vue'
 import DuelInviteDialog from './components/social/DuelInviteDialog.vue'
@@ -26,17 +27,20 @@ import { useMatchStore } from './stores/match'
 import { useDocumentHead } from './composables/useDocumentHead'
 import { usePatchNotesStore } from './stores/patchNotes'
 import { useProfileStore } from './stores/profile'
+import { usePrivacyStore } from './stores/privacy'
 import { useReplayStore } from './stores/replay'
 import { useGameAudio } from './composables/useGameAudio'
 
 const store = useMatchStore()
 const patchNotes = usePatchNotesStore()
-useDocumentHead()
 const profile = useProfileStore()
 const replay = useReplayStore()
 useGameAudio()
+
 /* Started with the app: it picks up a sign-in link and pulls progress saved on other devices. */
 const cloud = useCloudStore()
+usePrivacyStore()
+
 /* Also started with the app, so a signed-in coach shows up online for their friends. */
 useFriendsStore()
 useChatStore()
@@ -45,6 +49,8 @@ useSystemNotificationsStore()
 
 /** Each screen opens at its top, as a new page does, not where the one before was scrolled to. */
 const scrollToTop = () => globalThis.scrollTo({ top: 0 })
+
+useDocumentHead()
 </script>
 
 <template>
@@ -68,6 +74,7 @@ const scrollToTop = () => globalThis.scrollTo({ top: 0 })
     <template v-if="cloud.enabled">
       <SignInDialog />
       <CloudConflictDialog />
+      <TelemetryConsentDialog />
       <CoachProfileDialog />
       <SocialWindow />
 

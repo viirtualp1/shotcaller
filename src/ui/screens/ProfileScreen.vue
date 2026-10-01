@@ -3,6 +3,7 @@ import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer } from '@lucide
 import { computed, ref, type Component } from 'vue'
 import AvatarPicker from '../components/profile/AvatarPicker.vue'
 import CloudCard from '../components/profile/CloudCard.vue'
+import TelemetrySettings from '../components/settings/TelemetrySettings.vue'
 import CareerCard from '../components/profile/CareerCard.vue'
 import { winRate } from '../components/profile/format'
 import HeroTable from '../components/profile/HeroTable.vue'
@@ -14,6 +15,7 @@ import { useGameText } from '../composables/useGameText'
 import { useCloudStore } from '../stores/cloud'
 import { useMenuStore } from '../stores/menu'
 import { useProfileStore } from '../stores/profile'
+import { usePrivacyStore } from '../stores/privacy'
 
 interface Tile {
   readonly key: string
@@ -25,9 +27,11 @@ interface Tile {
 
 const profile = useProfileStore()
 const cloud = useCloudStore()
+const privacy = usePrivacyStore()
 const menu = useMenuStore()
 const text = useGameText()
 const { t } = text
+
 const picking = ref(false)
 
 const totals = computed(() => profile.profile.totals)
@@ -107,7 +111,14 @@ function play() {
     </header>
 
     <main class="page">
-      <CloudCard />
+      <div
+        v-if="cloud.enabled"
+        class="save-overview"
+        :class="{ single: !privacy.enabled || !cloud.signedIn }"
+      >
+        <CloudCard class="cloud-save" />
+        <TelemetrySettings compact class="telemetry-card" />
+      </div>
 
       <div class="profile-overview">
         <ProfileHeader class="profile-header" @pick-avatar="picking = true" />
@@ -185,14 +196,27 @@ function play() {
   padding: 28px 20px calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
+.save-overview,
 .profile-overview {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(230px, 1fr);
   align-items: stretch;
   gap: 16px;
 }
 
+.save-overview.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cloud-save {
+  min-width: 0;
+}
+
+.telemetry-card {
+  min-width: 0;
+}
+
 .profile-header {
-  flex: 4 1 0;
   min-width: 0;
   gap: 24px;
 }
@@ -202,8 +226,7 @@ function play() {
 }
 
 .career-link {
-  flex: 1 1 0;
-  min-width: 180px;
+  min-width: 0;
 }
 
 .tiles {
@@ -282,8 +305,9 @@ function play() {
 }
 
 @media (max-width: 900px) {
+  .save-overview,
   .profile-overview {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .columns {

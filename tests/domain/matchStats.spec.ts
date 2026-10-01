@@ -10,7 +10,7 @@ import { headlessResolver } from '@/simulation/BattleSimulation'
 
 const FULL_MATCH_TIMEOUT = 15_000
 
-function playOut(seed: string, rounds = Infinity) {
+function prepareMatch(seed: string) {
   const match = createMatch({
     seed,
     ids: sequentialIds(),
@@ -18,14 +18,32 @@ function playOut(seed: string, rounds = Infinity) {
 
   const coach = new GreedyCoach()
   const rng = createRng(`${seed}-coach`)
-  while (match.phase !== 'finished' && match.stats.rounds < rounds) {
-    coach.playTurn(match.human, {
-      round: match.round,
-      rng,
-    })
 
+  coach.playTurn(match.human, {
+    round: match.round,
+    rng,
+  })
+
+  return {
+    match,
+    coach,
+    rng,
+  }
+}
+
+function playOut(seed: string, rounds = Infinity) {
+  const { match, coach, rng } = prepareMatch(seed)
+
+  while (match.phase !== 'finished' && match.stats.rounds < rounds) {
     match.finishBattle(headlessResolver.resolve(match.startBattle()._unsafeUnwrap()))
     match.nextRound()
+
+    if (match.phase === 'planning' && match.stats.rounds < rounds) {
+      coach.playTurn(match.human, {
+        round: match.round,
+        rng,
+      })
+    }
   }
 
   return match
@@ -51,14 +69,14 @@ describe('match statistics', () => {
   })
 
   it('keeps one row per hero type and team', () => {
-    const { stats } = playOut('rows')
+    const { stats } = playOut('rows', 4)
     const keys = stats.heroes.map((h) => `${h.team}:${h.heroId}`)
 
     expect(new Set(keys).size).toBe(keys.length)
   })
 
   it('books what each coach bought', () => {
-    const match = playOut('ledger')
+    const { match } = prepareMatch('ledger')
 
     for (const player of match.players) {
       expect(player.ledger.heroesBought).toBeGreaterThan(0)
@@ -85,7 +103,7 @@ describe('match statistics', () => {
   })
 
   it('survives a save and load', () => {
-    const match = playOut('saved')
+    const match = playOut('saved', 4)
     const restored = parseSnapshot(serializeSnapshot(match.snapshot()))!
 
     expect(restored.stats).toEqual(match.stats)

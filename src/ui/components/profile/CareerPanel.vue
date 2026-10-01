@@ -13,19 +13,22 @@ import {
   TabsTrigger,
 } from 'reka-ui'
 import { computed, ref } from 'vue'
-import { ACHIEVEMENTS, TRIALS, type TrialDefinition } from '@/content/career'
+import { ACHIEVEMENTS, TRIALS, type TrialDefinition, type TrialId } from '@/content/career'
 import { achievementProgress, nextCareerWeek } from '@/domain/profile/career'
+import { replayAvailability } from '@/domain/replay/setup'
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
+import { useReplayStore } from '../../stores/replay'
 
 withDefaults(defineProps<{ heading?: 'h1' | 'h2' }>(), { heading: 'h2' })
 
 const profile = useProfileStore()
 const match = useMatchStore()
 const settings = useSettingsStore()
+const replay = useReplayStore()
 const text = useGameText()
 const { t } = text
 const tab = ref('trials')
@@ -34,6 +37,19 @@ useModal(() => selected.value !== null)
 
 const completed = computed(() => Object.keys(profile.profile.career.trials).length)
 const resetAt = computed(() => nextCareerWeek(profile.week))
+
+const trialReplays = computed(
+  () =>
+    new Map(
+      TRIALS.map((trial) => [
+        trial.id,
+        profile.profile.recent.find(
+          (record) =>
+            record.trialId === trial.id && record.verdict === 'win' && replayAvailability(record) === 'ready',
+        ),
+      ]),
+    ),
+)
 
 const resetLabel = computed(() =>
   new Intl.DateTimeFormat(settings.locale, {
@@ -60,6 +76,16 @@ function start() {
   selected.value = null
   profile.close()
   match.startTrial(trial.id)
+}
+
+function watchReplay(trialId: TrialId) {
+  const record = trialReplays.value.get(trialId)
+  if (!record) {
+    return
+  }
+
+  selected.value = null
+  replay.open(record)
 }
 </script>
 
@@ -128,21 +154,32 @@ function start() {
                   : t('career.firstClear', { xp: trial.xp })
               }}</span>
 
-              <button
-                type="button"
-                class="btn"
-                :disabled="profile.level.level < trial.level"
-                @click="selected = trial"
-              >
-                <Play :size="14" />
-                {{
-                  profile.level.level < trial.level
-                    ? t('career.locked', { level: trial.level })
-                    : profile.profile.career.trials[trial.id]
-                      ? t('career.retry')
-                      : t('career.play')
-                }}
-              </button>
+              <div class="trial-actions">
+                <button
+                  v-if="trialReplays.get(trial.id)"
+                  type="button"
+                  class="btn ghost"
+                  @click="watchReplay(trial.id)"
+                >
+                  <Play :size="14" /> {{ t('replay.watch') }}
+                </button>
+
+                <button
+                  type="button"
+                  class="btn"
+                  :disabled="profile.level.level < trial.level"
+                  @click="selected = trial"
+                >
+                  <Play :size="14" />
+                  {{
+                    profile.level.level < trial.level
+                      ? t('career.locked', { level: trial.level })
+                      : profile.profile.career.trials[trial.id]
+                        ? t('career.retry')
+                        : t('career.play')
+                  }}
+                </button>
+              </div>
             </footer>
           </article>
         </div>
@@ -380,6 +417,12 @@ footer {
   color: var(--gold);
   font-size: 12px;
   font-weight: 700;
+}
+
+.trial-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .complete .reward {
   color: var(--heal);

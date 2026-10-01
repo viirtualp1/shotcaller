@@ -10,6 +10,7 @@ import { useSettingsStore } from '../../stores/settings'
 import { useAudioStore } from '../../stores/audio'
 import CheckField from '../common/CheckField.vue'
 import LanguageSwitch from './LanguageSwitch.vue'
+import TelemetrySettings from './TelemetrySettings.vue'
 
 const DIFFICULTY_IDS = Object.keys(DIFFICULTIES) as Difficulty[]
 
@@ -71,6 +72,8 @@ function openOrdersPatch() {
 
 <template>
   <div class="fields">
+    <TelemetrySettings />
+
     <section class="field">
       <h3 class="label"><Gauge :size="16" /> {{ t('settings.difficulty') }}</h3>
 

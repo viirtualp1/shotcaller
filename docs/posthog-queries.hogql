@@ -1,0 +1,39 @@
+-- Run in PostHog > SQL (HogQL), one query at a time. Optional filters belong in WHERE.
+-- This is a PostHog analytics file, NOT a PostgreSQL/Supabase migration.
+-- Apply supabase/migrations/20261001120000_telemetry_consent.sql in Supabase instead.
+-- These operate on consenting player-match samples, not all players or unique duels.
+
+-- Mode / matchup / difficulty / balance-version overview.
+select properties.mode as mode, properties.kind as kind,
+  properties.difficulty as difficulty, properties.balance as balance,
+  count() as player_matches, count(distinct distinct_id) as players,
+  countIf(properties.verdict = 'win') as wins,
+  countIf(properties.verdict = 'draw') as draws,
+  round(100.0 * countIf(properties.verdict = 'win') / count(), 2) as win_rate,
+  avg(toFloat(properties.rounds)) as avg_rounds
+from events
+where event = 'game_match_finished' and timestamp >= now() - interval 30 day
+group by mode, kind, difficulty, balance
+order by player_matches desc;
+
+-- Per-pseudonym win rate; no nickname or auth user ID is available in PostHog.
+select distinct_id, properties.mode as mode, properties.kind as kind,
+  count() as player_matches,
+  round(100.0 * countIf(properties.verdict = 'win') / count(), 2) as win_rate
+from events
+where event = 'game_match_finished' and timestamp >= now() - interval 30 day
+group by distinct_id, mode, kind
+having player_matches >= 10
+order by player_matches desc;
+
+-- Heroes. Replace hero_ids with item_ids or synergy_ids to get those breakdowns.
+select arrayJoin(JSONExtractArrayRaw(properties.hero_ids ?? '[]')) as hero,
+  properties.mode as mode, properties.kind as kind, properties.balance as balance,
+  properties.ratingBand as rating_band,
+  count() as player_matches, count(distinct distinct_id) as players,
+  round(100.0 * countIf(properties.verdict = 'win') / count(), 2) as win_rate
+from events
+where event = 'game_match_finished' and timestamp >= now() - interval 30 day
+group by hero, mode, kind, balance, rating_band
+having player_matches >= 30 and players >= 5
+order by player_matches desc;

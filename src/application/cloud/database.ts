@@ -113,6 +113,27 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      submit_feedback: {
+        Args: {
+          request_id: string
+          category: string
+          subject: string
+          message: string
+          reply_email: string | null
+          game_version: string
+          language: string
+        }
+        Returns: undefined
+      }
+      reserve_telemetry: {
+        Args: { policy_version: number; match_id: string; finished_at: string }
+        Returns: Json
+      }
+      my_privacy: { Args: Record<PropertyKey, never>; Returns: Json }
+      set_privacy: {
+        Args: { policy_version: number; allow_telemetry: boolean }
+        Returns: Json
+      }
       ensure_coach: {
         Args: Record<PropertyKey, never>
         Returns: {

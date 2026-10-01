@@ -2,6 +2,8 @@
 /// <reference types="vite-plugin-pwa/vue" />
 
 interface ImportMetaEnv {
+  /** Enable only after the consent migration and PostHog Edge Functions are deployed. */
+  readonly VITE_TELEMETRY_ENABLED?: string
   /** Cloud saves: the Supabase project URL. Leave empty to keep the game local. */
   readonly VITE_SUPABASE_URL?: string
   /** Cloud saves: the publishable (or legacy anon) key. Never the secret key. */

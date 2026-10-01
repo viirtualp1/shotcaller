@@ -78,6 +78,56 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.6.2',
+    date: '2026-10-01',
+    title: {
+      en: 'Your choice',
+      ru: 'Твой выбор',
+    },
+    general: [
+      {
+        en: 'Added **optional gameplay analytics** to help balance heroes, items, synergies and game modes. Match statistics are shared with PostHog **only after your explicit consent**.',
+        ru: 'Добавлен **добровольный сбор игровой статистики** для улучшения баланса героев, предметов, синергий и режимов. Статистика матчей передаётся в PostHog **только после твоего явного согласия**.',
+      },
+      {
+        en: 'Sharing starts with new matches after consent. Matches use a random analytics identifier; your name, email and account ID stay private.',
+        ru: 'В статистику попадают новые матчи после согласия. Матчи связываются случайным аналитическим идентификатором; ник, email и ID аккаунта остаются приватными.',
+      },
+      {
+        en: 'Withdrawing consent stops collection and queues previously shared statistics for deletion.',
+        ru: 'Отзыв согласия прекращает сбор, а ранее переданные данные ставятся в очередь на удаление.',
+      },
+    ],
+    interface: [
+      {
+        en: 'New and existing accounts can agree, decline or decide later after signing in. The choice is saved to your account.',
+        ru: 'После входа новые и существующие аккаунты могут согласиться, отказаться или решить позже. Выбор сохраняется в аккаунте.',
+      },
+      {
+        en: 'Change your telemetry consent at any time in settings or your profile.',
+        ru: 'Согласие на телеметрию можно изменить в любой момент в настройках или профиле.',
+      },
+      {
+        en: 'Added a feedback form to send bug reports, balance feedback and suggestions to the game team.',
+        ru: 'Добавлена форма обратной связи: сообщай об ошибках, обсуждай баланс и отправляй предложения команде игры.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Fixed cloud saves failing for profiles with a large match history and round replays.',
+        ru: 'Исправлена ошибка облачного сохранения профилей с большой историей матчей и повторами раундов.',
+      },
+      {
+        en: 'Chat now stays above the on-screen keyboard while typing.',
+        ru: 'При вводе сообщения чат теперь остаётся над экранной клавиатурой.',
+      },
+      {
+        en: 'Completed trials now offer a saved match replay separately from playing the trial again.',
+        ru: 'Для пройденных испытаний просмотр сохранённого повтора теперь доступен отдельно от повторного прохождения.',
+      },
+    ],
+  },
+  {
     version: '8.6.1',
     date: '2026-10-01',
     title: {

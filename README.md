@@ -10,6 +10,20 @@ An auto battler in the spirit of Dota. You are the coach: buy heroes, send them 
 
 Every mode has its own duel rating.
 
+Optional [PostHog gameplay telemetry](docs/telemetry.md) requires an explicit account consent.
+The integration is off until its migration, server functions and deletion scheduler are configured.
+
+Cloud saves require all files in `supabase/migrations`, applied in timestamp order.
+For existing deployments, `20261001130000_cloud_save_capacity.sql` raises the snapshot limits to
+1 MiB per profile and 256 KiB per match so history and round replays fit without discarding data.
+The regression check in `supabase/tests/cloud_save_capacity.sql` runs in a disposable database and rolls back its writes.
+
+The main page's feedback form uses `20261001140000_support_feedback.sql`.
+Read submissions in Supabase **Table Editor → support_requests** and mark them `reviewed` or `closed`.
+Only project administrators can read the inbox; players and guests can submit up to three requests per hour
+and ten per day. Submission shares the text, optional reply email, account/guest ID, language and game version;
+it is separate from gameplay analytics. Contact emails and message text should be retained only as long as support needs them.
+
 ## How to play
 
 - Buy heroes in the shop. Three copies of a hero merge into one stronger hero.

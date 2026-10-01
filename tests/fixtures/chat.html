@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat keyboard preview</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Onest:wght@400;500;600;700&display=swap"
+    />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // Emulates a shrinking VisualViewport. Account, conversations and presence are local stubs.
+      import { createApp, h, ref } from 'vue'
+      import { createPinia } from 'pinia'
+      import { TooltipProvider } from 'reka-ui'
+      import { i18n } from '/src/ui/i18n/index.ts'
+      import { useCloudStore } from '/src/ui/stores/cloud.ts'
+      import { useFriendsStore } from '/src/ui/stores/friends.ts'
+      import { useSettingsStore } from '/src/ui/stores/settings.ts'
+      import SocialWindow from '/src/ui/components/social/SocialWindow.vue'
+      import '/src/ui/styles/base.css'
+
+      const keyboard = ref(0)
+      const viewport = Object.assign(new EventTarget(), {
+        height: innerHeight,
+        offsetTop: 0,
+        width: innerWidth,
+        scale: 1,
+      })
+      Object.defineProperty(window, 'visualViewport', { value: viewport })
+
+      function toggleKeyboard() {
+        keyboard.value = keyboard.value ? 0 : 360
+        viewport.height = innerHeight - keyboard.value
+        viewport.dispatchEvent(new Event('resize'))
+      }
+
+      const pinia = createPinia()
+      const app = createApp({
+        render: () =>
+          h(TooltipProvider, null, {
+            default: () => [
+              h(
+                'button',
+                { class: 'btn', onClick: toggleKeyboard, style: 'margin:16px' },
+                'Показать / скрыть клавиатуру',
+              ),
+              h(SocialWindow),
+              ...(keyboard.value
+                ? [
+                    h(
+                      'div',
+                      {
+                        style: `position:fixed;bottom:0;left:0;right:0;height:${keyboard.value}px;background:#34403b;padding:24px;z-index:44`,
+                      },
+                      [
+                        'Тестовая экранная клавиатура',
+                        h('button', { class: 'btn', onClick: toggleKeyboard }, 'Скрыть клавиатуру'),
+                      ],
+                    ),
+                  ]
+                : []),
+            ],
+          }),
+      })
+        .use(pinia)
+        .use(i18n)
+
+      const cloud = useCloudStore(pinia)
+      useSettingsStore(pinia).locale = 'ru'
+      i18n.global.locale.value = 'ru'
+      cloud.connect = async () => ({
+        friends: () => ({
+          card: async () => ({
+            id: 'fixture',
+            name: 'Preview coach',
+            friendCode: 'PREVIEW',
+            rating: 0,
+            avatar: null,
+            photo: null,
+          }),
+          list: async () => [
+            {
+              id: 'rival',
+              name: 'Preview friend',
+              avatar: 'archer',
+              photo: null,
+              rating: 0,
+              status: 'friend',
+            },
+          ],
+          blocked: async () => [],
+          setPhoto: async () => undefined,
+          presence: () => ({ onChange: () => undefined, update: () => undefined, leave: () => undefined }),
+          watch: () => () => undefined,
+        }),
+        chat: () => ({
+          conversation: async () =>
+            Array.from({ length: 12 }, (_, i) => ({
+              id: i + 1,
+              sender: 'rival',
+              recipient: 'fixture',
+              body: 'Тестовое сообщение ' + (i + 1),
+              createdAt: '2026-10-01T12:00:00.000Z',
+              readAt: null,
+            })),
+          unread: async () => new Map(),
+          watch: () => () => undefined,
+          markRead: async () => undefined,
+        }),
+        duels: () => ({ mine: async () => [], watch: () => () => undefined }),
+      })
+      cloud.enabled = true
+      cloud.account = { id: 'fixture', anonymous: false, email: null, photo: null }
+      useFriendsStore(pinia).open = true
+      app.mount('#app')
+    </script>
+  </body>
+</html>

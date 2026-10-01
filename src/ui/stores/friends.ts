@@ -25,9 +25,22 @@ const byName = (a: FriendEntry, b: FriendEntry) => a.name.localeCompare(b.name)
  * for their friends even before opening the list.
  */
 export const useFriendsStore = defineStore('friends', () => {
+  let viewedMatches = new Map<string, Promise<MatchRecord | null>>()
+  let service: FriendsService | null = null
+  let presence: Presence | null = null
+  let stops: (() => void)[] = []
+  /** Requests as of the last refresh, to tell what is new; null before the first one. */
+  let known: { incoming: ReadonlySet<string>; outgoing: ReadonlySet<string> } | null = null
+  /** Bumped on every account change, so a connection that finishes late for an old account is dropped. */
+  let generation = 0
+  /** The Google picture last published for friends, so a list refresh does not send it again. */
+  let publishedPhoto: string | null | undefined
+
   const cloud = useCloudStore()
   const match = useMatchStore()
   const notifications = useNotificationsStore()
+  const accountPhoto = useAccountPhoto()
+
   const status = ref<FriendsStatus>('off')
   const card = shallowRef<OwnCard | null>(null)
   const entries = shallowRef<FriendEntry[]>([])
@@ -39,22 +52,6 @@ export const useFriendsStore = defineStore('friends', () => {
   const viewedId = ref<string | null>(null)
   const viewed = shallowRef<FriendProfile | null>(null)
   const viewLoading = ref(false)
-
-  let viewedMatches = new Map<string, Promise<MatchRecord | null>>()
-
-  let service: FriendsService | null = null
-  let presence: Presence | null = null
-  let stops: (() => void)[] = []
-  /** Requests as of the last refresh, to tell what is new; null before the first one. */
-  let known: { incoming: ReadonlySet<string>; outgoing: ReadonlySet<string> } | null = null
-  /** Bumped on every account change, so a connection that finishes late for an old account is dropped. */
-  let generation = 0
-  /** The Google picture last published for friends, so a list refresh does not send it again. */
-  let publishedPhoto: string | null | undefined
-  const accountPhoto = useAccountPhoto()
-
-  const isOnline = (id: string) => online.value.has(id)
-  const statusOf = (id: string) => online.value.get(id) ?? null
 
   /** What this coach is doing, as their friends see it. */
   const ownStatus = computed<PresenceStatus>(() => ({
@@ -71,6 +68,14 @@ export const useFriendsStore = defineStore('friends', () => {
   const incoming = computed(() => entries.value.filter((e) => e.status === 'incoming').sort(byName))
   const outgoing = computed(() => entries.value.filter((e) => e.status === 'outgoing').sort(byName))
   const onlineCount = computed(() => friends.value.filter((f) => isOnline(f.id)).length)
+
+  function isOnline(id: string) {
+    return online.value.has(id)
+  }
+
+  function statusOf(id: string) {
+    return online.value.get(id) ?? null
+  }
 
   async function openProfile(id: string) {
     viewedId.value = id

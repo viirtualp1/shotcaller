@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onClickOutside, useTextareaAutosize } from '@vueuse/core'
+import { onClickOutside, useResizeObserver, useTextareaAutosize } from '@vueuse/core'
 import { ArrowDown, ArrowLeft, SendHorizontal, Smile, Swords, X } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { MESSAGE_MAX_LENGTH } from '@/application/social/chat'
@@ -15,6 +15,7 @@ import CoachAvatar from '../profile/CoachAvatar.vue'
 import EmojiPicker from './EmojiPicker.vue'
 
 const SHOW_COUNTER_FROM = MESSAGE_MAX_LENGTH - 100
+let initialized = false
 
 const props = defineProps<{ friend: FriendEntry; active: boolean }>()
 const emit = defineEmits<{ back: []; close: [] }>()
@@ -27,6 +28,10 @@ const { t } = useGameText()
 const statusText = useFriendStatus()
 const list = useTemplateRef<HTMLElement>('list')
 const field = useTemplateRef<HTMLTextAreaElement>('field')
+const emoji = useTemplateRef<HTMLElement>('emoji')
+const picking = ref(false)
+const following = ref(true)
+const unseen = ref(0)
 
 const draft = computed({
   get: () => chat.drafts[props.friend.id] ?? '',
@@ -38,57 +43,6 @@ const draft = computed({
 const { input } = useTextareaAutosize({
   element: field,
   input: draft,
-})
-
-function focusComposer() {
-  if (props.active) {
-    field.value?.focus({ preventScroll: true })
-  }
-}
-
-defineExpose({ focusComposer })
-
-const picking = ref(false)
-const following = ref(true)
-const unseen = ref(0)
-let initialized = false
-
-function trackScroll() {
-  const el = list.value
-  following.value = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 40
-  chat.atEnd = following.value
-
-  if (following.value) {
-    unseen.value = 0
-  }
-}
-
-onMounted(() => {
-  if (props.active) {
-    field.value?.focus({ preventScroll: true })
-  }
-})
-
-watch(
-  () => props.active,
-  (active) => {
-    if (active) {
-      chat.atEnd = following.value
-
-      if (following.value) {
-        scrollToEnd()
-      }
-
-      field.value?.focus({ preventScroll: true })
-    } else {
-      picking.value = false
-    }
-  },
-  { flush: 'post' },
-)
-
-onClickOutside(useTemplateRef<HTMLElement>('emoji'), () => (picking.value = false), {
-  ignore: ['.emoji-toggle'],
 })
 
 const clock = computed(
@@ -103,29 +57,28 @@ const hero = computed(() => HERO_IDS.find((id) => id === props.friend.avatar) ??
 const online = computed(() => friends.isOnline(props.friend.id))
 const canSend = computed(() => input.value.trim().length > 0 && !chat.sending)
 
+function focusComposer() {
+  if (props.active) {
+    field.value?.focus({ preventScroll: true })
+  }
+}
+
+function trackScroll() {
+  const el = list.value
+  following.value = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 40
+  chat.atEnd = following.value
+
+  if (following.value) {
+    unseen.value = 0
+  }
+}
+
 function scrollToEnd() {
   following.value = true
   unseen.value = 0
   chat.atEnd = true
   void nextTick(() => list.value?.scrollTo({ top: list.value.scrollHeight }))
 }
-
-/* Incoming messages keep the reader's place until they choose to catch up. */
-watch(
-  () => chat.messages.at(-1)?.id,
-  (id) => {
-    if (!id) {
-      return
-    }
-
-    if (!initialized || following.value) {
-      initialized = true
-      scrollToEnd()
-    } else {
-      unseen.value++
-    }
-  },
-)
 
 async function showOlder() {
   const el = list.value
@@ -182,6 +135,56 @@ async function insertEmoji(emoji: string) {
   el?.focus()
   el?.setSelectionRange(start + emoji.length, start + emoji.length)
 }
+
+defineExpose({ focusComposer })
+
+onClickOutside(emoji, () => (picking.value = false), {
+  ignore: ['.emoji-toggle'],
+})
+
+/* Keep the latest message visible as the keyboard or multiline composer resizes the list. */
+useResizeObserver(list, () => {
+  if (props.active && following.value) {
+    scrollToEnd()
+  }
+})
+
+watch(
+  () => props.active,
+  (active) => {
+    if (active) {
+      chat.atEnd = following.value
+
+      if (following.value) {
+        scrollToEnd()
+      }
+
+      focusComposer()
+    } else {
+      picking.value = false
+    }
+  },
+  { flush: 'post' },
+)
+
+/* Incoming messages keep the reader's place until they choose to catch up. */
+watch(
+  () => chat.messages.at(-1)?.id,
+  (id) => {
+    if (!id) {
+      return
+    }
+
+    if (!initialized || following.value) {
+      initialized = true
+      scrollToEnd()
+    } else {
+      unseen.value++
+    }
+  },
+)
+
+onMounted(focusComposer)
 </script>
 
 <template>
@@ -512,7 +515,7 @@ async function insertEmoji(emoji: string) {
   border: 1px solid var(--edge-strong);
   background: #0f1614;
   color: var(--chalk);
-  font: 500 15px/1.35 var(--font-ui);
+  font: 500 16px/1.35 var(--font-ui);
   resize: none;
   /* The field grows with its text up to max-height; past that it scrolls without showing a bar. */
   scrollbar-width: none;

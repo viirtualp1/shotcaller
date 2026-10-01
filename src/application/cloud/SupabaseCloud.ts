@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { MatchRecord, Profile } from '@/domain/profile/Profile'
+import { feedbackSchema, type Feedback } from '../feedback'
 import { fromProfileEnvelope, toProfileEnvelope } from '../persistence/profileSnapshot'
 import type { AccountMode, CloudAccount, CloudStore } from './CloudStore'
 import type { CloudConfig } from './config'
@@ -7,6 +8,7 @@ import type { Database } from './database'
 import { SupabaseChat } from './SupabaseChat'
 import { SupabaseDuels } from './SupabaseDuels'
 import { SupabaseFriends } from './SupabaseFriends'
+import { SupabasePrivacy } from './SupabasePrivacy'
 import { asJson } from './json'
 import { settledRatingsSchema } from './ratingsSchema'
 
@@ -144,6 +146,30 @@ export class SupabaseCloud implements CloudStore {
   /** Friends of the given signed-in coach, over the same connection. */
   friends(userId: string) {
     return new SupabaseFriends(this.client, userId)
+  }
+
+  privacy(userId: string) {
+    return new SupabasePrivacy(this.client, userId)
+  }
+
+  /** Feedback is sent deliberately by a player, including guests, independently of telemetry consent. */
+  async sendFeedback(feedback: Feedback) {
+    const request = feedbackSchema.parse(feedback)
+    await this.ensureAccount()
+
+    const { error } = await this.client.rpc('submit_feedback', {
+      request_id: request.id,
+      category: request.kind,
+      subject: request.subject,
+      message: request.message,
+      reply_email: request.email || null,
+      game_version: request.version,
+      language: request.locale,
+    })
+
+    if (error) {
+      throw error
+    }
   }
 
   /** Conversations of the given signed-in coach, over the same connection. */

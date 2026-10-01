@@ -2,10 +2,6 @@ import type { HeroId, ModeId, StarLevel } from '@/content/ids'
 import type { Difficulty } from '@/content/rules'
 import type { MatchRecord, ModeRatings } from '@/domain/profile/Profile'
 
-/** An https address of a Google account picture, or nothing. */
-export const coachPhoto = (url: string | null | undefined): string | null =>
-  url && url.length <= 2048 && url.startsWith('https://') ? url : null
-
 /** What other players see of a coach. */
 export interface CoachCard {
   readonly id: string
@@ -110,6 +106,10 @@ export interface FriendsService {
 }
 
 const CODE_LENGTH = 8
+
+/** An https address of a Google account picture, or nothing. */
+export const coachPhoto = (url: string | null | undefined): string | null =>
+  url && url.length <= 2048 && url.startsWith('https://') ? url : null
 
 /** Accepts any spacing, dashes or case a player may type or paste. */
 export const normalizeFriendCode = (input: string) => input.toUpperCase().replace(/[^A-Z0-9]/g, '')

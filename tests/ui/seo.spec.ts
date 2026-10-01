@@ -21,9 +21,12 @@ describe('public page SEO', () => {
 
   it('delivers readable patch content and crawlable adjacent links before JavaScript', () => {
     const html = patchArticle(LATEST_PATCH)
-    expect(html).toContain('Optimization improved.')
-    expect(html).toContain('<h1>Patch 8.6.1')
-    expect(html).toContain('href="/patches/8.6/"')
+    const previous = PATCH_NOTES[1]!
+
+    expect(html).toContain(`<h1>Patch ${LATEST_PATCH.version}`)
+    expect(html).toContain(escapeHtml(LATEST_PATCH.title.en))
+    expect(html).toContain(escapeHtml(LATEST_PATCH.general![0]!.en.replaceAll('**', '')))
+    expect(html).toContain(`href="${patchPath(previous.version)}"`)
     expect(html).not.toContain('#/patches')
     expect(html).toContain('href="/"')
   })

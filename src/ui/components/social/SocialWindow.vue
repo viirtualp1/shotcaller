@@ -3,6 +3,7 @@ import { Bell, BellOff, X } from '@lucide/vue'
 import { useEventListener } from '@vueuse/core'
 import { computed, nextTick, useTemplateRef, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
+import { useVisibleViewport } from '../../composables/useVisibleViewport'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
@@ -19,6 +20,10 @@ const chat = useChatStore()
 const duel = useDuelStore()
 const system = useSystemNotificationsStore()
 const { t } = useGameText()
+const viewport = useVisibleViewport()
+
+const window = useTemplateRef<HTMLElement>('window')
+const panel = useTemplateRef<InstanceType<typeof ChatPanel>>('chatPanel')
 
 /** Offered once, until the player answers or closes it. */
 const offerNotifications = computed(
@@ -33,6 +38,8 @@ const bellTitle = computed(() => {
   return system.active ? t('systemNotifications.on') : t('systemNotifications.off')
 })
 
+const chatting = computed(() => friends.friends.find((f) => f.id === chat.friendId) ?? null)
+
 function toggleBell() {
   if (system.permission === 'default') {
     void system.request()
@@ -41,10 +48,20 @@ function toggleBell() {
   }
 }
 
-const chatting = computed(() => friends.friends.find((f) => f.id === chat.friendId) ?? null)
-const window = useTemplateRef<HTMLElement>('window')
-const panel = useTemplateRef<InstanceType<typeof ChatPanel>>('chatPanel')
 const focusChat = () => panel.value?.focusComposer()
+
+function back() {
+  chat.close()
+  friends.open = true
+}
+
+function close() {
+  chat.minimize()
+
+  void nextTick(() =>
+    document.querySelector<HTMLElement>('[aria-controls="social-window"]')?.focus({ preventScroll: true }),
+  )
+}
 
 useEventListener(
   document,
@@ -93,19 +110,6 @@ watch(
     }
   },
 )
-
-function back() {
-  chat.close()
-  friends.open = true
-}
-
-function close() {
-  chat.minimize()
-
-  void nextTick(() =>
-    document.querySelector<HTMLElement>('[aria-controls="social-window"]')?.focus({ preventScroll: true }),
-  )
-}
 </script>
 
 <template>
@@ -115,6 +119,7 @@ function close() {
       id="social-window"
       ref="window"
       class="social-window"
+      :style="viewport.style.value"
       :aria-label="t('friends.title')"
     >
       <ChatPanel
@@ -179,11 +184,11 @@ function close() {
 .social-window {
   position: fixed;
   right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--visible-bottom, 0px) + 16px + env(safe-area-inset-bottom, 0px));
   z-index: 45;
   display: flex;
   width: min(380px, calc(100vw - 32px));
-  height: min(560px, calc(100dvh - 32px));
+  height: min(560px, calc(var(--visible-height, 100dvh) - 32px - env(safe-area-inset-bottom, 0px)));
   padding: 12px;
   border-radius: 16px;
   background: var(--panel);
@@ -282,7 +287,7 @@ function close() {
     right: 8px;
     left: 8px;
     width: auto;
-    height: min(580px, calc(100dvh - 24px));
+    height: min(580px, calc(var(--visible-height, 100dvh) - 24px - env(safe-area-inset-bottom, 0px)));
   }
 }
 </style>

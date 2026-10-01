@@ -10,8 +10,8 @@ import { Flag, Play, Swords } from '@lucide/vue'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
+import SupportButton from '../components/common/SupportButton.vue'
 
-const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
 import CareerChip from '../components/profile/CareerChip.vue'
@@ -25,18 +25,36 @@ import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { useSettingsStore } from '../stores/settings'
 
+interface DemoLayer {
+  readonly id: number
+  readonly mode: ModeId
+}
+
 /** The show fight moves on to the next mode this often. */
 const DEMO_MODE_MS = 15_000
+const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
 const store = useMatchStore()
 const menu = useMenuStore()
 const settings = useSettingsStore()
 const duel = useDuelStore()
 const { t } = useGameText()
-const previewHost = ref<HTMLElement | null>(null)
-const previewVisible = useElementVisibility(previewHost)
 const visibility = useDocumentVisibility()
+
+const previewHost = ref<HTMLElement | null>(null)
 const patchCard = ref<InstanceType<typeof LatestPatchCard> | null>(null)
+/** Giving up asks once more; the question goes away on its own. */
+const confirmingForfeit = ref(false)
+
+/** The board on show, and for a moment the next mode's board fading in over it. */
+const demos = ref<DemoLayer[]>([
+  {
+    id: 0,
+    mode: MODE_IDS[0],
+  },
+])
+
+const previewVisible = useElementVisibility(previewHost)
 
 const patchSize = useElementSize(
   () => patchCard.value?.$el as HTMLElement | undefined,
@@ -47,18 +65,28 @@ const patchSize = useElementSize(
   { box: 'border-box' },
 )
 
-interface DemoLayer {
-  readonly id: number
-  readonly mode: ModeId
+const { start: expireForfeit } = useTimeoutFn(() => (confirmingForfeit.value = false), 3000, {
+  immediate: false,
+})
+
+const rival = computed(() => duel.resumable?.opponent.name || t('profile.defaultName'))
+
+/** The new board covers the old one now, so the old one can go. */
+function demoShown(id: number) {
+  demos.value = demos.value.filter((layer) => layer.id >= id)
 }
 
-/** The board on show, and for a moment the next mode's board fading in over it. */
-const demos = ref<DemoLayer[]>([
-  {
-    id: 0,
-    mode: MODE_IDS[0],
-  },
-])
+function forfeit() {
+  if (!confirmingForfeit.value) {
+    confirmingForfeit.value = true
+    expireForfeit()
+
+    return
+  }
+
+  confirmingForfeit.value = false
+  void duel.forfeit()
+}
 
 useIntervalFn(() => {
   if (!previewVisible.value || visibility.value !== 'visible') {
@@ -75,31 +103,6 @@ useIntervalFn(() => {
     },
   ]
 }, DEMO_MODE_MS)
-
-/** The new board covers the old one now, so the old one can go. */
-function demoShown(id: number) {
-  demos.value = demos.value.filter((layer) => layer.id >= id)
-}
-
-const rival = computed(() => duel.resumable?.opponent.name || t('profile.defaultName'))
-/** Giving up asks once more; the question goes away on its own. */
-const confirmingForfeit = ref(false)
-
-const { start: expireForfeit } = useTimeoutFn(() => (confirmingForfeit.value = false), 3000, {
-  immediate: false,
-})
-
-function forfeit() {
-  if (!confirmingForfeit.value) {
-    confirmingForfeit.value = true
-    expireForfeit()
-
-    return
-  }
-
-  confirmingForfeit.value = false
-  void duel.forfeit()
-}
 </script>
 
 <template>
@@ -170,7 +173,10 @@ function forfeit() {
       <LatestPatchCard ref="patchCard" />
     </div>
 
-    <LanguageSwitch compact class="language" />
+    <div class="footer">
+      <LanguageSwitch compact />
+      <SupportButton />
+    </div>
   </main>
 </template>
 
@@ -292,11 +298,15 @@ h1 {
   max-width: min(320px, calc(100% - 90px));
 }
 
-.language {
+.footer {
   position: absolute;
   bottom: 24px;
   left: 24px;
   z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   animation: fade-in 0.4s 0.2s ease-out both;
 }
 
@@ -346,7 +356,7 @@ h1 {
     max-width: 100%;
   }
 
-  .language {
+  .footer {
     position: relative;
     inset: auto;
     justify-self: start;

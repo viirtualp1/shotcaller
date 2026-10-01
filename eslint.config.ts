@@ -38,6 +38,7 @@ const codeStyle: Linter.Config = {
   plugins: { '@stylistic': stylistic },
   rules: {
     curly: ['error', 'all'],
+    '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
     '@stylistic/padding-line-between-statements': [
       'error',
       {
