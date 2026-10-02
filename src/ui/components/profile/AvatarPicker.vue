@@ -102,7 +102,7 @@ function pickPhoto() {
   align-items: center;
   gap: 8px;
   padding: 12px 6px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: rgba(10, 15, 13, 0.35);
   cursor: pointer;

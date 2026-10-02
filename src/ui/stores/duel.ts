@@ -22,6 +22,7 @@ import {
   type DuelService,
 } from '@/application/social/duels'
 import type { ReactionId, ReactionLink } from '@/application/social/reactions'
+import { BALANCE_FINGERPRINT } from '@/content/balance'
 import { opponentOf, type ModeId, type TeamId } from '@/content/ids'
 import type { MatchResult } from '@/domain/match/judge'
 import type { PlayerState } from '@/domain/player/Player'
@@ -29,12 +30,12 @@ import { useCloudStore } from './cloud'
 import { useMatchStore, type DuelBinding, type SettledDuel } from './match'
 import { useNotificationsStore } from './notifications'
 
-/** A reaction stays on screen this long. */
-const REACTION_SHOWN_MS = 3500
-/** A player can send one reaction this often. */
-const REACTION_COOLDOWN_MS = 3000
-/** The opponent's reactions closer together than this are dropped, so a modified client cannot flood the screen. */
-const REACTION_MIN_GAP_MS = 1000
+interface PendingReport {
+  readonly userId: string
+  readonly id: string
+  readonly winner: TeamId | null
+  readonly byThrone: boolean
+}
 
 export interface ShownReaction {
   readonly key: number
@@ -42,17 +43,40 @@ export interface ShownReaction {
   readonly mine: boolean
 }
 
+type PlayingDuel = Omit<SettledDuel, 'won'>
+
+/** A reaction stays on screen this long. */
+const REACTION_SHOWN_MS = 3500
+/** A player can send one reaction this often. */
+const REACTION_COOLDOWN_MS = 3000
+/** The opponent's reactions closer together than this are dropped, so a modified client cannot flood the screen. */
+const REACTION_MIN_GAP_MS = 1000
 /** Realtime should bring the other board; this is the safety net if a message is lost. */
 const BOARD_POLL_MS = 5000
 
 const secondsSince = (iso: string | null, now: number) => (iso ? (now - Date.parse(iso)) / 1000 : 0)
 
-type PlayingDuel = Omit<SettledDuel, 'won'>
-
-/** Online duels with friends: invites, the running duel and how it ends. */
+/** Online duels: matchmaking, friend invitations, the running duel and how it ends. */
 export const useDuelStore = defineStore('duel', () => {
+  let service: DuelService | null = null
+  let userId: string | null = null
+  let stops: (() => void)[] = []
+  let reactionLink: ReactionLink | null = null
+  let reactionKey = 0
+  let lastReceived = 0
+  let boards: BoardExchange | null = null
+  let generation = 0
+  let queueRequest: Promise<void> | null = null
+  let leaveRequest: Promise<void> | null = null
+  let foundMatch: string | null = null
+  let polling = false
+  let reporting = false
+
   const cloud = useCloudStore()
   const matchStore = useMatchStore()
+  const notifications = useNotificationsStore()
+  const online = useOnline()
+  const visibility = useDocumentVisibility()
   const now = useNow({ scheduler: (tick) => useIntervalFn(tick, 1000) })
 
   /** An invite waiting for this coach's answer. */
@@ -65,36 +89,34 @@ export const useDuelStore = defineStore('duel', () => {
   const resumable = shallowRef<DuelEntry | null>(null)
   /** The friend being challenged while the mode is picked. */
   const challenging = ref<string | null>(null)
-  const notifications = useNotificationsStore()
   /** Reactions on screen, the player's own and the opponent's, a few seconds each. */
   const reactionsShown = shallowRef<ShownReaction[]>([])
   const reactionsMuted = useLocalStorage(STORAGE_KEYS.reactionsMuted, false)
   /** Off for a moment after each reaction, so they cannot be spammed. */
   const canReact = ref(true)
+  const reports = useLocalStorage<PendingReport[]>(STORAGE_KEYS.duelReports, [])
 
   const playing = useLocalStorage<PlayingDuel | null>(STORAGE_KEYS.duelPlaying, null, {
     serializer: StorageSerializers.object,
   })
 
-  let service: DuelService | null = null
-  let userId: string | null = null
-  let stops: (() => void)[] = []
-  let stopBoards: (() => void) | null = null
-  let reactionLink: ReactionLink | null = null
-  let reactionKey = 0
-  let lastReceived = 0
-  let boards: BoardExchange | null = null
   const recovering = ref(false)
-  const online = useOnline()
-  const visibility = useDocumentVisibility()
-  const reconnecting = computed(() => recovering.value || !online.value)
-  let generation = 0
+  const connected = ref(false)
+  const searching = ref<ModeId | null>(null)
+  /** Keep the selected mode visible while cancellation or a found pairing is being recovered. */
+  const searchMode = ref<ModeId | null>(null)
+  const cancellingSearch = ref(false)
+  const searchStartedAt = ref<number | null>(null)
+  const searchRecovering = ref(false)
 
-  let pendingReport: {
-    readonly id: string
-    readonly winner: TeamId | null
-    readonly byThrone: boolean
-  } | null = null
+  const reconnecting = computed(() => recovering.value || searchRecovering.value || !online.value)
+  const matchmaking = computed(() => searchMode.value !== null || cancellingSearch.value)
+
+  const searchSeconds = computed(() =>
+    searchStartedAt.value === null
+      ? 0
+      : Math.max(0, Math.floor((now.value.getTime() - searchStartedAt.value) / 1000)),
+  )
 
   const mySide = computed(() => (active.value && userId ? sideOf(active.value.duel, userId) : 0))
 
@@ -112,15 +134,24 @@ export const useDuelStore = defineStore('duel', () => {
   /** Waiting on a coach who went quiet for longer than a round may take. */
   const canClaim = computed(() => {
     const entry = active.value
-    if (!entry || !matchStore.awaiting || opponentReady.value) {
+    if (!entry || (matchStore.phase !== 'finished' && (!matchStore.awaiting || opponentReady.value))) {
       return false
     }
 
     return secondsSince(entry.duel.roundOpenedAt, now.value.getTime()) > ROUND_TIMEOUT_SECONDS
   })
 
+  const busy = computed(() => active.value !== null || outgoing.value !== null || matchmaking.value)
+
+  /** The resumable duel was saved on this device; otherwise it can only be given up. */
+  const canResume = computed(() => {
+    const seed = resumable.value?.duel.seed
+
+    return seed ? matchStore.savedDuel(seed) !== null : false
+  })
+
   /** The clock ticks once a second, so it can lag a fresh invite by a moment; the count never starts above the limit. */
-  const inviteSecondsLeft = (entry: DuelEntry | null) => {
+  function inviteSecondsLeft(entry: DuelEntry | null) {
     if (!entry) {
       return 0
     }
@@ -130,37 +161,12 @@ export const useDuelStore = defineStore('duel', () => {
     return Math.min(INVITE_SECONDS, Math.max(0, left))
   }
 
-  const busy = computed(() => active.value !== null || outgoing.value !== null)
-
-  /** The resumable duel was saved on this device; otherwise it can only be given up. */
-  const canResume = computed(() => {
-    const seed = resumable.value?.duel.seed
-
-    return seed ? matchStore.savedDuel(seed) !== null : false
-  })
-
   function fail(error: unknown) {
     notifications.push({
       kind: 'duelFailed',
       reason: error instanceof DuelError ? error.reason : 'failed',
     })
   }
-
-  /** Invites time out on the server; the dialogs close on their own a little after. */
-  watch(now, () => {
-    if (incoming.value && inviteSecondsLeft(incoming.value) === 0) {
-      incoming.value = null
-    }
-
-    if (outgoing.value && inviteSecondsLeft(outgoing.value) === 0) {
-      notifications.push({
-        kind: 'duelExpired',
-        name: outgoing.value.opponent.name,
-      })
-
-      outgoing.value = null
-    }
-  })
 
   async function load() {
     if (!service || !userId) {
@@ -203,6 +209,12 @@ export const useDuelStore = defineStore('duel', () => {
 
     /* A duel running elsewhere (another tab or device) is offered, never ended on its own. */
     const running = entries.find((e) => e.duel.status === 'active') ?? null
+    if (running && (foundMatch === running.duel.id || searching.value !== null)) {
+      begin(running)
+
+      return
+    }
+
     resumable.value = running && running.duel.id !== active.value?.duel.id ? running : null
 
     await settleMissed(entries).catch(() => undefined)
@@ -300,24 +312,9 @@ export const useDuelStore = defineStore('duel', () => {
     showReaction(reaction, true)
   }
 
-  /* Reactions stay on until the player leaves the match, so a "GG" still goes out after the last round. */
-  watch(
-    () => matchStore.isDuel,
-    (isDuel) => {
-      if (!isDuel) {
-        reactionLink?.leave()
-        reactionLink = null
-        reactionsShown.value = []
-      }
-    },
-  )
-
   function stopDuel() {
-    stopBoards?.()
-    stopBoards = null
     boards?.cancel('duel stopped')
     active.value = null
-    pendingReport = null
   }
 
   /** A board from the other device, checked against the rules of the duel's mode. */
@@ -333,7 +330,7 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     const theirs = board ? [...board.roster.bench, ...Object.values(board.roster.lanes).flat()] : []
-    if (!board || theirs.some((hero) => mine.has(hero.uid))) {
+    if (!board || theirs.some((hero) => mine.has(hero.uid)) || !matchStore.acceptsOpponent(board)) {
       return null
     }
 
@@ -343,7 +340,12 @@ export const useDuelStore = defineStore('duel', () => {
   /** The other board is unusable: say so, keep our result on record and leave the duel. */
   function rejectBoard(duelId: string) {
     notifications.push({ kind: 'badBoard' })
-    void service?.report(duelId, mySide.value, false).catch(() => undefined)
+
+    report(duelId, {
+      winner: 0,
+      reason: 'forfeit',
+    })
+
     stopDuel()
     matchStore.leaveToMenu()
   }
@@ -379,7 +381,6 @@ export const useDuelStore = defineStore('duel', () => {
     return accepted
   }
 
-  let polling = false
   /** Recover boards and terminal duel state even when Realtime misses events during a disconnect. */
   async function poll() {
     const connection = service
@@ -391,16 +392,21 @@ export const useDuelStore = defineStore('duel', () => {
     polling = true
 
     try {
+      await retryReport()
+
       if (current) {
         await Promise.all([
           boards?.retry(),
-          retryReport(),
           connection.find(current.duel.id).then((duel) => {
             if (connection === service && duel) {
               onDuel(duel)
             }
           }),
         ])
+      } else if (cancellingSearch.value) {
+        await cancelSearch()
+      } else if (searching.value || foundMatch) {
+        await pollQueue()
       } else if (outgoing.value || incoming.value || resumable.value) {
         await load()
       }
@@ -411,23 +417,8 @@ export const useDuelStore = defineStore('duel', () => {
     }
   }
 
-  useIntervalFn(poll, BOARD_POLL_MS)
-
-  useEventListener(globalThis, 'online', () => {
-    void poll()
-    void load().catch(() => undefined)
-  })
-
-  watch(visibility, (state) => {
-    if (state === 'visible') {
-      void poll()
-    }
-  })
-
-  let reporting = false
-
   async function retryReport() {
-    const queued = pendingReport
+    const queued = reports.value.find((report) => report.userId === userId)
     const connection = service
     if (!queued || !connection || reporting) {
       return
@@ -438,17 +429,19 @@ export const useDuelStore = defineStore('duel', () => {
     try {
       await connection.report(queued.id, queued.winner, queued.byThrone)
 
-      if (pendingReport === queued) {
-        pendingReport = null
+      reports.value = reports.value.filter((report) => report.id !== queued.id)
+
+      if (service === connection && !matchStore.isDuel) {
+        stopDuel()
       }
     } catch (error) {
       if (
-        pendingReport === queued &&
+        service === connection &&
         error instanceof DuelError &&
         error.reason !== 'failed' &&
         error.reason !== 'rateLimited'
       ) {
-        pendingReport = null
+        reports.value = reports.value.filter((report) => report.id !== queued.id)
         fail(error)
       }
     } finally {
@@ -457,12 +450,20 @@ export const useDuelStore = defineStore('duel', () => {
   }
 
   function report(duelId: string, { winner, reason }: MatchResult) {
-    const side = mySide.value
-    pendingReport = {
-      id: duelId,
-      winner: winner === null ? null : winner === 0 ? side : opponentOf(side),
-      byThrone: reason === 'throne',
+    if (!userId || reports.value.some((report) => report.id === duelId)) {
+      return
     }
+
+    const side = mySide.value
+    reports.value = [
+      ...reports.value,
+      {
+        userId,
+        id: duelId,
+        winner: winner === null ? null : winner === 0 ? side : opponentOf(side),
+        byThrone: reason === 'throne',
+      },
+    ]
 
     void retryReport()
   }
@@ -472,19 +473,9 @@ export const useDuelStore = defineStore('duel', () => {
       id: entry.duel.id,
       opponentName: entry.opponent.name,
       exchange: (round, board) => exchange(entry.duel.id, round, board),
+      opponentRating: entry.opponent.rating,
       finish: (result) => report(entry.duel.id, result),
     }
-  }
-
-  function watchBoards(entry: DuelEntry) {
-    stopBoards?.()
-
-    stopBoards =
-      service?.watchBoards(entry.duel.id, (round, side) => {
-        if (boards?.matches(entry.duel.id, round) && side !== mySide.value) {
-          void boards.retry()
-        }
-      }) ?? null
   }
 
   function begin(entry: DuelEntry) {
@@ -495,9 +486,13 @@ export const useDuelStore = defineStore('duel', () => {
     outgoing.value = null
     incoming.value = null
     resumable.value = null
+    searching.value = null
+    searchMode.value = null
+    searchStartedAt.value = null
+    searchRecovering.value = false
+    foundMatch = null
     active.value = entry
     remember(entry)
-    watchBoards(entry)
     listenForReactions(entry)
 
     matchStore.startDuel(
@@ -521,7 +516,6 @@ export const useDuelStore = defineStore('duel', () => {
     resumable.value = null
     active.value = entry
     remember(entry)
-    watchBoards(entry)
     listenForReactions(entry)
     matchStore.resumeDuel(binding(entry), state)
 
@@ -537,10 +531,19 @@ export const useDuelStore = defineStore('duel', () => {
 
   /** A result both devices reported was recorded when the last battle ended; a forfeit or timeout is counted here. */
   function end(duel: Duel) {
+    reports.value = reports.value.filter((report) => report.id !== duel.id)
     const won = duel.winner === userId
     const entry = active.value
 
-    if (duel.status === 'disputed') {
+    if (duel.status === 'abandoned') {
+      notifications.push({
+        kind: 'duelEnded',
+        how: 'abandoned',
+        won: false,
+      })
+
+      matchStore.leaveToMenu()
+    } else if (duel.status === 'disputed') {
       notifications.push({
         kind: 'duelEnded',
         how: 'disputed',
@@ -604,8 +607,10 @@ export const useDuelStore = defineStore('duel', () => {
         duel,
       }
 
-      if (duel.status === 'finished' || duel.status === 'disputed') {
+      if (duel.status === 'finished' || duel.status === 'disputed' || duel.status === 'abandoned') {
         end(duel)
+      } else if (boards?.matches(duel.id, matchStore.view?.round ?? 0) && opponentReady.value) {
+        void boards.retry()
       }
 
       return
@@ -613,7 +618,143 @@ export const useDuelStore = defineStore('duel', () => {
 
     if (duel.status === 'invited' && duel.guest === userId) {
       void load().catch(() => undefined)
+    } else if (duel.status === 'finished' || duel.status === 'disputed' || duel.status === 'abandoned') {
+      void cloud.syncNow()
     }
+  }
+
+  async function runQueue() {
+    const connection = service
+    const mode = searching.value
+    if (!connection || (!mode && !foundMatch)) {
+      return
+    }
+
+    try {
+      const id = foundMatch ?? (mode ? await connection.findMatch(mode, BALANCE_FINGERPRINT) : null)
+      if (service !== connection) {
+        return
+      }
+
+      searchRecovering.value = false
+
+      if (!id) {
+        return
+      }
+
+      foundMatch = id
+      const entry = (await connection.mine()).find((entry) => entry.duel.id === id)
+      if (service === connection && entry && active.value?.duel.id !== id) {
+        begin(entry)
+      }
+    } catch (error) {
+      if (service === connection) {
+        searchRecovering.value = true
+      }
+
+      if (service === connection && error instanceof DuelError && error.reason !== 'failed') {
+        searching.value = null
+
+        if (!cancellingSearch.value) {
+          searchMode.value = null
+          searchStartedAt.value = null
+        }
+
+        searchRecovering.value = false
+        fail(error)
+      }
+    }
+  }
+
+  function pollQueue() {
+    if (!queueRequest) {
+      const request = runQueue().finally(() => {
+        if (queueRequest === request) {
+          queueRequest = null
+        }
+      })
+
+      queueRequest = request
+    }
+
+    return queueRequest
+  }
+
+  async function search(mode: ModeId) {
+    if (!service || busy.value || resumable.value || matchStore.isDuel) {
+      return
+    }
+
+    searching.value = mode
+    searchMode.value = mode
+    searchStartedAt.value = Date.now()
+    searchRecovering.value = false
+    await pollQueue()
+  }
+
+  async function leaveQueue(firstAttempt: boolean) {
+    const connection = service
+    if (!connection) {
+      return
+    }
+
+    try {
+      await queueRequest
+
+      if (service !== connection) {
+        return
+      }
+
+      const id = await connection.leaveQueue()
+      if (service !== connection) {
+        return
+      }
+
+      cancellingSearch.value = false
+
+      if (id && active.value?.duel.id !== id) {
+        foundMatch = id
+        await pollQueue()
+      } else {
+        searchMode.value = null
+        searchStartedAt.value = null
+      }
+    } catch (error) {
+      if (service === connection) {
+        if (error instanceof DuelError && error.reason !== 'failed' && error.reason !== 'rateLimited') {
+          cancellingSearch.value = false
+          searchMode.value = null
+          searchStartedAt.value = null
+        }
+
+        if (firstAttempt) {
+          fail(error)
+        }
+      }
+    }
+  }
+
+  function cancelSearch() {
+    if (!service) {
+      return Promise.resolve()
+    }
+
+    const firstAttempt = !cancellingSearch.value
+    searching.value = null
+    searchRecovering.value = false
+    cancellingSearch.value = true
+
+    if (!leaveRequest) {
+      const request = leaveQueue(firstAttempt).finally(() => {
+        if (leaveRequest === request) {
+          leaveRequest = null
+        }
+      })
+
+      leaveRequest = request
+    }
+
+    return leaveRequest
   }
 
   /** Asks for the mode first; the invite goes out from there. */
@@ -694,6 +835,15 @@ export const useDuelStore = defineStore('duel', () => {
 
   function disconnect() {
     generation++
+    connected.value = false
+    searching.value = null
+    searchMode.value = null
+    searchStartedAt.value = null
+    searchRecovering.value = false
+    cancellingSearch.value = false
+    queueRequest = null
+    leaveRequest = null
+    foundMatch = null
 
     for (const stop of stops) {
       stop()
@@ -722,6 +872,7 @@ export const useDuelStore = defineStore('duel', () => {
 
     userId = id
     service = cloudClient.duels(id)
+    connected.value = true
 
     boards = new BoardExchange(service, (value) => {
       recovering.value = value
@@ -730,6 +881,51 @@ export const useDuelStore = defineStore('duel', () => {
     stops = [service.watch(onDuel)]
     await load().catch(() => undefined)
   }
+
+  /** Invites time out on the server; the dialogs close on their own a little after. */
+  watch(now, () => {
+    if (incoming.value && inviteSecondsLeft(incoming.value) === 0) {
+      incoming.value = null
+    }
+
+    if (outgoing.value && inviteSecondsLeft(outgoing.value) === 0) {
+      notifications.push({
+        kind: 'duelExpired',
+        name: outgoing.value.opponent.name,
+      })
+
+      outgoing.value = null
+    }
+  })
+
+  /* Reactions stay on until the player leaves the match, so a "GG" still goes out after the last round. */
+  watch(
+    () => matchStore.isDuel,
+    (isDuel) => {
+      if (!isDuel) {
+        reactionLink?.leave()
+        reactionLink = null
+        reactionsShown.value = []
+
+        if (active.value && !reports.value.some((report) => report.id === active.value?.duel.id)) {
+          stopDuel()
+        }
+      }
+    },
+  )
+
+  useIntervalFn(poll, BOARD_POLL_MS)
+
+  useEventListener(globalThis, 'online', () => {
+    void poll()
+    void load().catch(() => undefined)
+  })
+
+  watch(visibility, (state) => {
+    if (state === 'visible') {
+      void poll()
+    }
+  })
 
   watch(
     () => (cloud.signedIn ? cloud.account?.id : null),
@@ -744,6 +940,14 @@ export const useDuelStore = defineStore('duel', () => {
   )
 
   return {
+    connected,
+    searching,
+    searchMode,
+    matchmaking,
+    searchSeconds,
+    cancellingSearch,
+    search,
+    cancelSearch,
     incoming,
     outgoing,
     active,

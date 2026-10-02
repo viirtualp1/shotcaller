@@ -74,7 +74,7 @@ function save() {
   <section class="header" :class="{ linked }">
     <a
       v-if="linked"
-      href="#/profile"
+      href="/profile/"
       class="profile-link"
       :aria-label="`${t('profile.title')} · ${name}`"
       @click.prevent="profile.open()"
@@ -193,7 +193,7 @@ function save() {
   justify-content: space-between;
   gap: 24px 40px;
   padding: 28px;
-  border-radius: 18px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background:
     radial-gradient(ellipse 70% 140% at 100% 0%, rgba(244, 197, 91, 0.1), transparent 60%),
@@ -231,7 +231,7 @@ function save() {
   position: relative;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius);
   background: none;
   cursor: pointer;
 }
@@ -287,7 +287,7 @@ function save() {
 .name-input {
   width: min(280px, 60vw);
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid var(--gold);
   background: #0f1614;
   color: var(--chalk);

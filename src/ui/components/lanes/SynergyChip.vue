@@ -63,7 +63,7 @@ const recruitable = computed(() => Boolean(props.missing && props.recruit))
   gap: 3px;
   max-width: 100%;
   padding: 1px 8px;
-  border-radius: 7px;
+  border-radius: var(--radius);
   font: inherit;
   font-size: 11px;
   font-weight: 600;

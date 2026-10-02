@@ -141,6 +141,7 @@ useIntervalFn(() => {
           v-if="store.savedRound"
           type="button"
           class="btn primary block big"
+          :disabled="duel.matchmaking"
           @click="store.continueMatch()"
         >
           <Play :size="18" /> {{ t('start.continue', { round: store.savedRound }) }}
@@ -150,6 +151,7 @@ useIntervalFn(() => {
           type="button"
           class="btn block big"
           :class="{ primary: !store.savedRound }"
+          :disabled="duel.matchmaking"
           @click="menu.newMatch = true"
         >
           <Swords :size="18" /> {{ t('start.newMatch') }}
@@ -198,7 +200,7 @@ useIntervalFn(() => {
   flex-direction: column;
   gap: 8px;
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid rgba(244, 197, 91, 0.5);
   background: rgba(244, 197, 91, 0.08);
 }

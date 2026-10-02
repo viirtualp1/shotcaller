@@ -8,6 +8,7 @@ import type { Database } from './database'
 import { SupabaseChat } from './SupabaseChat'
 import { SupabaseDuels } from './SupabaseDuels'
 import { SupabaseFriends } from './SupabaseFriends'
+import { SupabaseLeaderboard } from './SupabaseLeaderboard'
 import { SupabasePrivacy } from './SupabasePrivacy'
 import { asJson } from './json'
 import { settledRatingsSchema } from './ratingsSchema'
@@ -146,6 +147,10 @@ export class SupabaseCloud implements CloudStore {
   /** Friends of the given signed-in coach, over the same connection. */
   friends(userId: string) {
     return new SupabaseFriends(this.client, userId)
+  }
+
+  leaderboard() {
+    return new SupabaseLeaderboard(this.client)
   }
 
   privacy(userId: string) {
@@ -289,7 +294,11 @@ export class SupabaseCloud implements CloudStore {
       id: record.id,
       played_at: record.playedAt,
       verdict: record.verdict,
-      data: asJson(record),
+      data: asJson({
+        ...record,
+        roundLineups: [],
+        replays: [],
+      }),
     }))
 
     const { error } = await this.client.from('matches').upsert(rows, {

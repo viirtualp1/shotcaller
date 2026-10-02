@@ -74,7 +74,7 @@ const passive = computed(() => Object.keys(item.value.effects).length > 0)
   flex-direction: column;
   gap: 3px;
   padding: 7px 9px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
   border-left: 2px solid var(--heal);
 }

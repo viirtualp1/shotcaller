@@ -171,10 +171,11 @@ export const withSettledRatings = (profile: Profile, settled: SettledRatings): P
 export const bestMode = (ratings: ModeRatings) =>
   MODE_IDS.reduce((best, mode) => (ratings[mode] > ratings[best] ? mode : best))
 
-/** A match against a friend rather than the computer; only these move the rating. */
+/** A match against another coach; only these move the rating. */
 export interface DuelInfo {
   /** Null in a friend's match: who they played stays private. */
   readonly opponentName: string | null
+  readonly opponentRating?: number
 }
 
 /** What the profile needs from a match once it is over. */
@@ -380,8 +381,11 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
   const { verdict, mode } = played
   const won = verdict === 'win'
   const ratingBefore = profile.ratings[mode]
+
   /* The computer only gives XP; the rating is for beating people, one per mode. */
-  const rating = played.duel ? Math.max(0, ratingBefore + ratingChange(resultOf(played))) : ratingBefore
+  const rating = played.duel
+    ? Math.max(0, ratingBefore + ratingChange(resultOf(played), ratingBefore, played.duel.opponentRating))
+    : ratingBefore
 
   const ratings = {
     ...profile.ratings,

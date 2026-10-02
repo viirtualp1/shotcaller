@@ -16,9 +16,10 @@ const DIFFICULTY_IDS = Object.keys(DIFFICULTIES) as Difficulty[]
 
 const LANE_ORDERS_PATCH = '8.5'
 
-withDefaults(defineProps<{ language?: boolean; sound?: boolean }>(), {
+withDefaults(defineProps<{ language?: boolean; sound?: boolean; telemetry?: boolean }>(), {
   language: true,
   sound: true,
+  telemetry: true,
 })
 
 const settings = useSettingsStore()
@@ -72,7 +73,7 @@ function openOrdersPatch() {
 
 <template>
   <div class="fields">
-    <TelemetrySettings />
+    <TelemetrySettings v-if="telemetry" />
 
     <section class="field">
       <h3 class="label"><Gauge :size="16" /> {{ t('settings.difficulty') }}</h3>
@@ -80,10 +81,10 @@ function openOrdersPatch() {
       <ToggleGroupRoot
         v-model="difficulty"
         type="single"
-        class="choices"
+        class="segmented-control"
         :aria-label="t('settings.difficulty')"
       >
-        <ToggleGroupItem v-for="id in DIFFICULTY_IDS" :key="id" :value="id" class="choice">
+        <ToggleGroupItem v-for="id in DIFFICULTY_IDS" :key="id" :value="id" class="segmented-option">
           {{ t(`settings.difficulties.${id}`) }}
         </ToggleGroupItem>
       </ToggleGroupRoot>
@@ -182,31 +183,6 @@ function openOrdersPatch() {
   color: var(--chalk-dim);
 }
 
-.choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.choice {
-  padding: 9px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--chalk-dim);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.choice[data-state='on'] {
-  background: var(--gold);
-  color: var(--ink);
-}
-
 .hint {
   margin: 0;
   font-size: 12px;
@@ -267,7 +243,7 @@ function openOrdersPatch() {
   flex: none;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: var(--radius);
   color: var(--chalk-dim);
 }
 

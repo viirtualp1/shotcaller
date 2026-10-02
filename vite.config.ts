@@ -57,7 +57,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        globIgnores: ['**/patches/**'],
+        globIgnores: ['**/patches/**', '**/profile/**', '**/career/**', '**/leaderboard/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         /* Supabase is never cached: saves, friends and duels have to be live. */

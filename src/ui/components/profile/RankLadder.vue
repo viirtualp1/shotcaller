@@ -56,7 +56,7 @@ li {
   gap: 8px;
   min-width: 84px;
   padding: 12px 6px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
 }
 

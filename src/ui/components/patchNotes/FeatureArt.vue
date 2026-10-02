@@ -12,9 +12,9 @@ import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import LaneOrderArt from './LaneOrderArt.vue'
 import CareerFeatureArt from './CareerFeatureArt.vue'
+import MatchmakingFeatureArt from './MatchmakingFeatureArt.vue'
+import LeaderboardFeatureArt from './LeaderboardFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
-
-const props = defineProps<{ art: FeatureArt }>()
 
 /** A made-up rank per mode, only to show that each has its own. */
 const SAMPLE_RANKS: Readonly<Record<ModeId, { tier: RankTier; stars: number }>> = {
@@ -42,6 +42,8 @@ const SAMPLE_LINEUPS: readonly (readonly HeroId[])[] = [
 
 /* Painting a board takes a moment; each map and language is painted once per visit. */
 const pictures = new Map<string, string>()
+
+const props = defineProps<{ art: FeatureArt }>()
 
 const settings = useSettingsStore()
 const labels = useBoardLabels()
@@ -89,6 +91,10 @@ onMounted(() => {
     <LaneOrderArt v-else-if="art.kind === 'order'" :order="art.order" />
 
     <CareerFeatureArt v-else-if="art.kind === 'career'" :focus="art.focus" />
+
+    <MatchmakingFeatureArt v-else-if="art.kind === 'matchmaking'" :focus="art.focus" />
+
+    <LeaderboardFeatureArt v-else-if="art.kind === 'leaderboard'" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">
@@ -182,7 +188,7 @@ onMounted(() => {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--verdict) 22%, transparent);
   border: 1px solid color-mix(in srgb, var(--verdict) 60%, transparent);
   font-size: 13px;

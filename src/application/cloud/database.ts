@@ -56,6 +56,8 @@ export interface Database {
           host: string
           guest: string
           status: string
+          mode: string
+          ranked: boolean
           seed: string | null
           round: number
           round_opened_at: string | null
@@ -113,6 +115,25 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      mmr_leaderboard: {
+        Args: { game_mode: string }
+        Returns: {
+          id: string
+          position: number
+          name: string
+          avatar: string | null
+          photo: string | null
+          rating: number
+        }[]
+      }
+      find_match: {
+        Args: { game_mode: string; game_balance: string }
+        Returns: string | null
+      }
+      leave_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: string | null
+      }
       submit_feedback: {
         Args: {
           request_id: string
@@ -263,7 +284,15 @@ export interface Database {
       }
       publish_live_match: {
         Args: { payload: Json }
-        Returns: undefined
+        Returns: boolean
+      }
+      keep_live_match: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean | null
+      }
+      friends_online: {
+        Args: { doing: string | null; doing_round: number | null }
+        Returns: { id: string; activity: string; round: number | null }[]
       }
       coach_live_match: {
         Args: { friend: string }

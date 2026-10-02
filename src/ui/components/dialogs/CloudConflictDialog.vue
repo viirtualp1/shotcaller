@@ -141,7 +141,7 @@ const sides = computed(() => {
   flex-direction: column;
   gap: 12px;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: rgba(10, 15, 13, 0.35);
 }

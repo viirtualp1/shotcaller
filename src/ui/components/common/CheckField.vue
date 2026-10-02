@@ -32,7 +32,7 @@ const checked = defineModel<boolean>({ required: true })
   width: 22px;
   height: 22px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 1.5px solid var(--edge-strong);
   background: rgba(0, 0, 0, 0.25);
   cursor: pointer;

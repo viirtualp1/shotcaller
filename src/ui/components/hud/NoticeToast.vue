@@ -69,7 +69,7 @@ watch(
 <style scoped>
 .toast {
   padding: 10px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: #0f1614;
   border: 1px solid var(--edge-strong);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);

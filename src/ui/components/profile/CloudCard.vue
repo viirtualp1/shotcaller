@@ -99,7 +99,7 @@ function signOut() {
   align-items: center;
   gap: 12px 18px;
   padding: 14px 18px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: rgba(17, 24, 21, 0.86);
 }
@@ -119,7 +119,7 @@ function signOut() {
   flex: none;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--tone) 14%, transparent);
   color: var(--tone);
 }

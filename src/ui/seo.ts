@@ -1,13 +1,18 @@
+import { MODE_IDS, type ModeId } from '../content/ids.ts'
 import type { Locale } from './i18n/index.ts'
 import type { PatchNote } from './patchNotes/notes.ts'
 
 export const SITE_ORIGIN = 'https://theshotcaller.online'
 export const SITE_NAME = 'The Shotcaller'
 export const patchPath = (version: string) => `/patches/${version}/`
+export const leaderboardPath = (mode: ModeId) => `/leaderboard/${mode}/`
+
+/** Pages the app draws by itself. The build gives each a copy of the main page, so a direct link or reload opens it. */
+export const APP_PAGE_PATHS = ['/profile/', '/career/', '/leaderboard/', ...MODE_IDS.map(leaderboardPath)]
 
 export const HOME_DESCRIPTION = {
-  en: 'Play The Shotcaller, a free browser strategy game. Draft heroes, build synergies, command three lanes and challenge friends to a duel.',
-  ru: 'The Shotcaller — бесплатная стратегия в браузере. Собирай героев и синергии, управляй тремя линиями и вызывай друзей на дуэль.',
+  en: 'Play The Shotcaller, a free browser strategy game. Draft heroes, build synergies, command the lanes and challenge friends to a duel.',
+  ru: 'The Shotcaller — бесплатная стратегия в браузере. Собирай героев и синергии, линиями и вызывай друзей на дуэль.',
 } as const
 
 const plain = (text: string) => text.replaceAll('**', '').replace(/\s+/g, ' ').trim()
@@ -51,6 +56,10 @@ export function patchTitle(patch: PatchNote, locale: Locale) {
 }
 
 export const PRIVATE_DESCRIPTIONS = {
+  leaderboard: {
+    en: 'The top coaches by MMR in each mode of The Shotcaller.',
+    ru: 'Лучшие тренеры по MMR в каждом режиме The Shotcaller.',
+  },
   profile: {
     en: 'Your coach profile, match history and progress in The Shotcaller.',
     ru: 'Профиль тренера, история матчей и прогресс в The Shotcaller.',

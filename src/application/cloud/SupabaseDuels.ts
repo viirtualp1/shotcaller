@@ -25,7 +25,16 @@ const duelRow = z.object({
   id: z.uuid(),
   host: z.uuid(),
   guest: z.uuid(),
-  status: z.enum(['invited', 'declined', 'cancelled', 'expired', 'active', 'finished', 'disputed']),
+  status: z.enum([
+    'invited',
+    'declined',
+    'cancelled',
+    'expired',
+    'active',
+    'finished',
+    'disputed',
+    'abandoned',
+  ]),
   /** Servers without game modes yet send no mode: those duels are three lanes. */
   mode: z.enum(MODE_IDS).default(DEFAULT_MODE),
   seed: z.string().max(64).nullable(),
@@ -36,13 +45,6 @@ const duelRow = z.object({
   winner: z.uuid().nullable().optional(),
   ended_by: z.enum(['result', 'forfeit', 'timeout']).nullable().optional(),
   created_at: z.string(),
-})
-
-const boardRow = z.object({
-  duel_id: z.uuid(),
-  round: z.int().min(1).max(40),
-  side: z.union([z.literal(0), z.literal(1)]),
-  board: z.unknown(),
 })
 
 function toDuel(row: z.infer<typeof duelRow>): Duel {
@@ -67,6 +69,31 @@ export class SupabaseDuels implements DuelService {
     private readonly client: SupabaseClient<Database>,
     private readonly userId: string,
   ) {}
+
+  async findMatch(mode: ModeId, balance: string) {
+    const { data, error } = await this.client
+      .rpc('find_match', {
+        game_mode: mode,
+        game_balance: balance,
+      })
+      .abortSignal(AbortSignal.timeout(12_000))
+
+    if (error) {
+      throw failure(error)
+    }
+
+    return data
+  }
+
+  async leaveQueue() {
+    const { data, error } = await this.client.rpc('leave_queue').abortSignal(AbortSignal.timeout(12_000))
+
+    if (error) {
+      throw failure(error)
+    }
+
+    return data
+  }
 
   async invite(friendId: string, mode: ModeId) {
     /* Three lanes is the server's default, so those invites work before and after the game modes migration. */
@@ -258,29 +285,5 @@ export class SupabaseDuels implements DuelService {
         }),
       leave: () => void this.client.removeChannel(channel),
     }
-  }
-
-  watchBoards(duelId: string, onBoard: (round: number, side: TeamId, board: unknown) => void) {
-    const channel = this.client.channel(`duel-boards:${duelId}`)
-
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'duel_boards',
-        filter: `duel_id=eq.${duelId}`,
-      },
-      (payload) => {
-        const row = boardRow.safeParse(payload.new)
-        if (row.success && row.data.duel_id === duelId) {
-          onBoard(row.data.round, row.data.side, row.data.board)
-        }
-      },
-    )
-
-    channel.subscribe()
-
-    return () => void this.client.removeChannel(channel)
   }
 }

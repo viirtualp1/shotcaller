@@ -131,7 +131,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px 14px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.03);
   transition:
@@ -161,7 +161,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
   align-self: flex-start;
   gap: 2px;
   padding: 2px;
-  border-radius: 7px;
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.25);
 }
 
@@ -171,7 +171,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
   gap: 3px;
   padding: 3px 6px;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--chalk-dim);
   font-size: 11px;

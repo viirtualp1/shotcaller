@@ -152,7 +152,7 @@ const { t } = useGameText()
   gap: 6px;
   min-height: 0;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -168,7 +168,7 @@ const { t } = useGameText()
   align-self: flex-start;
   gap: 2px;
   padding: 2px;
-  border-radius: 7px;
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.28);
 }
 
@@ -177,7 +177,7 @@ const { t } = useGameText()
   align-items: center;
   gap: 3px;
   padding: 3px 6px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   color: var(--chalk-dim);
   font-size: 11px;
   font-weight: 700;

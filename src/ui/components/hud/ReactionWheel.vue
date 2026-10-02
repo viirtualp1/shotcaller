@@ -118,7 +118,7 @@ function pick(reaction: ReactionId) {
   width: 46px;
   height: 46px;
   margin: -23px 0 0 -23px;
-  border-radius: 50%;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: rgba(255, 255, 255, 0.05);
   cursor: pointer;

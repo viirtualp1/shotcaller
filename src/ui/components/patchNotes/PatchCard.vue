@@ -57,7 +57,7 @@ const { t } = useGameText()
   width: 400px;
   max-width: 100%;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
@@ -80,7 +80,7 @@ const { t } = useGameText()
   flex: none;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.14);
   color: var(--gold);
 }

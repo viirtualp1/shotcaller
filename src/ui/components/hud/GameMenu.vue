@@ -41,7 +41,7 @@ const { t } = useGameText()
 .menu :deep(.friends.compact) {
   width: 36px;
   min-height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius);
 }
 
 @media (max-width: 1099px) {

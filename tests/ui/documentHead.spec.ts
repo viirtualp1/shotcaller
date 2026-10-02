@@ -14,11 +14,13 @@ const profile = reactive({
 
 const match = reactive({ view: null as object | null })
 const replay = reactive({ match: null as object | null })
+const leaderboard = reactive({ isOpen: false })
 vi.mock('@/ui/stores/settings', () => ({ useSettingsStore: () => settings }))
 vi.mock('@/ui/stores/patchNotes', () => ({ usePatchNotesStore: () => notes }))
 vi.mock('@/ui/stores/profile', () => ({ useProfileStore: () => profile }))
 vi.mock('@/ui/stores/match', () => ({ useMatchStore: () => match }))
 vi.mock('@/ui/stores/replay', () => ({ useReplayStore: () => replay }))
+vi.mock('@/ui/stores/leaderboard', () => ({ useLeaderboardStore: () => leaderboard }))
 
 class Element {
   attributes: Record<string, string> = {}
@@ -82,6 +84,11 @@ describe('screen indexing rules', () => {
     match.view = {}
     await nextTick()
     expect(document.title).toBe('Match · The Shotcaller')
+
+    leaderboard.isOpen = true
+    await nextTick()
+    expect(document.title).toBe('Leaderboard · The Shotcaller')
+    expect(robots()).toBe('noindex, nofollow')
 
     notes.patch = LATEST_PATCH
     await nextTick()

@@ -18,7 +18,7 @@ const open = ref(false)
 
 <style scoped>
 .support-button {
-  min-height: 32px;
+  height: var(--control-height);
   padding: 5px 10px;
   font-size: 12px;
   color: var(--chalk-dim);

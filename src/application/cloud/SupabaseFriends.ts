@@ -27,8 +27,8 @@ const REQUEST_RESULTS: ReadonlySet<string> = new Set<FriendRequestResult>([
   'cooldown',
 ])
 
-/** Everyone signed in shares one presence channel; fine until the player count calls for per-friend channels. */
-const PRESENCE_CHANNEL = 'online'
+/** A small heartbeat returns only this coach's online friends. */
+const PRESENCE_INTERVAL = 30_000
 
 const count = z.int().nonnegative()
 const heroId = z.enum(HERO_IDS)
@@ -269,13 +269,24 @@ export class SupabaseFriends implements FriendsService {
   }
 
   async publishLiveMatch(snapshot: LiveMatch | null) {
-    const { error } = await this.client.rpc('publish_live_match', {
+    const { data, error } = await this.client.rpc('publish_live_match', {
       payload: snapshot ? asJson(liveMatchSchema.parse(snapshot)) : null,
     })
 
     if (error) {
       throw error
     }
+
+    return data === true
+  }
+
+  async keepLiveMatch() {
+    const { data, error } = await this.client.rpc('keep_live_match')
+    if (error) {
+      throw error
+    }
+
+    return data
   }
 
   async liveMatch(coachId: string) {
@@ -292,40 +303,52 @@ export class SupabaseFriends implements FriendsService {
   presence(initial: PresenceStatus) {
     let status = initial
     let listener: (online: ReadonlyMap<string, PresenceStatus>) => void = () => undefined
+    let left = false
+    let running = false
+    let changed = false
 
-    const channel = this.client.channel(PRESENCE_CHANNEL, {
-      config: {
-        presence: { key: this.userId },
-      },
-    })
-
-    channel.on('presence', { event: 'sync' }, () => {
-      const online = new Map<string, PresenceStatus>()
-
-      for (const [id, metas] of Object.entries(channel.presenceState())) {
-        const latest = presenceStatus.safeParse(metas.at(-1))
-        online.set(
-          id,
-          latest.success
-            ? latest.data
-            : {
-                activity: 'menu',
-                round: null,
-              },
-        )
+    const refresh = async () => {
+      if (left || running) {
+        return
       }
 
-      listener(online)
-    })
+      running = true
+      changed = false
 
-    let joined = false
+      try {
+        const { data, error } = await this.client
+          .rpc('friends_online', {
+            doing: status.activity,
+            doing_round: status.round,
+          })
+          .abortSignal(AbortSignal.timeout(12_000))
 
-    channel.subscribe((state) => {
-      if (state === 'SUBSCRIBED') {
-        joined = true
-        void channel.track(status)
+        if (left || error) {
+          return
+        }
+
+        const online = new Map<string, PresenceStatus>()
+        for (const row of data ?? []) {
+          const parsed = presenceStatus.safeParse(row)
+          if (parsed.success && z.uuid().safeParse(row.id).success) {
+            online.set(row.id, parsed.data)
+          }
+        }
+
+        listener(online)
+      } catch {
+        // The next heartbeat retries a lost connection.
+      } finally {
+        running = false
+
+        if (changed && !left) {
+          void refresh()
+        }
       }
-    })
+    }
+
+    const timer = setInterval(() => void refresh(), PRESENCE_INTERVAL)
+    void refresh()
 
     return {
       onChange: (next: typeof listener) => {
@@ -334,11 +357,13 @@ export class SupabaseFriends implements FriendsService {
       update: (next: PresenceStatus) => {
         status = next
 
-        if (joined) {
-          void channel.track(status)
-        }
+        changed = true
+        void refresh()
       },
-      leave: () => void this.client.removeChannel(channel),
+      leave: () => {
+        left = true
+        clearInterval(timer)
+      },
     }
   }
 }

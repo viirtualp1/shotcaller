@@ -18,7 +18,7 @@ const progressLabel = computed(() =>
 
 <template>
   <a
-    href="#/career"
+    href="/career/"
     class="career-card"
     :aria-label="`${t('career.open')} · ${progressLabel}`"
     @click.prevent="profile.openCareer()"
@@ -50,7 +50,7 @@ const progressLabel = computed(() =>
   gap: 20px;
   padding: 28px 24px;
   border: 1px solid var(--edge);
-  border-radius: 18px;
+  border-radius: var(--radius);
   background:
     radial-gradient(ellipse at 0% 0%, rgba(244, 197, 91, 0.1), transparent 70%),
     linear-gradient(180deg, var(--panel), rgba(31, 43, 39, 0.6));
@@ -73,7 +73,7 @@ const progressLabel = computed(() =>
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.1);
   color: var(--gold);
 }

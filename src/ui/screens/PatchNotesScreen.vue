@@ -22,6 +22,7 @@ import HeroAvatar from '../components/common/HeroAvatar.vue'
 import ItemIcon from '../components/common/ItemIcon.vue'
 import FeatureCard from '../components/patchNotes/FeatureCard.vue'
 import CareerRelease from '../components/patchNotes/CareerRelease.vue'
+import MatchmakingRelease from '../components/patchNotes/MatchmakingRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
@@ -77,6 +78,8 @@ watch(
         </section>
 
         <CareerRelease v-if="patch.campaign === 'career'" />
+
+        <MatchmakingRelease v-else-if="patch.campaign === 'matchmaking'" />
 
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>
@@ -368,7 +371,7 @@ watch(
   flex-direction: column;
   gap: 12px;
   padding: 18px 20px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: linear-gradient(180deg, var(--panel), rgba(31, 43, 39, 0.6));
   overflow: hidden;
@@ -432,7 +435,7 @@ watch(
   flex: none;
   width: 46px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
   color: var(--accent);
@@ -489,7 +492,7 @@ watch(
   gap: 10px;
   margin-top: 2px;
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(10, 15, 13, 0.35);
   border: 1px solid var(--edge);
 }
@@ -506,7 +509,7 @@ watch(
   flex: none;
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--accent);
 }

@@ -107,7 +107,7 @@ onScopeDispose(() => {
   width: fit-content;
   margin-inline: auto;
   padding: 8px 10px 8px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: #0f1614;
   border: 1px solid rgba(244, 197, 91, 0.5);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);

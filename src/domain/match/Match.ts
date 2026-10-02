@@ -16,6 +16,7 @@ import { HeroPool, type PoolState } from '../economy/HeroPool'
 import { computeIncome, type IncomeBreakdown } from '../economy/income'
 import type { DomainError } from '../errors'
 import { Player, type PlayerState } from '../player/Player'
+import { affordableBoard } from '../player/boardValue'
 import {
   judgeMatch,
   judgeRound,
@@ -219,10 +220,18 @@ export class Match {
       return err({ code: 'wrongPhase' })
     }
 
+    if (!this.acceptsOpponent(state)) {
+      return err({ code: 'invalidBoard' })
+    }
+
     this.opponent.restore(state)
     this.opponentReady = true
 
     return ok(undefined)
+  }
+
+  acceptsOpponent(state: PlayerState) {
+    return affordableBoard(state, this.opponent.snapshot(), this.mode, this.currentRound)
   }
 
   /** Takes the outcome in battle order, as the simulation reports it. */

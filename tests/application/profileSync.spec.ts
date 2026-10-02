@@ -186,7 +186,7 @@ describe('ProfileSync', () => {
       losses: 1,
     })
 
-    expect(cloud.row?.profile.rating).toBe(40)
+    expect(cloud.row?.profile.rating).toBe(25)
     expect(phone.profile).toEqual(cloud.row?.profile)
     expect(laptop.profile.totals.matches).toBe(3)
     expect(cloud.matches.size).toBe(3)
@@ -271,7 +271,7 @@ describe('ProfileSync', () => {
     const phone = new Device()
     phone.play()
     phone.play()
-    expect(phone.profile.ratings.threeLanes).toBe(60)
+    expect(phone.profile.ratings.threeLanes).toBe(50)
 
     /* One of the two duels ended in a dispute, so the server counted only the other. */
     cloud.settled = {
@@ -307,7 +307,7 @@ describe('ProfileSync', () => {
 
     await phone.push(cloud)
 
-    expect(phone.profile.ratings.threeLanes).toBe(30)
+    expect(phone.profile.ratings.threeLanes).toBe(25)
   })
 
   it('gives up when the cloud keeps changing', async () => {

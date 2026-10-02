@@ -100,7 +100,7 @@ const rows = computed(() =>
 .scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
 }
 

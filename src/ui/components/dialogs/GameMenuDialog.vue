@@ -60,7 +60,12 @@ function forfeit() {
         <DialogTitle class="title hand">{{ t('app.title') }}</DialogTitle>
 
         <nav class="items">
-          <button type="button" class="btn primary block big" @click="menu.gameMenu = false">
+          <button
+            type="button"
+            class="btn primary block big"
+            :disabled="duel.matchmaking"
+            @click="menu.gameMenu = false"
+          >
             <Play :size="18" /> {{ t('menu.resume') }}
           </button>
 
@@ -76,7 +81,13 @@ function forfeit() {
             <Settings :size="18" /> {{ t('hud.settings') }}
           </button>
 
-          <button v-if="!store.isDuel" type="button" class="btn block big" @click="open('newMatch')">
+          <button
+            v-if="!store.isDuel"
+            type="button"
+            class="btn block big"
+            :disabled="duel.matchmaking"
+            @click="open('newMatch')"
+          >
             <RotateCcw :size="18" /> {{ t('hud.newMatch') }}
           </button>
 

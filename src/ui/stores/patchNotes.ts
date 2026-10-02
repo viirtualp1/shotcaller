@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { useHashPage } from '../composables/useHashPage'
+import { usePage } from '../composables/usePage'
 import { patchPath } from '../seo'
 import { findPatch, LATEST_PATCH } from '../patchNotes/notes'
 
-const HASH = /^#\/patches(?:\/([\w.]+))?\/?$/
+const PATH = /^\/patches(?:\/([\w.]+))?\/?$/
 
-/** The version named in a hash like `#/patches/3.0`; an unknown version opens the latest patch. */
-function versionFromHash(hash: string) {
-  const match = HASH.exec(hash)
+/** The version named in a path like `/patches/3.0/`; an unknown version opens the latest patch. */
+function versionFromPath(path: string) {
+  const match = PATH.exec(path)
   if (!match) {
     return null
   }
@@ -17,7 +17,7 @@ function versionFromHash(hash: string) {
 }
 
 export const usePatchNotesStore = defineStore('patchNotes', () => {
-  const page = useHashPage(versionFromHash, patchPath)
+  const page = usePage(versionFromPath, patchPath)
 
   const patch = computed(() =>
     page.state.value === null ? null : (findPatch(page.state.value) ?? LATEST_PATCH),

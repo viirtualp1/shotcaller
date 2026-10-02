@@ -19,6 +19,7 @@ import { replayAvailability } from '@/domain/replay/setup'
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
+import { useDuelStore } from '../../stores/duel'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
 import { useReplayStore } from '../../stores/replay'
@@ -27,6 +28,7 @@ withDefaults(defineProps<{ heading?: 'h1' | 'h2' }>(), { heading: 'h2' })
 
 const profile = useProfileStore()
 const match = useMatchStore()
+const duel = useDuelStore()
 const settings = useSettingsStore()
 const replay = useReplayStore()
 const text = useGameText()
@@ -69,7 +71,7 @@ const milestones = computed(() =>
 
 function start() {
   const trial = selected.value
-  if (!trial) {
+  if (!trial || duel.matchmaking) {
     return
   }
 
@@ -167,7 +169,7 @@ function watchReplay(trialId: TrialId) {
                 <button
                   type="button"
                   class="btn"
-                  :disabled="profile.level.level < trial.level"
+                  :disabled="profile.level.level < trial.level || duel.matchmaking"
                   @click="selected = trial"
                 >
                   <Play :size="14" />
@@ -267,7 +269,9 @@ function watchReplay(trialId: TrialId) {
       :open="selected !== null"
       @update:open="
         (open) => {
-          if (!open) selected = null
+          if (!open) {
+            selected = null
+          }
         }
       "
     >
@@ -286,7 +290,7 @@ function watchReplay(trialId: TrialId) {
           <p v-if="match.savedRound" class="replace-warning">{{ t('career.replaceSave') }}</p>
 
           <div class="dialog-actions">
-            <button type="button" class="btn primary block" @click="start">
+            <button type="button" class="btn primary block" :disabled="duel.matchmaking" @click="start">
               <Play :size="16" /> {{ t('career.play') }}
             </button>
 
@@ -304,7 +308,7 @@ function watchReplay(trialId: TrialId) {
 .career {
   padding: 20px;
   border: 1px solid var(--edge-strong);
-  border-radius: 18px;
+  border-radius: var(--radius);
   background: linear-gradient(140deg, rgba(244, 197, 91, 0.06), var(--panel) 55%);
 }
 .heading {
@@ -366,7 +370,7 @@ function watchReplay(trialId: TrialId) {
   gap: 10px;
   padding: 18px;
   border: 1px solid var(--edge);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(10, 15, 13, 0.28);
 }
 .card.complete {

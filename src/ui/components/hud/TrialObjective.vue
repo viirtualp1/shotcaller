@@ -30,7 +30,7 @@ const { t } = useGameText()
   margin-bottom: 4px;
   padding: 3px 10px;
   border: 1px solid var(--edge);
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--radius) var(--radius);
   background: var(--panel);
   color: var(--gold);
   font-size: 12px;

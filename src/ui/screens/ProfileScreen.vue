@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer } from '@lucide/vue'
+import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer, Trophy } from '@lucide/vue'
 import { computed, ref, type Component } from 'vue'
 import AvatarPicker from '../components/profile/AvatarPicker.vue'
 import CloudCard from '../components/profile/CloudCard.vue'
@@ -13,9 +13,11 @@ import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import FriendsCard from '../components/social/FriendsCard.vue'
 import { useGameText } from '../composables/useGameText'
 import { useCloudStore } from '../stores/cloud'
+import { useDuelStore } from '../stores/duel'
 import { useMenuStore } from '../stores/menu'
 import { useProfileStore } from '../stores/profile'
 import { usePrivacyStore } from '../stores/privacy'
+import { useLeaderboardStore } from '../stores/leaderboard'
 
 interface Tile {
   readonly key: string
@@ -29,6 +31,8 @@ const profile = useProfileStore()
 const cloud = useCloudStore()
 const privacy = usePrivacyStore()
 const menu = useMenuStore()
+const duel = useDuelStore()
+const leaderboard = useLeaderboardStore()
 const text = useGameText()
 const { t } = text
 
@@ -95,6 +99,10 @@ const tiles = computed<Tile[]>(() => {
 })
 
 function play() {
+  if (duel.matchmaking) {
+    return
+  }
+
   profile.close()
   menu.newMatch = true
 }
@@ -107,6 +115,10 @@ function play() {
         <a href="/" class="btn ghost" @click.prevent="profile.close()">
           <ArrowLeft :size="16" /> {{ t('profile.back') }}
         </a>
+
+        <a v-if="cloud.enabled" href="/leaderboard/" class="btn ghost" @click.prevent="leaderboard.open()"
+          ><Trophy :size="16" /> {{ t('leaderboard.title') }}</a
+        >
       </div>
     </header>
 
@@ -148,7 +160,7 @@ function play() {
         <section class="empty">
           <h2 class="hand">{{ t('profile.empty.title') }}</h2>
 
-          <button type="button" class="btn primary big" @click="play">
+          <button type="button" class="btn primary big" :disabled="duel.matchmaking" @click="play">
             <Swords :size="18" /> {{ t('profile.empty.play') }}
           </button>
         </section>
@@ -240,7 +252,7 @@ function play() {
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: rgba(17, 24, 21, 0.86);
 }
@@ -289,7 +301,7 @@ function play() {
   align-items: center;
   gap: 10px;
   padding: 40px 20px;
-  border-radius: 18px;
+  border-radius: var(--radius);
   border: 1px dashed var(--edge-strong);
   text-align: center;
 }

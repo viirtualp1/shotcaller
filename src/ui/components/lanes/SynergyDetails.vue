@@ -109,7 +109,7 @@ const anyHero = computed(() => props.missing?.length === ROLE_IDS.length)
   flex-direction: column;
   gap: 3px;
   padding: 7px 9px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
   border-left: 2px solid var(--edge-strong);
 }

@@ -384,7 +384,7 @@ const combat = computed<ComparisonRow[]>(() => {
   flex-direction: column;
   gap: 2px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--edge);
 }
@@ -462,7 +462,7 @@ button.pip:disabled {
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--verdict) 22%, transparent);
   border: 1px solid color-mix(in srgb, var(--verdict) 60%, transparent);
   color: var(--chalk);
@@ -486,7 +486,7 @@ button.pip:disabled {
 .legacy {
   margin: 0;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
   font-size: 12.5px;
   color: var(--chalk-dim);
@@ -534,7 +534,7 @@ button.pip:disabled {
 .lanes {
   display: flex;
   flex-direction: column;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
 }
 

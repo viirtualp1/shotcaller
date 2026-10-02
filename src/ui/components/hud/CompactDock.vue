@@ -156,7 +156,7 @@ const tabs = computed(() => [
   gap: 2px;
   padding: 5px 2px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--chalk-dim);
   font-size: 11px;

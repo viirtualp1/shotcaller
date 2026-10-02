@@ -153,7 +153,10 @@ const matchRecord = z.object({
   replays: z.array(roundReplay).max(40).default([]),
   mvp: heroId.nullable(),
   duel: z
-    .object({ opponentName: z.string().max(64) })
+    .object({
+      opponentName: z.string().max(64),
+      opponentRating: count.optional(),
+    })
     .nullable()
     .default(null),
   /** Added with cloud saves; older records fall back to zero. */

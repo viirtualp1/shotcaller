@@ -95,7 +95,7 @@ const towers = computed(() =>
   place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1.5px solid var(--team);
   background: linear-gradient(
     to top,

@@ -13,6 +13,7 @@ import { usePatchNotesStore } from '../stores/patchNotes'
 import { useProfileStore } from '../stores/profile'
 import { useReplayStore } from '../stores/replay'
 import { useSettingsStore } from '../stores/settings'
+import { useLeaderboardStore } from '../stores/leaderboard'
 
 function meta(attribute: 'name' | 'property', name: string, content: string) {
   let element = document.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`)
@@ -32,6 +33,7 @@ export function useDocumentHead() {
   const profile = useProfileStore()
   const match = useMatchStore()
   const replay = useReplayStore()
+  const leaderboard = useLeaderboardStore()
 
   watch(
     [
@@ -41,6 +43,7 @@ export function useDocumentHead() {
       () => profile.isCareer,
       () => match.view !== null,
       () => replay.match !== null,
+      () => leaderboard.isOpen,
     ],
     () => {
       const locale = settings.locale
@@ -50,13 +53,15 @@ export function useDocumentHead() {
         ? 'replay'
         : patch
           ? null
-          : match.view
-            ? 'game'
-            : profile.isCareer
-              ? 'career'
-              : profile.isOpen
-                ? 'profile'
-                : null
+          : leaderboard.isOpen
+            ? 'leaderboard'
+            : match.view
+              ? 'game'
+              : profile.isCareer
+                ? 'career'
+                : profile.isOpen
+                  ? 'profile'
+                  : null
 
       const labels =
         locale === 'ru'
@@ -65,12 +70,14 @@ export function useDocumentHead() {
               replay: 'Повтор',
               profile: 'Профиль',
               career: 'Карьера',
+              leaderboard: 'Таблица лидеров',
             }
           : {
               game: 'Match',
               replay: 'Replay',
               profile: 'Profile',
               career: 'Career',
+              leaderboard: 'Leaderboard',
             }
 
       const title = personal

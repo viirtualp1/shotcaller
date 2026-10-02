@@ -8,12 +8,22 @@ import { useFriendsStore } from '../../stores/friends'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
 /** Sits next to the profile card on the start screen once signed in; shows who is online and new requests at a glance. */
+withDefaults(
+  defineProps<{
+    compact?: boolean
+    /** Floats over a page on its own: only the icon tile shows, without the button's card. */
+    floating?: boolean
+  }>(),
+  {
+    compact: false,
+    floating: false,
+  },
+)
+
 const cloud = useCloudStore()
 const friends = useFriendsStore()
 const chat = useChatStore()
 const { t } = useGameText()
-
-withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
 /** New friend requests and unread messages. */
 const news = computed(() => friends.incoming.length + chat.totalUnread)
@@ -21,7 +31,7 @@ const news = computed(() => friends.incoming.length + chat.totalUnread)
 const label = computed(() =>
   [
     t('friends.button'),
-    friends.onlineCount ? t('friends.onlineCount', { n: friends.onlineCount }) : null,
+    t('friends.onlineCount', { n: friends.onlineCount }),
     news.value ? t('friends.incomingBadge', { n: news.value }) : null,
   ]
     .filter(Boolean)
@@ -34,7 +44,7 @@ const label = computed(() =>
     <button
       type="button"
       class="friends"
-      :class="{ compact }"
+      :class="{ compact, floating }"
       :aria-label="label"
       :aria-expanded="chat.windowOpen"
       aria-controls="social-window"
@@ -45,6 +55,10 @@ const label = computed(() =>
         <span v-if="news" class="badge">{{ news }}</span>
         <span v-if="friends.onlineCount" class="dot" />
       </span>
+
+      <span v-if="!compact" class="online-count">{{
+        t('friends.onlineCount', { n: friends.onlineCount })
+      }}</span>
     </button>
 
     <template #content>{{ label }}</template>
@@ -54,12 +68,14 @@ const label = computed(() =>
 <style scoped>
 .friends {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   width: 80px;
   min-height: var(--coach-card-height, 66px);
-  padding: 0 20px;
-  border-radius: 14px;
+  padding: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
@@ -91,7 +107,17 @@ const label = computed(() =>
   width: 38px;
   height: 38px;
   flex: none;
+  border-radius: var(--radius);
+  background: var(--gold-soft);
   color: var(--gold);
+}
+
+.online-count {
+  color: var(--chalk-dim);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .badge {
@@ -126,7 +152,14 @@ const label = computed(() =>
   width: 48px;
   min-height: 48px;
   padding: 4px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   animation: none;
+}
+
+.friends.floating,
+.friends.floating:hover {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 </style>

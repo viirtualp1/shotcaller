@@ -70,7 +70,7 @@ const picked = computed({
   gap: 12px;
   padding: 8px 12px 8px 8px;
   border: 1.5px solid var(--edge);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.2);
   color: var(--chalk);
   font: inherit;

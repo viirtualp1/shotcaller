@@ -20,7 +20,7 @@ const progressLabel = computed(() =>
 <template>
   <InfoTooltip side="bottom">
     <a
-      href="#/career"
+      href="/career/"
       class="career-chip"
       :aria-label="`${t('career.open')} · ${progressLabel}`"
       @click.prevent="profile.openCareer()"
@@ -70,7 +70,7 @@ const progressLabel = computed(() =>
   justify-content: center;
   min-height: var(--coach-card-height, 66px);
   padding: 12px 20px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
@@ -100,8 +100,8 @@ const progressLabel = computed(() =>
   flex: none;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: rgba(244, 197, 91, 0.14);
+  border-radius: var(--radius);
+  background: var(--gold-soft);
   color: var(--gold);
 }
 

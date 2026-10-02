@@ -25,9 +25,17 @@ const fight = useFightRequest()
         <Flag :size="18" /> {{ t('duel.claim') }}
       </button>
 
-      <button v-else-if="store.awaiting" key="waiting" type="button" class="btn block fight waiting" disabled>
+      <button
+        v-else-if="store.awaiting"
+        key="waiting"
+        type="button"
+        class="btn primary block fight waiting"
+        :aria-label="t(duel.reconnecting ? 'duel.reconnecting' : 'duel.waiting')"
+        aria-busy="true"
+        disabled
+      >
         <LoaderCircle :size="18" class="spin" />
-        {{ t(duel.reconnecting ? 'duel.reconnecting' : 'duel.waiting') }}
+        <span v-if="!duel.reconnecting">{{ t('duel.waiting') }}</span>
       </button>
 
       <button

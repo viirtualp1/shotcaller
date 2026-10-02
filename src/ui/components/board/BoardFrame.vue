@@ -10,7 +10,7 @@
 .frame {
   position: relative;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background:
     repeating-linear-gradient(97deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 9px),
     linear-gradient(135deg, var(--wood-light), var(--wood) 45%, #6f5139 70%, var(--wood-dark));

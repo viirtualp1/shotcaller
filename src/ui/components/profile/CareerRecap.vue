@@ -82,7 +82,7 @@ function openCareer() {
   align-items: center;
   gap: 5px;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.08);
   color: var(--gold);
   font-size: 12px;

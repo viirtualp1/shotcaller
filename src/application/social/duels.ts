@@ -2,7 +2,8 @@ import type { ModeId, TeamId } from '@/content/ids'
 import type { CoachCard } from './friends'
 import type { ReactionId, ReactionLink } from './reactions'
 
-export type DuelStatus = 'invited' | 'declined' | 'cancelled' | 'expired' | 'active' | 'finished' | 'disputed'
+export type DuelStatus =
+  'invited' | 'declined' | 'cancelled' | 'expired' | 'active' | 'finished' | 'disputed' | 'abandoned'
 
 export type DuelEnding = 'result' | 'forfeit' | 'timeout'
 
@@ -48,6 +49,10 @@ export const ROUND_TIMEOUT_SECONDS = 180
 
 /** Online duels of the signed-in coach. Every call rejects with a DuelError. */
 export interface DuelService {
+  /** Joins or renews a short-lived queue entry; returns the match once paired. */
+  findMatch(mode: ModeId, balance: string): Promise<string | null>
+  /** Cancels searching, or returns a duel that was paired just before cancellation. */
+  leaveQueue(): Promise<string | null>
   invite(friendId: string, mode: ModeId): Promise<string>
   respond(duelId: string, accept: boolean): Promise<void>
   cancel(duelId: string): Promise<void>
@@ -66,7 +71,6 @@ export interface DuelService {
   /** Calls back when an invite arrives or a duel changes. Returns a function that stops listening. */
   watch(onChange: (duel: Duel) => void): () => void
   /** Calls back when the other side's board for a round becomes readable. */
-  watchBoards(duelId: string, onBoard: (round: number, side: TeamId, board: unknown) => void): () => void
   /** Quick reactions with the other player; nothing is stored. */
   reactions(duelId: string, onReaction: (reaction: ReactionId) => void): ReactionLink
 }

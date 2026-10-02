@@ -122,7 +122,7 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
 
 .sold {
   height: 54px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px dashed var(--edge);
 }
 
@@ -131,7 +131,7 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
   inset: 0;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 2px dashed rgba(255, 112, 96, 0.6);
   background: rgba(40, 14, 12, 0.82);
   color: var(--theirs);

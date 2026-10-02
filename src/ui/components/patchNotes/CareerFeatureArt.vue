@@ -183,7 +183,7 @@ const copy = computed(() =>
   max-width: 70%;
   padding: 18px;
   border: 1px solid #f4c55b30;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: #111e18ed;
   box-shadow: 0 10px 40px #0006;
 }
@@ -236,7 +236,7 @@ const copy = computed(() =>
   gap: 10px;
   padding: 13px 12px;
   border: 1px solid var(--edge);
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: #192720;
   color: var(--chalk-faint);
   font-size: 11px;
@@ -338,7 +338,7 @@ const copy = computed(() =>
   max-width: 310px;
   padding: 20px;
   border: 1px solid #f4c55b30;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: #18251f;
   box-shadow:
     8px 8px 0 #f4c55b06,

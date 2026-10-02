@@ -102,7 +102,7 @@ begin
   update public.profiles set data = snapshot, revision = revision + 1 where id = auth.uid();
 
   if not exists (select 1 from public.profiles where id = auth.uid() and revision = 2 and data = snapshot)
-    or not exists (select 1 from public.matches where id = 'capacity-match-1' and data = game)
+    or not exists (select 1 from public.matches where id = 'capacity-match-1' and data = game - 'roundLineups' - 'replays')
   then
     raise exception 'Cloud round trip lost history or replay data';
   end if;

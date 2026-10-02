@@ -413,7 +413,7 @@ function ask(action: 'remove' | 'block') {
 
 .match {
   --verdict: var(--chalk-faint);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: linear-gradient(90deg, color-mix(in srgb, var(--verdict) 12%, transparent), transparent 45%);
   border-left: 3px solid var(--verdict);
   transition: background-color 0.15s;
@@ -437,7 +437,7 @@ function ask(action: 'remove' | 'block') {
   width: 100%;
   padding: 6px 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: none;
   color: inherit;
   font: inherit;

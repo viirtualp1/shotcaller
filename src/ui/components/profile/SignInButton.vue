@@ -30,7 +30,7 @@ const { t } = useGameText()
   gap: 8px;
   min-height: var(--coach-card-height, 66px);
   padding: 0 18px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid rgba(244, 197, 91, 0.5);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);

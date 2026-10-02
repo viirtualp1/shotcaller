@@ -49,16 +49,17 @@ const language = computed({
   grid-template-columns: 1fr 1fr;
   gap: 4px;
   padding: 3px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.25);
 }
 
 .choices.compact {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
   gap: 2px;
+  height: var(--control-height);
   padding: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: rgba(17, 24, 21, 0.9);
 }
@@ -66,7 +67,7 @@ const language = computed({
 .choice {
   padding: 9px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--chalk-dim);
   font-weight: 600;
@@ -75,9 +76,12 @@ const language = computed({
 }
 
 .compact .choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 38px;
-  padding: 5px 10px;
-  border-radius: 999px;
+  padding: 0 10px;
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;

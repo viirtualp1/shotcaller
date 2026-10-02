@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   duelClock: `${PREFIX}/duel-clock`,
   /** The duel this device is playing, so one that ends while it is away still counts. */
   duelPlaying: `${PREFIX}/duel-playing`,
+  duelReports: `${PREFIX}/duel-reports`,
   speed: `${PREFIX}/speed`,
   musicVolume: `${PREFIX}/music-volume`,
   effectsVolume: `${PREFIX}/effects-volume`,

@@ -2,6 +2,7 @@ import type { Plugin } from 'vite'
 import { PATCH_NOTES } from '../src/ui/patchNotes/notes.ts'
 import type { NoteText, PatchNote } from '../src/ui/patchNotes/notes.ts'
 import {
+  APP_PAGE_PATHS,
   HOME_DESCRIPTION,
   patchPath,
   patchSnippet,
@@ -104,6 +105,14 @@ export function seoPlugin(): Plugin {
             type: 'asset',
             fileName: `patches/${patch.version}/index.html`,
             source: patchHtml(home.source, patch),
+          })
+        }
+
+        for (const path of APP_PAGE_PATHS) {
+          this.emitFile({
+            type: 'asset',
+            fileName: `${path.slice(1)}index.html`,
+            source: home.source,
           })
         }
 

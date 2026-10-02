@@ -468,14 +468,13 @@ onMounted(focusComposer)
   min-width: 0;
   max-width: 88%;
   padding: 7px 11px 5px;
-  border-radius: 12px 12px 12px 4px;
+  border-radius: var(--radius);
   background: var(--panel-raised);
   border: 1px solid var(--edge);
 }
 
 .message.mine {
   align-self: flex-end;
-  border-radius: 12px 12px 4px 12px;
   background: rgba(244, 197, 91, 0.14);
   border-color: rgba(244, 197, 91, 0.3);
 }
@@ -511,7 +510,7 @@ onMounted(focusComposer)
   min-height: var(--control);
   max-height: 120px;
   padding: 9px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: #0f1614;
   color: var(--chalk);
@@ -564,7 +563,7 @@ onMounted(focusComposer)
   gap: 6px;
   padding: 6px 12px;
   border: 1px solid rgba(244, 197, 91, 0.5);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--panel-raised);
   color: var(--gold);
   cursor: pointer;

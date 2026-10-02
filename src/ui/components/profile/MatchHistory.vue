@@ -120,7 +120,7 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
   align-items: center;
   gap: 8px 18px;
   padding: 10px 10px 10px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: linear-gradient(90deg, color-mix(in srgb, var(--verdict) 12%, transparent), transparent 40%);
   border-left: 3px solid var(--verdict);
   cursor: pointer;

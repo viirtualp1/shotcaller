@@ -13,7 +13,7 @@ const narrow = useMediaQuery('(max-width: 360px)')
 </script>
 
 <template>
-  <a href="#/profile" class="chip" :aria-label="t('profile.title')" @click.prevent="profile.open()">
+  <a href="/profile/" class="chip" :aria-label="t('profile.title')" @click.prevent="profile.open()">
     <CoachAvatar
       :hero-id="profile.avatar"
       :level="profile.level.level"
@@ -39,7 +39,7 @@ const narrow = useMediaQuery('(max-width: 360px)')
   max-width: 100%;
   min-height: var(--coach-card-height, 66px);
   padding: 10px 20px 12px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: linear-gradient(160deg, rgba(39, 54, 49, 0.92), rgba(24, 34, 31, 0.92));
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);

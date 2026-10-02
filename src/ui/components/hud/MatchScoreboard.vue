@@ -114,7 +114,7 @@ const history = computed(() =>
   align-items: center;
   gap: 22px;
   padding: 8px 18px;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--radius) var(--radius);
   background: rgba(17, 24, 21, 0.9);
   border: 1px solid var(--edge);
   border-top: 0;

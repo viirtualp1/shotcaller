@@ -91,7 +91,7 @@ const speedModel = computed({
   display: flex;
   gap: 2px;
   padding: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.25);
 }
 
@@ -99,7 +99,7 @@ const speedModel = computed({
   min-width: 40px;
   padding: 5px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: transparent;
   font-weight: 700;
   font-size: 12px;

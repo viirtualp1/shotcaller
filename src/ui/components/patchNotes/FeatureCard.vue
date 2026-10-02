@@ -23,7 +23,7 @@ withDefaults(defineProps<{ feature: FeatureNote; wide?: boolean }>(), { wide: fa
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: var(--panel);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);

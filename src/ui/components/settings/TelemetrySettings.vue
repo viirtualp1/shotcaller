@@ -82,7 +82,7 @@ function edit() {
   gap: 12px;
   padding: 14px 18px;
   border: 1px solid var(--edge);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(17, 24, 21, 0.86);
   color: var(--chalk);
   font: inherit;
@@ -104,7 +104,7 @@ function edit() {
   flex: none;
   box-sizing: content-box;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--gold) 14%, transparent);
   color: var(--gold);
 }

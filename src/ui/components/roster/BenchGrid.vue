@@ -118,7 +118,7 @@ function onPanelClick() {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   padding: 4px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px dashed transparent;
   transition:
     border-color 0.15s,
@@ -152,7 +152,7 @@ function onPanelClick() {
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: var(--radius);
   container-type: inline-size;
 }
 

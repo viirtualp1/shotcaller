@@ -82,7 +82,7 @@ function press(item: StashItemView, e: PointerEvent) {
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
   background: transparent;
   padding: 0;

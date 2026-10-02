@@ -150,7 +150,7 @@ const innate = computed(() => text.heroPassive(props.heroId))
   align-items: center;
   gap: 6px;
   padding: 5px 9px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.05);
   font-size: 14px;
   font-weight: 700;
@@ -170,7 +170,7 @@ const innate = computed(() => text.heroPassive(props.heroId))
   flex-direction: column;
   gap: 3px;
   padding: 7px 9px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
   border-left: 2px solid var(--edge-strong);
 }

@@ -133,7 +133,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
   gap: 10px;
   width: min(380px, calc(100vw - 32px));
   padding: 12px 14px 14px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(17, 24, 21, 0.96);
   border: 1px solid rgba(244, 197, 91, 0.45);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
@@ -148,7 +148,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
   gap: 12px;
   margin: -12px -14px 0;
   padding: 12px 14px 10px;
-  border-radius: 14px 14px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   border-bottom: 1px solid var(--edge);
   background: linear-gradient(90deg, rgba(244, 197, 91, 0.16), transparent 70%);
 }

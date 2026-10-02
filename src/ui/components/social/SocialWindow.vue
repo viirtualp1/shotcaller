@@ -203,7 +203,7 @@ watch(
   width: min(380px, calc(100vw - 32px));
   height: min(560px, calc(var(--visible-height, 100dvh) - 32px - env(safe-area-inset-bottom, 0px)));
   padding: 12px;
-  border-radius: 16px;
+  border-radius: var(--radius);
   background: var(--panel);
   border: 1px solid var(--edge-strong);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
@@ -254,7 +254,7 @@ watch(
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.08);
   border: 1px solid rgba(244, 197, 91, 0.4);
 }

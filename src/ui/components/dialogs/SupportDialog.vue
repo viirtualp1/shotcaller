@@ -215,7 +215,7 @@ textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--edge-strong);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--board-deep);
   color: var(--chalk);
   font: 16px/1.4 var(--font-ui);

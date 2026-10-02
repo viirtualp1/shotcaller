@@ -45,7 +45,9 @@ export type FeatureArt =
   | { readonly kind: 'modes' }
   | { readonly kind: 'ratings' }
   | { readonly kind: 'rounds' }
+  | { readonly kind: 'leaderboard' }
   | { readonly kind: 'career'; readonly focus: 'trials' | 'contracts' | 'milestones' | 'rewards' }
+  | { readonly kind: 'matchmaking'; readonly focus: 'queue' | 'rating' | 'fairness' | 'efficiency' }
   /** The lanes panel with an order on each lane. */
   | { readonly kind: 'orders' }
   /** What one order makes the heroes of a lane do. */
@@ -65,7 +67,7 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career'
+  readonly campaign?: 'career' | 'matchmaking'
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
   readonly general?: readonly NoteText[]
@@ -77,6 +79,126 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '8.7',
+    date: '2026-10-02',
+    title: {
+      en: 'Find your match',
+      ru: 'Найди своего соперника',
+    },
+    campaign: 'matchmaking',
+    features: [
+      {
+        art: {
+          kind: 'matchmaking',
+          focus: 'queue',
+        },
+        title: {
+          en: 'Your next opponent is out there',
+          ru: 'Твой следующий соперник уже здесь',
+        },
+        text: {
+          en: '**Rated matchmaking** is here. Choose one, two or three lanes and find another coach with a nearby MMR. Browse your profile and career while you wait; the match starts automatically when an opponent is found.',
+          ru: 'Появился **рейтинговый поиск соперника**. Выбери одну, две или три линии — игра подберёт тренера с близким MMR. Пока ждёшь, изучай профиль и карьеру: матч начнётся автоматически, когда соперник найдётся.',
+        },
+      },
+      {
+        art: {
+          kind: 'matchmaking',
+          focus: 'rating',
+        },
+        title: {
+          en: 'Every opponent changes the stakes',
+          ru: 'Сильнее соперник — ценнее победа',
+        },
+        text: {
+          en: 'MMR now considers **both coaches’ ratings**. Beating a stronger opponent earns more; losing to them costs less. At equal ratings, a win gives **+25 MMR** and a loss takes **−25 MMR**, above the rating floor.',
+          ru: 'MMR теперь учитывает **рейтинг обоих тренеров**. Победа над сильным соперником приносит больше, а поражение от него стоит меньше. При равном рейтинге победа даёт **+25 MMR**, поражение — **−25 MMR**, пока не достигнут минимум рейтинга.',
+        },
+      },
+      {
+        art: {
+          kind: 'leaderboard',
+        },
+        title: {
+          en: 'Meet the coaches at the top',
+          ru: 'Знакомься с лидерами',
+        },
+        text: {
+          en: 'Who rules each mode? The leaderboard gathers the **top 100 coaches**. Find it in your profile and see how far you are from the top.',
+          ru: 'Кто правит каждым режимом? В таблице лидеров — **топ-100 тренеров**. Открой её в профиле и посмотри, сколько осталось до вершины.',
+        },
+      },
+      {
+        art: {
+          kind: 'matchmaking',
+          focus: 'efficiency',
+        },
+        title: {
+          en: 'More play. Less background traffic.',
+          ru: 'Больше игры. Меньше лишних данных.',
+        },
+        text: {
+          en: 'Cloud saves are **lighter**, and the game sends far less in the background. More of your connection goes to the match itself.',
+          ru: 'Облачные сохранения стали **легче**, а фоновых данных — намного меньше. Больше связи остаётся для самого матча.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'Opponent lineups are checked against their **earned gold and progression**. Heroes, items, levels and rerolls must fit the match budget. Impossible purchases stop the duel before battle.',
+        ru: 'Состав соперника проверяется по **заработанному золоту и прогрессу**. Герои, предметы, уровни и обновления магазина должны укладываться в бюджет матча. Невозможные покупки останавливают дуэль до начала боя.',
+      },
+      {
+        en: 'Matchmaking starts within **100 MMR** and gradually widens the search as you wait, up to **1,000 MMR**. Each mode uses its own rating.',
+        ru: 'Поиск начинается с разницы до **100 MMR** и постепенно расширяется во время ожидания, максимум до **1 000 MMR**. Для каждого режима используется свой рейтинг.',
+      },
+      {
+        en: 'Online search requires a registered account. Coaches with different game balance versions or blocked relationships are not paired.',
+        ru: 'Для онлайн-поиска нужен зарегистрированный аккаунт. Тренеры с разными версиями баланса и заблокированные друг другом игроки не встречаются.',
+      },
+      {
+        en: 'The throne bonus has been removed from MMR changes. Victory is what counts, whether the throne falls or the round limit is reached.',
+        ru: 'Бонус к MMR за разрушение трона убран. Учитывается победа — и за снесённый трон, и по лимиту раундов.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Computer and Online use the same tabs as difficulty. Match setup is more compact; telemetry controls remain in settings and your profile.',
+        ru: 'Компьютер и Онлайн переключаются такими же вкладками, как сложность. Настройка матча стала компактнее; управление телеметрией остаётся в настройках и профиле.',
+      },
+      {
+        en: 'The friends shortcut shows how many friends are online beneath its icon. Language and feedback controls now have the same height.',
+        ru: 'Под иконкой друзей видно, сколько друзей сейчас в сети. Переключатель языка и кнопка обратной связи теперь одной высоты.',
+      },
+      {
+        en: 'Buttons, cards, panels and navigation links now share consistent rounded corners throughout the interface.',
+        ru: 'Кнопки, карточки, панели и навигационные ссылки теперь используют единое скругление во всём интерфейсе.',
+      },
+      {
+        en: 'Search stays visible wherever you go, with the selected mode, elapsed time and a cancel action. Starting or continuing another match is paused until the search ends.',
+        ru: 'Поиск остаётся виден при переходах: выбранный режим, время ожидания и отмена всегда под рукой. Запуск и продолжение другого матча недоступны до завершения поиска.',
+      },
+      {
+        en: 'The match report shows your opponent’s MMR and the rating change. During reconnection, Fight shows only a loading indicator; the connection message remains with the round status.',
+        ru: 'В отчёте о матче видны MMR соперника и изменение рейтинга. При восстановлении связи на кнопке боя остаётся только лоадер, а сообщение о соединении — рядом со статусом раунда.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Interrupted searches and cancellation requests recover without allowing a second match to start. If pairing finishes just before cancellation, the paired match still opens.',
+        ru: 'Поиск и отмена восстанавливаются после обрыва связи, не позволяя запустить второй матч. Если соперник нашёлся прямо перед отменой, найденный матч всё равно откроется.',
+      },
+      {
+        en: 'A match result retries after a connection failure and survives reloading the game. An opponent’s later timeout claim no longer overwrites an already reported result.',
+        ru: 'Результат матча повторно отправляется после ошибки связи и сохраняется при перезагрузке игры. Поздняя заявка соперника на победу по тайм-ауту больше не перезаписывает уже отправленный результат.',
+      },
+      {
+        en: 'Searches and friend invitations can no longer create overlapping active duels for the same coach.',
+        ru: 'Поиск и приглашения друзей больше не создают несколько активных дуэлей у одного тренера.',
+      },
+    ],
+  },
   {
     version: '8.6.3',
     date: '2026-10-02',

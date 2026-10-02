@@ -19,7 +19,7 @@ withDefaults(defineProps<{ itemId: ItemId; size?: number; fill?: boolean }>(), {
   width: var(--size);
   height: var(--size);
   flex: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: linear-gradient(160deg, #3a3222, #231d13);
   border: 1px solid rgba(244, 197, 91, 0.55);
   color: var(--gold);

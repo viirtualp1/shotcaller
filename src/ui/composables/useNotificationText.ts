@@ -51,6 +51,10 @@ export function useNotificationText() {
       case 'duelCancelled':
         return t('duel.cancelled', { name: nameOr(notice.name) })
       case 'duelEnded':
+        if (notice.how === 'abandoned') {
+          return t('duel.ended.abandoned')
+        }
+
         return notice.how === 'disputed'
           ? t('duel.ended.disputed')
           : t(`duel.ended.${notice.how}${notice.won ? 'Won' : 'Lost'}`)

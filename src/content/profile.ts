@@ -27,10 +27,8 @@ export const RANK = {
 } as const
 
 export const RATING = {
-  win: 25,
-  /** Extra for breaking the enemy throne instead of winning on the round limit. */
-  throneBonus: 5,
-  loss: 20,
+  k: 50,
+  scale: 400,
 } as const
 
 export const PROFILE_XP = {

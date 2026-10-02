@@ -19,6 +19,7 @@ import { useGameText } from '../../../composables/useGameText'
 import { useModal } from '../../../composables/useModal'
 import { vOpticalAlign } from '../../../directives/opticalAlign'
 import { useMatchStore } from '../../../stores/match'
+import { useDuelStore } from '../../../stores/duel'
 import HeroAvatar from '../../common/HeroAvatar.vue'
 import ProgressStrip from '../../profile/ProgressStrip.vue'
 import CareerRecap from '../../profile/CareerRecap.vue'
@@ -27,14 +28,16 @@ import StatComparison from './StatComparison.vue'
 import type { ComparisonRow, HeroStatKey } from './reportModel'
 
 const store = useMatchStore()
+const duel = useDuelStore()
 const text = useGameText()
 const { t } = text
+
+const tab = ref('heroes')
+const sort = ref<HeroStatKey>('damageDealt')
 
 const result = computed(() => store.view?.result ?? null)
 const report = computed(() => store.view?.report ?? null)
 const open = computed(() => store.phase === 'finished' && result.value !== null && report.value !== null)
-const tab = ref('heroes')
-const sort = ref<HeroStatKey>('damageDealt')
 
 useModal(open)
 
@@ -45,23 +48,6 @@ const verdict = computed(() =>
 const heroes = computed(() => report.value?.heroes ?? [])
 const topDamage = computed(() => Math.max(1, ...heroes.value.map((h) => h.damageDealt)))
 const mvp = computed(() => heroes.value.find((h) => h.team === 0) ?? null)
-
-function compare(
-  key: string,
-  label: string,
-  pick: (team: TeamReportView, id: TeamId) => number,
-): ComparisonRow {
-  const teams = report.value!.teams
-
-  return {
-    key,
-    label,
-    values: [pick(teams[0], 0), pick(teams[1], 1)],
-  }
-}
-
-const heroTotal = (team: TeamId, key: HeroStatKey) =>
-  heroes.value.filter((h) => h.team === team).reduce((sum, h) => sum + h[key], 0)
 
 const economy = computed(() => [
   compare('earned', t('report.economy.goldEarned'), (s) => s.stats.income.total),
@@ -97,6 +83,24 @@ const combat = computed(() => [
     ),
   ),
 ])
+
+function compare(
+  key: string,
+  label: string,
+  pick: (team: TeamReportView, id: TeamId) => number,
+): ComparisonRow {
+  const teams = report.value!.teams
+
+  return {
+    key,
+    label,
+    values: [pick(teams[0], 0), pick(teams[1], 1)],
+  }
+}
+
+function heroTotal(team: TeamId, key: HeroStatKey) {
+  return heroes.value.filter((h) => h.team === team).reduce((sum, h) => sum + h[key], 0)
+}
 </script>
 
 <template>
@@ -170,6 +174,10 @@ const combat = computed(() => [
         </TabsRoot>
 
         <footer class="actions">
+          <button v-if="duel.canClaim" type="button" class="btn big" @click="duel.claim()">
+            {{ t('duel.settle') }}
+          </button>
+
           <button
             v-if="!store.isDuel"
             type="button"
@@ -207,7 +215,7 @@ const combat = computed(() => [
   width: min(860px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   padding: 22px 24px;
-  border-radius: 18px;
+  border-radius: var(--radius);
   background: var(--panel);
   border: 1px solid var(--edge-strong);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
@@ -241,7 +249,7 @@ const combat = computed(() => [
   gap: 10px;
   margin: 0;
   padding: 6px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.08);
   border: 1px solid rgba(244, 197, 91, 0.3);
   font-size: 13px;

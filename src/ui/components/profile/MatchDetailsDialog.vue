@@ -190,7 +190,7 @@ function watchReplay() {
   gap: 10px;
   margin: 0;
   padding: 6px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.08);
   border: 1px solid rgba(244, 197, 91, 0.3);
   font-size: 13px;

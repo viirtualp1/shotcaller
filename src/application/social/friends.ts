@@ -100,7 +100,10 @@ export interface FriendsService {
   profile(coachId: string): Promise<FriendProfile | null>
   /** One of those matches in full, without the duel opponent's name; null when it is not there any more. */
   match(coachId: string, matchId: string): Promise<MatchRecord | null>
-  publishLiveMatch(snapshot: LiveMatch | null): Promise<void>
+  /** Returns whether a friend is currently watching. */
+  publishLiveMatch(snapshot: LiveMatch | null): Promise<boolean>
+  /** A small heartbeat while nobody watches; null means the stored snapshot has expired. */
+  keepLiveMatch(): Promise<boolean | null>
   liveMatch(coachId: string): Promise<LiveMatch | null>
   /** Calls back when a request arrives or is accepted. Returns a function that stops listening. */
   watch(onChange: () => void): () => void

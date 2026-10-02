@@ -1,10 +1,27 @@
 {
+  "leaderboard": {
+    "title": "Leaderboard",
+    "top": "Top 100",
+    "coach": "Coach",
+    "rank": "Rank / MMR",
+    "caption": "Top coaches · {mode}",
+    "loading": "Loading the leaderboard…",
+    "error": "Could not load the leaderboard",
+    "empty": "No ranked coaches in this mode yet",
+    "off": "The leaderboard is unavailable while cloud features are off",
+    "more": "Show more coaches"
+  },
   "support": {
     "button": "Feedback & support",
     "title": "Contact the team",
     "intro": "Found a bug or have an idea? Describe it here and the game team will read your message.",
     "category": "Category",
-    "categories": { "bug": "Bug report", "balance": "Game balance", "idea": "Suggestion", "other": "Other" },
+    "categories": {
+      "bug": "Bug report",
+      "balance": "Game balance",
+      "idea": "Suggestion",
+      "other": "Other"
+    },
     "subject": "Subject",
     "message": "Message",
     "characterCount": "{count}/{max} · minimum {min} characters",
@@ -60,7 +77,11 @@
     "nextUnlock": "Level {level} unlocks {name}",
     "allUnlocked": "All trials unlocked. Improve your records!",
     "unlocked": "Trial unlocked: {name}",
-    "tabs": { "trials": "Trials", "weekly": "Contracts", "milestones": "Milestones" },
+    "tabs": {
+      "trials": "Trials",
+      "weekly": "Contracts",
+      "milestones": "Milestones"
+    },
     "resets": "New contracts: {date}",
     "completed": "Completed",
     "locked": "Level {level} required",
@@ -96,10 +117,22 @@
       }
     },
     "contracts": {
-      "matches": { "name": "On the field", "objective": "Finish {n} matches." },
-      "rounds": { "name": "Combat practice", "objective": "Play {n} rounds in finished matches." },
-      "towers": { "name": "Siege work", "objective": "Destroy {n} towers in finished matches." },
-      "kills": { "name": "Team effort", "objective": "Kill {n} enemy heroes in finished matches." },
+      "matches": {
+        "name": "On the field",
+        "objective": "Finish {n} matches."
+      },
+      "rounds": {
+        "name": "Combat practice",
+        "objective": "Play {n} rounds in finished matches."
+      },
+      "towers": {
+        "name": "Siege work",
+        "objective": "Destroy {n} towers in finished matches."
+      },
+      "kills": {
+        "name": "Team effort",
+        "objective": "Kill {n} enemy heroes in finished matches."
+      },
       "synergies": {
         "name": "Make connections",
         "objective": "Finish {n} matches with two different active synergies in your final lineup."
@@ -110,17 +143,26 @@
       }
     },
     "achievements": {
-      "regular": { "name": "Finding your feet", "objective": "Finish {n} matches." },
+      "regular": {
+        "name": "Finding your feet",
+        "objective": "Finish {n} matches."
+      },
       "throneBreaker": {
         "name": "Throne breaker",
         "objective": "Win {n} matches by destroying the enemy throne."
       },
-      "explorer": { "name": "A broad roster", "objective": "Field {n} different heroes across your career." },
+      "explorer": {
+        "name": "A broad roster",
+        "objective": "Field {n} different heroes across your career."
+      },
       "strategist": {
         "name": "Tactical range",
         "objective": "Win with {n} different synergies across your career."
       },
-      "threeStar": { "name": "Three stars", "objective": "Field a three-star hero in combat." }
+      "threeStar": {
+        "name": "Three stars",
+        "objective": "Field a three-star hero in combat."
+      }
     }
   },
   "app": {
@@ -382,7 +424,9 @@
     "total": "Total",
     "next": "Back to the shop",
     "nextIn": "Back to the shop · {s} s",
-    "tabs": { "overview": "Overview" },
+    "tabs": {
+      "overview": "Overview"
+    },
     "income": "Gold earned",
     "incomeBreakdown": "Income this round",
     "buildings": "Buildings",
@@ -480,7 +524,8 @@
     "stashFull": "The item stash is full",
     "itemSlotsFull": "This hero already carries two items",
     "itemNotFound": "Item not found",
-    "laneClosed": "This mode has no such lane"
+    "laneClosed": "This mode has no such lane",
+    "invalidBoard": "The opponent sent an invalid board"
   },
   "notices": {
     "promoted": "{hero} is now {stars}",
@@ -909,7 +954,7 @@
       "busy": "One of you is already in a duel",
       "gone": "The challenge is no longer open",
       "rateLimited": "Too many challenges. Wait a moment",
-      "forbidden": "You can only duel friends",
+      "forbidden": "This duel is unavailable for your account",
       "tooEarly": "Your opponent still has time",
       "wrongRound": "The rounds got out of step. Reload the page",
       "failed": "That did not work. Try again"
@@ -919,13 +964,15 @@
       "forfeitLost": "You gave up",
       "timeoutWon": "Your opponent stopped answering. The win is yours",
       "timeoutLost": "You took too long to answer. Defeat",
-      "disputed": "Your results did not match; the duel does not count"
+      "disputed": "Your results did not match; the duel does not count",
+      "abandoned": "The inactive duel was closed. Ratings are unchanged"
     },
     "badBoard": "Your opponent sent a board the rules do not allow. The duel is stopped",
     "reconnecting": "Reconnecting… Your board is saved.",
     "waiting": "Waiting for your opponent…",
     "opponentReady": "Opponent is ready",
     "claim": "Claim the win",
+    "settle": "Confirm result",
     "claimHint": "Your opponent has not answered for a while",
     "forfeit": "Give up",
     "confirmForfeit": "Give up for sure?",
@@ -1053,5 +1100,20 @@
     "send": "Challenge",
     "duelMode": "Mode: {mode}",
     "ratings": "Rating by mode"
+  },
+  "matchmaking": {
+    "opponent": "Opponent",
+    "computer": "Computer",
+    "online": "Online",
+    "find": "Find opponent",
+    "rankedMode": "Ranked · {mode}",
+    "searching": "Finding opponent…",
+    "reconnecting": "Reconnecting…",
+    "elapsed": "Search time",
+    "cancel": "Cancel search",
+    "cancelling": "Cancelling search…",
+    "searchHint": "The search expands as you wait. Your match starts automatically when an opponent is found.",
+    "hint": "Play a rated match against another coach. The search expands as you wait.",
+    "signIn": "Sign in to play online"
   }
 }

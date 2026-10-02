@@ -505,7 +505,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 2px;
   padding: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.25);
 }
 
@@ -513,7 +513,7 @@ onBeforeUnmount(() => {
   min-width: 40px;
   padding: 5px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--chalk);
   font-weight: 700;
@@ -564,7 +564,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 22px;
   padding: 8px 18px 10px;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--radius) var(--radius);
   background: rgba(17, 24, 21, 0.9);
   border: 1px solid var(--edge);
   border-top: 0;
@@ -666,7 +666,7 @@ onBeforeUnmount(() => {
 .track {
   position: relative;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -721,7 +721,7 @@ onBeforeUnmount(() => {
   width: 28px;
   height: 28px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--verdict) 60%, transparent);
   background: color-mix(in srgb, var(--verdict) 22%, rgba(17, 24, 21, 0.9));
   color: var(--chalk);

@@ -51,12 +51,11 @@ type NoticeInput =
 
 export type Notice = NoticeInput & { readonly id: number }
 
-const LIVE_REFRESH_SECONDS = 0.15
-
 /** What the match needs from an online duel; the duel store provides it. */
 export interface DuelBinding {
   readonly id: string
   readonly opponentName: string
+  readonly opponentRating?: number
   /** Sends this round's board and resolves with the other player's once both are in. */
   exchange(round: number, board: PlayerState): Promise<PlayerState>
   /** The result this device replayed, seen from its own side: 0 won, 1 lost, null a draw. */
@@ -85,12 +84,14 @@ interface DuelClock {
   readonly planningEndsAt: number
 }
 
-const secondsFromNow = (seconds: number) => Date.now() + seconds * 1000
-
 export interface LocatedHero {
   readonly hero: HeroCardView
   readonly slot: RosterSlot
 }
+
+const LIVE_REFRESH_SECONDS = 0.15
+
+const secondsFromNow = (seconds: number) => Date.now() + seconds * 1000
 
 export function locateHero(player: PlayerView, uid: string) {
   const onBench = player.bench.find((h) => h.uid === uid)
@@ -118,14 +119,15 @@ export const useMatchStore = defineStore('match', () => {
   const repository = new LocalStorageMatchRepository()
   const duelRepository = new LocalStorageMatchRepository(STORAGE_KEYS.duel)
   const optimizer = new LaneOptimizer()
-  const profile = useProfileStore()
-  const settings = useSettingsStore()
   let match: Match | null = null
   let session: BattleSession | null = null
   let liveCountdown = 0
   let noticeSeq = 0
   let streamedMatch: Match | null = null
   let streamId = ''
+
+  const profile = useProfileStore()
+  const settings = useSettingsStore()
 
   const view = shallowRef<MatchView | null>(null)
   const live = shallowRef<LiveBattleView | null>(null)
@@ -134,7 +136,6 @@ export const useMatchStore = defineStore('match', () => {
   const notice = shallowRef<Notice | null>(null)
   /** The match against the computer saved on this device, for the start screen. */
   const saved = shallowRef<MatchState | null>(repository.load())
-  const savedRound = computed(() => saved.value?.round ?? null)
   const selectedUid = ref<string | null>(null)
   const selectedItem = ref<number | null>(null)
   /** An opponent hero opened for a read-only look. */
@@ -151,6 +152,7 @@ export const useMatchStore = defineStore('match', () => {
     serializer: StorageSerializers.object,
   })
 
+  const savedRound = computed(() => saved.value?.round ?? null)
   const phase = computed(() => view.value?.phase ?? null)
   const isDuel = computed(() => duel.value !== null)
   const isPlanning = computed(() => phase.value === 'planning' && !awaiting.value)
@@ -355,6 +357,10 @@ export const useMatchStore = defineStore('match', () => {
     if (match.phase === 'battle' && match.pendingBattle) {
       launchBattle(match.pendingBattle)
     }
+  }
+
+  function acceptsOpponent(board: PlayerState) {
+    return match?.acceptsOpponent(board) ?? false
   }
 
   /** Sends the board and fights once the other one arrives. */
@@ -623,13 +629,19 @@ export const useMatchStore = defineStore('match', () => {
     live.value = liveView(sim)
   }
 
-  function liveMatch() {
+  function liveMatchId() {
     if (streamedMatch !== match) {
       streamedMatch = match
       streamId = crypto.randomUUID()
     }
 
-    return match ? liveMatchOf(match, settings.difficulty, streamId, session?.simulation.elapsed ?? 0) : null
+    return match ? streamId : null
+  }
+
+  function liveMatch() {
+    const id = liveMatchId()
+
+    return match && id ? liveMatchOf(match, settings.difficulty, id, session?.simulation.elapsed ?? 0) : null
   }
 
   /** Keeps the start of a battle already under way, so a board sent again after a reload does not restart it. */
@@ -823,6 +835,7 @@ export const useMatchStore = defineStore('match', () => {
     live,
     simulation,
     liveMatch,
+    liveMatchId,
     battleSkipped,
     notice,
     saved,
@@ -842,6 +855,7 @@ export const useMatchStore = defineStore('match', () => {
     isDuel,
     duel,
     awaiting,
+    acceptsOpponent,
     planningEndsAt,
     newMatch,
     startTrial,

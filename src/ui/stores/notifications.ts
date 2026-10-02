@@ -9,7 +9,11 @@ export type SocialNotice =
   | { readonly kind: 'friendRequest'; readonly coach: CoachCard }
   | { readonly kind: 'friendAccepted'; readonly coach: CoachCard }
   | { readonly kind: 'duelDeclined' | 'duelExpired' | 'duelCancelled'; readonly name: string }
-  | { readonly kind: 'duelEnded'; readonly how: 'forfeit' | 'timeout' | 'disputed'; readonly won: boolean }
+  | {
+      readonly kind: 'duelEnded'
+      readonly how: 'forfeit' | 'timeout' | 'disputed' | 'abandoned'
+      readonly won: boolean
+    }
   | { readonly kind: 'duelFailed'; readonly reason: DuelFailure }
   | { readonly kind: 'badBoard' }
 

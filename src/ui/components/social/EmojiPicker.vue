@@ -67,6 +67,6 @@ onBeforeUnmount(() => picker?.remove())
   --emoji-size: 1.35rem;
   width: 100%;
   height: 300px;
-  border-radius: 12px;
+  border-radius: var(--radius);
 }
 </style>

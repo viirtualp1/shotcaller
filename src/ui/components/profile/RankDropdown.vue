@@ -51,7 +51,7 @@ const open = ref(false)
   flex: none;
   padding: 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: none;
   color: inherit;
   cursor: pointer;
@@ -69,7 +69,7 @@ const open = ref(false)
   overflow-y: auto;
   padding: 16px;
   border: 1px solid var(--edge-strong);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--panel);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
 }

@@ -353,7 +353,7 @@ p {
   align-items: center;
   gap: 8px;
   padding: 7px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--edge);
 }
@@ -482,7 +482,7 @@ p {
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--edge);
 }
@@ -527,7 +527,7 @@ p {
   flex: 1;
   min-width: 0;
   padding: 9px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: #0f1614;
   color: var(--chalk);

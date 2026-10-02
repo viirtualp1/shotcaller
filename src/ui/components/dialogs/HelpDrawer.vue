@@ -390,7 +390,7 @@ p {
   flex-direction: column;
   gap: 5px;
   padding: 9px 11px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--edge);
 }

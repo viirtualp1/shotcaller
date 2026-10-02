@@ -18,7 +18,7 @@ import {
   type Profile,
 } from '@/domain/profile/Profile'
 import { levelFor, rankFor } from '@/domain/profile/progression'
-import { useHashPage } from '../composables/useHashPage'
+import { usePage } from '../composables/usePage'
 import { useSettingsStore } from './settings'
 
 /** The coach's lifetime record: rank, level, favourite heroes and recent matches. */
@@ -26,15 +26,15 @@ export const useProfileStore = defineStore('profile', () => {
   const repository = new LocalStorageProfileRepository()
   const settings = useSettingsStore()
 
-  const page = useHashPage<'profile' | 'career'>(
-    (hash) => {
-      if (/^#\/profile\/?$/.test(hash)) {
+  const page = usePage<'profile' | 'career'>(
+    (path) => {
+      if (/^\/profile\/?$/.test(path)) {
         return 'profile'
       }
 
-      return /^#\/career\/?$/.test(hash) ? 'career' : null
+      return /^\/career\/?$/.test(path) ? 'career' : null
     },
-    (section) => `#/${section}`,
+    (section) => `/${section}/`,
   )
 
   const profile = shallowRef<Profile>(repository.load() ?? createProfile(new Date().toISOString()))
@@ -69,7 +69,15 @@ export const useProfileStore = defineStore('profile', () => {
    * so settling it again, here or on another device, changes nothing.
    */
   function record(match: Match, duel: (DuelInfo & { readonly id: string }) | null = null) {
-    const finished = finishedMatch(match, settings.difficulty, duel && { opponentName: duel.opponentName })
+    const finished = finishedMatch(
+      match,
+      settings.difficulty,
+      duel && {
+        opponentName: duel.opponentName,
+        ...(duel.opponentRating === undefined ? {} : { opponentRating: duel.opponentRating }),
+      },
+    )
+
     if (!finished) {
       return null
     }

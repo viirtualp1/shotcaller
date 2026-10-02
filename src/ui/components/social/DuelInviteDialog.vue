@@ -89,7 +89,7 @@ const leavesSolo = computed(() => match.view !== null && !match.isDuel)
   place-items: center;
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(244, 197, 91, 0.16);
   color: var(--gold);
 }

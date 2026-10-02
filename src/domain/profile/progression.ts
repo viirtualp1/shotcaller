@@ -40,17 +40,17 @@ export function rankFor(rating: number): Rank {
 /** Orders ranks so a rank-up is simply a bigger number. */
 export const rankStep = (rank: Rank) => RANK_TIERS.indexOf(rank.tier) * RANK.starsPerTier + rank.stars
 
-export function ratingChange(result: MatchResult) {
+export function ratingChange(result: MatchResult, mine = 0, theirs = mine) {
   const verdict = verdictOf(result)
   if (verdict === 'draw') {
     return 0
   }
 
-  if (verdict === 'loss') {
-    return -RATING.loss
-  }
+  const expected = 1 / (1 + 10 ** ((theirs - mine) / RATING.scale))
 
-  return RATING.win + (result.reason === 'throne' ? RATING.throneBonus : 0)
+  return verdict === 'win'
+    ? Math.max(1, Math.round(RATING.k * (1 - expected)))
+    : -Math.max(1, Math.round(RATING.k * expected))
 }
 
 export function matchXp(verdict: Verdict, roundsWon: number) {

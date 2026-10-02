@@ -20,7 +20,7 @@ defineProps<{ title?: string; meta?: string }>()
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(17, 24, 21, 0.86);
   border: 1px solid var(--edge);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);

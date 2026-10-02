@@ -42,8 +42,8 @@ describe('coach ranks', () => {
     expect(rankStep(rankFor(240))).toBeGreaterThan(rankStep(rankFor(239)))
   })
 
-  it('pays more for a throne', () => {
-    expect(ratingChange(WIN)).toBe(30)
+  it('moves equal ratings by the same amount for either win condition', () => {
+    expect(ratingChange(WIN)).toBe(25)
 
     expect(
       ratingChange({
@@ -52,8 +52,16 @@ describe('coach ranks', () => {
       }),
     ).toBe(25)
 
-    expect(ratingChange(LOSS)).toBe(-20)
+    expect(ratingChange(LOSS)).toBe(-25)
     expect(ratingChange(DRAW)).toBe(0)
+  })
+
+  it('uses the opponent rating for Elo and conserves points above the floor', () => {
+    expect(ratingChange(WIN, 100, 500)).toBe(45)
+    expect(ratingChange(WIN, 500, 100)).toBe(5)
+    expect(ratingChange(LOSS, 100, 500)).toBe(-5)
+    expect(ratingChange(WIN, 100, 500) + ratingChange(LOSS, 500, 100)).toBe(0)
+    expect(ratingChange(LOSS, 0, 4000)).toBe(-1)
   })
 
   it('needs more XP for every next level', () => {
@@ -139,7 +147,7 @@ describe('recordMatch', () => {
 
     profile = play(profile, duel(DRAW)).profile
     expect(profile.totals.streak).toBe(0)
-    expect(profile.peakRating).toBe(90)
+    expect(profile.peakRating).toBe(75)
 
     for (let i = 0; i < PROFILE.recentMatches; i++) {
       profile = play(profile, finished(WIN)).profile
@@ -219,12 +227,12 @@ describe('recordMatch', () => {
     expect(record).toMatchObject({
       duel: { opponentName: 'Rival' },
       ratingBefore: 0,
-      ratingAfter: 30,
+      ratingAfter: 25,
     })
 
     expect(isRated(record)).toBe(true)
     expect(solo.rating).toBe(0)
-    expect(profile.rating).toBe(30)
+    expect(profile.rating).toBe(25)
     expect(profile.xp).toBe(solo.xp)
     expect(profile.totals).toEqual(solo.totals)
     expect(profile.heroes).toEqual(solo.heroes)
@@ -253,7 +261,7 @@ describe('recordMatch', () => {
       )
 
     const lost = applyRecord(start, forfeit(1))
-    expect(lost.profile.rating).toBe(80)
+    expect(lost.profile.rating).toBe(75)
     expect(lost.profile.totals.losses).toBe(1)
     expect(parseProfile(serializeProfile(lost.profile))).toEqual(lost.profile)
 
@@ -276,13 +284,13 @@ describe('recordMatch', () => {
     expect(record).toMatchObject({
       mode: 'oneLane',
       ratingBefore: 0,
-      ratingAfter: 30,
+      ratingAfter: 25,
     })
 
     expect(after.ratings).toEqual({
-      threeLanes: 30,
+      threeLanes: 25,
       twoLanes: 0,
-      oneLane: 30,
+      oneLane: 25,
     })
 
     const lost = play(after, {
@@ -290,9 +298,9 @@ describe('recordMatch', () => {
       mode: 'oneLane',
     }).profile
 
-    expect(lost.ratings.oneLane).toBe(10)
-    expect(lost.rating).toBe(30)
-    expect(lost.peakRatings.oneLane).toBe(30)
+    expect(lost.ratings.oneLane).toBe(0)
+    expect(lost.rating).toBe(25)
+    expect(lost.peakRatings.oneLane).toBe(25)
   })
 
   it('reads a profile from before game modes as three-lane rating', () => {
@@ -304,7 +312,7 @@ describe('recordMatch', () => {
 
     const parsed = parseProfile(JSON.stringify(saved))!
     expect(parsed.ratings).toEqual({
-      threeLanes: 30,
+      threeLanes: 25,
       twoLanes: 0,
       oneLane: 0,
     })

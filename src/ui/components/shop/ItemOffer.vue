@@ -39,7 +39,7 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
   gap: 10px;
   width: 100%;
   padding: 7px 10px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: var(--panel-raised);
   text-align: left;

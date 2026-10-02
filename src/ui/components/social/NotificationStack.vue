@@ -192,7 +192,7 @@ function viewProfile(item: SocialNotification, coachId: string) {
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: #0f1614;
   border: 1px solid var(--edge-strong);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);

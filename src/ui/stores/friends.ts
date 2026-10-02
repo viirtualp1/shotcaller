@@ -40,6 +40,8 @@ export const useFriendsStore = defineStore('friends', () => {
   let publishedPhoto: string | null | undefined
   let publishing = false
   let publishedLive = false
+  let liveWatched = false
+  let publishedLiveKey: string | null = null
 
   const cloud = useCloudStore()
   const match = useMatchStore()
@@ -145,6 +147,8 @@ export const useFriendsStore = defineStore('friends', () => {
     status.value = 'off'
     publishedPhoto = undefined
     publishedLive = false
+    liveWatched = false
+    publishedLiveKey = null
     publishing = false
 
     if (replay.liveFriend) {
@@ -160,18 +164,34 @@ export const useFriendsStore = defineStore('friends', () => {
       return
     }
 
-    const snapshot = match.liveMatch()
-    if (!snapshot && !publishedLive) {
+    const key = match.view ? `${match.liveMatchId()}:${match.view.round}:${match.phase}` : null
+    if (!key && !publishedLive) {
       return
     }
 
     publishing = true
 
     try {
-      await current.publishLiveMatch(snapshot)
+      if (key && publishedLive && key === publishedLiveKey && !liveWatched) {
+        const watched = await current.keepLiveMatch()
+        if (service !== current) {
+          return
+        }
+
+        liveWatched = watched === true
+
+        if (watched !== null && !liveWatched) {
+          return
+        }
+      }
+
+      const snapshot = match.liveMatch()
+      const watched = await current.publishLiveMatch(snapshot)
 
       if (service === current) {
         publishedLive = snapshot !== null
+        publishedLiveKey = key
+        liveWatched = watched
       }
     } catch {
       // Viewing a match must never interrupt the player's own game. Retry at the next interval.

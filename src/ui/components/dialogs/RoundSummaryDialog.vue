@@ -392,7 +392,7 @@ const incomeRows = computed(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--edge);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.025);
 }
 .highlight {

@@ -204,7 +204,7 @@ const google = () => run(() => cloud.signInWithGoogle())
 
 .field input {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--edge-strong);
   background: #0f1614;
   color: var(--chalk);

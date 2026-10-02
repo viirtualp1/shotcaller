@@ -141,7 +141,7 @@ const entry = computed(() => copy.value.entries[selected.value]!)
         </div>
       </dl>
 
-      <a href="#/career" class="career-link" @click.prevent="profile.openCareer()">
+      <a href="/career/" class="career-link" @click.prevent="profile.openCareer()">
         {{ copy.open }} <ArrowUpRight :size="18" />
       </a>
     </div>
@@ -203,7 +203,7 @@ const entry = computed(() => copy.value.entries[selected.value]!)
   margin-top: 28px;
   padding: 36px;
   border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--edge));
-  border-radius: 22px;
+  border-radius: var(--radius);
   background:
     radial-gradient(ellipse at 100% 0%, #f4c55b16, transparent 65%),
     linear-gradient(140deg, #26342b, #101a17 85%);
@@ -278,7 +278,7 @@ dd {
   gap: 12px;
   margin-top: auto;
   padding: 12px 18px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--gold);
   color: #15201a;
   font-size: 13px;
@@ -361,7 +361,7 @@ dd {
 .dossier {
   padding: 18px;
   border: 1px solid #f4c55b30;
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: #0b1510b3;
 }
 .trial-top {
@@ -378,7 +378,7 @@ dd {
 }
 .mode {
   padding: 3px 7px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   background: #ffffff08;
 }
 .trial-title {
@@ -394,7 +394,7 @@ dd {
   width: 46px;
   height: 46px;
   border: 1px solid #f4c55b40;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: #f4c55b0c;
   color: var(--gold);
 }
