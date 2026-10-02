@@ -887,7 +887,8 @@
     "updateTitle": "A new version is out",
     "duelHint": "Updating reloads the page, so wait for the duel to end",
     "update": "Update",
-    "updating": "Installing the update…"
+    "updating": "Installing the update…",
+    "updateFailed": "The update could not finish. Try again"
   },
   "duel": {
     "challenge": "Challenge to a duel",

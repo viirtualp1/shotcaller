@@ -129,6 +129,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         en: 'The rank summary is easier to read, with the rank name and MMR kept on one line.',
         ru: 'Ранг стал легче читать: название и MMR отображаются в одну строку.',
       },
+      {
+        en: 'Fixed the update prompt getting stuck on “Installing the update” after the new version was already installed. If activation fails, the game unlocks and the update can be retried.',
+        ru: 'Исправлено зависание на «Устанавливаем обновление», когда новая версия уже установлена. При ошибке активации игра разблокируется, а установку можно повторить.',
+      },
     ],
   },
   {

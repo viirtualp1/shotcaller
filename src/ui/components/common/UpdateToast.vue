@@ -2,20 +2,32 @@
 import { useEventListener } from '@vueuse/core'
 import { RefreshCw } from '@lucide/vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
-import { ref } from 'vue'
+import { onScopeDispose } from 'vue'
 import { useGameText } from '../../composables/useGameText'
+import { usePwaUpdate } from '../../composables/usePwaUpdate'
 import { useMatchStore } from '../../stores/match'
 
 /** The game stays open for hours, so it asks the server for a new version often; the request is tiny. */
 const UPDATE_CHECK_MS = 60 * 1000
+let registration: ServiceWorkerRegistration | undefined
+let stopChecking: (() => void) | undefined
 
 const match = useMatchStore()
 const { t } = useGameText()
-const updating = ref(false)
-let registration: ServiceWorkerRegistration | undefined
 
-const { needRefresh, updateServiceWorker } = useRegisterSW({
+const { updating, failed, applyUpdate, reloadIfUpdating } = usePwaUpdate({
+  registration: () => registration,
+  workers: navigator.serviceWorker,
+  reload: () => {
+    needRefresh.value = false
+    window.location.reload()
+  },
+})
+
+const { needRefresh } = useRegisterSW({
+  onNeedReload: reloadIfUpdating,
   onRegisteredSW(_url, registered) {
+    stopChecking?.()
     registration = registered
 
     if (!registered) {
@@ -29,9 +41,15 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
       }
     }
 
-    setInterval(check, UPDATE_CHECK_MS)
+    const timer = setInterval(check, UPDATE_CHECK_MS)
     document.addEventListener('visibilitychange', check)
     window.addEventListener('online', check)
+
+    stopChecking = () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', check)
+      window.removeEventListener('online', check)
+    }
   },
 })
 
@@ -48,30 +66,9 @@ useEventListener(
   { capture: true },
 )
 
-/**
- * The plugin reloads only a tab that the old worker controlled; a tab opened with a hard reload
- * is not controlled, so it would sit on the old version. Reloading once the new worker is active covers both.
- */
-async function applyUpdate() {
-  updating.value = true
-  const waiting = registration?.waiting
-  if (!waiting) {
-    window.location.reload()
-
-    return
-  }
-
-  const reload = () => window.location.reload()
-  navigator.serviceWorker.addEventListener('controllerchange', reload, { once: true })
-
-  waiting.addEventListener('statechange', () => {
-    if (waiting.state === 'activated') {
-      reload()
-    }
-  })
-
-  await updateServiceWorker()
-}
+onScopeDispose(() => {
+  stopChecking?.()
+})
 </script>
 
 <template>
@@ -84,7 +81,10 @@ async function applyUpdate() {
       <RefreshCw :size="16" class="icon" :class="{ spinning: updating }" />
 
       <span class="text">
-        <strong>{{ updating ? t('pwa.updating') : t('pwa.updateTitle') }}</strong>
+        <strong>{{
+          updating ? t('pwa.updating') : failed ? t('pwa.updateFailed') : t('pwa.updateTitle')
+        }}</strong>
+
         <span v-if="match.isDuel && !updating" class="hint">{{ t('pwa.duelHint') }}</span>
       </span>
 
