@@ -13,7 +13,7 @@ const narrow = useMediaQuery('(max-width: 360px)')
 </script>
 
 <template>
-  <a href="/profile/" class="chip" :aria-label="t('profile.title')" @click.prevent="profile.open()">
+  <a href="/profile" class="chip" :aria-label="t('profile.title')" @click.prevent="profile.open()">
     <CoachAvatar
       :hero-id="profile.avatar"
       :level="profile.level.level"

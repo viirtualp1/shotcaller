@@ -10,14 +10,22 @@ function upgradeHashLink() {
 }
 
 /**
- * A page of the app addressed by its path, with browser history.
+ * A page of the app addressed by its path, without a trailing slash, with browser history.
  * `parse` receives the path and returns null for another page; `format` gives the path of a state.
  */
 export function usePage<T>(parse: (path: string) => T | null, format: (state: T) => string) {
+  /** Older spellings (a trailing slash, a camelCase mode) open the page and show its current address. */
   const read = () => {
     upgradeHashLink()
 
-    return parse(globalThis.location?.pathname ?? '/')
+    const path = globalThis.location?.pathname ?? '/'
+    const page = parse(path)
+    if (page !== null && format(page) !== path) {
+      const { search, hash } = globalThis.location
+      globalThis.history.replaceState(null, '', `${format(page)}${search}${hash}`)
+    }
+
+    return page
   }
 
   const state = shallowRef<T | null>(read())

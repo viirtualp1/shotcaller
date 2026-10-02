@@ -34,7 +34,7 @@ export const useProfileStore = defineStore('profile', () => {
 
       return /^\/career\/?$/.test(path) ? 'career' : null
     },
-    (section) => `/${section}/`,
+    (section) => `/${section}`,
   )
 
   const profile = shallowRef<Profile>(repository.load() ?? createProfile(new Date().toISOString()))

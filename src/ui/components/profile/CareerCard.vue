@@ -18,7 +18,7 @@ const progressLabel = computed(() =>
 
 <template>
   <a
-    href="/career/"
+    href="/career"
     class="career-card"
     :aria-label="`${t('career.open')} · ${progressLabel}`"
     @click.prevent="profile.openCareer()"

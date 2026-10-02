@@ -74,7 +74,7 @@ function save() {
   <section class="header" :class="{ linked }">
     <a
       v-if="linked"
-      href="/profile/"
+      href="/profile"
       class="profile-link"
       :aria-label="`${t('profile.title')} · ${name}`"
       @click.prevent="profile.open()"

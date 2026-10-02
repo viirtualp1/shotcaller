@@ -4,6 +4,7 @@ import type { NoteText, PatchNote } from '../src/ui/patchNotes/notes.ts'
 import {
   APP_PAGE_PATHS,
   HOME_DESCRIPTION,
+  pageFiles,
   patchPath,
   patchSnippet,
   patchTitle,
@@ -101,17 +102,19 @@ export function seoPlugin(): Plugin {
         }
 
         for (const patch of PATCH_NOTES) {
-          this.emitFile({
-            type: 'asset',
-            fileName: `patches/${patch.version}/index.html`,
-            source: patchHtml(home.source, patch),
-          })
+          for (const fileName of pageFiles(patchPath(patch.version))) {
+            this.emitFile({
+              type: 'asset',
+              fileName,
+              source: patchHtml(home.source, patch),
+            })
+          }
         }
 
-        for (const path of APP_PAGE_PATHS) {
+        for (const fileName of APP_PAGE_PATHS.flatMap(pageFiles)) {
           this.emitFile({
             type: 'asset',
-            fileName: `${path.slice(1)}index.html`,
+            fileName,
             source: home.source,
           })
         }

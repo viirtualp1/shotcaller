@@ -4,11 +4,24 @@ import type { PatchNote } from './patchNotes/notes.ts'
 
 export const SITE_ORIGIN = 'https://theshotcaller.online'
 export const SITE_NAME = 'The Shotcaller'
-export const patchPath = (version: string) => `/patches/${version}/`
-export const leaderboardPath = (mode: ModeId) => `/leaderboard/${mode}/`
+export const patchPath = (version: string) => `/patches/${version}`
+/** A mode as it appears in a URL: `threeLanes` is `three-lanes`. */
+export const modeSlug = (mode: ModeId) => mode.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+
+/** The mode named by a URL segment; the old camelCase spelling still opens it. */
+export const modeFromSlug = (slug: string) =>
+  MODE_IDS.find((mode) => modeSlug(mode) === slug || mode === slug) ?? null
+
+export const leaderboardPath = (mode: ModeId) => `/leaderboard/${modeSlug(mode)}`
 
 /** Pages the app draws by itself. The build gives each a copy of the main page, so a direct link or reload opens it. */
-export const APP_PAGE_PATHS = ['/profile/', '/career/', '/leaderboard/', ...MODE_IDS.map(leaderboardPath)]
+export const APP_PAGE_PATHS = ['/profile', '/career', '/leaderboard', ...MODE_IDS.map(leaderboardPath)]
+
+/**
+ * Where the build writes a page so that `/profile` opens on any static host: hosts with clean URLs serve
+ * `profile.html`, and the rest redirect to the folder and serve `profile/index.html`. The app then drops the slash.
+ */
+export const pageFiles = (path: string) => [`${path.slice(1)}.html`, `${path.slice(1)}/index.html`]
 
 export const HOME_DESCRIPTION = {
   en: 'Play The Shotcaller, a free browser strategy game. Draft heroes, build synergies, command the lanes and challenge friends to a duel.',

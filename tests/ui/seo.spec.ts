@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { escapeHtml, patchArticle } from '../../scripts/seoPlugin'
 import { LATEST_PATCH, PATCH_NOTES } from '@/ui/patchNotes/notes'
-import { patchSnippet, patchPath, patchTitle } from '@/ui/seo'
+import { APP_PAGE_PATHS, leaderboardPath, modeFromSlug, patchSnippet, patchPath, patchTitle } from '@/ui/seo'
 
 describe('public page SEO', () => {
   it('gives each patch a distinct crawlable URL, title and short description', () => {
@@ -29,6 +29,17 @@ describe('public page SEO', () => {
     expect(html).toContain(`href="${patchPath(previous.version)}"`)
     expect(html).not.toContain('#/patches')
     expect(html).toContain('href="/"')
+  })
+
+  it('spells app page URLs in kebab-case and still opens old camelCase links', () => {
+    expect(leaderboardPath('threeLanes')).toBe('/leaderboard/three-lanes')
+    expect(modeFromSlug('one-lane')).toBe('oneLane')
+    expect(modeFromSlug('twoLanes')).toBe('twoLanes')
+    expect(modeFromSlug('four-lanes')).toBeNull()
+
+    for (const path of APP_PAGE_PATHS) {
+      expect(path).toMatch(/^\/[a-z-]+(?:\/[a-z-]+)?$/)
+    }
   })
 
   it('escapes note text and attribute values', () => {

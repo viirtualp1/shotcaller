@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { usePage } from '@/ui/composables/usePage'
 
-vi.mock('@vueuse/core', () => ({ useEventListener: vi.fn() }))
+vi.mock('@vueuse/core', () => ({
+  useEventListener: vi.fn(),
+}))
 
-const location = { pathname: '/', hash: '' }
+const location = {
+  pathname: '/',
+  search: '',
+  hash: '',
+}
 
 const history = {
   pushState: vi.fn((_state: unknown, _title: string, url: string) => go(url)),
@@ -11,15 +17,16 @@ const history = {
 }
 
 function go(url: string) {
-  const [path, hash = ''] = url.split('#')
-  location.pathname = path!
-  location.hash = hash ? `#${hash}` : ''
+  const { pathname, search, hash } = new URL(url, 'https://theshotcaller.online')
+  location.pathname = pathname
+  location.search = search
+  location.hash = hash
 }
 
 const profilePage = () =>
   usePage(
     (path) => (/^\/profile\/?$/.test(path) ? 'profile' : null),
-    () => '/profile/',
+    () => '/profile',
   )
 
 describe('app pages addressed by path', () => {
@@ -40,7 +47,7 @@ describe('app pages addressed by path', () => {
     expect(page.state.value).toBeNull()
 
     page.open('profile')
-    expect(history.pushState).toHaveBeenLastCalledWith(null, '', '/profile/')
+    expect(history.pushState).toHaveBeenLastCalledWith(null, '', '/profile')
     expect(location.hash).toBe('')
 
     page.state.value = 'profile'
@@ -49,10 +56,18 @@ describe('app pages addressed by path', () => {
     expect(page.state.value).toBeNull()
   })
 
-  it('reads the page from the path, with or without the trailing slash', () => {
-    go('/profile')
+  it('drops a trailing slash and keeps the query, such as a sign-in code', () => {
+    go('/profile/?code=abc')
 
     expect(profilePage().state.value).toBe('profile')
+    expect(history.replaceState).toHaveBeenLastCalledWith(null, '', '/profile?code=abc')
+  })
+
+  it('leaves the address of another page alone', () => {
+    go('/patches/8.7')
+
+    expect(profilePage().state.value).toBeNull()
+    expect(history.replaceState).not.toHaveBeenCalled()
   })
 
   it('moves a link saved with a hash to the same page at its path', () => {

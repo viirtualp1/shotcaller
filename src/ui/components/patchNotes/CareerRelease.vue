@@ -141,7 +141,7 @@ const entry = computed(() => copy.value.entries[selected.value]!)
         </div>
       </dl>
 
-      <a href="/career/" class="career-link" @click.prevent="profile.openCareer()">
+      <a href="/career" class="career-link" @click.prevent="profile.openCareer()">
         {{ copy.open }} <ArrowUpRight :size="18" />
       </a>
     </div>

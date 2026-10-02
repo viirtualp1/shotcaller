@@ -20,7 +20,7 @@ const progressLabel = computed(() =>
 <template>
   <InfoTooltip side="bottom">
     <a
-      href="/career/"
+      href="/career"
       class="career-chip"
       :aria-label="`${t('career.open')} · ${progressLabel}`"
       @click.prevent="profile.openCareer()"

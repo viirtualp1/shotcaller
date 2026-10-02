@@ -116,7 +116,7 @@ function play() {
           <ArrowLeft :size="16" /> {{ t('profile.back') }}
         </a>
 
-        <a v-if="cloud.enabled" href="/leaderboard/" class="btn ghost" @click.prevent="leaderboard.open()"
+        <a v-if="cloud.enabled" href="/leaderboard" class="btn ghost" @click.prevent="leaderboard.open()"
           ><Trophy :size="16" /> {{ t('leaderboard.title') }}</a
         >
       </div>

@@ -93,7 +93,7 @@ describe('screen indexing rules', () => {
     notes.patch = LATEST_PATCH
     await nextTick()
     expect(robots()).toBe('index, follow')
-    expect(canonical()).toBe(`https://theshotcaller.online/patches/${LATEST_PATCH.version}/`)
+    expect(canonical()).toBe(`https://theshotcaller.online/patches/${LATEST_PATCH.version}`)
     settings.locale = 'ru'
     await nextTick()
     expect(document.documentElement.lang).toBe('ru')

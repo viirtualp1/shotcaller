@@ -97,11 +97,7 @@ useDocumentHead()
       <CoachProfileDialog />
       <SocialWindow />
 
-      <div
-        v-if="showFriendsLauncher"
-        class="social-launcher"
-        :class="{ 'in-replay': replay.match }"
-      >
+      <div v-if="showFriendsLauncher" class="social-launcher" :class="{ 'in-replay': replay.match }">
         <FriendsButton compact floating />
       </div>
 

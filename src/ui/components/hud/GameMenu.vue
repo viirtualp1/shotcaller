@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Menu } from '@lucide/vue'
 import { useGameText } from '../../composables/useGameText'
-import FriendsButton from '../social/FriendsButton.vue'
 import { useMenuStore } from '../../stores/menu'
 
 const menu = useMenuStore()
@@ -21,8 +20,6 @@ const { t } = useGameText()
     </button>
 
     <span class="brand hand">{{ t('app.title') }}</span>
-
-    <FriendsButton compact />
   </div>
 </template>
 
@@ -37,11 +34,6 @@ const { t } = useGameText()
   font-size: 28px;
   line-height: 1;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-}
-.menu :deep(.friends.compact) {
-  width: 36px;
-  min-height: 36px;
-  border-radius: var(--radius);
 }
 
 @media (max-width: 1099px) {

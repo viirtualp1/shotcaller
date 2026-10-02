@@ -172,6 +172,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Под иконкой друзей видно, сколько друзей сейчас в сети. Переключатель языка и кнопка обратной связи теперь одной высоты.',
       },
       {
+        en: 'The friends button is now on every screen except the main menu and the match itself, so nothing distracts you in battle.',
+        ru: 'Кнопка друзей теперь есть на всех экранах, кроме главного и матча: в бою ничего не отвлекает.',
+      },
+      {
         en: 'Buttons, cards, panels and navigation links now share consistent rounded corners throughout the interface.',
         ru: 'Кнопки, карточки, панели и навигационные ссылки теперь используют единое скругление во всём интерфейсе.',
       },

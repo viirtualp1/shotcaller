@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
-import { MODE_IDS, type ModeId } from '@/content/ids'
+import type { ModeId } from '@/content/ids'
 import type { LeaderboardEntry } from '@/application/social/leaderboard'
 import { usePage } from '../composables/usePage'
-import { leaderboardPath } from '../seo'
+import { leaderboardPath, modeFromSlug } from '../seo'
 import { useCloudStore } from './cloud'
 import { useSettingsStore } from './settings'
 
@@ -15,12 +15,12 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
 
   const page = usePage<ModeId>(
     (path) => {
-      const match = /^\/leaderboard(?:\/(\w+))?\/?$/.exec(path)
+      const match = /^\/leaderboard(?:\/([\w-]+))?\/?$/.exec(path)
       if (!match) {
         return null
       }
 
-      return MODE_IDS.find((mode) => mode === match[1]) ?? settings.mode
+      return (match[1] && modeFromSlug(match[1])) || settings.mode
     },
     (mode) => leaderboardPath(mode),
   )
