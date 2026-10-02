@@ -38,7 +38,7 @@ const EMPTY: SyncState = {
 
 const stateSchema = z.object({
   userId: z.string().nullable(),
-  revision: z.number().int().nonnegative(),
+  revision: z.int().nonnegative(),
   pending: z.array(matchRecordSchema),
   identity: z
     .object({

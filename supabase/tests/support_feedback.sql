@@ -77,6 +77,18 @@ begin
   end if;
 
   -- Spread previous messages across the day; daily quota applies even without an hourly burst.
+  -- New minimums accept two-character subjects and ten-character messages after trimming.
+  update public.support_requests set subject = ' UI ', message = ' 1234567890 '
+  where id = '50000000-0000-4000-8000-000000000001';
+
+  begin
+    update public.support_requests set subject = 'x'
+    where id = '50000000-0000-4000-8000-000000000001';
+    raise exception 'Subject below the minimum accepted';
+  exception when check_violation then
+    null;
+  end;
+
   update public.support_requests set created_at = now() - interval '2 hours';
   for i in 1..7 loop
     insert into public.support_requests (id, sender, category, subject, message, game_version, language, created_at)

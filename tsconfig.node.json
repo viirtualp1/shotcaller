@@ -31,6 +31,7 @@
     "pwa-assets.config.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
+    "supabase/functions/_shared/**/*.ts",
     "src/env.d.ts"
   ]
 }

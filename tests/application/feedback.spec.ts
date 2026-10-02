@@ -51,6 +51,20 @@ beforeEach(() => {
 })
 
 describe('support feedback', () => {
+  it('accepts the reduced minimum lengths after trimming', async () => {
+    const cloud = await connect()
+    await cloud.sendFeedback({
+      ...request,
+      subject: ' UI ',
+      message: ' 1234567890 ',
+    })
+
+    expect(client.rpc.mock.calls[0]![1]).toMatchObject({
+      subject: 'UI',
+      message: '1234567890',
+    })
+  })
+
   it('allows guests and sends only deliberately submitted fields', async () => {
     const cloud = await connect()
     await cloud.sendFeedback(request)

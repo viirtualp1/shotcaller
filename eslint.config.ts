@@ -1,5 +1,5 @@
 import stylistic from '@stylistic/eslint-plugin'
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import { withVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import type { Linter } from 'eslint'
 import prettier from 'eslint-config-prettier/flat'
 import pluginVue from 'eslint-plugin-vue'
@@ -137,10 +137,25 @@ const codeStyle: Linter.Config = {
   },
 }
 
-export default defineConfigWithVueTs(
+export default withVueTs(
   { ignores: ['dist/**', 'node_modules/**'] },
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
+  {
+    files: [
+      'src/**/*.{ts,vue}',
+      'tests/**/*.ts',
+      'scripts/**/*.ts',
+      'supabase/functions/_shared/**/*.ts',
+      '*.config.ts',
+    ],
+    rules: { '@typescript-eslint/no-deprecated': 'error' },
+  },
+  {
+    // Edge entry points use Deno and are outside the application's TypeScript projects.
+    files: ['supabase/functions/*/index.ts'],
+    languageOptions: { parserOptions: { projectService: false } },
+  },
   layer(
     ['src/core/**', 'src/content/**'],
     ['@/domain/*', '@/simulation/*', '@/rendering/*', '@/application/*', '@/ui/*', 'vue', 'pixi.js'],

@@ -14,6 +14,7 @@ import SocialWindow from './components/social/SocialWindow.vue'
 import FriendsButton from './components/social/FriendsButton.vue'
 import GameScreen from './screens/GameScreen.vue'
 import ReplayScreen from './screens/ReplayScreen.vue'
+import LiveMatchWaiting from './screens/LiveMatchWaiting.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
 import ProfileScreen from './screens/ProfileScreen.vue'
 import CareerScreen from './screens/CareerScreen.vue'
@@ -64,11 +65,9 @@ useDocumentHead()
     </Transition>
 
     <ReplayScreen v-if="replay.match" :key="replay.match.id" :match="replay.match" />
-
+    <LiveMatchWaiting v-else-if="replay.liveFriend" />
     <SettingsDialog />
-
     <NewMatchDialog />
-
     <UpdateToast />
 
     <template v-if="cloud.enabled">

@@ -17,7 +17,7 @@ const pair = <T extends z.ZodType>(schema: T) => z.tuple([schema, schema]).reado
 const heroId = z.enum(HERO_IDS)
 const itemId = z.enum(ITEM_IDS)
 const stars = z.union([z.literal(1), z.literal(2), z.literal(3)])
-const level = z.number().int().min(1).max(5)
+const level = z.int().min(1).max(5)
 const amount = z.number().nonnegative()
 /** Matches saved before game modes were all three lanes. */
 const mode = z.enum(MODE_IDS).default(DEFAULT_MODE)
@@ -49,7 +49,7 @@ const player = z.object({
   gold: amount,
   level,
   xp: amount,
-  streak: z.number().int(),
+  streak: z.int(),
   roster: z.object({
     bench: z.array(ownedHero),
     lanes: lineup,
@@ -98,7 +98,7 @@ const heroReport = z.object({
 })
 
 const summary = z.object({
-  round: z.number().int().positive(),
+  round: z.int().positive(),
   winner: team.nullable(),
   structureDamage: pair(amount),
   /** Saved before kills could count, when the score was the building damage. */
@@ -176,14 +176,14 @@ const remoteLink = z.object({
 const matchState = z.object({
   mode,
   trialId: z.enum(TRIAL_IDS).optional(),
-  round: z.number().int().positive(),
+  round: z.int().positive(),
   phase: z.enum(['planning', 'battle', 'summary', 'finished']),
   rng: z.object({
     i: z.number(),
     j: z.number(),
     S: z.array(z.number()),
   }),
-  pool: z.record(heroId, z.number().int().nonnegative()),
+  pool: z.record(heroId, z.int().nonnegative()),
   structures: pair(structures),
   players: pair(player),
   summary: scoredSummary.nullable(),
@@ -196,7 +196,7 @@ const matchState = z.object({
   battle: z
     .object({
       mode,
-      round: z.number().int().positive(),
+      round: z.int().positive(),
       seed: z.string(),
       lineups: pair(lineup),
       structures: pair(structures),

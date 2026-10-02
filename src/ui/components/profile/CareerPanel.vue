@@ -253,7 +253,9 @@ function watchReplay(trialId: TrialId) {
               <span class="count">{{ milestone.progress }}/{{ milestone.target }}</span>
 
               <span class="reward">{{
-                milestone.completed ? t('career.rewardReceived') : t('career.xpReward', { xp: milestone.xp })
+                milestone.completed
+                  ? t('career.xpReceived', { xp: milestone.xp })
+                  : t('career.xpReward', { xp: milestone.xp })
               }}</span>
             </footer>
           </article>

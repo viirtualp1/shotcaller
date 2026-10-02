@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import type { Database } from '@/application/cloud/database'
 import { SupabaseFriends } from '@/application/cloud/SupabaseFriends'
 import { createProfile } from '@/domain/profile/Profile'
+import { createMatch } from '@/application/createMatch'
+import { liveMatchOf } from '@/domain/replay/live'
 import { duelMatch, play, WIN } from '../helpers/profile'
 
 const FRIEND = '22222222-2222-2222-2222-222222222222'
@@ -67,5 +69,46 @@ describe('a friend match', () => {
   it('is null when it is gone or unreadable', async () => {
     expect(await friendsReturning(null).friends.match(FRIEND, 'gone')).toBeNull()
     expect(await friendsReturning({ id: 'broken' }).friends.match(FRIEND, 'broken')).toBeNull()
+  })
+})
+
+describe('live friend matches', () => {
+  it('fetches and validates current battle progress through the friend-only RPC', async () => {
+    const match = createMatch({ seed: 'live-service' })
+    match.startBattle({ allowEmptyBoard: true })._unsafeUnwrap()
+    const snapshot = liveMatchOf(match, 'standard', 'live-service', 12)
+    const { calls, friends } = friendsReturning(snapshot)
+
+    expect(await friends.liveMatch(FRIEND)).toEqual(snapshot)
+    expect(calls).toEqual([['coach_live_match', { friend: FRIEND }]])
+    expect(await friendsReturning(null).friends.liveMatch(FRIEND)).toBeNull()
+
+    expect(
+      await friendsReturning({
+        ...snapshot,
+        elapsed: -1,
+      }).friends.liveMatch(FRIEND),
+    ).toBeNull()
+  })
+
+  it('publishes only validated snapshots and sends null to stop sharing', async () => {
+    const snapshot = liveMatchOf(createMatch({ seed: 'live-publish' }), 'standard', 'live-publish', 0)
+    const { calls, friends } = friendsReturning(null)
+    await friends.publishLiveMatch(snapshot)
+    await friends.publishLiveMatch(null)
+
+    expect(calls).toEqual([
+      ['publish_live_match', { payload: snapshot }],
+      ['publish_live_match', { payload: null }],
+    ])
+
+    await expect(
+      friends.publishLiveMatch({
+        ...snapshot,
+        elapsed: -1,
+      }),
+    ).rejects.toThrow()
+
+    expect(calls).toHaveLength(2)
   })
 })

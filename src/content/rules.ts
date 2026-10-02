@@ -1,4 +1,4 @@
-import type { StarLevel, Tier } from './ids'
+import type { ModeId, StarLevel, Tier } from './ids'
 
 export const ECONOMY = {
   startGold: 5,
@@ -97,6 +97,23 @@ export const OPPONENT: Readonly<Record<Difficulty, OpponentStyle>> = {
     itemsFromRound: 3,
     goldReserveForItems: 4,
   },
+}
+
+/** The shorter bridge match rewards investing in items and upgrades earlier. No extra gold or stats. */
+export function opponentStyleFor(mode: ModeId, difficulty: Difficulty): OpponentStyle {
+  const style = OPPONENT[difficulty]
+  if (mode !== 'oneLane' || difficulty !== 'standard') {
+    return style
+  }
+
+  return {
+    ...style,
+    goldReserveForXp: 1,
+    itemsFromRound: 2,
+    goldReserveForItems: 2,
+    rerollFromRound: 2,
+    rerollAboveGold: 6,
+  }
 }
 
 export const MATCH = {

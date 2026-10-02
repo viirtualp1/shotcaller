@@ -14,7 +14,7 @@ export type PrivacyChoices = z.infer<typeof privacySchema>
 export const PRIVACY_VERSION = TELEMETRY_POLICY_VERSION
 
 export const privacySchema = z.object({
-  version: z.number().int(),
+  version: z.int(),
   telemetry: z.boolean(),
   telemetrySince: z.iso.datetime({ offset: true }).nullable(),
 })

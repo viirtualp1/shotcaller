@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
-import { Ban, Check, ChevronDown, ChevronUp, Copy, Info, Swords, UserPlus, X } from '@lucide/vue'
+import { Ban, Check, ChevronDown, ChevronUp, Copy, Eye, Info, Swords, UserPlus, X } from '@lucide/vue'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import {
   formatFriendCode,
@@ -180,6 +180,20 @@ async function submit() {
           @click="duel.challenge(entry.id)"
         >
           <Swords :size="16" />
+        </button>
+
+        <button
+          v-if="
+            friends.statusOf(entry.id)?.activity === 'match' ||
+            friends.statusOf(entry.id)?.activity === 'duel'
+          "
+          type="button"
+          class="icon-btn"
+          :aria-label="t('replay.watchFriend', { name: nameOf(entry.name) })"
+          :title="t('replay.watchFriend', { name: nameOf(entry.name) })"
+          @click="friends.watchMatch(entry.id)"
+        >
+          <Eye :size="16" />
         </button>
       </li>
     </ul>

@@ -14,7 +14,7 @@ const heroId = z.enum(HERO_IDS)
 const synergyId = z.enum(SYNERGY_IDS)
 const stars = z.union([z.literal(1), z.literal(2), z.literal(3)])
 const amount = z.number().nonnegative()
-const count = z.number().int().nonnegative()
+const count = z.int().nonnegative()
 const verdict = z.enum(['win', 'loss', 'draw'])
 
 const rewards = z.array(
@@ -191,7 +191,7 @@ const profile = z.object({
     throneWins: count,
     roundsPlayed: count,
     heroKills: count,
-    streak: z.number().int(),
+    streak: z.int(),
     bestWinStreak: count,
     fastestWin: count.nullable(),
   }),

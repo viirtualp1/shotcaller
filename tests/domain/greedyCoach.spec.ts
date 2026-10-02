@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createMatch } from '@/application/createMatch'
+import { createMatch, restoreMatch } from '@/application/createMatch'
+import { opponentStyleFor, OPPONENT } from '@/content/rules'
 import { sequentialIds } from '@/core/ids'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
 import { createRng } from '@/core/random/rng'
@@ -39,6 +40,36 @@ describe('GreedyCoach', () => {
 
     expect(match.opponent.ledger.rerolls).toBe(0)
     expect(match.opponent.ledger.heroesBought).toBeGreaterThan(0)
+  }, 20_000)
+
+  it('equips earlier on the standard bridge, including after restoring a match', () => {
+    const original = createMatch({
+      mode: 'oneLane',
+      seed: 'bridge-items',
+      ids: sequentialIds(),
+    })
+
+    const state = original.snapshot()
+    const bot = state.players[1]
+
+    const restored = restoreMatch({
+      ...state,
+      phase: 'summary',
+      players: [
+        state.players[0],
+        {
+          ...bot,
+          gold: 20,
+        },
+      ],
+    })
+
+    restored.nextRound()._unsafeUnwrap()
+
+    expect(restored.opponent.ledger.itemsBought).toBeGreaterThan(0)
+    expect(restored.opponent.roster.boardHeroes().some((hero) => hero.items.length > 0)).toBe(true)
+    expect(opponentStyleFor('oneLane', 'relaxed')).toEqual(OPPONENT.relaxed)
+    expect(opponentStyleFor('twoLanes', 'standard')).toEqual(OPPONENT.standard)
   })
 
   it('buys and equips one item before it spends the round on the shop', () => {

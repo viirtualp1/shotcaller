@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { useIntervalFn } from '@vueuse/core'
+import { LIVE_MATCH_INTERVAL } from '@/application/social/liveMatch'
 import { computed, ref, shallowRef, watch } from 'vue'
 import type {
   CoachCard,
@@ -15,6 +17,7 @@ import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useCloudStore } from './cloud'
 import { useMatchStore } from './match'
 import { useNotificationsStore } from './notifications'
+import { useReplayStore } from './replay'
 
 export type FriendsStatus = 'off' | 'loading' | 'ready' | 'error'
 
@@ -35,11 +38,14 @@ export const useFriendsStore = defineStore('friends', () => {
   let generation = 0
   /** The Google picture last published for friends, so a list refresh does not send it again. */
   let publishedPhoto: string | null | undefined
+  let publishing = false
+  let publishedLive = false
 
   const cloud = useCloudStore()
   const match = useMatchStore()
   const notifications = useNotificationsStore()
   const accountPhoto = useAccountPhoto()
+  const replay = useReplayStore()
 
   const status = ref<FriendsStatus>('off')
   const card = shallowRef<OwnCard | null>(null)
@@ -138,6 +144,52 @@ export const useFriendsStore = defineStore('friends', () => {
     online.value = new Map()
     status.value = 'off'
     publishedPhoto = undefined
+    publishedLive = false
+    publishing = false
+
+    if (replay.liveFriend) {
+      replay.close()
+    }
+
+    closeProfile()
+  }
+
+  async function publishLive() {
+    const current = service
+    if (!current || status.value !== 'ready' || publishing) {
+      return
+    }
+
+    const snapshot = match.liveMatch()
+    if (!snapshot && !publishedLive) {
+      return
+    }
+
+    publishing = true
+
+    try {
+      await current.publishLiveMatch(snapshot)
+
+      if (service === current) {
+        publishedLive = snapshot !== null
+      }
+    } catch {
+      // Viewing a match must never interrupt the player's own game. Retry at the next interval.
+    } finally {
+      if (service === current) {
+        publishing = false
+      }
+    }
+  }
+
+  function watchMatch(id: string) {
+    const current = service
+    if (!current || !friends.value.some((friend) => friend.id === id)) {
+      return
+    }
+
+    replay.openLive(id, () => current.liveMatch(id))
+    open.value = false
     closeProfile()
   }
 
@@ -291,9 +343,15 @@ export const useFriendsStore = defineStore('friends', () => {
     if (viewedId.value && !list.some((f) => f.id === viewedId.value)) {
       closeProfile()
     }
+
+    if (replay.liveFriend && !list.some((friend) => friend.id === replay.liveFriend)) {
+      replay.close()
+    }
   })
 
   watch([() => status.value, accountPhoto.shown], () => publishPhoto())
+  watch([() => status.value, () => match.phase], () => void publishLive())
+  useIntervalFn(() => void publishLive(), LIVE_MATCH_INTERVAL)
 
   watch(
     () => (cloud.signedIn ? cloud.account?.id : null),
@@ -324,6 +382,7 @@ export const useFriendsStore = defineStore('friends', () => {
     openProfile,
     closeProfile,
     viewedMatch,
+    watchMatch,
     refresh,
     add,
     accept,

@@ -11,6 +11,8 @@ import {
   type PresenceStatus,
 } from '../social/friends'
 import type { Database } from './database'
+import { liveMatchSchema, type LiveMatch } from '../social/liveMatch'
+import { asJson } from './json'
 import { modeRatingsSchema } from './ratingsSchema'
 
 const FRIEND_STATUSES: ReadonlySet<string> = new Set<FriendStatus>(['friend', 'incoming', 'outgoing'])
@@ -28,13 +30,13 @@ const REQUEST_RESULTS: ReadonlySet<string> = new Set<FriendRequestResult>([
 /** Everyone signed in shares one presence channel; fine until the player count calls for per-friend channels. */
 const PRESENCE_CHANNEL = 'online'
 
-const count = z.number().int().nonnegative()
+const count = z.int().nonnegative()
 const heroId = z.enum(HERO_IDS)
 
 /** Other coaches' presence and profiles come from their devices, so they are checked before use. */
 const presenceStatus = z.object({
   activity: z.enum(['menu', 'match', 'duel']),
-  round: z.number().int().min(1).max(40).nullable(),
+  round: z.int().min(1).max(40).nullable(),
 })
 
 const friendProfile = z
@@ -264,6 +266,27 @@ export class SupabaseFriends implements FriendsService {
     channel.subscribe()
 
     return () => void this.client.removeChannel(channel)
+  }
+
+  async publishLiveMatch(snapshot: LiveMatch | null) {
+    const { error } = await this.client.rpc('publish_live_match', {
+      payload: snapshot ? asJson(liveMatchSchema.parse(snapshot)) : null,
+    })
+
+    if (error) {
+      throw error
+    }
+  }
+
+  async liveMatch(coachId: string) {
+    const { data, error } = await this.client.rpc('coach_live_match', { friend: coachId })
+    if (error) {
+      throw error
+    }
+
+    const parsed = liveMatchSchema.safeParse(data)
+
+    return parsed.success ? parsed.data : null
   }
 
   presence(initial: PresenceStatus) {

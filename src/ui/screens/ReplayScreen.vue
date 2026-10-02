@@ -14,7 +14,7 @@ import { MODES } from '@/content/modes'
 import { BATTLE } from '@/content/rules'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { fromSide, seenFrom } from '@/domain/battle/mirror'
-import { emptyStructureState } from '@/domain/match/structures'
+import { freshStructures } from '@/domain/match/structures'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { replayRoundHeroes, replaySetup } from '@/domain/replay/setup'
 import type { Insets } from '@/rendering/BoardRenderer'
@@ -39,6 +39,9 @@ const SPEEDS = [1, 2, 4] as const
 type Speed = (typeof SPEEDS)[number]
 
 const LIVE_REFRESH_SECONDS = 0.15
+const avatarSize = 36
+let session: BattleSession | null = null
+let sinceRefresh = 0
 
 const props = defineProps<{
   match: MatchRecord
@@ -57,20 +60,17 @@ const wide = useMediaQuery('(min-width: 1100px)')
 const { width: viewportW, height: viewportH } = useWindowSize()
 const topBox = useElementBounding(topEl)
 const sideBox = useElementBounding(sideEl)
-const avatarSize = 36
 
 const playing = ref(false)
 const speed = ref<Speed>(1)
 const elapsed = ref(0)
 const over = ref(false)
 const meter = ref<MeterStat>('damageDealt')
+const meterTeam = ref<0 | 1>(0)
 const selectedUid = ref<string | null>(null)
 const hovered = shallowRef<HeroHit | null>(null)
 const structures = shallowRef<PerTeam<StructureState>>(tapeStructures(replay.round))
 const statuses = shallowRef<ReadonlyMap<string, HeroStatus>>(new Map())
-
-let session: BattleSession | null = null
-let sinceRefresh = 0
 
 const cast = computed(() => replayRoundHeroes(props.match, replay.round) ?? [])
 const fighterLabel = useFighterLabels(cast)
@@ -104,7 +104,7 @@ const meterRows = computed(() => {
         value: status?.[meter.value] ?? 0,
       }
     })
-    .filter((row) => row.team === 0 && (meter.value !== 'healing' || row.value > 0))
+    .filter((row) => row.team === meterTeam.value && (meter.value !== 'healing' || row.value > 0))
     .sort((a, b) => b.value - a.value)
 
   const top = Math.max(1, rows[0]?.value ?? 1)
@@ -140,7 +140,12 @@ const insets = computed<Insets>(() => {
 })
 
 function tapeStructures(round: number): PerTeam<StructureState> {
-  return props.match.replays[round - 1]?.structures ?? [emptyStructureState(), emptyStructureState()]
+  return (
+    props.match.replays[round - 1]?.structures ?? [
+      freshStructures(props.match.mode),
+      freshStructures(props.match.mode),
+    ]
+  )
 }
 
 function refreshLive() {
@@ -185,11 +190,24 @@ function pick(uid: string) {
 }
 
 function tick(seconds: number) {
-  if (!session || !playing.value) {
+  if (!session || over.value) {
     return
   }
 
-  session.advance(seconds, speed.value)
+  if (replay.liveFriend) {
+    const snapshot = replay.live
+    if (!snapshot) {
+      return
+    }
+
+    const target = snapshot.phase === 'battle' ? snapshot.elapsed : BATTLE.duration
+    session.catchUp(target, 32)
+  } else if (playing.value) {
+    session.advance(seconds, speed.value)
+  } else {
+    return
+  }
+
   elapsed.value = session.simulation.elapsed
   sinceRefresh += seconds
 
@@ -207,6 +225,10 @@ function tick(seconds: number) {
 }
 
 function toggle() {
+  if (replay.liveFriend) {
+    return
+  }
+
   if (over.value) {
     playing.value = true
     loadRound(replay.round)
@@ -255,7 +277,7 @@ function onPointerDown(event: PointerEvent) {
 }
 
 watch(
-  [renderer, () => replay.round],
+  [renderer, () => replay.round, () => props.match.replays[replay.round - 1]?.seed],
   ([board, round], previous) => {
     if (previous && previous[1] !== round) {
       selectedUid.value = null
@@ -320,9 +342,21 @@ onBeforeUnmount(() => {
         <BaseStatus :team="0" :structures="structures[0]" :mode="match.mode" />
 
         <div class="center">
-          <span class="eyebrow">{{ t('replay.title') }}</span>
-          <span class="round">{{ t('hud.round', { round: replay.round, max: maxRounds }) }}</span>
-          <span class="phase">{{ t('battle.timeLeft', { s: secondsLeft }) }}</span>
+          <span class="eyebrow">{{ t(replay.liveFriend ? 'replay.liveTitle' : 'replay.title') }}</span>
+
+          <span class="round">{{
+            t('hud.round', { round: replay.live?.round ?? replay.round, max: maxRounds })
+          }}</span>
+
+          <span class="phase">{{
+            replay.liveFriend && replay.liveStatus !== 'watching'
+              ? t(`replay.liveStatus.${replay.liveStatus}`)
+              : replay.liveFriend && replay.live?.phase === 'planning'
+                ? t('replay.waitingRound')
+                : t('battle.timeLeft', { s: secondsLeft })
+          }}</span>
+
+          <span v-if="replay.liveFriend" class="round">{{ t('replay.liveDelay') }}</span>
         </div>
 
         <BaseStatus :team="1" :structures="structures[1]" :mode="match.mode" :name="opponentName" />
@@ -330,13 +364,13 @@ onBeforeUnmount(() => {
 
       <nav class="pips" :aria-label="t('matchDetails.roundByRound')">
         <button
-          v-for="(verdict, i) in match.history"
+          v-for="(_, i) in match.replays"
           :key="i"
           type="button"
           class="pip"
-          :class="verdict"
+          :class="match.history[i]"
           :aria-pressed="replay.round === i + 1"
-          :disabled="!match.replays[i]"
+          :disabled="Boolean(replay.liveFriend)"
           @click="replay.selectRound(i + 1)"
         >
           {{ i + 1 }}
@@ -347,13 +381,13 @@ onBeforeUnmount(() => {
     <aside ref="sideEl" class="side">
       <HudPanel class="actions">
         <div class="controls">
-          <button type="button" class="btn" @click="toggle()">
+          <button v-if="!replay.liveFriend" type="button" class="btn" @click="toggle()">
             <Pause v-if="playing" :size="14" />
             <Play v-else :size="14" />
             {{ over ? t('replay.restart') : playing ? t('replay.pause') : t('replay.play') }}
           </button>
 
-          <div class="speeds" role="group" :aria-label="t('replay.speed')">
+          <div v-if="!replay.liveFriend" class="speeds" role="group" :aria-label="t('replay.speed')">
             <button
               v-for="s in SPEEDS"
               :key="s"
@@ -367,6 +401,7 @@ onBeforeUnmount(() => {
           </div>
 
           <button
+            v-if="!replay.liveFriend"
             type="button"
             class="speed reset"
             :aria-label="t('replay.restart')"
@@ -395,6 +430,16 @@ onBeforeUnmount(() => {
       />
 
       <HudPanel>
+        <div class="speeds" role="group" :aria-label="t('replay.statsTeam')">
+          <button type="button" class="speed" :aria-pressed="meterTeam === 0" @click="meterTeam = 0">
+            {{ t('replay.friendTeam') }}
+          </button>
+
+          <button type="button" class="speed" :aria-pressed="meterTeam === 1" @click="meterTeam = 1">
+            {{ t('replay.opponentTeam') }}
+          </button>
+        </div>
+
         <MeterTabs v-model="meter" />
 
         <ol v-if="meterRows.length" class="meter" :class="meter">

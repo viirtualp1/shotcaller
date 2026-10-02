@@ -42,7 +42,7 @@ const itemId = z.enum([
 ])
 
 const synergyId = z.enum(['guardian', 'setup', 'soloMid', 'trilane', 'siege', 'hunt', 'arcane', 'bulwark'])
-const count = z.number().int().nonnegative().max(1_000_000)
+const count = z.int().nonnegative().max(1_000_000)
 const amount = z.number().nonnegative().max(1_000_000_000)
 
 const pick = z.object({

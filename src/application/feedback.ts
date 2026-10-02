@@ -3,6 +3,8 @@ import { z } from 'zod'
 export const FEEDBACK_KINDS = ['bug', 'balance', 'idea', 'other'] as const
 
 export const FEEDBACK_LIMITS = {
+  subjectMin: 2,
+  messageMin: 10,
   subject: 120,
   message: 4000,
   email: 254,
@@ -11,8 +13,8 @@ export const FEEDBACK_LIMITS = {
 export const feedbackSchema = z.object({
   id: z.uuid(),
   kind: z.enum(FEEDBACK_KINDS),
-  subject: z.string().trim().min(3).max(FEEDBACK_LIMITS.subject),
-  message: z.string().trim().min(20).max(FEEDBACK_LIMITS.message),
+  subject: z.string().trim().min(FEEDBACK_LIMITS.subjectMin).max(FEEDBACK_LIMITS.subject),
+  message: z.string().trim().min(FEEDBACK_LIMITS.messageMin).max(FEEDBACK_LIMITS.message),
   email: z.union([z.literal(''), z.email().max(FEEDBACK_LIMITS.email)]),
   locale: z.enum(['en', 'ru']),
   version: z.string().min(1).max(20),

@@ -12,7 +12,7 @@ const FAILURES: Readonly<Record<string, ChatFailure>> = {
 
 /** Realtime payloads are checked like any other input before they reach the screen. */
 const messageRow = z.object({
-  id: z.number().int(),
+  id: z.int(),
   sender: z.uuid(),
   recipient: z.uuid(),
   body: z.string().max(2000),

@@ -78,6 +78,48 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.6.3',
+    date: '2026-10-02',
+    title: {
+      en: 'Stay connected',
+      ru: 'На связи',
+    },
+    general: [
+      {
+        en: 'Watch your friends play **live**, with a short delay. Follow the current battle and inspect heroes on either team.',
+        ru: 'Смотри матчи друзей **в прямом эфире** с небольшой задержкой. Следи за текущим боем и изучай героев обеих команд.',
+      },
+      {
+        en: 'The **Standard bot on one lane** now buys items from **round 2** and invests in levels and rerolls earlier, making the shorter match more challenging.',
+        ru: 'Бот на **стандартной сложности одной линии** теперь покупает предметы со **2-го раунда** и раньше вкладывается в уровни и обновления магазина. Короткий матч стал сложнее.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Replays and live matches let you switch between **both teams’ damage, healing and damage taken**.',
+        ru: 'В повторах и прямых трансляциях можно переключать **урон, лечение и полученный урон обеих команд**.',
+      },
+      {
+        en: 'Completed milestones now keep the **XP received** visible alongside their progress.',
+        ru: 'У завершённых достижений теперь видна **сумма полученного XP** рядом с прогрессом.',
+      },
+      {
+        en: 'Feedback fields now show character counts. Minimum lengths are reduced to **2 characters for the subject** and **10 for the message**.',
+        ru: 'В форме обратной связи появились счётчики символов. Минимум снижен до **2 символов в теме** и **10 в сообщении**.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Feedback drafts now survive closing the form and reloading the game. A failed submission keeps the draft for another attempt.',
+        ru: 'Черновик обращения теперь сохраняется после закрытия формы и перезагрузки игры. При ошибке отправки текст остаётся для повторной попытки.',
+      },
+      {
+        en: 'After sending feedback, the introductory prompt disappears and only the delivery confirmation remains.',
+        ru: 'После отправки обращения вводная подсказка исчезает — остаётся подтверждение отправки.',
+      },
+    ],
+  },
+  {
     version: '8.6.2',
     date: '2026-10-01',
     title: {

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const count = z.number().int().nonnegative()
+const count = z.int().nonnegative()
 
 /** A rating for every mode; one the server does not know yet reads as zero. */
 export const modeRatingsSchema = z.object({

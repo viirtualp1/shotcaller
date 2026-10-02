@@ -2,7 +2,7 @@ import { randomIds, type IdGenerator } from '@/core/ids'
 import { trialById, type TrialId } from '@/content/career'
 import type { ModeId } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
-import { OPPONENT, type Difficulty } from '@/content/rules'
+import { opponentStyleFor, type Difficulty } from '@/content/rules'
 import { createRng } from '@/core/random/rng'
 import type { CoachStrategy } from '@/domain/coach/CoachStrategy'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
@@ -30,7 +30,12 @@ function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
 
   return {
     kind: 'coach',
-    coach: options.opponentCoach ?? new GreedyCoach(undefined, OPPONENT[options.difficulty ?? 'standard']),
+    coach:
+      options.opponentCoach ??
+      new GreedyCoach(
+        undefined,
+        opponentStyleFor(options.mode ?? DEFAULT_MODE, options.difficulty ?? 'standard'),
+      ),
   }
 }
 
@@ -42,6 +47,7 @@ export function createMatch(options: MatchOptions = {}) {
     ids: options.ids ?? randomIds,
     rival: rivalFor({
       ...options,
+      mode: trial?.mode ?? options.mode,
       difficulty: trial ? 'standard' : options.difficulty,
     }),
     mode: trial?.mode ?? options.mode ?? DEFAULT_MODE,
@@ -56,6 +62,7 @@ export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'see
       ids: options.ids ?? randomIds,
       rival: rivalFor({
         ...options,
+        mode: state.mode,
         ...(state.trialId ? { difficulty: 'standard' } : {}),
         link: state.link,
       }),

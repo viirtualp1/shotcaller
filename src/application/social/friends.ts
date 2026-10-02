@@ -1,6 +1,7 @@
 import type { HeroId, ModeId, StarLevel } from '@/content/ids'
 import type { Difficulty } from '@/content/rules'
 import type { MatchRecord, ModeRatings } from '@/domain/profile/Profile'
+import type { LiveMatch } from './liveMatch'
 
 /** What other players see of a coach. */
 export interface CoachCard {
@@ -99,6 +100,8 @@ export interface FriendsService {
   profile(coachId: string): Promise<FriendProfile | null>
   /** One of those matches in full, without the duel opponent's name; null when it is not there any more. */
   match(coachId: string, matchId: string): Promise<MatchRecord | null>
+  publishLiveMatch(snapshot: LiveMatch | null): Promise<void>
+  liveMatch(coachId: string): Promise<LiveMatch | null>
   /** Calls back when a request arrives or is accepted. Returns a function that stops listening. */
   watch(onChange: () => void): () => void
   /** Marks the coach online with the given status. */

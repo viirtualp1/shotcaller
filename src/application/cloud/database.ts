@@ -261,6 +261,14 @@ export interface Database {
         Args: { friend: string; match_id: string }
         Returns: Json
       }
+      publish_live_match: {
+        Args: { payload: Json }
+        Returns: undefined
+      }
+      coach_live_match: {
+        Args: { friend: string }
+        Returns: Json
+      }
       list_friends: {
         Args: Record<PropertyKey, never>
         Returns: {

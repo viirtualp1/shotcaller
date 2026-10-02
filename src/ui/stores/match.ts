@@ -35,6 +35,7 @@ import type { Match, MatchState, RemoteLink } from '@/domain/match/Match'
 import type { PlayerState } from '@/domain/player/Player'
 import type { RosterSlot } from '@/domain/roster/Roster'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
+import { liveMatchOf } from '@/domain/replay/live'
 import { useProfileStore } from './profile'
 import { useSettingsStore } from './settings'
 
@@ -123,6 +124,8 @@ export const useMatchStore = defineStore('match', () => {
   let session: BattleSession | null = null
   let liveCountdown = 0
   let noticeSeq = 0
+  let streamedMatch: Match | null = null
+  let streamId = ''
 
   const view = shallowRef<MatchView | null>(null)
   const live = shallowRef<LiveBattleView | null>(null)
@@ -620,6 +623,15 @@ export const useMatchStore = defineStore('match', () => {
     live.value = liveView(sim)
   }
 
+  function liveMatch() {
+    if (streamedMatch !== match) {
+      streamedMatch = match
+      streamId = crypto.randomUUID()
+    }
+
+    return match ? liveMatchOf(match, settings.difficulty, streamId, session?.simulation.elapsed ?? 0) : null
+  }
+
   /** Keeps the start of a battle already under way, so a board sent again after a reload does not restart it. */
   function startDuelBattle() {
     const clock = duelClock.value
@@ -810,6 +822,7 @@ export const useMatchStore = defineStore('match', () => {
     view,
     live,
     simulation,
+    liveMatch,
     battleSkipped,
     notice,
     saved,

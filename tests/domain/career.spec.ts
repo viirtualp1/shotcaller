@@ -97,6 +97,25 @@ describe('career rewards', () => {
     expect(weeklyContracts('2026-10-05')).not.toEqual(contracts)
   })
 
+  it('changes contracts each week throughout a full rotation and keeps the completion contract', () => {
+    let week = '2026-09-28'
+    const seen = new Set<string>()
+    let previous: ReturnType<typeof weeklyContracts> | null = null
+
+    for (let i = 0; i < 10; i++) {
+      const contracts = weeklyContracts(week)
+      expect(contracts[0]?.id).toBe('matches')
+      expect(new Set(contracts.map((contract) => contract.id)).size).toBe(3)
+      expect(contracts).not.toEqual(previous)
+
+      contracts.forEach((contract) => seen.add(contract.id))
+      previous = contracts
+      week = nextCareerWeek(week).toISOString().slice(0, 10)
+    }
+
+    expect([...seen].sort()).toEqual(['kills', 'matches', 'rounds', 'synergies', 'towers', 'upgrades'])
+  })
+
   it('migrates old accounts with earned milestones without paying them again', () => {
     const old = JSON.parse(serializeProfile(start()))
     old.version = 1

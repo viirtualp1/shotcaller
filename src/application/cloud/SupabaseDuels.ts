@@ -29,10 +29,10 @@ const duelRow = z.object({
   /** Servers without game modes yet send no mode: those duels are three lanes. */
   mode: z.enum(MODE_IDS).default(DEFAULT_MODE),
   seed: z.string().max(64).nullable(),
-  round: z.number().int().min(1).max(40),
+  round: z.int().min(1).max(40),
   round_opened_at: z.string().nullable(),
-  host_board_round: z.number().int(),
-  guest_board_round: z.number().int(),
+  host_board_round: z.int(),
+  guest_board_round: z.int(),
   winner: z.uuid().nullable().optional(),
   ended_by: z.enum(['result', 'forfeit', 'timeout']).nullable().optional(),
   created_at: z.string(),
@@ -40,7 +40,7 @@ const duelRow = z.object({
 
 const boardRow = z.object({
   duel_id: z.uuid(),
-  round: z.number().int().min(1).max(40),
+  round: z.int().min(1).max(40),
   side: z.union([z.literal(0), z.literal(1)]),
   board: z.unknown(),
 })

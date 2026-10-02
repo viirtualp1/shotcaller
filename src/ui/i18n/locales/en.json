@@ -7,7 +7,8 @@
     "categories": { "bug": "Bug report", "balance": "Game balance", "idea": "Suggestion", "other": "Other" },
     "subject": "Subject",
     "message": "Message",
-    "messageHint": "What happened, what did you expect and how can we reproduce it? At least 20 characters.",
+    "characterCount": "{count}/{max} · minimum {min} characters",
+    "messageHint": "What happened, what did you expect and how can we reproduce it? At least 10 characters.",
     "email": "Email for a reply (optional)",
     "privacy": "Sending shares your message, optional email, account or guest identifier, language and game version ({version}) with the game team. No logs, screenshots or match history are attached automatically.",
     "contactNote": "Leave an email if you would like a reply. Please do not include passwords or other sensitive details.",
@@ -67,6 +68,7 @@
     "firstClear": "+{xp} XP for your first clear",
     "xpReward": "+{xp} XP",
     "rewardReceived": "Reward received",
+    "xpReceived": "+{xp} XP received",
     "rewardBreakdown": "Match: {match} · rewards: {bonus}",
     "play": "Start trial",
     "retry": "Play again",
@@ -1006,6 +1008,20 @@
     "noRounds": "Round lineups are kept for the last 5 matches played since 8.0."
   },
   "replay": {
+    "liveTitle": "Live match",
+    "watchFriend": "Watch {name} play",
+    "liveDelay": "Viewing with a short delay",
+    "waitingRound": "Waiting for the next battle",
+    "statsTeam": "Team statistics",
+    "friendTeam": "Player team",
+    "opponentTeam": "Opponent",
+    "liveStatus": {
+      "incompatible": "This match uses a different game version. Update the game to watch it.",
+      "loading": "Connecting to the match…",
+      "watching": "Live match",
+      "ended": "Live broadcast ended",
+      "error": "Could not update the match. Retrying…"
+    },
     "watch": "Replay",
     "title": "Replay",
     "round": "Round {round}",
