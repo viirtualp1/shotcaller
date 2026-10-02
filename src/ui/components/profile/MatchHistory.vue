@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ChevronRight, Crown, Swords } from '@lucide/vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { isRated, type MatchRecord } from '@/domain/profile/Profile'
 import { earnedMatchXp } from '@/domain/profile/career'
 import { useGameText } from '../../composables/useGameText'
@@ -12,12 +12,22 @@ import InfoTooltip from '../common/InfoTooltip.vue'
 import MatchDetailsDialog from './MatchDetailsDialog.vue'
 import { relativeTime } from './format'
 
+const PAGE_SIZE = 10
+
 const profile = useProfileStore()
 const settings = useSettingsStore()
 const text = useGameText()
 const { t } = text
 
 const selected = ref<MatchRecord | null>(null)
+const shown = ref(PAGE_SIZE)
+
+const visibleMatches = computed(() => profile.profile.recent.slice(0, shown.value))
+const hasMore = computed(() => shown.value < profile.profile.recent.length)
+
+function loadMore() {
+  shown.value = Math.min(profile.profile.recent.length, shown.value + PAGE_SIZE)
+}
 
 /** Copies of the best hero share its id; only the first one gets the crown. */
 const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.heroId === match.mvp)
@@ -27,7 +37,7 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
   <HudPanel :title="t('profile.history.title')" class="panel">
     <ol class="matches">
       <li
-        v-for="match in profile.profile.recent"
+        v-for="match in visibleMatches"
         :key="match.id"
         class="match"
         :class="match.verdict"
@@ -95,6 +105,10 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
       </li>
     </ol>
 
+    <button v-if="hasMore" type="button" class="btn ghost block more" @click="loadMore">
+      {{ t('profile.history.more') }}
+    </button>
+
     <MatchDetailsDialog v-model="selected" />
   </HudPanel>
 </template>
@@ -111,6 +125,10 @@ const mvpIndex = (match: MatchRecord) => match.lineup.findIndex((hero) => hero.h
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.more {
+  margin-top: 12px;
 }
 
 .match {

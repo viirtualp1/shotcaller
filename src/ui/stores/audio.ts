@@ -50,6 +50,7 @@ export const useAudioStore = defineStore('audio', () => {
     musicVolume,
     effectsVolume,
     setMusic: (track: MusicTrack) => engine.setMusic(track),
+    setMusicPaused: (paused: boolean) => engine.setMusicPaused(paused),
     bindSimulation: (events: SimulationEmitter | undefined, humanSide: TeamId) =>
       engine.bindSimulation(events, humanSide),
     playRoundResult: (result: RoundResult) => engine.playRoundResult(result),

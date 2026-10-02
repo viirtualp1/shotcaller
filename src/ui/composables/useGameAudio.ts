@@ -2,17 +2,21 @@ import { computed, onBeforeUnmount, watch } from 'vue'
 import type { MusicTrack } from '../audio/AudioEngine'
 import { useAudioStore } from '../stores/audio'
 import { useMatchStore } from '../stores/match'
+import { usePauseStore } from '../stores/pause'
 import { usePatchNotesStore } from '../stores/patchNotes'
 import { useProfileStore } from '../stores/profile'
 import { useReplayStore } from '../stores/replay'
 
 /** Audio follows the visible match, including synchronous skips and leaving its report. */
 export function useGameAudio() {
+  let matchResultTimer: ReturnType<typeof setTimeout> | undefined
+
   const store = useMatchStore()
   const patchNotes = usePatchNotesStore()
   const profile = useProfileStore()
   const replay = useReplayStore()
   const audio = useAudioStore()
+  const pause = usePauseStore()
 
   const track = computed<MusicTrack>(() => {
     if (replay.match) {
@@ -36,6 +40,15 @@ export function useGameAudio() {
 
     return throneUnderThirtyPercent || battleNearEnd ? 'climax' : 'battle'
   })
+
+  watch(
+    () => pause.paused && !replay.match,
+    (paused) => audio.setMusicPaused(paused),
+    {
+      immediate: true,
+      flush: 'sync',
+    },
+  )
 
   watch(track, (next) => audio.setMusic(next), {
     immediate: true,
@@ -71,8 +84,6 @@ export function useGameAudio() {
     },
     { flush: 'sync' },
   )
-
-  let matchResultTimer: ReturnType<typeof setTimeout> | undefined
 
   watch(
     () => (store.phase === 'finished' ? store.view?.result : null),

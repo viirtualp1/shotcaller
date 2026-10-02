@@ -10,8 +10,6 @@ import type { Perspective } from '../perspective'
 import { FONTS, PALETTE, TEAM_COLORS } from '../theme'
 import { TOKEN_RADIUS } from '../views/HeroToken'
 
-const MIN_HEAL_TO_SHOW = 25
-const MIN_HERO_DAMAGE_TO_SHOW = 40
 /** Skipping a battle replays hundreds of events in one frame; only a handful are worth drawing. */
 const EFFECTS_PER_FRAME = 24
 const BIG_BURST = 120
@@ -46,19 +44,20 @@ export class EffectsLayer extends Container {
       this.ring(victim.position, 34, this.teamColor(killer.team), 0.5)
     })
 
-    this.listen(events, 'damaged', ({ target, amount, type, crit }) => {
-      if (crit && amount > 0) {
-        this.floatText(`${Math.round(amount)}!`, jitter(target.position), PALETTE.gold, 17, FONTS.ui, -4)
-
+    this.listen(events, 'damaged', ({ target, amount, crit }) => {
+      const rounded = Math.round(amount)
+      if (rounded <= 0) {
         return
       }
 
-      if (target.kind !== 'hero' || amount < MIN_HERO_DAMAGE_TO_SHOW) {
-        return
-      }
-
-      const color = type === 'magical' ? 0xc6b3ff : PALETTE.chalk
-      this.floatText(String(Math.round(amount)), jitter(target.position), color, 13, FONTS.ui, -4)
+      this.floatText(
+        `${rounded}${crit ? '!' : ''}`,
+        jitter(target.position),
+        PALETTE.damage,
+        crit ? 17 : 13,
+        FONTS.ui,
+        -4,
+      )
     })
 
     this.listen(events, 'evaded', ({ target }) =>
@@ -78,9 +77,12 @@ export class EffectsLayer extends Container {
     })
 
     this.listen(events, 'healed', ({ target, amount }) => {
-      if (amount >= MIN_HEAL_TO_SHOW) {
-        this.floatText(`+${Math.round(amount)}`, jitter(target.position), PALETTE.heal, 13, FONTS.ui, -4)
+      const rounded = Math.round(amount)
+      if (this.perspective.seen(target.team) !== 0 || rounded <= 0) {
+        return
       }
+
+      this.floatText(`+${rounded}`, jitter(target.position), PALETTE.heal, 13, FONTS.ui, -4)
     })
 
     this.listen(events, 'shielded', ({ target }) => this.ring(target.position, 26, 0xe4d6ff, 0.4))

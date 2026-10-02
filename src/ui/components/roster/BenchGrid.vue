@@ -6,7 +6,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
-import HeroDetails from '../common/HeroDetails.vue'
+import HeroPeek from '../common/HeroPeek.vue'
 import HudPanel from '../common/HudPanel.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
@@ -91,7 +91,7 @@ function onPanelClick() {
         </button>
 
         <template #content>
-          <HeroDetails :hero-id="hero.heroId" :stars="hero.stars" :items="hero.items" />
+          <HeroPeek :hero-id="hero.heroId" :stars="hero.stars" :items="hero.items" />
         </template>
       </InfoTooltip>
 

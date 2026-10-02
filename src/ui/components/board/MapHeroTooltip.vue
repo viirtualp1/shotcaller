@@ -4,8 +4,9 @@ import { computed, ref } from 'vue'
 import type { BoardRenderer } from '@/rendering/BoardRenderer'
 import type { HeroHit } from '@/rendering/views/HeroToken'
 import { useGameText } from '../../composables/useGameText'
+import { useLiveHeroVitals } from '../../composables/useLiveHeroVitals'
 import { loadoutOf, locateHero, useMatchStore } from '../../stores/match'
-import HeroDetails from '../common/HeroDetails.vue'
+import HeroPeek from '../common/HeroPeek.vue'
 
 const props = defineProps<{ renderer: BoardRenderer; hit: HeroHit }>()
 
@@ -41,13 +42,15 @@ const loadout = computed(() => {
 
   return located ? loadoutOf(player, located) : null
 })
+
+const vitals = useLiveHeroVitals(() => props.hit.uid)
 </script>
 
 <template>
   <Teleport to="body">
     <div v-if="loadout" ref="floating" class="tooltip map-tooltip" :class="{ enemy }" :style="floatingStyles">
       <span v-if="enemy" class="side">{{ t('card.enemy') }}</span>
-      <HeroDetails v-bind="loadout" />
+      <HeroPeek v-bind="loadout" :vitals="vitals" />
     </div>
   </Teleport>
 </template>

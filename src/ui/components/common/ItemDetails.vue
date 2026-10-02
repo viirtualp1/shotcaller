@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowRight } from '@lucide/vue'
 import { computed } from 'vue'
+import { HEROES } from '@/content/heroes'
 import type { ItemId } from '@/content/ids'
 import { ITEM_SLOTS, ITEMS } from '@/content/items'
 import { heroSheet, type HeroLoadout } from '@/domain/roster/heroSheet'
@@ -96,7 +97,15 @@ const changes = computed(() => {
 
     <section class="block" :class="{ passive }">
       <span class="label">{{ passive ? t('itemTip.passive') : t('itemTip.bonus') }}</span>
-      <p class="text">{{ text.itemDescription(itemId) }}</p>
+      <p class="text">{{ text.itemDescription(itemId, hero ? HEROES[hero.heroId].role : undefined) }}</p>
+
+      <p v-if="!hero && text.itemRoleDescription(itemId)" class="hint">
+        {{ text.itemRoleDescription(itemId) }}
+      </p>
+
+      <p v-if="itemId === 'gloves' || itemId === 'staff' || itemId === 'manaStone'" class="hint">
+        {{ t('itemTip.additive') }}
+      </p>
     </section>
 
     <section v-if="hero && changes.length" class="block hero">

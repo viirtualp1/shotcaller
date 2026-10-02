@@ -12,6 +12,8 @@ import {
 } from '../ecs/components'
 import type { SimulationEmitter } from '../events'
 import type { SpatialIndex } from './SpatialIndex'
+import type { TowerSafety } from './TowerSafety'
+import { trainingTargetAllowed } from './training'
 
 export interface DamageOptions {
   readonly structureBonus?: number
@@ -36,6 +38,7 @@ export class CombatService {
     private readonly events: SimulationEmitter,
     private readonly index: SpatialIndex,
     private readonly structureScale: number,
+    private readonly safety: TowerSafety,
   ) {}
 
   /** A basic attack landing: the target may evade it, then the attacker may crit and bash. */
@@ -75,7 +78,11 @@ export class CombatService {
   }
 
   dealDamage(source: Unit, target: Unit, amount: number, type: DamageType, options: DamageOptions = {}) {
-    if (!isAlive(target)) {
+    if (
+      !isAlive(target) ||
+      !this.safety.isStructureVulnerable(target) ||
+      !trainingTargetAllowed(source, target)
+    ) {
       return 0
     }
 

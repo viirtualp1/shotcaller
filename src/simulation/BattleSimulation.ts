@@ -3,6 +3,7 @@ import mitt from 'mitt'
 import { TEAM_IDS, type HeroId, type ItemId, type LaneId, type StarLevel, type TeamId } from '@/content/ids'
 import { MODES } from '@/content/modes'
 import { BATTLE } from '@/content/rules'
+import { SANDBOX, sandboxGoal, type SandboxGoal } from '@/content/sandbox'
 import { createRng } from '@/core/random/rng'
 import type { BattleOutcome, BattleResolver, BattleSetup, StructureState } from '@/domain/battle/contracts'
 import { emptyStructureState } from '@/domain/match/structures'
@@ -79,6 +80,14 @@ export class BattleSimulation {
     const rng = createRng(setup.seed)
     const index = new SpatialIndex(this.queries.units)
     const structureScale = 1 + BATTLE.structureScalePerRound * (setup.round - 1)
+
+    const safety = new TowerSafety(
+      this.queries,
+      index,
+      this.map,
+      Boolean(setup.sandbox && !setup.sandbox.creeps),
+    )
+
     this.ctx = {
       setup,
       world: this.world,
@@ -88,8 +97,8 @@ export class BattleSimulation {
       events: this.events,
       clock: this.clock,
       index,
-      safety: new TowerSafety(this.queries, index),
-      combat: new CombatService(this.world, this.events, index, structureScale),
+      safety,
+      combat: new CombatService(this.world, this.events, index, structureScale, safety),
       factory: new EntityFactory(this.world, this.map, rng),
     }
 
@@ -139,12 +148,13 @@ export class BattleSimulation {
     return this.relicSystem.relics
   }
 
+  /** Endless on the training ground when the coach asks for no clock. */
   get duration() {
-    return BATTLE.duration
+    return this.setup.sandbox?.endless ? Infinity : BATTLE.duration
   }
 
   get isOver() {
-    return this.fallenThrone !== null || this.clock.elapsed >= BATTLE.duration
+    return this.fallenThrone !== null || this.clock.elapsed >= this.duration
   }
 
   step(dt: number = BATTLE.step) {
@@ -161,8 +171,9 @@ export class BattleSimulation {
     }
   }
 
+  /** Plays the battle out; an endless one has no end to reach, so it stops where it is. */
   runToEnd() {
-    while (!this.isOver) {
+    while (!this.isOver && Number.isFinite(this.duration)) {
       this.step()
     }
 
@@ -225,6 +236,27 @@ export class BattleSimulation {
     return status
   }
 
+  /** Live practice orders preserve health, mana, items and accumulated battle statistics. */
+  setSandboxGoal(lane: LaneId, goal: SandboxGoal) {
+    if (
+      !this.setup.sandbox ||
+      !this.map.lanes.includes(lane) ||
+      (goal === 'dummies' && !this.setup.sandbox.dummies)
+    ) {
+      return false
+    }
+
+    for (const hero of this.queries.heroes) {
+      if (hero.training?.lane === lane) {
+        hero.training.goal = goal
+        hero.targeting.target = null
+        hero.targeting.chasing = true
+      }
+    }
+
+    return true
+  }
+
   dispose() {
     this.events.all.clear()
     this.ctx.index.dispose()
@@ -253,11 +285,24 @@ export class BattleSimulation {
         )
 
         const stance = this.setup.stances?.[team][lane]
-        lineup.forEach((owned, slot) => factory.hero(owned, team, lane, report, slot, stance))
+        lineup.forEach((owned, slot) => {
+          const hero = factory.hero(owned, team, lane, report, slot, stance)
+          if (this.setup.sandbox) {
+            hero.targeting.ignoresStructures = false
+            hero.laneFollower!.stance = 'push'
+
+            this.world.addComponent(hero, 'training', {
+              lane,
+              goal: sandboxGoal(this.setup.sandbox, lane),
+            })
+
+            this.world.removeComponent(hero, 'roamer')
+          }
+        })
       }
     }
 
-    const dummies = this.setup.sandbox?.dummies ?? 0
+    const dummies = Math.min(SANDBOX.maxDummies, this.setup.sandbox?.dummies ?? 0)
     for (const lane of this.map.lanes) {
       for (let i = 0; i < dummies; i++) {
         factory.dummy(1, lane, i, dummies)

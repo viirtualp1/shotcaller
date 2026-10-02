@@ -17,7 +17,6 @@ import MovedCard from '../components/patchNotes/MovedCard.vue'
 import CareerChip from '../components/profile/CareerChip.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
 import SignInButton from '../components/profile/SignInButton.vue'
-import FriendsButton from '../components/social/FriendsButton.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useGameText } from '../composables/useGameText'
 import { useDuelStore } from '../stores/duel'
@@ -111,7 +110,6 @@ useIntervalFn(() => {
       <ProfileChip />
       <CareerChip />
       <SignInButton />
-      <FriendsButton />
     </div>
 
     <section class="copy">
@@ -297,7 +295,7 @@ h1 {
 
 .coach :deep(.chip) {
   min-width: 0;
-  max-width: min(320px, calc(100% - 90px));
+  max-width: 320px;
 }
 
 .footer {
@@ -361,7 +359,6 @@ h1 {
     gap: 8px;
   }
 
-  .coach:has(> .friends),
   .coach:has(> .sign-in) {
     grid-template-columns: minmax(0, 2.5fr) repeat(2, minmax(0, 1fr));
   }
@@ -385,7 +382,6 @@ h1 {
   }
 
   .coach :deep(.career-chip),
-  .coach :deep(.friends),
   .coach :deep(.sign-in) {
     width: 100%;
     min-width: 0;

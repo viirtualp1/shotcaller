@@ -10,16 +10,15 @@ import { useSettingsStore } from '../../stores/settings'
 import { useAudioStore } from '../../stores/audio'
 import CheckField from '../common/CheckField.vue'
 import LanguageSwitch from './LanguageSwitch.vue'
-import TelemetrySettings from './TelemetrySettings.vue'
 
 const DIFFICULTY_IDS = Object.keys(DIFFICULTIES) as Difficulty[]
 
 const LANE_ORDERS_PATCH = '8.5'
 
-withDefaults(defineProps<{ language?: boolean; sound?: boolean; telemetry?: boolean }>(), {
+withDefaults(defineProps<{ language?: boolean; sound?: boolean; showDifficulty?: boolean }>(), {
   language: true,
   sound: true,
-  telemetry: true,
+  showDifficulty: true,
 })
 
 const settings = useSettingsStore()
@@ -73,9 +72,7 @@ function openOrdersPatch() {
 
 <template>
   <div class="fields">
-    <TelemetrySettings v-if="telemetry" />
-
-    <section class="field">
+    <section v-if="showDifficulty" class="field">
       <h3 class="label"><Gauge :size="16" /> {{ t('settings.difficulty') }}</h3>
 
       <ToggleGroupRoot

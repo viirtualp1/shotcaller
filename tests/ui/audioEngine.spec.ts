@@ -13,6 +13,7 @@ class FakeAudio {
   volume = 1
   playbackRate = 1
   paused = true
+  currentTime = 0
   onended: (() => void) | null = null
   onerror: (() => void) | null = null
   readonly play = vi.fn(() => {
@@ -109,6 +110,38 @@ describe('game audio engine', () => {
     expect(active()[0]!.src).toContain('determined-pursuit.m4a')
     engine.setMusicVolume(0)
     expect(active()).toHaveLength(0)
+  })
+
+  it('pauses and resumes the same music at its current position, including user gestures while paused', async () => {
+    engine.setMusic('battle')
+    await vi.advanceTimersByTimeAsync(1100)
+    const music = active()[0]!
+    music.currentTime = 23.5
+    engine.setMusicPaused(true)
+    gestures.dispatchEvent(new Event('pointerdown'))
+    gestures.dispatchEvent(new Event('keydown'))
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(music.paused).toBe(true)
+    expect(music.currentTime).toBe(23.5)
+    expect(music.play).toHaveBeenCalledTimes(1)
+    engine.setMusicPaused(false)
+    await vi.advanceTimersByTimeAsync(1100)
+    expect(music.paused).toBe(false)
+    expect(music.currentTime).toBe(23.5)
+    expect(active()).toEqual([music])
+  })
+
+  it('keeps a pending playback paused and starts a changed track only after resuming', async () => {
+    engine.setMusic('battle')
+    engine.setMusicPaused(true)
+    await vi.advanceTimersByTimeAsync(50)
+    expect(active()[0]!.paused).toBe(true)
+    engine.setMusic('climax')
+    expect(FakeAudio.instances).toHaveLength(1)
+    engine.setMusicPaused(false)
+    await vi.advanceTimersByTimeAsync(1100)
+    expect(active()).toHaveLength(1)
+    expect(active()[0]!.src).toContain('determined-pursuit.m4a')
   })
 
   it('loads audio from the site root when a patch page is open', () => {

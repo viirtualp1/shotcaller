@@ -8,7 +8,7 @@ import { cssColor } from '@/rendering/theme'
 import { ROLE_ICONS } from '../../icons'
 import { useGameText } from '../../composables/useGameText'
 import HeroAvatar from '../common/HeroAvatar.vue'
-import HeroDetails from '../common/HeroDetails.vue'
+import HeroPeek from '../common/HeroPeek.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
 const props = defineProps<{
@@ -61,7 +61,7 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
     </button>
 
     <template #content>
-      <HeroDetails :hero-id="offer.heroId" :stars="1" />
+      <HeroPeek :hero-id="offer.heroId" :stars="1" />
     </template>
   </InfoTooltip>
 </template>

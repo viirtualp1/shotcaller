@@ -63,6 +63,7 @@ watch(
 
 .level {
   position: absolute;
+  z-index: 2;
   right: calc(var(--size) * -0.1);
   bottom: calc(var(--size) * -0.08);
   min-width: calc(var(--size) * 0.42);

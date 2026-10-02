@@ -54,15 +54,11 @@ useDuelStore()
 useSystemNotificationsStore()
 
 /**
- * Every page but the main one gets the friends shortcut. The game has its own in the menu,
+ * Pages share the friends shortcut. The game has its own in the menu,
  * so it shows over a match only while a page such as the patch notes covers the board.
  */
 const showFriendsLauncher = computed(
-  () =>
-    replay.match !== null ||
-    patchNotes.patch !== null ||
-    leaderboard.isOpen ||
-    (!store.view && (profile.isOpen || profile.isCareer)),
+  () => replay.match !== null || patchNotes.patch !== null || leaderboard.isOpen || !store.view,
 )
 
 /** Each screen opens at its top, as a new page does, not where the one before was scrolled to. */

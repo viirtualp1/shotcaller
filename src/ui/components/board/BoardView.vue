@@ -58,6 +58,12 @@ watch(renderer, (board) => boardStore.register(board), { immediate: true })
 
 watch([renderer, orders], ([board, stances]) => board?.showOrders(stances), { immediate: true })
 
+watch(
+  [renderer, () => store.view?.sandbox, () => store.simulation],
+  ([board, settings, simulation]) => board?.showTraining(settings ?? null, !simulation),
+  { immediate: true },
+)
+
 watch([renderer, () => props.insets], ([board, insets]) => board?.setInsets(insets), { immediate: true })
 
 watch([renderer, () => props.closeUp], ([board, closeUp]) => board?.setCloseUp(closeUp), { immediate: true })

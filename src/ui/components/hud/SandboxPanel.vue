@@ -1,29 +1,39 @@
 <script setup lang="ts">
-import { LogOut } from '@lucide/vue'
+import { RotateCcw } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
-import { SANDBOX } from '@/content/sandbox'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import CheckField from '../common/CheckField.vue'
 import HudPanel from '../common/HudPanel.vue'
+import TrainingOrders from './TrainingOrders.vue'
 
-/** The training ground's controls: how many dummies stand on each lane, creep waves, and the way out. */
+/** The training ground's controls: the clock, how many dummies stand on each lane, creep waves, and a fresh start. */
 const store = useMatchStore()
 const { t } = useGameText()
-
-const counts = Array.from({ length: SANDBOX.maxDummies + 1 }, (_, n) => String(n))
 
 const settings = computed(() => store.view?.sandbox ?? null)
 const locked = computed(() => !store.isPlanning)
 
 const dummies = computed({
-  get: () => String(settings.value?.dummies ?? 0),
+  get: () => (settings.value?.dummies ? 'on' : 'off'),
   set: (value: string | undefined) => {
     if (settings.value && value !== undefined) {
       store.setSandbox({
         ...settings.value,
-        dummies: Number(value),
+        dummies: value === 'on' ? 1 : 0,
+      })
+    }
+  },
+})
+
+const clock = computed({
+  get: () => (settings.value?.endless ? 'endless' : 'rounds'),
+  set: (value: string | undefined) => {
+    if (settings.value && value) {
+      store.setSandbox({
+        ...settings.value,
+        endless: value === 'endless',
       })
     }
   },
@@ -44,6 +54,17 @@ const creeps = computed({
 
 <template>
   <HudPanel v-if="settings" :title="t('sandbox.title')" class="sandbox">
+    <ToggleGroupRoot
+      v-model="clock"
+      type="single"
+      class="segmented-control"
+      :aria-label="t('sandbox.clock')"
+      :disabled="locked"
+    >
+      <ToggleGroupItem value="endless" class="segmented-option">{{ t('sandbox.endless') }}</ToggleGroupItem>
+      <ToggleGroupItem value="rounds" class="segmented-option">{{ t('sandbox.rounds') }}</ToggleGroupItem>
+    </ToggleGroupRoot>
+
     <div class="field">
       <span id="sandbox-dummies" class="label">{{ t('sandbox.dummies') }}</span>
 
@@ -54,18 +75,23 @@ const creeps = computed({
         aria-labelledby="sandbox-dummies"
         :disabled="locked"
       >
-        <ToggleGroupItem v-for="n in counts" :key="n" :value="n" class="segmented-option">
-          {{ n }}
-        </ToggleGroupItem>
+        <ToggleGroupItem value="off" class="segmented-option">{{ t('sandbox.off') }}</ToggleGroupItem>
+        <ToggleGroupItem value="on" class="segmented-option">{{ t('sandbox.on') }}</ToggleGroupItem>
       </ToggleGroupRoot>
     </div>
 
     <CheckField v-model="creeps" :class="{ locked }">{{ t('sandbox.creeps') }}</CheckField>
 
-    <p class="hint">{{ t('sandbox.hint') }}</p>
+    <TrainingOrders />
 
-    <button type="button" class="btn ghost leave" @click="store.leaveToMenu()">
-      <LogOut :size="15" /> {{ t('sandbox.leave') }}
+    <button
+      type="button"
+      class="btn ghost reset"
+      :title="t('sandbox.resetHint')"
+      :disabled="locked"
+      @click="store.resetSandbox()"
+    >
+      <RotateCcw :size="15" /> {{ t('sandbox.reset') }}
     </button>
   </HudPanel>
 </template>
@@ -88,13 +114,7 @@ const creeps = computed({
   opacity: 0.6;
 }
 
-.hint {
-  margin: 0;
-  font-size: 11.5px;
-  color: var(--chalk-faint);
-}
-
-.leave {
+.reset {
   align-self: flex-start;
 }
 </style>

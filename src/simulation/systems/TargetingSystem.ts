@@ -6,6 +6,7 @@ import { withinLaneBand } from '../services/laneBand'
 import { beyondHoldLine } from '../services/laneOrders'
 import { isCaughtAlone } from '../services/skirmish'
 import { isThroneNearlyDown } from '../services/TowerSafety'
+import { trainingTargetAllowed } from '../services/training'
 import { attackReach, inReach } from './AttackSystem'
 import type { SimulationContext, System } from '../SimulationContext'
 
@@ -40,6 +41,30 @@ export class TargetingSystem implements System {
       }
 
       const targeting = unit.targeting
+      if (unit.training?.goal === 'dummies') {
+        targeting.target = this.ctx.queries.units.entities
+          .filter((target) => target.dummy && isAlive(target) && trainingTargetAllowed(unit, target))
+          .reduce<Unit | null>(
+            (closest, target) =>
+              !closest || distance(unit.position, target.position) < distance(unit.position, closest.position)
+                ? target
+                : closest,
+            null,
+          )
+
+        targeting.chasing = targeting.target !== null
+
+        continue
+      }
+
+      const siegeTarget = this.creepSiegeTarget(unit)
+      if (siegeTarget) {
+        targeting.target = siegeTarget
+        targeting.chasing = true
+
+        continue
+      }
+
       const throne = this.throneToFinish(unit)
       if (!throne && this.fallsBack(unit, dt)) {
         targeting.target = null
@@ -148,7 +173,11 @@ export class TargetingSystem implements System {
   }
 
   private isValid(unit: Unit, target: Unit | null) {
-    if (!target || !isAlive(target) || !unit.targeting) {
+    if (!target || !isAlive(target) || !unit.targeting || !trainingTargetAllowed(unit, target)) {
+      return false
+    }
+
+    if (!this.ctx.safety.isStructureVulnerable(target) || this.ctx.safety.isBeyondTower(unit, target)) {
       return false
     }
 
@@ -193,6 +222,7 @@ export class TargetingSystem implements System {
     for (const structure of this.ctx.queries.structures) {
       if (
         structure.team !== unit.team &&
+        this.ctx.safety.isStructureVulnerable(structure) &&
         isThroneNearlyDown(structure) &&
         distance(unit.position, structure.position) - structure.radius <= aggro
       ) {
@@ -204,7 +234,7 @@ export class TargetingSystem implements System {
   }
 
   private mayHitStructure(hero: Unit, structure: Unit) {
-    if (hero.targeting?.ignoresStructures) {
+    if (hero.targeting?.ignoresStructures || !this.ctx.safety.isStructureVulnerable(structure)) {
       return false
     }
 
@@ -250,13 +280,20 @@ export class TargetingSystem implements System {
       (u) =>
         u.team !== unit.team &&
         isAlive(u) &&
+        trainingTargetAllowed(unit, u) &&
+        /* Buildings leave training dummies to the heroes. */
+        !(unit.kind === 'structure' && u.dummy) &&
         (u.kind === 'hero' || distance(unit.position, u.position) <= aggro),
     )
 
     let best: Unit | null = null
     let bestScore = Infinity
     for (const candidate of candidates) {
-      if (!withinLaneBand(this.ctx.map, unit, candidate.position)) {
+      if (
+        !withinLaneBand(this.ctx.map, unit, candidate.position) ||
+        !this.ctx.safety.isStructureVulnerable(candidate) ||
+        this.ctx.safety.isBeyondTower(unit, candidate)
+      ) {
         continue
       }
 
@@ -268,6 +305,36 @@ export class TargetingSystem implements System {
     }
 
     return best
+  }
+
+  /** At a tower, clear the defending wave first; then attack the tower instead of chasing behind it. */
+  private creepSiegeTarget(unit: Unit) {
+    const tower = this.ctx.safety.blockingTower(unit)
+    const aggro = unit.targeting?.aggroRange ?? 0
+    if (!tower || distance(unit.position, tower.position) - tower.radius > aggro) {
+      return null
+    }
+
+    const defenders = this.ctx.index.near(
+      unit.position,
+      aggro,
+      (candidate) =>
+        candidate.team !== unit.team &&
+        candidate.kind === 'creep' &&
+        isAlive(candidate) &&
+        withinLaneBand(this.ctx.map, unit, candidate.position) &&
+        !this.ctx.safety.isBeyondTower(unit, candidate),
+    )
+
+    return (
+      defenders.reduce<Unit | null>(
+        (closest, candidate) =>
+          !closest || distance(unit.position, candidate.position) < distance(unit.position, closest.position)
+            ? candidate
+            : closest,
+        null,
+      ) ?? tower
+    )
   }
 
   private score(unit: Unit, candidate: Unit) {

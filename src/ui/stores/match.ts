@@ -26,7 +26,7 @@ import {
   type TeamId,
 } from '@/content/ids'
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
-import { DEFAULT_SANDBOX, type SandboxSettings } from '@/content/sandbox'
+import { DEFAULT_SANDBOX, type SandboxGoal, type SandboxSettings } from '@/content/sandbox'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
 import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
@@ -287,14 +287,14 @@ export const useMatchStore = defineStore('match', () => {
   }
 
   /** The training ground: any hero and item for free, dummies to hit, and nothing saved or counted. */
-  function startSandbox(mode: ModeId = settings.mode) {
+  function startSandbox(mode: ModeId = settings.mode, sandbox: SandboxSettings = DEFAULT_SANDBOX) {
     disposeBattle()
     profile.forgetLast()
     duel.value = null
 
     match = createMatch({
       mode,
-      sandbox: DEFAULT_SANDBOX,
+      sandbox,
     })
 
     clearSelection()
@@ -469,10 +469,36 @@ export const useMatchStore = defineStore('match', () => {
     }
   }
 
+  /** Clears the training ground: no heroes, no items and no dummies; the clock choice stays. */
+  function resetSandbox() {
+    if (!match?.sandbox) {
+      return
+    }
+
+    startSandbox(match.mode, {
+      dummies: 0,
+      creeps: false,
+      endless: match.sandbox.endless,
+    })
+  }
+
   function setSandbox(settings: SandboxSettings) {
     if (match) {
       apply(match.setSandbox(settings))
     }
+  }
+
+  function setSandboxGoal(lane: LaneId, goal: SandboxGoal) {
+    if (!match) {
+      return
+    }
+
+    const result = match.setSandboxGoal(lane, goal)
+    if (result.isOk()) {
+      simulation.value?.setSandboxGoal(lane, goal)
+    }
+
+    apply(result)
   }
 
   function buyItem(itemId: ItemId) {
@@ -765,6 +791,13 @@ export const useMatchStore = defineStore('match', () => {
       return
     }
 
+    if (match.sandbox?.endless) {
+      disposeBattle()
+      apply(match.exitSandboxBattle())
+
+      return
+    }
+
     live.value = liveView(session.simulation)
 
     if (duel.value) {
@@ -921,8 +954,10 @@ export const useMatchStore = defineStore('match', () => {
     settleDuel,
     leaveToMenu,
     startSandbox,
+    resetSandbox,
     recruit,
     setSandbox,
+    setSandboxGoal,
     buy,
     buyItem,
     sell,

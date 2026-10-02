@@ -31,8 +31,13 @@ const REFRESH_EVERY_MS = 30_000
 /** Cloud saves for the coach profile. The game keeps playing on the local profile; this keeps the account in step. */
 export const useCloudStore = defineStore('cloud', () => {
   const config = cloudConfig(import.meta.env)
-  const profile = useProfileStore()
   const sync = new ProfileSync()
+  let client: Promise<SupabaseCloud> | null = null
+  let running = false
+  let again = false
+  let syncFinished: (() => void) | null = null
+
+  const profile = useProfileStore()
 
   const status = ref<CloudStatus>(config ? 'local' : 'off')
   const account = shallowRef<CloudAccount | null>(null)
@@ -48,10 +53,8 @@ export const useCloudStore = defineStore('cloud', () => {
 
   /** The sign-in dialog, opened from the start screen or the profile. */
   const signInOpen = ref(false)
-
-  let client: Promise<SupabaseCloud> | null = null
-  let running = false
-  let again = false
+  const deleting = ref(false)
+  const deleteError = ref(false)
 
   function connect() {
     if (!config) {
@@ -79,7 +82,7 @@ export const useCloudStore = defineStore('cloud', () => {
   const needsAccount = () => sync.hasWork || (sync.state.userId === null && !isBlank(profile.profile))
 
   async function syncNow() {
-    if (!config || conflict.value) {
+    if (!config || conflict.value || deleting.value) {
       return
     }
 
@@ -131,6 +134,8 @@ export const useCloudStore = defineStore('cloud', () => {
       console.warn('Cloud sync failed', error)
     } finally {
       running = false
+      syncFinished?.()
+      syncFinished = null
 
       if (again) {
         again = false
@@ -195,6 +200,50 @@ export const useCloudStore = defineStore('cloud', () => {
     status.value = 'local'
   }
 
+  async function deleteAccount() {
+    if (!account.value || account.value.anonymous || deleting.value) {
+      return false
+    }
+
+    deleting.value = true
+    deleteError.value = false
+
+    try {
+      if (running) {
+        await new Promise<void>((resolve) => (syncFinished = resolve))
+      }
+
+      await (await connect()).deleteAccount()
+      sync.reset()
+      profile.reset()
+      account.value = null
+      conflict.value = null
+      syncedAt.value = null
+      savedAt.value = null
+      status.value = 'local'
+
+      for (const key of [
+        STORAGE_KEYS.match,
+        STORAGE_KEYS.duel,
+        STORAGE_KEYS.duelClock,
+        STORAGE_KEYS.duelPlaying,
+        STORAGE_KEYS.duelReports,
+        STORAGE_KEYS.accountPhoto,
+        STORAGE_KEYS.feedbackDraft,
+      ]) {
+        globalThis.localStorage.removeItem(key)
+      }
+
+      return true
+    } catch {
+      deleteError.value = true
+
+      return false
+    } finally {
+      deleting.value = false
+    }
+  }
+
   if (config) {
     profile.$onAction(({ name, after }) => {
       after((result) => {
@@ -243,6 +292,9 @@ export const useCloudStore = defineStore('cloud', () => {
     verifyCode,
     signInWithGoogle,
     signOut,
+    deleting,
+    deleteError,
+    deleteAccount,
     connect,
   }
 })

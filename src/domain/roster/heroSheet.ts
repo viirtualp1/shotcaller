@@ -1,6 +1,6 @@
 import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, StarLevel, SynergyId } from '@/content/ids'
-import { ITEMS } from '@/content/items'
+import { loadoutModifiers } from '@/content/items'
 import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
@@ -15,9 +15,9 @@ export interface HeroNumbers {
   readonly speed: number
   /** Share of attack damage the hero does not take: armor, and any cut to all damage on top. */
   readonly protection: number
-  /** Multiplies ability damage, shields and summons; the hero's stars are already in. */
+  /** Multiplies ability damage and summons; the hero's stars are already in. */
   readonly spellPower: number
-  /** Multiplies healing from abilities; the hero's stars are already in. */
+  /** Multiplies healing and shields; the hero's stars are already in. */
   readonly healPower: number
   readonly manaGain: number
   readonly structureDamage: number
@@ -82,7 +82,7 @@ export function heroSheet({ heroId, stars, items = [], synergies = [] }: HeroLoa
   const total = numbersOf(
     heroId,
     stars,
-    combineModifiers(role.modifiers, ...synergyModifiers, ...items.map((item) => ITEMS[item].modifiers)),
+    combineModifiers(role.modifiers, ...synergyModifiers, loadoutModifiers(items, hero.role)),
   )
 
   const cost = hero.stats.mana

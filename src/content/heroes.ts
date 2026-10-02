@@ -50,7 +50,7 @@ const stats = (
 })
 
 const TABLE: Readonly<Record<HeroId, Row>> = {
-  spearman: ['Spearman', 1, 'initiator', 0xc9824a, 'charge', stats(650, 36, 1.1, 0, 95, 0.15, 80)],
+  spearman: ['Spearman', 1, 'initiator', 0xc9824a, 'charge', stats(780, 40, 1.1, 0, 95, 0.2, 80)],
   archer: ['Archer', 1, 'carry', 0x9bcf53, 'volley', stats(420, 40, 0.9, 150, 90, 0.05, 100)],
   acolyte: ['Acolyte', 1, 'support', 0xe8d9a0, 'prayer', stats(440, 26, 1.2, 140, 90, 0.05, 70)],
   sapper: ['Sapper', 1, 'pusher', 0xb58b5a, 'barrel', stats(470, 32, 1.3, 130, 88, 0.08, 90)],

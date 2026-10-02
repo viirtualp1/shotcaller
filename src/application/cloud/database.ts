@@ -115,6 +115,10 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      delete_account: {
+        Args: Record<string, never>
+        Returns: undefined
+      }
       mmr_leaderboard: {
         Args: { game_mode: string }
         Returns: {

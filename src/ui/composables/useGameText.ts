@@ -11,7 +11,7 @@ import type {
   StructureSlot,
   SynergyId,
 } from '@/content/ids'
-import { ITEMS } from '@/content/items'
+import { ITEMS, itemModifiers } from '@/content/items'
 import type { StatModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { SYNERGY_BY_ID } from '@/content/synergies'
@@ -29,12 +29,12 @@ const REDUCTION_PARAMS = new Set(['falloff'])
 const percentGain = (format: Format, multiplier: number) => format(Math.round((multiplier - 1) * 100))
 const percentCut = (format: Format, multiplier: number) => format(Math.round((1 - multiplier) * 100))
 
-/** Healing follows heal power in battle; damage, shields and summons follow spell power. */
+/** Healing and shields follow heal power; damage and summons follow spell power. */
 function abilityParams(format: Format, id: AbilityId, power: number, healPower: number) {
   const params: Params = {}
   for (const [key, value] of Object.entries(ABILITY_PARAMS[id])) {
     if (SCALED_PARAMS.has(key)) {
-      params[key] = format(Math.round(value * (key === 'heal' ? healPower : power)))
+      params[key] = format(Math.round(value * (key === 'heal' || key === 'absorb' ? healPower : power)))
     } else if (PERCENT_PARAMS.has(key)) {
       params[key] = format(Math.round(value * 100))
     } else if (REDUCTION_PARAMS.has(key)) {
@@ -74,9 +74,9 @@ function roleParams(format: Format, role: RoleId) {
   }
 }
 
-function itemParams(format: Format, id: ItemId) {
+function itemParams(format: Format, id: ItemId, role?: RoleId) {
   const { modifiers, effects } = ITEMS[id]
-  const params = modifierParams(format, modifiers)
+  const params = modifierParams(format, role ? itemModifiers(id, role) : modifiers)
   for (const [key, value] of Object.entries(effects)) {
     params[key] = format(Math.round(value * 100))
   }
@@ -126,7 +126,20 @@ export function useGameText() {
         modifierParams(number, Object.assign({}, ...SYNERGY_BY_ID[id].effects.map((e) => e.modifiers))),
       ),
     itemName: (id: ItemId) => ITEMS[id].name,
-    itemDescription: (id: ItemId) => t(`items.${id}`, itemParams(number, id)),
+    itemDescription: (id: ItemId, role?: RoleId) => t(`items.${id}`, itemParams(number, id, role)),
+    itemRoleDescription: (id: ItemId) =>
+      id === 'gloves'
+        ? t('itemTip.hasteRoles', {
+            fighters: percentGain(number, itemModifiers(id, 'carry').attackSpeed ?? 1),
+            pushers: percentGain(number, itemModifiers(id, 'pusher').attackSpeed ?? 1),
+            casters: percentGain(number, itemModifiers(id, 'mage').attackSpeed ?? 1),
+          })
+        : id === 'staff'
+          ? t('itemTip.powerRoles', {
+              casters: percentGain(number, itemModifiers(id, 'mage').spellPower ?? 1),
+              others: percentGain(number, itemModifiers(id, 'carry').spellPower ?? 1),
+            })
+          : null,
     slotName: (slot: LaneId | StructureSlot) => t(`lanes.${slot}`),
     errorText: (error: DomainError) =>
       error.code === 'boardFull'

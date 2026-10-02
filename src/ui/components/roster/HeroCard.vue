@@ -6,6 +6,7 @@ import { HEROES } from '@/content/heroes'
 import { ITEM_SLOTS } from '@/content/items'
 import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
+import { useLiveHeroVitals } from '../../composables/useLiveHeroVitals'
 import { useBoardStore } from '../../stores/board'
 import { loadoutOf, useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -25,6 +26,7 @@ const board = useBoardStore()
 const text = useGameText()
 const { t } = text
 const located = computed(() => store.selected ?? store.inspected)
+const vitals = useLiveHeroVitals(() => located.value?.hero.uid ?? null)
 /** Opponent heroes are shown read-only: no selling, benching or item management. */
 const enemy = computed(() => !store.selected && store.inspected !== null)
 const canManage = computed(() => !enemy.value && store.isPlanning)
@@ -106,7 +108,14 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
         </button>
       </header>
 
-      <HeroDetails v-if="loadout" class="details" v-bind="loadout" :heading="false" :item-icons="false" />
+      <HeroDetails
+        v-if="loadout"
+        class="details"
+        v-bind="loadout"
+        :vitals="vitals"
+        :heading="false"
+        :item-icons="false"
+      />
 
       <footer class="bottom">
         <div class="items">

@@ -17,9 +17,11 @@ export class CollisionSystem implements System {
       unit.position.x = clamp(unit.position.x, EDGE, BATTLE.worldSize - EDGE)
       unit.position.y = clamp(unit.position.y, EDGE, BATTLE.worldSize - EDGE)
 
-      if (unit.kind !== 'structure') {
+      if (unit.kind !== 'structure' && !unit.dummy && !unit.training) {
         keepOnDeck(map, unit.position, unit.radius)
       }
+
+      this.ctx.safety.constrainCreep(unit)
     }
   }
 }

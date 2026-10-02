@@ -1,6 +1,13 @@
 import { err, ok, type Result } from 'neverthrow'
 import type { TrialId } from '@/content/career'
-import { opponentOf, TEAM_IDS, type ModeId, type StructureSlot, type TeamId } from '@/content/ids'
+import {
+  opponentOf,
+  TEAM_IDS,
+  type LaneId,
+  type ModeId,
+  type StructureSlot,
+  type TeamId,
+} from '@/content/ids'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng, RngState } from '@/core/random/rng'
 import type {
@@ -12,7 +19,7 @@ import type {
 } from '../battle/contracts'
 import { fromSide, mirrorOutcome } from '../battle/mirror'
 import { MODES } from '@/content/modes'
-import { SANDBOX, type SandboxSettings } from '@/content/sandbox'
+import { SANDBOX, type SandboxGoal, type SandboxSettings } from '@/content/sandbox'
 import type { CoachStrategy } from '../coach/CoachStrategy'
 import { HeroPool, type PoolState } from '../economy/HeroPool'
 import { computeIncome, type IncomeBreakdown } from '../economy/income'
@@ -180,6 +187,30 @@ export class Match {
     this.sandboxSettings = {
       dummies: Math.min(Math.max(Math.round(settings.dummies), 0), SANDBOX.maxDummies),
       creeps: settings.creeps,
+      endless: settings.endless,
+      ...(settings.goals ? { goals: settings.goals } : {}),
+    }
+
+    return ok(undefined)
+  }
+
+  /** A practice lane can leave its camp and return without restarting the battle. */
+  setSandboxGoal(lane: LaneId, goal: SandboxGoal): Result<void, DomainError> {
+    if (
+      !this.sandboxSettings ||
+      (this.currentPhase !== 'planning' && this.currentPhase !== 'battle') ||
+      !MODES[this.mode].lanes.includes(lane) ||
+      (goal === 'dummies' && !this.sandboxSettings.dummies)
+    ) {
+      return err({ code: 'wrongPhase' })
+    }
+
+    this.sandboxSettings = {
+      ...this.sandboxSettings,
+      goals: {
+        ...this.sandboxSettings.goals,
+        [lane]: goal,
+      },
     }
 
     return ok(undefined)
@@ -281,6 +312,21 @@ export class Match {
 
   acceptsOpponent(state: PlayerState) {
     return affordableBoard(state, this.opponent.snapshot(), this.mode, this.currentRound)
+  }
+
+  /** Leaves an untimed training fight without recording a round or changing its lineup. */
+  exitSandboxBattle(): Result<void, DomainError> {
+    if (!this.sandboxSettings?.endless || this.currentPhase !== 'battle') {
+      return err({ code: 'wrongPhase' })
+    }
+
+    this.battle = null
+    this.opponentReady = false
+    this.summary = null
+    this.structureState = [freshStructures(this.mode), freshStructures(this.mode)]
+    this.currentPhase = 'planning'
+
+    return ok(undefined)
   }
 
   /** Takes the outcome in battle order, as the simulation reports it. */

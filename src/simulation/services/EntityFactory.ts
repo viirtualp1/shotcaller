@@ -2,11 +2,11 @@ import type { World } from 'miniplex'
 import { ABILITY_PARAMS } from '@/content/abilities'
 import { HEROES } from '@/content/heroes'
 import type { ItemId, LaneId, LaneStance, StructureSlot, TeamId, TowerSlot } from '@/content/ids'
-import { ITEMS } from '@/content/items'
+import { ITEMS, loadoutModifiers } from '@/content/items'
 import { combineModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
-import { SANDBOX } from '@/content/sandbox'
+import { SANDBOX, TRAINING_CAMPS } from '@/content/sandbox'
 import { CREEPS, STRUCTURES, type CreepVariant, type StructureType } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
 import { createPrd } from '@/core/random/prd'
@@ -91,20 +91,17 @@ export class EntityFactory {
     return this.structure(team, 'throne', 'throne', null, this.map.base(team), hp)
   }
 
-  /** A training dummy of `team` on `lane`, the `index`-th of `count` standing side by side across the lane. */
+  /** A training dummy in the side camp assigned to its lane. */
   dummy(team: TeamId, lane: LaneId, index: number, count: number) {
-    const path = this.map.path(team, lane)
-    const along = path.length * SANDBOX.dummyAlong
-    const point = this.map.pointAt(path, along)
-    const tangent = this.map.tangentAt(path, along)
+    const [x, y] = TRAINING_CAMPS[this.map.mode][lane]!
     const across = (index - (count - 1) / 2) * SANDBOX.dummySpacing
 
     return this.world.add({
       team,
       kind: 'hero',
       position: {
-        x: point.x - tangent.y * across,
-        y: point.y + tangent.x * across,
+        x: x + across,
+        y,
       },
       radius: SANDBOX.dummyRadius,
       health: {
@@ -114,6 +111,7 @@ export class EntityFactory {
       armor: 0,
       status: freshStatus(),
       dummy: true,
+      dummyLane: lane,
     }) as Unit
   }
 
@@ -175,7 +173,7 @@ export class EntityFactory {
 
     const mods = combineModifiers(
       report.modifiersFor(definition.role),
-      ...owned.items.map((item) => ITEMS[item].modifiers),
+      loadoutModifiers(owned.items, definition.role),
     )
 
     const maxHp = stats.hp * star * mods.maxHp
@@ -361,6 +359,7 @@ export class EntityFactory {
         prefersStructures: false,
       },
       owner,
+      ...(owner.training ? { training: owner.training } : {}),
       lifetime: p.lifetime,
     }) as Unit
   }
@@ -408,6 +407,7 @@ export class EntityFactory {
         summoned: true,
       },
       owner,
+      ...(owner.training ? { training: owner.training } : {}),
       lifetime: p.lifetime,
     }) as Unit
   }

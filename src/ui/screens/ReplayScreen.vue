@@ -692,10 +692,6 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--heal) 40%, transparent);
 }
 
-.damageReceived .track i {
-  background: color-mix(in srgb, var(--theirs) 35%, transparent);
-}
-
 .label {
   position: relative;
   padding-left: 12px;

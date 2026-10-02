@@ -1,5 +1,6 @@
-import type { ItemId } from './ids'
-import type { StatModifiers } from './modifiers'
+import type { ItemId, RoleId } from './ids'
+import { combineModifiers, type StatModifiers } from './modifiers'
+import { ROLES } from './roles'
 
 export interface ItemEffects {
   /** Share of attack damage returned as healing. */
@@ -50,13 +51,13 @@ export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
       critMultiplier: 2,
     },
   ),
-  gloves: item('gloves', 'Gloves of Fury', 3, { attackSpeed: 1.25 }),
+  gloves: item('gloves', 'Gloves of Fury', 3, { attackSpeed: 1.2 }),
   chainmail: item('chainmail', 'Chainmail', 3, { damageTaken: 0.85 }),
   vitality: item('vitality', 'Vitality Orb', 3, { maxHp: 1.25 }),
   boots: item('boots', 'Boots of Speed', 2, { speed: 1.25 }),
-  staff: item('staff', 'Mage Staff', 4, { spellPower: 1.2 }),
-  chalice: item('chalice', 'Sacred Chalice', 3, { healPower: 1.3 }),
-  manaStone: item('manaStone', 'Mana Stone', 3, { manaGain: 1.35 }),
+  staff: item('staff', 'Mage Staff', 4, { spellPower: 1.5 }),
+  chalice: item('chalice', 'Sacred Chalice', 3, { healPower: 1.35 }),
+  manaStone: item('manaStone', 'Mana Stone', 3, { manaGain: 1.5 }),
   vampireFang: item(
     'vampireFang',
     'Vampire Fang',
@@ -74,3 +75,28 @@ export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
 export const ITEM_SLOTS = 2
 export const STASH_SIZE = 6
 export const ITEM_SELL_RATIO = 0.5
+
+/** Item haste follows the role, while mana, healing and durability remain useful to every role. */
+export function itemModifiers(id: ItemId, role: RoleId): Partial<StatModifiers> {
+  const modifiers = ITEMS[id].modifiers
+  return {
+    ...modifiers,
+    ...(modifiers.attackSpeed !== undefined
+      ? { attackSpeed: 1 + (modifiers.attackSpeed - 1) * ROLES[role].itemAttackSpeed }
+      : {}),
+    ...(modifiers.spellPower !== undefined
+      ? { spellPower: 1 + (modifiers.spellPower - 1) * ROLES[role].itemSpellPower }
+      : {}),
+  }
+}
+
+/** Offensive bonuses add across slots; buying a duplicate no longer compounds its own benefit. */
+export function loadoutModifiers(items: readonly ItemId[], role: RoleId): StatModifiers {
+  const parts = items.map((id) => itemModifiers(id, role))
+  const result = combineModifiers(...parts)
+  for (const key of ['attackSpeed', 'spellPower', 'manaGain'] as const) {
+    result[key] = 1 + parts.reduce((sum, modifiers) => sum + (modifiers[key] ?? 1) - 1, 0)
+  }
+
+  return result
+}

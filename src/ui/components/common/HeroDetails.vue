@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Axe, BowArrow, Droplet, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
+import { previewHeroVitals, type HeroVitals } from '@/application/heroVitals'
 import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, StarLevel, SynergyId } from '@/content/ids'
 import { ROLES } from '@/content/roles'
@@ -11,6 +12,7 @@ import { starsLabel, useGameText } from '../../composables/useGameText'
 import { useHeroStats } from '../../composables/useHeroStats'
 import { ROLE_ICONS } from '../../icons'
 import ItemIcon from './ItemIcon.vue'
+import HeroResources from './HeroResources.vue'
 
 /**
  * Dota-style hero sheet: identity, then stats with the hero's own value in white and what items and lane synergies
@@ -26,12 +28,14 @@ const props = withDefaults(
     heading?: boolean
     /** Off where the hero's item slots are already on screen next to the sheet. */
     itemIcons?: boolean
+    vitals?: HeroVitals | null
   }>(),
   {
     items: () => [],
     synergies: () => [],
     heading: true,
     itemIcons: true,
+    vitals: null,
   },
 )
 
@@ -60,6 +64,7 @@ const mana = computed(() => sheet.value.mana)
 const basePerAttack = computed(() => BATTLE.manaPerAttack * sheet.value.base.manaGain)
 const bonusPerAttack = computed(() => Math.round((mana.value.perAttack - basePerAttack.value) * 10) / 10)
 const startingMana = computed(() => role.value.startingManaRatio ?? 0)
+const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
 </script>
 
 <template>
@@ -77,6 +82,7 @@ const startingMana = computed(() => role.value.startingManaRatio ?? 0)
       >
         <BowArrow v-if="range" :size="14" />
         <Axe v-else :size="14" />
+        <span v-if="range" class="range">{{ text.number(range) }}</span>
       </span>
 
       <span class="chip role" :style="{ '--role': cssColor(role.color) }">
@@ -84,6 +90,8 @@ const startingMana = computed(() => role.value.startingManaRatio ?? 0)
         {{ text.roleName(hero.role) }}
       </span>
     </div>
+
+    <HeroResources :values="vitals" :live="Boolean(props.vitals)" />
 
     <dl class="stats" :title="t('card.statsHint')">
       <div v-for="row in rows" :key="row.key" class="stat" :class="row.key" :title="row.hint">
@@ -204,6 +212,10 @@ const startingMana = computed(() => role.value.startingManaRatio ?? 0)
   font-size: 11.5px;
   font-weight: 600;
   color: var(--chalk-dim);
+}
+
+.range {
+  font-variant-numeric: tabular-nums;
 }
 
 .chip.role {

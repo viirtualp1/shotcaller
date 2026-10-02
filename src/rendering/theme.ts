@@ -10,6 +10,7 @@ export const PALETTE = {
   gold: 0xf4c55b,
   mana: 0x8fb8ff,
   heal: 0x7fe0b4,
+  damage: 0xff7060,
   frost: 0x8fd6ff,
   river: 0x78b4d2,
   treeLine: 0x96c896,

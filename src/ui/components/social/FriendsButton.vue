@@ -7,7 +7,7 @@ import { useCloudStore } from '../../stores/cloud'
 import { useFriendsStore } from '../../stores/friends'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
-/** Sits next to the profile card on the start screen once signed in; shows who is online and new requests at a glance. */
+/** Shared shortcut with friend activity, new requests and unread messages. */
 withDefaults(
   defineProps<{
     compact?: boolean
@@ -27,11 +27,12 @@ const { t } = useGameText()
 
 /** New friend requests and unread messages. */
 const news = computed(() => friends.incoming.length + chat.totalUnread)
+const playing = computed(() => friends.friends.some((friend) => friends.isPlaying(friend.id)))
 
 const label = computed(() =>
   [
     t('friends.button'),
-    t('friends.onlineCount', { n: friends.onlineCount }),
+    playing.value ? t('friends.playing') : friends.onlineCount ? t('friends.online') : null,
     news.value ? t('friends.incomingBadge', { n: news.value }) : null,
   ]
     .filter(Boolean)
@@ -53,12 +54,8 @@ const label = computed(() =>
       <span class="icon" aria-hidden="true">
         <Users :size="20" />
         <span v-if="news" class="badge">{{ news }}</span>
-        <span v-if="friends.onlineCount" class="dot" />
+        <span v-if="friends.onlineCount" class="dot" :class="{ playing }" />
       </span>
-
-      <span v-if="!compact" class="online-count">{{
-        t('friends.onlineCount', { n: friends.onlineCount })
-      }}</span>
     </button>
 
     <template #content>{{ label }}</template>
@@ -112,14 +109,6 @@ const label = computed(() =>
   color: var(--gold);
 }
 
-.online-count {
-  color: var(--chalk-dim);
-  font-size: 11px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
 .badge {
   position: absolute;
   bottom: -5px;
@@ -154,6 +143,11 @@ const label = computed(() =>
   padding: 4px;
   border-radius: var(--radius);
   animation: none;
+}
+
+.dot.playing {
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(244, 197, 91, 0.8);
 }
 
 .friends.floating,

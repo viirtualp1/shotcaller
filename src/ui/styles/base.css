@@ -193,6 +193,11 @@ kbd {
   font-weight: 700;
 }
 
+/* Standalone numbers do not need the extra side bearings reserved for aligned table columns. */
+.display-number {
+  font-variant-numeric: proportional-nums;
+}
+
 .tooltip {
   max-width: 320px;
   padding: 10px 12px;

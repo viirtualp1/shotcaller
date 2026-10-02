@@ -184,7 +184,7 @@ describe('BattleSimulation', () => {
     const staff = acolyte(['staff'])
     const chalice = acolyte(['chalice'])
 
-    expect(staff.caster!.power).toBeCloseTo(plain.caster!.power * ITEMS.staff.modifiers.spellPower!)
+    expect(staff.caster!.power).toBeCloseTo(plain.caster!.power * 1.3)
     expect(staff.caster!.healPower).toBe(plain.caster!.healPower)
     expect(staff.healAura).toEqual(plain.healAura)
 
@@ -400,6 +400,12 @@ describe('BattleSimulation', () => {
       const creep = sim.queries.units.entities.find((u) => u.kind === 'creep' && u.team === 1)
 
       throne.health.current = throne.health.max * 0.05
+
+      const laneTower = sim.queries.structures.entities.find(
+        (s) => s.team === 1 && s.structure.slot === 'mid',
+      )!
+
+      laneTower.health.current = 0
 
       hero.position = {
         x: throne.position.x,

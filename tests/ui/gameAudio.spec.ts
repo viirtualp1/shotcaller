@@ -25,6 +25,7 @@ interface AudioState {
 const mocks = vi.hoisted(() => ({
   audio: {
     setMusic: vi.fn(),
+    setMusicPaused: vi.fn(),
     bindSimulation: vi.fn(),
     playRoundResult: vi.fn(),
     stopRoundResult: vi.fn(),
@@ -36,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   profile: { isOpen: false },
   replay: { match: null as object | null },
   patchNotes: { patch: null as object | null },
+  pause: { paused: false },
   cleanup: () => {},
 }))
 
@@ -44,6 +46,7 @@ vi.mock('@/ui/stores/match', () => ({ useMatchStore: () => mocks.match }))
 vi.mock('@/ui/stores/profile', () => ({ useProfileStore: () => mocks.profile }))
 vi.mock('@/ui/stores/replay', () => ({ useReplayStore: () => mocks.replay }))
 vi.mock('@/ui/stores/patchNotes', () => ({ usePatchNotesStore: () => mocks.patchNotes }))
+vi.mock('@/ui/stores/pause', () => ({ usePauseStore: () => mocks.pause }))
 
 vi.mock('vue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue')>()),
@@ -80,6 +83,7 @@ describe('match audio transitions', () => {
     mocks.profile = reactive({ isOpen: false })
     mocks.replay = reactive({ match: null })
     mocks.patchNotes = reactive({ patch: null })
+    mocks.pause = reactive({ paused: false })
     scope = effectScope()
     scope.run(useGameAudio)
   })
@@ -88,6 +92,16 @@ describe('match audio transitions', () => {
     mocks.cleanup()
     scope.stop()
     vi.useRealTimers()
+  })
+
+  it('holds music during a game pause without changing the selected track', () => {
+    store.view = view('battle')
+    const changes = mocks.audio.setMusic.mock.calls.length
+    mocks.pause.paused = true
+    expect(mocks.audio.setMusicPaused).toHaveBeenLastCalledWith(true)
+    mocks.pause.paused = false
+    expect(mocks.audio.setMusicPaused).toHaveBeenLastCalledWith(false)
+    expect(mocks.audio.setMusic).toHaveBeenCalledTimes(changes)
   })
 
   it('plays preparation and battle music throughout their phases without restarting on live updates', () => {

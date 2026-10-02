@@ -1,11 +1,11 @@
-/** Every field is a multiplier, so modifiers from roles, synergies and items simply multiply together. */
+/** Every field is a multiplier. Item bonuses are combined before multiplying with roles and synergies. */
 export interface StatModifiers {
   maxHp: number
   damage: number
   attackSpeed: number
-  /** Ability damage, shields and summons; healing has its own multiplier. */
+  /** Ability damage and summons; healing and shields have their own multiplier. */
   spellPower: number
-  /** Healing from abilities and the support aura. */
+  /** Healing, shields and the support aura. */
   healPower: number
   manaGain: number
   speed: number

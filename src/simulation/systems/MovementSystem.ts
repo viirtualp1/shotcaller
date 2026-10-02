@@ -1,4 +1,5 @@
 import { BATTLE } from '@/content/rules'
+import { SANDBOX, TRAINING_CAMPS } from '@/content/sandbox'
 import { direction, distance, offset, stepTowards, type Vec2 } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
@@ -22,6 +23,21 @@ export class MovementSystem implements System {
 
       const slow = unit.status.slow > 0 ? 1 - unit.status.slowFactor : 1
       const step = unit.speed * slow * dt
+
+      if (unit.training?.goal === 'dummies') {
+        const [x, y] = TRAINING_CAMPS[this.ctx.map.mode][unit.training.lane]!
+
+        const camp = {
+          x,
+          y,
+        }
+
+        if (distance(unit.position, camp) > SANDBOX.campRadius / 2) {
+          stepTowards(unit.position, camp, step)
+
+          continue
+        }
+      }
 
       if (unit.retreat && unit.retreat.remaining > 0 && !unit.defend) {
         this.fallBack(unit, step)

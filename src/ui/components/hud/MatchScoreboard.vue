@@ -16,8 +16,11 @@ const { t } = useGameText()
 const view = computed(() => store.view!)
 const structures = computed(() => store.live?.structures ?? view.value.structures)
 
+/* Training without a clock has no time to count down. */
+const timed = computed(() => !store.live || Number.isFinite(store.live.duration))
+
 const secondsLeft = computed(() =>
-  store.live ? Math.max(0, Math.ceil(store.live.duration - store.live.elapsed)) : null,
+  store.live && timed.value ? Math.max(0, Math.ceil(store.live.duration - store.live.elapsed)) : null,
 )
 
 const planningLeft = computed(() =>
@@ -38,7 +41,7 @@ const progress = computed(() => {
   return 0
 })
 
-const showProgress = computed(() => store.phase === 'battle' || planningLeft.value !== null)
+const showProgress = computed(() => (store.phase === 'battle' && timed.value) || planningLeft.value !== null)
 
 const history = computed(() =>
   view.value.history.map((verdict, i) => ({
@@ -56,9 +59,11 @@ const history = computed(() =>
       <TrialObjective />
 
       <span class="round">{{
-        view.sandbox
-          ? t('sandbox.round', { round: view.round })
-          : t('hud.round', { round: view.round, max: view.maxRounds })
+        view.sandbox?.endless
+          ? t('sandbox.title')
+          : view.sandbox
+            ? t('sandbox.round', { round: view.round })
+            : t('hud.round', { round: view.round, max: view.maxRounds })
       }}</span>
 
       <Transition name="phase" mode="out-in">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HeartPulse, ShieldHalf, Swords } from '@lucide/vue'
+import { HeartPulse, Swords } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, type Component } from 'vue'
 import { useGameText } from '../../composables/useGameText'
@@ -13,10 +13,6 @@ const STATS: readonly { readonly id: MeterStat; readonly icon: Component }[] = [
   {
     id: 'healing',
     icon: HeartPulse,
-  },
-  {
-    id: 'damageReceived',
-    icon: ShieldHalf,
   },
 ]
 

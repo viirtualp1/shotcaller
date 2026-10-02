@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import { FastForward, SkipForward } from '@lucide/vue'
+import { FastForward, Pause, Play, SkipForward, Square } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { DUEL_BATTLE_SPEED } from '@/content/rules'
 import { useGameText } from '../../composables/useGameText'
 import { useMatchStore, type BattleSpeed } from '../../stores/match'
+import { usePauseStore } from '../../stores/pause'
 import HudPanel from '../common/HudPanel.vue'
+import TrainingOrders from '../hud/TrainingOrders.vue'
 import DamageMeter, { type MeterStat } from './DamageMeter.vue'
 import MeterTabs from './MeterTabs.vue'
 
 const SPEEDS: readonly BattleSpeed[] = [1, 2, 4]
 
 const store = useMatchStore()
+const pause = usePauseStore()
 const { t } = useGameText()
 const meter = ref<MeterStat>('damageDealt')
+
+/** The training ground: the battle can be paused to look around, and without a clock it is stopped by hand. */
+const training = computed(() => store.view?.sandbox ?? null)
 
 const speedModel = computed({
   get: () => String(store.isDuel ? DUEL_BATTLE_SPEED : store.speed),
@@ -23,13 +29,32 @@ const speedModel = computed({
     }
   },
 })
+
+/* A paused training battle that ends, or is left, does not keep the next one paused. */
+onUnmounted(() => pause.set('training', false))
 </script>
 
 <template>
   <div class="battle">
     <HudPanel>
+      <TrainingOrders />
+
       <div class="controls">
-        <FastForward :size="16" class="icon" />
+        <button
+          v-if="training"
+          type="button"
+          class="btn pause"
+          :aria-pressed="pause.paused"
+          :aria-label="t(pause.paused ? 'sandbox.resume' : 'sandbox.pause')"
+          :title="t(pause.paused ? 'sandbox.resume' : 'sandbox.pause')"
+          :disabled="store.phase !== 'battle'"
+          @click="pause.set('training', !pause.paused)"
+        >
+          <Play v-if="pause.paused" :size="14" />
+          <Pause v-else :size="14" />
+        </button>
+
+        <FastForward v-else :size="16" class="icon" />
 
         <ToggleGroupRoot
           v-model="speedModel"
@@ -50,7 +75,13 @@ const speedModel = computed({
           :disabled="store.phase !== 'battle'"
           @click="store.skipBattle()"
         >
-          <SkipForward :size="14" /> {{ t('battle.skip') }}
+          <template v-if="training?.endless">
+            <Square :size="14" /> <span class="button-label">{{ t('sandbox.stop') }}</span>
+          </template>
+
+          <template v-else>
+            <SkipForward :size="14" /> <span class="button-label">{{ t('battle.skip') }}</span>
+          </template>
         </button>
       </div>
     </HudPanel>
@@ -121,10 +152,27 @@ const speedModel = computed({
   opacity: 0.4;
 }
 
-.skip {
-  margin-left: auto;
+.skip,
+.pause {
   min-height: 30px;
   padding: 4px 10px;
   font-size: 12px;
+  line-height: 1;
+}
+
+.skip {
+  margin-left: auto;
+}
+
+/* Onest's glyphs sit above the optical center of its line box. Keep this correction local to icon labels. */
+.button-label {
+  line-height: 14px;
+  padding-top: 1px;
+}
+
+.pause {
+  width: 30px;
+  padding-inline: 0;
+  flex: none;
 }
 </style>

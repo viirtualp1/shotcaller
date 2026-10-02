@@ -14,6 +14,10 @@ export function isLaneBound(unit: Unit) {
 }
 
 export function withinLaneBand(map: LaneMap, unit: Unit, point: Vec2) {
+  if (unit.training?.goal === 'dummies') {
+    return true
+  }
+
   if (!isLaneBound(unit) || !unit.laneFollower) {
     return true
   }

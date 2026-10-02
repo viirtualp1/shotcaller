@@ -13,7 +13,7 @@ import { CREEPS, STRUCTURES } from './units'
  * Bump when a fight can play out differently without any of the numbers below changing,
  * for example a new targeting rule or a synergy that turns on in a different lineup.
  */
-const LOGIC_REVISION = 2
+const LOGIC_REVISION = 3
 
 /** FNV-1a, 32 bits, so a match can remember which balance it was played on. */
 function fnv1a(text: string) {

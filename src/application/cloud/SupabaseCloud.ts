@@ -194,6 +194,21 @@ export class SupabaseCloud implements CloudStore {
     }
   }
 
+  /** The server takes the caller from their session; the browser never supplies an account ID. */
+  async deleteAccount() {
+    const { error } = await this.client.rpc('delete_account')
+    if (error) {
+      throw error
+    }
+
+    // Deletion has already succeeded. A revoked server session must not turn it into a retryable failure.
+    try {
+      await this.client.auth.signOut({ scope: 'local' })
+    } catch {
+      // A deleted account stays deleted even when its final logout cannot reach Auth.
+    }
+  }
+
   async ratings() {
     const { data, error } = await this.client.rpc('my_ratings')
     if (error) {

@@ -1,7 +1,7 @@
 export const ABILITY_PARAMS = {
   charge: {
     radius: 260,
-    damage: 90,
+    damage: 120,
     stun: 1.2,
   },
   volley: {

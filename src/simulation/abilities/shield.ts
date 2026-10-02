@@ -14,7 +14,7 @@ export const shield: Ability = {
       .slice(0, P.targets)
 
     for (const target of targets) {
-      ctx.combat.grantShield(target, P.absorb * caster.caster.power, P.duration)
+      ctx.combat.grantShield(target, P.absorb * caster.caster.healPower, P.duration)
     }
 
     return targets.length > 0

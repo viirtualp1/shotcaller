@@ -185,6 +185,8 @@ function watchReplay(trialId: TrialId) {
             </footer>
           </article>
         </div>
+
+        <p class="weekly-note">{{ t('career.trialsHint') }}</p>
       </TabsContent>
 
       <TabsContent value="weekly" class="content">
@@ -462,6 +464,9 @@ progress::-moz-progress-bar {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--chalk-faint);
 }
 time {
   font-size: 12px;

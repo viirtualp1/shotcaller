@@ -12,6 +12,7 @@ import type {
   TeamId,
 } from '@/content/ids'
 import type { CreepVariant, StructureType } from '@/content/units'
+import type { SandboxGoal } from '@/content/sandbox'
 import type { Vec2 } from '@/core/math/vec2'
 import type { Prd } from '@/core/random/prd'
 import type { LanePath } from '../map/LaneMap'
@@ -245,6 +246,9 @@ export interface Entity {
    * fights back, and heals to full before it could fall.
    */
   dummy?: true
+  dummyLane?: LaneId
+  /** Shared with summons so a live order immediately changes their targets too. */
+  training?: { readonly lane: LaneId; goal: SandboxGoal }
 }
 
 export type Unit = With<Entity, 'kind' | 'health' | 'radius' | 'armor' | 'status'>

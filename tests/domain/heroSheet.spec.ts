@@ -74,7 +74,7 @@ describe('hero sheet', () => {
     })
 
     expect(geared.base).toEqual(plain.base)
-    expect(geared.total.attackInterval).toBeCloseTo(plain.base.attackInterval / 1.25)
+    expect(geared.total.attackInterval).toBeCloseTo(plain.base.attackInterval / 1.2)
   })
 
   it('counts the attacks a full mana bar takes, and the head start of initiators', () => {
@@ -92,14 +92,14 @@ describe('hero sheet', () => {
       attacksToFirstCast: 4,
     })
 
-    // Storm Shaman is a mage, who gains mana half as fast again; a Mana Stone adds 35% on top.
+    // Storm Shaman is a mage, who gains mana half as fast again; a Mana Stone adds 50% on top.
     const shaman = heroSheet({
       heroId: 'shaman',
       stars: 1,
       items: ['manaStone'],
     }).mana
 
-    expect(shaman.perAttack).toBeCloseTo(20.25)
+    expect(shaman.perAttack).toBeCloseTo(22.5)
     expect(shaman.attacksToCast).toBe(4)
   })
 })

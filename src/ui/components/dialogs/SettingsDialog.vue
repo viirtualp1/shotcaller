@@ -3,9 +3,11 @@ import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, Di
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useMenuStore } from '../../stores/menu'
+import { useMatchStore } from '../../stores/match'
 import SettingsFields from '../settings/SettingsFields.vue'
 
 const menu = useMenuStore()
+const match = useMatchStore()
 const { t } = useGameText()
 
 useModal(() => menu.settings)
@@ -18,7 +20,7 @@ useModal(() => menu.settings)
 
       <DialogContent class="sheet settings" :aria-describedby="undefined">
         <DialogTitle class="title hand">{{ t('settings.title') }}</DialogTitle>
-        <SettingsFields />
+        <SettingsFields :show-difficulty="!match.view?.sandbox" />
         <DialogClose class="btn primary block">{{ t('settings.close') }}</DialogClose>
       </DialogContent>
     </DialogPortal>

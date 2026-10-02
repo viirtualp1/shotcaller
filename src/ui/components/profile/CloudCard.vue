@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { HardDrive, LogIn, LogOut, RotateCw } from '@lucide/vue'
+import { HardDrive, LogIn, LogOut, RotateCw, Trash2 } from '@lucide/vue'
 import { useIntervalFn, useNow } from '@vueuse/core'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
 import { useSettingsStore } from '../../stores/settings'
 import { CLOUD_ICONS, maskEmail } from './cloudStatus'
 import { relativeTime } from './format'
+import DeleteAccountDialog from './DeleteAccountDialog.vue'
 
 const cloud = useCloudStore()
 const settings = useSettingsStore()
 const { t } = useGameText()
 /** Keeps "saved 5 minutes ago" moving while the page stays open. */
 const now = useNow({ scheduler: (tick) => useIntervalFn(tick, 30_000) })
+const deleting = ref(false)
 
 /**
  * Before signing in the player's progress is theirs on this device only (the guest backup is our
@@ -44,6 +46,11 @@ function signOut() {
   if (globalThis.confirm(t('cloud.signOutConfirm'))) {
     void cloud.signOut()
   }
+}
+
+function confirmDeletion() {
+  cloud.deleteError = false
+  deleting.value = true
 }
 </script>
 
@@ -79,6 +86,10 @@ function signOut() {
         <LogOut :size="15" /> {{ t('cloud.signOut') }}
       </button>
 
+      <button v-if="cloud.signedIn" type="button" class="btn ghost delete" @click="confirmDeletion">
+        <Trash2 :size="15" /> {{ t('cloud.delete.button') }}
+      </button>
+
       <button
         v-if="!local && (cloud.status === 'error' || cloud.status === 'offline')"
         type="button"
@@ -89,6 +100,8 @@ function signOut() {
       </button>
     </div>
   </section>
+
+  <DeleteAccountDialog v-model:open="deleting" />
 </template>
 
 <style scoped>
@@ -167,6 +180,10 @@ function signOut() {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.delete {
+  color: var(--theirs);
 }
 
 @keyframes spin {

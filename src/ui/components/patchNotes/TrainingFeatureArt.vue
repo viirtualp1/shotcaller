@@ -25,6 +25,8 @@ const copy = computed(() =>
   settings.locale === 'ru'
     ? {
         dummies: 'Манекены на линии',
+        endless: 'Без таймера',
+        rounds: 'Раунды',
         creeps: 'Волны крипов',
         on: 'вкл',
         free: 'Бесплатно',
@@ -47,6 +49,8 @@ const copy = computed(() =>
       }
     : {
         dummies: 'Dummies per lane',
+        endless: 'No clock',
+        rounds: 'Rounds',
         creeps: 'Creep waves',
         on: 'on',
         free: 'Free',
@@ -74,6 +78,12 @@ const copy = computed(() =>
   <div class="training-art" :class="focus">
     <template v-if="focus === 'yard'">
       <div class="controls">
+        <span class="segments"
+          ><i class="on">{{ copy.endless }}</i>
+
+          <i>{{ copy.rounds }}</i></span
+        >
+
         <span class="label">{{ copy.dummies }}</span>
         <span class="segments"><i>0</i><i>1</i><i class="on">2</i><i>3</i></span>
 

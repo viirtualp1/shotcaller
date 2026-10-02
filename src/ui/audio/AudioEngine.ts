@@ -34,6 +34,7 @@ export class AudioEngine {
   private musicVolume = 0.38
   private effectsVolume = 0.72
   private desiredTrack: MusicTrack = null
+  private musicPaused = false
   private unlocked = false
   private currentMusic: MusicVoice | null = null
   private readonly musicVoices = new Set<MusicVoice>()
@@ -93,6 +94,33 @@ export class AudioEngine {
 
     if (this.unlocked) {
       this.startDesiredMusic()
+    }
+  }
+
+  setMusicPaused(paused: boolean) {
+    if (this.musicPaused === paused) {
+      return
+    }
+
+    this.musicPaused = paused
+
+    if (paused) {
+      for (const voice of this.musicVoices) {
+        if (voice.fadeTimer) {
+          clearInterval(voice.fadeTimer)
+          voice.fadeTimer = null
+        }
+
+        voice.audio.pause()
+      }
+    } else if (this.unlocked) {
+      this.startDesiredMusic()
+
+      for (const voice of this.musicVoices) {
+        if (voice !== this.currentMusic) {
+          this.fade(voice, 0, AUDIO_TIMING.musicFadeOutMs)
+        }
+      }
     }
   }
 
@@ -198,7 +226,7 @@ export class AudioEngine {
   }
 
   private startDesiredMusic() {
-    if (this.musicVolume <= 0 || document.visibilityState === 'hidden') {
+    if (this.musicPaused || this.musicVolume <= 0 || document.visibilityState === 'hidden') {
       return
     }
 
@@ -254,6 +282,12 @@ export class AudioEngine {
       .play()
       .then(() => {
         voice.starting = false
+
+        if (this.musicPaused) {
+          voice.audio.pause()
+
+          return
+        }
 
         if (this.currentMusic === voice) {
           const track = MUSIC_TRACKS[voice.track]

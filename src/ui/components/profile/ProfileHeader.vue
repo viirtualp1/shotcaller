@@ -131,7 +131,7 @@ function save() {
             :aria-label="t('profile.rename')"
             @click="startEditing"
           >
-            <Pencil :size="15" />
+            <Pencil :size="13" />
           </button>
         </component>
 
@@ -160,7 +160,7 @@ function save() {
         <strong class="rank-name">{{ t(`profile.ranks.${profile.rank.tier}`) }}</strong>
 
         <span class="rating">
-          <span>{{ text.number(profile.profile.rating) }}</span>
+          <span class="display-number">{{ text.number(profile.profile.rating) }}</span>
           <span class="mmr">MMR</span>
         </span>
 
@@ -238,6 +238,7 @@ function save() {
 
 .avatar-edit {
   position: absolute;
+  z-index: 1;
   inset: 0;
   display: grid;
   place-items: center;
@@ -271,6 +272,8 @@ function save() {
 }
 
 .rename-btn {
+  display: inline-grid;
+  place-items: center;
   flex: none;
   width: 30px;
   height: 30px;

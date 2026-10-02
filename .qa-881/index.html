@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Onest:wght@400;500;600;700&display=swap">
+</head>
+<body><div id="app"></div><script type="module">
+import { createApp } from 'vue';
+import { createPinia, setActivePinia } from 'pinia';
+import App from '/src/ui/App.vue';
+import { i18n } from '/src/ui/i18n';
+import { useCloudStore } from '/src/ui/stores/cloud';
+import { useProfileStore } from '/src/ui/stores/profile';
+import { useFriendsStore } from '/src/ui/stores/friends';
+import { useMatchStore } from '/src/ui/stores/match';
+import { useSettingsStore } from '/src/ui/stores/settings';
+import { usePauseStore } from '/src/ui/stores/pause';
+import { createProfile } from '/src/domain/profile/Profile';
+import '/src/ui/styles/base.css';
+const params = new URLSearchParams(location.search);
+if (params.has('touch')) {
+  const native = window.matchMedia.bind(window);
+  window.matchMedia = (query) => {
+    const media = native(query);
+    if (query.includes('hover: hover')) { Object.defineProperty(media, 'matches', {value: false}); }
+    return media;
+  };
+}
+const pinia = createPinia();
+setActivePinia(pinia);
+const app = createApp(App).use(pinia).use(i18n);
+const cloud = useCloudStore(pinia);
+const profile = useProfileStore(pinia);
+const friend = {id:'fixture-friend',name:'Practice coach',avatar:'archer',photo:null,rating:500,status:'friend',since:'2026-10-03T00:00:00Z'};
+cloud.connect = async () => ({
+  friends: () => ({
+    card: async () => ({...friend, friendCode:'AAAA4444'}), list:async()=>[friend],blocked:async()=>[],watch:()=>()=>{},setPhoto:async()=>{},publishLiveMatch:async()=>false,
+    presence:()=>({onChange:callback=>callback(new Map([[friend.id,{activity:params.has('playing')?'match':'menu',round:1}]])),update:()=>{},leave:()=>{}})
+  }),
+  chat:()=>({watch:()=>()=>{},unread:async()=>new Map()}),
+  duels:()=>({watch:()=>()=>{},mine:async()=>[]}),
+  privacy:()=>({load:async()=>({version:2,telemetry:false,telemetrySince:null})})
+});
+cloud.enabled = true;
+cloud.account = {id:'fixture-coach',anonymous:false,email:'qa@example.test',photo:null};
+cloud.deleteAccount = async () => {cloud.deleteError = true;return false;};
+const recent = Array.from({length:23},(_,index)=>({
+  id:`fixture-${index}`,playedAt:new Date(Date.UTC(2026,9,3,12-index)).toISOString(),mode:'threeLanes',difficulty:'normal',verdict:'win',reason:'throne',rounds:3,roundsWon:3,roundsLost:0,
+  lineup:[{heroId:'archer',stars:1,lane:'bot',items:[]}],synergies:[],heroes:[],opponentLineup:[],opponentSynergies:[],opponentHeroes:[],history:['win','win','win'],roundLineups:[],side:0,balance:'fixture',replays:[],mvp:'archer',duel:null,heroKills:4,towersDestroyed:1,goldEarned:30,ratingBefore:1090,ratingAfter:1111,xp:80,rewards:[],trialId:null
+}));
+profile.replace({...createProfile('2026-10-03T00:00:00Z'),name:'Practice coach',rating:1111,ratings:{threeLanes:1111,twoLanes:1400,oneLane:80},xp:2400,recent});
+useFriendsStore(pinia);
+useSettingsStore(pinia).locale = params.get('lang') === 'ru' ? 'ru' : 'en';
+if (params.has('training')) {
+  const match = useMatchStore(pinia);
+  const mode = params.get('mode') || 'threeLanes';
+  match.startSandbox(mode, {dummies:1,creeps:true,endless:true});
+  const lanes = mode === 'oneLane' ? ['mid'] : mode === 'twoLanes' ? ['top','bot'] : ['top','mid','bot'];
+  for (const [index,lane] of lanes.entries()) {
+    match.recruit(['spearman','pyromancer','archer'][index]);
+    const uid = match.view.human.bench[0].uid;
+    match.move(uid,lane);
+    if (index === 1) {
+      match.buyItem('staff');match.equip(0,uid);
+      match.buyItem('manaStone');match.equip(0,uid);
+    }
+  }
+  if (!params.has('planning')) {
+    match.startBattle();
+    for (let i=0;i<900;i++) {match.simulation.step();}
+    match.tick(0.15);
+    usePauseStore(pinia).set('training',true);
+  }
+}
+app.mount('#app');
+</script></body></html>

@@ -1,6 +1,7 @@
 import { direction, distance, offset, type Vec2 } from '@/core/math/vec2'
 import { isAlive, type HeroUnit, type Unit } from '../ecs/components'
 import { withinLaneBand } from '../services/laneBand'
+import { trainingTargetAllowed } from '../services/training'
 import type { SimulationContext } from '../SimulationContext'
 
 export interface EnemyFilter {
@@ -23,6 +24,7 @@ export function enemiesAround(
       (u) =>
         u.team !== caster.team &&
         isAlive(u) &&
+        trainingTargetAllowed(caster, u) &&
         (filter.includeStructures || u.kind !== 'structure') &&
         (!filter.heroesOnly || u.kind === 'hero'),
     )

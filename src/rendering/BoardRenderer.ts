@@ -3,6 +3,7 @@ import mitt from 'mitt'
 import { Application, Container, Point, Sprite, Texture, type FederatedPointerEvent } from 'pixi.js'
 import type { LaneId } from '@/content/ids'
 import { BATTLE } from '@/content/rules'
+import type { SandboxSettings } from '@/content/sandbox'
 import type { Vec2 } from '@/core/math/vec2'
 import type { LaneStances } from '@/domain/battle/contracts'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
@@ -13,6 +14,7 @@ import { BattleLayer } from './layers/BattleLayer'
 import { EffectsLayer } from './layers/EffectsLayer'
 import { OrdersLayer } from './layers/OrdersLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
+import { TrainingCampsLayer } from './layers/TrainingCampsLayer'
 import { fitMap, WHOLE_BOARD, type Insets } from './fitMap'
 import { Perspective } from './perspective'
 import { boardResolution } from './quality'
@@ -39,6 +41,7 @@ export class BoardRenderer {
   /** Holds everything placed in battle coordinates; mirrored when the viewer fights as team 1. */
   private readonly board = new Container()
   private readonly orders: OrdersLayer
+  private readonly training: TrainingCampsLayer
   private readonly planning: PlanningLayer
   private readonly battle: BattleLayer
   private readonly effects: EffectsLayer
@@ -70,11 +73,12 @@ export class BoardRenderer {
     const art = new Sprite(this.artTexture)
     art.width = art.height = BATTLE.worldSize
     this.orders = new OrdersLayer(map, perspective)
+    this.training = new TrainingCampsLayer(map, labels)
     this.planning = new PlanningLayer(map, icons, perspective)
     this.battle = new BattleLayer(icons, perspective)
     this.effects = new EffectsLayer(labels, (strength) => this.shake(strength), perspective)
     perspective.orient(this.board)
-    this.board.addChild(this.orders, this.planning, this.battle, this.effects)
+    this.board.addChild(this.training, this.orders, this.planning, this.battle, this.effects)
     this.world.addChild(art, this.board)
     this.camera.addChild(this.world)
     app.stage.addChild(this.camera)
@@ -186,6 +190,10 @@ export class BoardRenderer {
   /** The viewer's own lane orders; they stay on the map through planning and battle until changed. */
   showOrders(stances: LaneStances) {
     this.orders.show(stances)
+  }
+
+  showTraining(settings: SandboxSettings | null, planning: boolean) {
+    this.training.show(settings, planning)
   }
 
   laneAtClient(clientX: number, clientY: number) {

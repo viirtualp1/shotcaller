@@ -2,7 +2,8 @@
 
 Apply migrations in filename order before deploying the updated client. The pending changes are
 `20261003120000_fair_duels.sql`, `20261003130000_lean_storage.sql`,
-`20261003140000_mmr_leaderboard.sql`, and `20261003150000_read_only_leaderboard.sql`. The second changes the return type
+`20261003140000_mmr_leaderboard.sql`, `20261003150000_read_only_leaderboard.sql`,
+`20261003160000_delete_account.sql`, and `20261004120000_withdraw_board.sql`. The second changes the return type
 of `publish_live_match` and adds the heartbeat APIs, so deploy the migrations and client together.
 
 ## Matchmaking
@@ -94,12 +95,22 @@ the quoted game-mode argument does not need an explicit cast.
 
 ## SQL validation
 
+Account deletion in 8.8.1 requires `20261003160000_delete_account.sql` before the client is deployed.
+The `delete_account()` RPC accepts no account ID and erases only its authenticated registered caller.
+Auth, profiles, ratings, matches, social data, duels, queue entries, live matches and consent records
+cascade from the account. Support requests are explicitly erased, including their text and reply address.
+The existing anonymous analytics deletion job remains until external erasure is acknowledged by
+`telemetry-cleanup`; ensure that function is deployed and scheduled. The client clears account progress
+and saved games on this device after success. Language and sound preferences are retained.
+
 Run `supabase/tests/*.sql` as the database owner against a disposable Supabase database after all
 migrations. Each suite creates its own fixtures and rolls back. `fair_duels.sql` covers reporting,
 timeouts, Elo, pairing, version isolation, blocking and cancellation. `lean_storage.sql` covers
 friend-only presence and viewing, viewer expiry, retention and function privileges.
 `mmr_leaderboard.sql` covers public fields, per-mode ordering, ties, guest access, blocked coaches,
-the 100-row cap and removal of the leaderboard-specific request endpoint.
+the 100-row cap and removal of the leaderboard-specific request endpoint. `delete_account.sql` checks
+caller isolation, guest rejection, all dependent game records, support erasure and external analytics
+deletion jobs. Fixtures run inside a rolled-back transaction.
 
 Local validation used an isolated PostgreSQL runtime with stand-ins for Supabase's `auth.uid()`,
 `auth.jwt()`, roles and Realtime publication. It executes the migrations and SQL suites, but does

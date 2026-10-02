@@ -81,6 +81,135 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.8.1',
+    date: '2026-10-03',
+    title: {
+      en: 'Keep the practice flowing',
+      ru: 'Тренировка без помех',
+    },
+    general: [
+      {
+        en: 'With **no clock**, Exit returns you to your lineup without counting a round.',
+        ru: '**Без таймера** кнопка «Выйти» возвращает к расстановке без зачёта раунда.',
+      },
+      {
+        en: '**One dummy per lane** is ready by default in a side camp, visible before battle; turn dummies off to practice pushing. Switch each lane between **Dummies** and **Push** during battle while keeping your heroes and statistics. Creep waves stay on the lanes.',
+        ru: '**Один манекен на линию** готов по умолчанию в боковом лагере и виден ещё до боя; отключи манекены для тренировки пуша. Переключай каждую линию между **манекенами** и **пушем** прямо в бою, сохраняя героев и статистику. Волны крипов идут по линиям.',
+      },
+      {
+        en: 'The throne is **invulnerable** until every tower on at least one lane has fallen. Creeps clear the defending wave and then hit the tower instead of chasing past it.',
+        ru: 'Трон **неуязвим**, пока не разрушены все башни хотя бы на одной линии. Крипы разбирают защищающую волну, затем бьют башню вместо погони за ней.',
+      },
+      {
+        en: 'You can now **delete your account permanently** after reviewing which progress and conversations will be erased.',
+        ru: 'Теперь можно **навсегда удалить аккаунт**, заранее просмотрев, какой прогресс и переписки будут удалены.',
+      },
+    ],
+    items: [
+      {
+        id: 'gloves',
+        badge: 'nerfed',
+        changes: [
+          {
+            en: 'Attack speed per item: **20%** for carries and gankers, **15%** for pushers, **8%** for mages, supports and initiators. Two items add their bonuses instead of multiplying them.',
+            ru: 'Скорость атаки за предмет: **20%** для керри и ганкеров, **15%** для пушеров, **8%** для магов, саппортов и инициаторов. Бонусы двух предметов складываются вместо перемножения.',
+          },
+        ],
+      },
+      {
+        id: 'staff',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Ability damage and summon power: **20% → 50%** for mages and pushers, **30%** for other roles. Bonuses from two staves add together.',
+            ru: 'Урон способностей и сила призывов: **20% → 50%** для магов и пушеров, **30%** для остальных ролей. Бонусы двух посохов складываются.',
+          },
+        ],
+      },
+      {
+        id: 'manaStone',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Mana gain: **35% → 50%** per stone. Two stones give **100%** more mana to help ability builds cast more often.',
+            ru: 'Набор маны: **35% → 50%** за камень. Два камня дают **100%** дополнительной маны, помогая сборкам на способности чаще кастовать.',
+          },
+        ],
+      },
+      {
+        id: 'chalice',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Healing and support aura: **30% → 35%**. Shield strength now also benefits from healing gear, giving Oracle a support build of its own.',
+            ru: 'Лечение и аура поддержки: **30% → 35%**. Сила щитов теперь тоже растёт от предметов на лечение: у Oracle появилась своя сборка саппорта.',
+          },
+        ],
+      },
+    ],
+    heroes: [
+      {
+        id: 'spearman',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Health: **650 → 780**. Attack damage: **36 → 40**. Armor: **15% → 20%**, helping him survive his opening charge.',
+            ru: 'Здоровье: **650 → 780**. Урон атаки: **36 → 40**. Броня: **15% → 20%**, чтобы пережить первый рывок.',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'charge',
+            badge: 'buffed',
+            changes: [
+              {
+                en: 'Damage: **90 → 120**.',
+                ru: 'Урон: **90 → 120**.',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: '**Hover a hero** for a quick view of current health, mana, regeneration and equipped items. Open the full card for the same live resources alongside the detailed abilities.',
+        ru: '**Наведи на героя**, чтобы быстро увидеть текущее здоровье, ману, восстановление и надетые предметы. В полной карточке эти же ресурсы доступны вместе с подробностями способностей.',
+      },
+      {
+        en: '**Red damage numbers** appear above whoever took the hit, including training dummies. **Green healing numbers** show your allies recovering health from healing and lifesteal.',
+        ru: '**Красные числа урона** появляются над тем, кто получил удар, включая тренировочных манекенов. **Зелёные числа лечения** показывают восстановление здоровья союзников от лечения и вампиризма.',
+      },
+      {
+        en: 'Match history opens with **10 matches**; Load more reveals the next **10** at a time.',
+        ru: 'История матчей открывается с **10 матчей**; «Показать ещё» раскрывает следующие **10** за раз.',
+      },
+      {
+        en: 'Friends share one corner shortcut, with a **green** dot for online friends and **gold** when someone is playing.',
+        ru: 'Друзья доступны через общую кнопку в углу: **зелёная** точка означает, что кто-то в сети, **золотая** — что кто-то играет.',
+      },
+      {
+        en: 'Training gets a compact pause control and simpler settings. Hero and item lists have more breathing room, and mode ratings are easier to read.',
+        ru: 'В тренировке стали компактнее кнопка паузы и настройки. Спискам героев и предметов добавили воздуха, а рейтинги режимов стало легче читать.',
+      },
+      {
+        en: 'The trials now explain permanent records and first-clear rewards; weekly contracts keep their reset reminder.',
+        ru: 'У испытаний появилась подсказка о постоянных рекордах и награде за первое прохождение; у контрактов сохранено напоминание об обновлении.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Pausing holds the music too. Resume continues from **the same moment**.',
+        ru: 'Пауза останавливает и музыку. После продолжения трек играет **с того же момента**.',
+      },
+      {
+        en: 'Rank details open on hover or a tap, the profile edit icon is centered, MMR aligns with the rank, and the level badge stays above the avatar overlay.',
+        ru: 'Подробности ранга открываются наведением или касанием. Иконка редактирования профиля выровнена, MMR стоит под рангом, а значок уровня остаётся над затемнением аватара.',
+      },
+    ],
+  },
+  {
     version: '8.8',
     date: '2026-10-03',
     title: {
@@ -99,8 +228,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
           ru: 'Своя тренировочная площадка',
         },
         text: {
-          en: 'Take **any hero** and **any item** for free, line the lanes with dummies and see what your build really does. Add creep waves when you want to test wave clear. Training never touches your rating or your saved match.',
-          ru: 'Бери **любого героя** и **любые предметы** бесплатно, расставляй манекены на линиях и смотри, на что способна твоя сборка. Нужно проверить, как герой чистит волну, — включи крипов. Тренировка не трогает рейтинг и сохранённый матч.',
+          en: 'Take **any hero** and **any item** for free, line the lanes with dummies and see what your build really does. Fight with **no clock** and pause whenever you like, or play it out in rounds. Training never touches your rating or your saved match.',
+          ru: 'Бери **любого героя** и **любые предметы** бесплатно, расставляй манекены на линиях и смотри, на что способна твоя сборка. Сражайся **без таймера** и ставь бой на паузу когда угодно — или играй по раундам. Тренировка не трогает рейтинг и сохранённый матч.',
         },
       },
       {
