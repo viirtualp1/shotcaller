@@ -17,12 +17,15 @@ export const usePlanningTimerStore = defineStore('planningTimer', () => {
   /** The duel deadline already acted on, so a board that failed to send is not sent again every frame. */
   let spentDeadline: number | null = null
 
+  /* The training ground waits for the coach: there is nobody to keep waiting. */
   const total = computed(() =>
     match.isDuel
       ? DUEL_PLANNING_SECONDS
-      : match.view?.trialId
-        ? DIFFICULTIES.standard.planningSeconds
-        : settings.planningSeconds,
+      : match.view?.sandbox
+        ? null
+        : match.view?.trialId
+          ? DIFFICULTIES.standard.planningSeconds
+          : settings.planningSeconds,
   )
 
   const paused = computed(() => pause.paused && !match.isDuel)

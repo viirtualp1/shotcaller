@@ -126,6 +126,33 @@ describe('recordMatch', () => {
     expect(avatarOf(profile)).toBe('blademaster')
   })
 
+  it('counts a match once for a hero fielded twice, adding up both copies', () => {
+    const match = finished(WIN)
+
+    const twin = {
+      ...match.stats.heroes.find((h) => h.heroId === 'blademaster')!,
+      uid: 'second',
+      lane: 'top' as const,
+      kills: 1,
+    }
+
+    const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), {
+      ...match,
+      stats: {
+        ...match.stats,
+        heroes: [...match.stats.heroes, twin],
+      },
+    })
+
+    expect(record.heroes.filter((h) => h.heroId === 'blademaster')).toHaveLength(2)
+
+    expect(profile.heroes.blademaster).toMatchObject({
+      matches: 1,
+      wins: 1,
+      kills: 5,
+    })
+  })
+
   it('tracks streaks, keeps rating above zero and caps the history', () => {
     let profile = createProfile('2026-09-27T10:00:00.000Z')
     profile = play(profile, duel(LOSS)).profile

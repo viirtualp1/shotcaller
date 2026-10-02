@@ -238,6 +238,10 @@ export interface Database {
         Args: { duel: string; board_round: number }
         Returns: Json
       }
+      withdraw_board: {
+        Args: { duel: string; board_round: number }
+        Returns: boolean
+      }
       report_duel: {
         Args: { duel: string; winning_side: number | null; by_throne?: boolean }
         Returns: undefined

@@ -1,6 +1,7 @@
 import { HEROES } from '@/content/heroes'
 import type { TrialId } from '@/content/career'
 import {
+  HERO_IDS,
   ITEM_IDS,
   opponentOf,
   type HeroId,
@@ -14,6 +15,7 @@ import {
 import { ITEMS, ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, MERGE_COUNT } from '@/content/rules'
+import type { SandboxSettings } from '@/content/sandbox'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { fromSide, seenFrom } from '@/domain/battle/mirror'
 import { findRecruit } from '@/domain/coach/recruit'
@@ -89,6 +91,8 @@ export interface PlayerView {
   readonly bench: readonly HeroCardView[]
   readonly lanes: Readonly<Record<LaneId, LaneView>>
   readonly shop: readonly ShopOfferView[]
+  /** Every hero, cheapest tier first, as the training ground offers them; `slot` indexes `HERO_IDS`. */
+  readonly catalog: readonly ShopOfferView[]
   readonly shopOdds: readonly number[]
   readonly stash: readonly StashItemView[]
   readonly stashSize: number
@@ -127,6 +131,8 @@ export interface MatchView {
   readonly history: readonly RoundVerdict[]
   readonly result: MatchResult | null
   readonly report: MatchReportView | null
+  /** The training ground's dummies and creeps; null in a real match. */
+  readonly sandbox: SandboxSettings | null
 }
 
 export interface LiveBattleView {
@@ -211,6 +217,14 @@ function toPlayerView(player: Player) {
       completesSet: heroId !== null && singlesOf(heroId) >= MERGE_COUNT - 1,
       fits: heroId !== null && (player.roster.hasBenchSpace || wouldPromote(player.roster, heroId)),
     })),
+    catalog: HERO_IDS.map((heroId, slot) => ({
+      slot,
+      heroId,
+      affordable: true,
+      ownedCopies: copiesOf(heroId),
+      completesSet: singlesOf(heroId) >= MERGE_COUNT - 1,
+      fits: player.roster.hasBenchSpace || wouldPromote(player.roster, heroId),
+    })).sort((a, b) => HEROES[a.heroId].tier - HEROES[b.heroId].tier),
     shopOdds: player.progression.rules.odds,
     stash: player.stash.items.map((itemId, index) => ({
       index,
@@ -262,6 +276,7 @@ export function toMatchView(match: Match): MatchView {
     history: match.stats.winners.map((winner) => verdictFor(match.human.team, winner)),
     result: match.result,
     report: match.phase === 'finished' ? toMatchReport(match) : null,
+    sandbox: match.sandbox,
   }
 }
 

@@ -6,6 +6,7 @@ import { ITEMS } from '@/content/items'
 import { combineModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
+import { SANDBOX } from '@/content/sandbox'
 import { CREEPS, STRUCTURES, type CreepVariant, type StructureType } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
 import { createPrd } from '@/core/random/prd'
@@ -88,6 +89,32 @@ export class EntityFactory {
 
   throne(team: TeamId, hp: number) {
     return this.structure(team, 'throne', 'throne', null, this.map.base(team), hp)
+  }
+
+  /** A training dummy of `team` on `lane`, the `index`-th of `count` standing side by side across the lane. */
+  dummy(team: TeamId, lane: LaneId, index: number, count: number) {
+    const path = this.map.path(team, lane)
+    const along = path.length * SANDBOX.dummyAlong
+    const point = this.map.pointAt(path, along)
+    const tangent = this.map.tangentAt(path, along)
+    const across = (index - (count - 1) / 2) * SANDBOX.dummySpacing
+
+    return this.world.add({
+      team,
+      kind: 'hero',
+      position: {
+        x: point.x - tangent.y * across,
+        y: point.y + tangent.x * across,
+      },
+      radius: SANDBOX.dummyRadius,
+      health: {
+        current: SANDBOX.dummyHp,
+        max: SANDBOX.dummyHp,
+      },
+      armor: 0,
+      status: freshStatus(),
+      dummy: true,
+    }) as Unit
   }
 
   private structure(

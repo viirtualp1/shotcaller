@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { BoardExchange } from '@/application/social/BoardExchange'
+import { BoardExchange, BoardWithdrawn } from '@/application/social/BoardExchange'
 import { DuelError } from '@/application/social/duels'
 import type { PlayerState } from '@/domain/player/Player'
 
@@ -9,6 +9,7 @@ function fixture() {
   const service = {
     submitBoard: vi.fn(async (): Promise<unknown> => null),
     opponentBoard: vi.fn(async (): Promise<unknown> => null),
+    withdrawBoard: vi.fn(async () => true),
   }
 
   const changed = vi.fn()
@@ -73,6 +74,49 @@ describe('duel board recovery', () => {
       expect(service.submitBoard).toHaveBeenCalledTimes(1)
     },
   )
+
+  it('takes the board back while the other coach is still planning', async () => {
+    const { exchange, service } = fixture()
+    const result = exchange.wait('duel', 3, board)
+    const withdrawn = expect(result).rejects.toBeInstanceOf(BoardWithdrawn)
+
+    expect(await exchange.withdraw()).toBe(true)
+    await withdrawn
+    expect(service.withdrawBoard).toHaveBeenCalledWith('duel', 3)
+    expect(exchange.matches('duel', 3)).toBe(false)
+  })
+
+  it('waits for a board still on its way before taking it back, so it cannot land afterwards', async () => {
+    const { exchange, service } = fixture()
+    let finish!: (board: unknown) => void
+    service.submitBoard.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+    )
+
+    const result = exchange.wait('duel', 3, board)
+    const withdrawn = expect(result).rejects.toBeInstanceOf(BoardWithdrawn)
+    const withdrawal = exchange.withdraw()
+    await Promise.resolve()
+    expect(service.withdrawBoard).not.toHaveBeenCalled()
+
+    finish(null)
+    expect(await withdrawal).toBe(true)
+    await withdrawn
+    expect(service.submitBoard).toHaveBeenCalledTimes(1)
+  })
+
+  it('starts the round when the other board was already in', async () => {
+    const { exchange, service } = fixture()
+    service.withdrawBoard.mockResolvedValueOnce(false)
+    const result = exchange.wait('duel', 3, board)
+    await exchange.retry()
+
+    service.opponentBoard.mockResolvedValueOnce(theirs)
+    expect(await exchange.withdraw()).toBe(false)
+    expect(await result).toBe(theirs)
+  })
 
   it('ignores late responses and failures after leaving the duel', async () => {
     const { exchange, service, changed } = fixture()

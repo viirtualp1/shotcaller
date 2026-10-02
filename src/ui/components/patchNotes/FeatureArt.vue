@@ -14,6 +14,7 @@ import LaneOrderArt from './LaneOrderArt.vue'
 import CareerFeatureArt from './CareerFeatureArt.vue'
 import MatchmakingFeatureArt from './MatchmakingFeatureArt.vue'
 import LeaderboardFeatureArt from './LeaderboardFeatureArt.vue'
+import TrainingFeatureArt from './TrainingFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** A made-up rank per mode, only to show that each has its own. */
@@ -95,6 +96,8 @@ onMounted(() => {
     <MatchmakingFeatureArt v-else-if="art.kind === 'matchmaking'" :focus="art.focus" />
 
     <LeaderboardFeatureArt v-else-if="art.kind === 'leaderboard'" />
+
+    <TrainingFeatureArt v-else-if="art.kind === 'training'" :focus="art.focus" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">

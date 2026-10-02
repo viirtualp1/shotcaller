@@ -38,6 +38,47 @@ export class TurretView extends EntityView {
   }
 }
 
+const WOOD = 0x82613f
+const WOOD_DARK = 0x4e3825
+
+/** A training dummy: a straw head on a post with a crossbar, and its health over it. */
+export class DummyView extends EntityView {
+  private readonly bar = new Graphics()
+
+  constructor(private readonly team: TeamId) {
+    super()
+    const shape = new Graphics()
+    shape.rect(-1.75, -4, 3.5, 16).fill(WOOD_DARK)
+
+    shape.roundRect(-10, -2, 20, 3.5, 1.5).fill(WOOD).stroke({
+      width: 1,
+      color: WOOD_DARK,
+    })
+
+    shape.circle(0, -8, 5.5).fill(0xd8c27a).stroke({
+      width: 1.5,
+      color: TEAM_COLORS[team],
+    })
+
+    shape.circle(0, -8, 1.8).fill(TEAM_COLORS[team])
+    this.body.addChild(shape, this.bar)
+  }
+
+  sync(entity: Entity) {
+    this.bar.clear()
+
+    if (entity.health) {
+      drawBar(this.bar, {
+        y: -19,
+        width: 22,
+        height: 2.5,
+        ratio: entity.health.current / entity.health.max,
+        color: TEAM_COLORS[this.team],
+      })
+    }
+  }
+}
+
 const PROJECTILE_SIZE: Readonly<Record<ProjectileVisual, number>> = {
   bolt: 2.4,
   arrow: 3,

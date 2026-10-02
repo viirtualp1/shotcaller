@@ -54,7 +54,12 @@ const history = computed(() =>
 
     <div class="center">
       <TrialObjective />
-      <span class="round">{{ t('hud.round', { round: view.round, max: view.maxRounds }) }}</span>
+
+      <span class="round">{{
+        view.sandbox
+          ? t('sandbox.round', { round: view.round })
+          : t('hud.round', { round: view.round, max: view.maxRounds })
+      }}</span>
 
       <Transition name="phase" mode="out-in">
         <span v-if="store.awaiting" key="awaiting" class="phase awaiting">{{

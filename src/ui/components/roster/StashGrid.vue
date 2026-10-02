@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { StashItemView } from '@/application/views'
 import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
-import { useMatchStore } from '../../stores/match'
+import { loadoutOf, useMatchStore } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ItemDetails from '../common/ItemDetails.vue'
@@ -18,6 +18,9 @@ const text = useGameText()
 const { t } = text
 const human = computed(() => store.view!.human)
 const empties = computed(() => Math.max(0, human.value.stashSize - human.value.stash.length))
+
+/** With a hero picked, each item shows what it would change on them. */
+const target = computed(() => (store.selected ? loadoutOf(human.value, store.selected) : null))
 
 function press(item: StashItemView, e: PointerEvent) {
   if (e.button !== 0) {
@@ -57,7 +60,7 @@ function press(item: StashItemView, e: PointerEvent) {
         </button>
 
         <template #content>
-          <ItemDetails :item-id="item.itemId" />
+          <ItemDetails :item-id="item.itemId" :hero="target" />
         </template>
       </InfoTooltip>
 

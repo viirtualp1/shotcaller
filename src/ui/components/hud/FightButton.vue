@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Flag, LoaderCircle, Swords } from '@lucide/vue'
+import { Flag, LoaderCircle, Swords, Undo2 } from '@lucide/vue'
 import { useFightRequest } from '../../composables/useFightRequest'
 import { useGameText } from '../../composables/useGameText'
 import { useDuelStore } from '../../stores/duel'
@@ -30,12 +30,21 @@ const fight = useFightRequest()
         key="waiting"
         type="button"
         class="btn primary block fight waiting"
-        :aria-label="t(duel.reconnecting ? 'duel.reconnecting' : 'duel.waiting')"
+        :class="{ cancellable: duel.canWithdraw }"
+        :aria-label="
+          t(duel.reconnecting ? 'duel.reconnecting' : duel.canWithdraw ? 'duel.withdraw' : 'duel.waiting')
+        "
+        :title="duel.canWithdraw ? t('duel.withdrawHint') : undefined"
         aria-busy="true"
-        disabled
+        :disabled="!duel.canWithdraw"
+        @click="duel.withdraw()"
       >
         <LoaderCircle :size="18" class="spin" />
-        <span v-if="!duel.reconnecting">{{ t('duel.waiting') }}</span>
+
+        <span v-if="!duel.reconnecting" class="waiting-text">
+          {{ t('duel.waiting') }}
+          <small v-if="duel.canWithdraw"><Undo2 :size="12" /> {{ t('duel.withdraw') }}</small>
+        </span>
       </button>
 
       <button
@@ -68,6 +77,28 @@ const fight = useFightRequest()
 
 .waiting {
   font-size: 15px;
+}
+
+.waiting-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.waiting-text small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.waiting.cancellable:hover small {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .spin {

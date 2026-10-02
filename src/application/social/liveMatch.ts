@@ -13,6 +13,7 @@ export const liveMatchSchema = z.object({
     .number()
     .nonnegative()
     .max(BATTLE.duration + BATTLE.step),
+  speed: z.number().min(0).max(8).optional(),
 })
 
 export type { LiveMatch }

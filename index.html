@@ -28,6 +28,23 @@
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/icon.svg" sizes="any" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+    <!--
+      The text in #app is for crawlers and link previews. With JavaScript on, players see only the board colour
+      until the game mounts and Vue marks the container with data-v-app, so that text never flashes first.
+    -->
+    <style>
+      html,
+      body {
+        background: #131b18;
+      }
+
+      .js #app:not([data-v-app]) {
+        visibility: hidden;
+      }
+    </style>
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

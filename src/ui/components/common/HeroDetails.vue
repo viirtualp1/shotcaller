@@ -1,31 +1,65 @@
 <script setup lang="ts">
-import { Axe, BowArrow, Heart, Sparkles, Sword } from '@lucide/vue'
+import { Axe, BowArrow, Droplet, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
-import type { HeroId, ItemId, StarLevel } from '@/content/ids'
+import type { HeroId, ItemId, StarLevel, SynergyId } from '@/content/ids'
 import { ROLES } from '@/content/roles'
-import { STAR_POWER } from '@/content/rules'
+import { BATTLE } from '@/content/rules'
+import { heroSheet } from '@/domain/roster/heroSheet'
 import { cssColor } from '@/rendering/theme'
 import { starsLabel, useGameText } from '../../composables/useGameText'
+import { useHeroStats } from '../../composables/useHeroStats'
 import { ROLE_ICONS } from '../../icons'
 import ItemIcon from './ItemIcon.vue'
 
-/** Dota-style hero sheet: identity, core stats, then ability and passives in separate blocks. */
+/**
+ * Dota-style hero sheet: identity, then stats with the hero's own value in white and what items and lane synergies
+ * add in green, then the ability with its mana, and the passives.
+ */
 const props = withDefaults(
-  defineProps<{ heroId: HeroId; stars: StarLevel; items?: readonly ItemId[]; heading?: boolean }>(),
+  defineProps<{
+    heroId: HeroId
+    stars: StarLevel
+    items?: readonly ItemId[]
+    /** Synergies of the lane the hero stands on; none on the bench or in the shop. */
+    synergies?: readonly SynergyId[]
+    heading?: boolean
+    /** Off where the hero's item slots are already on screen next to the sheet. */
+    itemIcons?: boolean
+  }>(),
   {
     items: () => [],
+    synergies: () => [],
     heading: true,
+    itemIcons: true,
   },
 )
 
 const text = useGameText()
 const { t } = text
+const stats = useHeroStats()
+
 const hero = computed(() => HEROES[props.heroId])
-const power = computed(() => STAR_POWER[props.stars])
 const role = computed(() => ROLES[hero.value.role])
 const range = computed(() => hero.value.stats.range)
 const innate = computed(() => text.heroPassive(props.heroId))
+
+const sheet = computed(() =>
+  heroSheet({
+    heroId: props.heroId,
+    stars: props.stars,
+    items: props.items,
+    synergies: props.synergies,
+  }),
+)
+
+const rows = computed(() => stats.rows(sheet.value, props.stars))
+const mana = computed(() => sheet.value.mana)
+
+/** Mana per attack the hero gets on its own, role included; items and synergies add the rest. */
+const basePerAttack = computed(() => BATTLE.manaPerAttack * sheet.value.base.manaGain)
+const bonusPerAttack = computed(() => Math.round((mana.value.perAttack - basePerAttack.value) * 10) / 10)
+const startingMana = computed(() => role.value.startingManaRatio ?? 0)
 </script>
 
 <template>
@@ -51,27 +85,66 @@ const innate = computed(() => text.heroPassive(props.heroId))
       </span>
     </div>
 
-    <div class="stats">
-      <span class="stat hp" :title="t('card.hp')">
-        <Heart :size="15" />
-        {{ text.number(Math.round(hero.stats.hp * power)) }}
-      </span>
+    <dl class="stats" :title="t('card.statsHint')">
+      <div v-for="row in rows" :key="row.key" class="stat" :class="row.key" :title="row.hint">
+        <dt>
+          <component :is="row.icon" :size="13" aria-hidden="true" />
+          {{ row.label }}
+        </dt>
 
-      <span class="stat damage" :title="t('card.damage')">
-        <Sword :size="15" />
-        {{ text.number(Math.round(hero.stats.damage * power)) }}
-      </span>
-    </div>
+        <dd>
+          {{ row.base }}
+          <span v-if="row.bonus" class="bonus" :class="{ worse: !row.better }">{{ row.bonus }}</span>
+        </dd>
+      </div>
+    </dl>
 
     <section class="block ability">
-      <span class="label">{{ t('card.ability') }}</span>
+      <header class="block-head">
+        <span class="label">{{ t('card.ability') }}</span>
+
+        <span class="mana-cost" :title="t('card.mana.costHint', { n: mana.cost })">
+          <Droplet :size="12" aria-hidden="true" />
+          {{ text.number(mana.cost) }}
+        </span>
+      </header>
 
       <strong class="block-title">
         <Sparkles :size="14" />
         {{ text.abilityName(hero.ability) }}
       </strong>
 
-      <p>{{ text.abilityDescription(hero.ability, power) }}</p>
+      <p>{{ text.abilityDescription(hero.ability, sheet.total.spellPower, sheet.total.healPower) }}</p>
+
+      <dl class="mana">
+        <div :title="t('card.mana.perAttackHint')">
+          <dt>{{ t('card.mana.perAttack') }}</dt>
+
+          <dd>
+            +{{ text.number(basePerAttack) }}
+            <span v-if="bonusPerAttack" class="bonus">+{{ text.number(bonusPerAttack) }}</span>
+          </dd>
+        </div>
+
+        <div :title="t('card.mana.perDamageHint')">
+          <dt>{{ t('card.mana.perDamage') }}</dt>
+          <dd>+{{ text.number(mana.perTenthOfHealthLost) }}</dd>
+        </div>
+
+        <div :title="t('card.mana.castHint')">
+          <dt>{{ t('card.mana.cast') }}</dt>
+          <dd>{{ stats.attacks(mana.attacksToCast) }}</dd>
+        </div>
+      </dl>
+
+      <p v-if="startingMana" class="first-cast">
+        {{
+          t('card.mana.firstCast', {
+            percent: text.number(startingMana * 100),
+            attacks: stats.attacks(mana.attacksToFirstCast),
+          })
+        }}
+      </p>
     </section>
 
     <section v-if="innate" class="block innate">
@@ -84,7 +157,7 @@ const innate = computed(() => text.heroPassive(props.heroId))
       <p>{{ text.rolePassive(hero.role) }}</p>
     </section>
 
-    <ul v-if="items.length" class="items">
+    <ul v-if="itemIcons && items.length" class="items">
       <li v-for="(item, i) in items" :key="`${item}-${i}`">
         <ItemIcon :item-id="item" :size="40" />
       </li>
@@ -97,7 +170,7 @@ const innate = computed(() => text.heroPassive(props.heroId))
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 280px;
+  width: 300px;
   max-width: 100%;
 }
 
@@ -139,22 +212,40 @@ const innate = computed(() => text.heroPassive(props.heroId))
   color: var(--role);
 }
 
+dl,
+dd {
+  margin: 0;
+}
+
 .stats {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
 }
 
 .stat {
-  display: inline-flex;
-  flex: 1;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 8px;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.05);
+}
+
+.stat dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--chalk-dim);
+}
+
+.stat dd {
   font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .stat.hp svg {
@@ -163,6 +254,30 @@ const innate = computed(() => text.heroPassive(props.heroId))
 
 .stat.damage svg {
   color: #ff9a6b;
+}
+
+.stat.attackTime svg,
+.stat.moveSpeed svg {
+  color: var(--chalk);
+}
+
+.stat.armor svg {
+  color: var(--ours);
+}
+
+.stat.spellAmp svg,
+.stat.healAmp svg {
+  color: var(--mana);
+}
+
+.bonus {
+  margin-left: 2px;
+  color: var(--heal);
+  font-weight: 700;
+}
+
+.bonus.worse {
+  color: var(--theirs);
 }
 
 .block {
@@ -175,8 +290,15 @@ const innate = computed(() => text.heroPassive(props.heroId))
   border-left: 2px solid var(--edge-strong);
 }
 
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .block.ability {
-  border-left-color: var(--mana, #6c9cff);
+  border-left-color: var(--mana);
 }
 
 .block.innate {
@@ -195,6 +317,19 @@ const innate = computed(() => text.heroPassive(props.heroId))
   color: var(--chalk-dim);
 }
 
+.mana-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mana) 18%, transparent);
+  color: var(--mana);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .block-title {
   display: inline-flex;
   align-items: center;
@@ -206,6 +341,41 @@ p {
   margin: 0;
   font-size: 12.5px;
   color: var(--chalk-dim);
+}
+
+.mana {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.mana > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--mana) 8%, transparent);
+}
+
+.mana dt {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--chalk-dim);
+}
+
+.mana dd {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--chalk);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.first-cast {
+  font-size: 11.5px;
+  color: var(--chalk-faint);
 }
 
 .items {

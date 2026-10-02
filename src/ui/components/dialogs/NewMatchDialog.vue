@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Play, Swords } from '@lucide/vue'
+import { Dumbbell, Play, Swords } from '@lucide/vue'
 import {
   DialogContent,
   DialogOverlay,
@@ -36,12 +36,12 @@ const profile = useProfileStore()
 const { t } = useGameText()
 useModal(() => menu.newMatch)
 
-const opponent = ref<'computer' | 'online'>('computer')
+const opponent = ref<'computer' | 'online' | 'training'>('computer')
 
 const opponentChoice = computed({
   get: () => opponent.value,
   set: (value: string | undefined) => {
-    if (value === 'computer' || value === 'online') {
+    if (value === 'computer' || value === 'online' || value === 'training') {
       opponent.value = value
     }
   },
@@ -64,6 +64,14 @@ const withTutorial = computed({
 
 function start() {
   if (duel.matchmaking) {
+    return
+  }
+
+  if (opponent.value === 'training') {
+    menu.newMatch = false
+    menu.gameMenu = false
+    store.startSandbox(settings.mode)
+
     return
   }
 
@@ -137,6 +145,10 @@ watch(
           <ToggleGroupItem value="online" class="segmented-option">
             {{ t('matchmaking.online') }}
           </ToggleGroupItem>
+
+          <ToggleGroupItem value="training" class="segmented-option">
+            {{ t('sandbox.tab') }}
+          </ToggleGroupItem>
         </ToggleGroupRoot>
 
         <div class="mode">
@@ -149,6 +161,8 @@ watch(
             <CheckField v-model="withTutorial">{{ t('newMatch.tutorial') }}</CheckField>
           </template>
         </SettingsFields>
+
+        <p v-else-if="opponent === 'training'" class="training">{{ t('sandbox.intro') }}</p>
 
         <section v-else class="ranked">
           <div class="ranked-summary">
@@ -184,7 +198,17 @@ watch(
             @click="start"
           >
             <Swords v-if="opponent === 'online'" :size="18" />
-            <Play v-else :size="18" /> {{ t(opponent === 'online' ? 'matchmaking.find' : 'newMatch.start') }}
+            <Dumbbell v-else-if="opponent === 'training'" :size="18" />
+            <Play v-else :size="18" />
+            {{
+              t(
+                opponent === 'online'
+                  ? 'matchmaking.find'
+                  : opponent === 'training'
+                    ? 'sandbox.start'
+                    : 'newMatch.start',
+              )
+            }}
           </button>
 
           <button
@@ -232,6 +256,16 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.training {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: rgba(127, 224, 180, 0.05);
+  color: var(--chalk-dim);
+  font-size: 13px;
 }
 
 .ranked {

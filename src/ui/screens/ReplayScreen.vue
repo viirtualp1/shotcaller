@@ -11,6 +11,7 @@ import { Pause, Play, RotateCcw, X } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import { MODES } from '@/content/modes'
+import { LIVE_MATCH_INTERVAL } from '@/application/social/liveMatch'
 import { BATTLE } from '@/content/rules'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { fromSide, seenFrom } from '@/domain/battle/mirror'
@@ -200,7 +201,17 @@ function tick(seconds: number) {
       return
     }
 
-    const target = snapshot.phase === 'battle' ? snapshot.elapsed : BATTLE.duration
+    /*
+     * Snapshots come every few seconds; in between, the battle runs on at the player's speed, so it plays smoothly
+     * instead of jumping from one snapshot to the next. It never runs more than two snapshots ahead.
+     */
+    const ahead = Math.min((Date.now() - replay.liveReceivedAt) / 1000, (LIVE_MATCH_INTERVAL * 2) / 1000)
+
+    const target =
+      snapshot.phase === 'battle'
+        ? Math.min(BATTLE.duration, snapshot.elapsed + ahead * (snapshot.speed ?? 1))
+        : BATTLE.duration
+
     session.catchUp(target, 32)
   } else if (playing.value) {
     session.advance(seconds, speed.value)

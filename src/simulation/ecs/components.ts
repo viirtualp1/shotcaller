@@ -240,6 +240,11 @@ export interface Entity {
   respawnTimer?: number
   body?: Circle
   dead?: true
+  /**
+   * A training dummy: it counts as an enemy hero for attacks and abilities, but has no hero data, never moves or
+   * fights back, and heals to full before it could fall.
+   */
+  dummy?: true
 }
 
 export type Unit = With<Entity, 'kind' | 'health' | 'radius' | 'armor' | 'status'>

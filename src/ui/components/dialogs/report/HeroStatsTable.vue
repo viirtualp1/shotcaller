@@ -23,6 +23,28 @@ const { t } = text
 const rows = computed(() =>
   props.heroes.filter((h) => h.team === props.team).sort((a, b) => b[sort.value] - a[sort.value]),
 )
+
+/** Heroes the team fielded more than once: their lines name the lane, so the copies can be told apart. */
+const twins = computed(() => {
+  const seen = new Set<HeroStatRow['heroId']>()
+  const repeated = new Set<HeroStatRow['heroId']>()
+
+  for (const row of rows.value) {
+    if (seen.has(row.heroId)) {
+      repeated.add(row.heroId)
+    }
+
+    seen.add(row.heroId)
+  }
+
+  return repeated
+})
+
+function nameOf(row: HeroStatRow) {
+  const name = text.heroName(row.heroId)
+
+  return twins.value.has(row.heroId) && row.lane ? `${name} · ${text.slotName(row.lane)}` : name
+}
 </script>
 
 <template>
@@ -55,11 +77,11 @@ const rows = computed(() =>
         </thead>
 
         <tbody>
-          <tr v-for="hero in rows" :key="hero.heroId">
+          <tr v-for="(hero, index) in rows" :key="`${hero.heroId}-${index}`">
             <th scope="row" class="hero-col">
               <span class="hero">
                 <HeroAvatar :hero-id="hero.heroId" :team="team" :stars="hero.bestStars" :size="28" />
-                <span class="name">{{ text.heroName(hero.heroId) }}</span>
+                <span class="name">{{ nameOf(hero) }}</span>
               </span>
             </th>
 

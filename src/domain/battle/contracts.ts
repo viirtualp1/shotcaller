@@ -8,6 +8,7 @@ import type {
   StructureSlot,
   TeamId,
 } from '@/content/ids'
+import type { SandboxSettings } from '@/content/sandbox'
 import type { Lineup } from '../roster/Roster'
 
 export type StructureState = Record<StructureSlot, number>
@@ -24,6 +25,8 @@ export interface BattleSetup {
   readonly structures: PerTeam<StructureState>
   /** Missing for fights set up without orders, such as the start screen's. */
   readonly stances?: PerTeam<LaneStances>
+  /** Set on the training ground: dummies stand on the other side's lanes, and creeps come only when asked for. */
+  readonly sandbox?: SandboxSettings
 }
 
 export interface TeamBattleStats {

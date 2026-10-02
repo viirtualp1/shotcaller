@@ -42,14 +42,15 @@ export const i18n = createI18n<[MessageSchema], Locale, false>({
   },
 })
 
-const numberFormats = new Map<Locale, Intl.NumberFormat>()
+const numberFormats = new Map<string, Intl.NumberFormat>()
 
-export function formatNumber(locale: string, value: number) {
+/** One decimal by default; attack times use two, so 0.88 s does not read as 0.9 s. */
+export function formatNumber(locale: string, value: number, digits = 1) {
   const key = isLocale(locale) ? locale : 'en'
-  let format = numberFormats.get(key)
+  let format = numberFormats.get(`${key}:${digits}`)
   if (!format) {
-    format = new Intl.NumberFormat(key === 'ru' ? 'ru-RU' : 'en-US', { maximumFractionDigits: 1 })
-    numberFormats.set(key, format)
+    format = new Intl.NumberFormat(key === 'ru' ? 'ru-RU' : 'en-US', { maximumFractionDigits: digits })
+    numberFormats.set(`${key}:${digits}`, format)
   }
 
   return format.format(value)

@@ -28,6 +28,8 @@ import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeRatings from '../modes/ModeRatings.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
+import PresenceDot from './PresenceDot.vue'
+import WatchLiveButton from './WatchLiveButton.vue'
 import { relativeTime } from '../profile/format'
 import RankDropdown from '../profile/RankDropdown.vue'
 import FriendMatchDetails from './FriendMatchDetails.vue'
@@ -172,7 +174,10 @@ function ask(action: 'remove' | 'block') {
             <span class="medal-name">{{ t(`profile.ranks.${rank.tier}`) }}</span>
           </span>
 
-          <CoachAvatar :hero-id="hero" :photo="photo" :level="level" :size="56" />
+          <span class="avatar">
+            <CoachAvatar :hero-id="hero" :photo="photo" :level="level" :size="56" />
+            <PresenceDot v-if="entry" :friend-id="entry.id" />
+          </span>
 
           <div class="who">
             <DialogTitle class="name">{{ name }}</DialogTitle>
@@ -284,6 +289,8 @@ function ask(action: 'remove' | 'block') {
             <Swords :size="16" /> {{ t('duel.challenge') }}
           </button>
 
+          <WatchLiveButton :friend-id="entry.id" :name="name" />
+
           <span class="spacer" />
 
           <button
@@ -312,6 +319,12 @@ function ask(action: 'remove' | 'block') {
 </template>
 
 <style scoped>
+.avatar {
+  position: relative;
+  display: grid;
+  flex: none;
+}
+
 .mode {
   display: inline-flex;
   align-items: center;
@@ -559,7 +572,11 @@ function ask(action: 'remove' | 'block') {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
 }
 
+/* A flex row, so the mode with its duel icon sits on the same centre line as the rounds and the date. */
 .meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: var(--chalk-dim);
   white-space: nowrap;

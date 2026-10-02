@@ -17,6 +17,7 @@ import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useCloudStore } from './cloud'
 import { useMatchStore } from './match'
 import { useNotificationsStore } from './notifications'
+import { usePauseStore } from './pause'
 import { useReplayStore } from './replay'
 
 export type FriendsStatus = 'off' | 'loading' | 'ready' | 'error'
@@ -41,6 +42,8 @@ export const useFriendsStore = defineStore('friends', () => {
   let publishing = false
   let publishedLive = false
   let liveWatched = false
+  /** Friends in a match at the last presence update; null until the first one after signing in. */
+  let playing: ReadonlySet<string> | null = null
   let publishedLiveKey: string | null = null
 
   const cloud = useCloudStore()
@@ -48,6 +51,7 @@ export const useFriendsStore = defineStore('friends', () => {
   const notifications = useNotificationsStore()
   const accountPhoto = useAccountPhoto()
   const replay = useReplayStore()
+  const pause = usePauseStore()
 
   const status = ref<FriendsStatus>('off')
   const card = shallowRef<OwnCard | null>(null)
@@ -61,10 +65,10 @@ export const useFriendsStore = defineStore('friends', () => {
   const viewed = shallowRef<FriendProfile | null>(null)
   const viewLoading = ref(false)
 
-  /** What this coach is doing, as their friends see it. */
+  /** What this coach is doing, as their friends see it. Training is nothing to watch, so it reads as the menu. */
   const ownStatus = computed<PresenceStatus>(() => ({
-    activity: !match.view ? 'menu' : match.isDuel ? 'duel' : 'match',
-    round: match.view?.round ?? null,
+    activity: !match.view || match.view.sandbox ? 'menu' : match.isDuel ? 'duel' : 'match',
+    round: match.view && !match.view.sandbox ? match.view.round : null,
   }))
 
   const friends = computed(() =>
@@ -83,6 +87,49 @@ export const useFriendsStore = defineStore('friends', () => {
 
   function statusOf(id: string) {
     return online.value.get(id) ?? null
+  }
+
+  /**
+   * Takes friends' presence. A friend who starts a match pops up in the corner with a way to watch; those already
+   * playing when the coach signs in do not, and the card goes once the match is over.
+   */
+  function onPresence(next: ReadonlyMap<string, PresenceStatus>) {
+    online.value = next
+
+    const now = new Set([...next.keys()].filter((id) => isPlaying(id)))
+    const before = playing
+    playing = now
+
+    if (!before) {
+      return
+    }
+
+    for (const id of now) {
+      const friend = friends.value.find((entry) => entry.id === id)
+      if (!before.has(id) && friend && replay.liveFriend !== id) {
+        notifications.push(
+          {
+            kind: 'friendPlaying',
+            coach: friend,
+            duel: next.get(id)?.activity === 'duel',
+          },
+          `friendPlaying:${id}`,
+        )
+      }
+    }
+
+    for (const id of before) {
+      if (!now.has(id)) {
+        notifications.dismissKey(`friendPlaying:${id}`)
+      }
+    }
+  }
+
+  /** In a match or a duel right now, so there is something to watch. */
+  function isPlaying(id: string) {
+    const activity = statusOf(id)?.activity
+
+    return activity === 'match' || activity === 'duel'
   }
 
   async function openProfile(id: string) {
@@ -139,6 +186,7 @@ export const useFriendsStore = defineStore('friends', () => {
     service = null
     presence = null
     known = null
+    playing = null
     notifications.clear()
     card.value = null
     entries.value = []
@@ -185,7 +233,7 @@ export const useFriendsStore = defineStore('friends', () => {
         }
       }
 
-      const snapshot = match.liveMatch()
+      const snapshot = match.liveMatch(pause.paused)
       const watched = await current.publishLiveMatch(snapshot)
 
       if (service === current) {
@@ -312,7 +360,7 @@ export const useFriendsStore = defineStore('friends', () => {
     status.value = 'loading'
 
     const joined = service.presence(ownStatus.value)
-    joined.onChange((next) => (online.value = next))
+    joined.onChange(onPresence)
     presence = joined
     stops = [service.watch(() => void refresh()), () => joined.leave()]
 
@@ -399,6 +447,7 @@ export const useFriendsStore = defineStore('friends', () => {
     viewLoading,
     isOnline,
     statusOf,
+    isPlaying,
     openProfile,
     closeProfile,
     viewedMatch,

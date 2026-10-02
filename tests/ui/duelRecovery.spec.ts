@@ -108,6 +108,7 @@ describe('duel recovery polling', () => {
       find: vi.fn(),
       submitBoard: vi.fn(),
       opponentBoard: vi.fn(),
+      withdrawBoard: vi.fn(async () => true),
       report: vi.fn(async () => undefined),
       forfeit: vi.fn(),
       claim: vi.fn(),

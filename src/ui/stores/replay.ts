@@ -13,6 +13,8 @@ export const useReplayStore = defineStore('replay', () => {
   const match = shallowRef<MatchRecord | null>(null)
   const round = ref(1)
   const live = shallowRef<LiveMatch | null>(null)
+  /** When the latest snapshot arrived, so the battle can run on between snapshots instead of waiting for them. */
+  const liveReceivedAt = ref(0)
   const liveFriend = ref<string | null>(null)
   const liveStatus = ref<'off' | 'loading' | 'watching' | 'ended' | 'error' | 'incompatible'>('off')
 
@@ -48,6 +50,7 @@ export const useReplayStore = defineStore('replay', () => {
 
       match.value = snapshot.record
       live.value = snapshot
+      liveReceivedAt.value = Date.now()
       round.value = Math.max(1, snapshot.record.replays.length)
       liveStatus.value = snapshot.phase === 'finished' ? 'ended' : 'watching'
 
@@ -100,6 +103,7 @@ export const useReplayStore = defineStore('replay', () => {
   return {
     match,
     live,
+    liveReceivedAt,
     liveFriend,
     liveStatus,
     round,

@@ -112,6 +112,7 @@ const rowsOf = (lines: readonly MatchHeroLine[], team: TeamId): HeroStatRow[] =>
     team,
     heroId: line.heroId,
     bestStars: line.stars,
+    lane: line.lane,
     rounds: line.rounds,
     kills: line.kills,
     deaths: line.deaths,
@@ -427,10 +428,12 @@ const combat = computed<ComparisonRow[]>(() => {
   margin: 0;
 }
 
+/* The panel clips sideways, so the pips keep room for the outline of the picked round. */
 .pips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
+  padding: 4px;
 }
 
 .pip.final {

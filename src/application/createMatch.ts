@@ -3,6 +3,7 @@ import { trialById, type TrialId } from '@/content/career'
 import type { ModeId } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { opponentStyleFor, type Difficulty } from '@/content/rules'
+import type { SandboxSettings } from '@/content/sandbox'
 import { createRng } from '@/core/random/rng'
 import type { CoachStrategy } from '@/domain/coach/CoachStrategy'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
@@ -18,9 +19,18 @@ export interface MatchOptions {
   readonly link?: RemoteLink
   readonly mode?: ModeId
   readonly trialId?: TrialId
+  /** Opens the training ground: dummies on the other side, and gold that never runs out. */
+  readonly sandbox?: SandboxSettings
 }
 
 function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
+  if (options.sandbox) {
+    return {
+      kind: 'sandbox',
+      settings: options.sandbox,
+    }
+  }
+
   if (options.link) {
     return {
       kind: 'remote',
@@ -65,6 +75,7 @@ export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'see
         mode: state.mode,
         ...(state.trialId ? { difficulty: 'standard' } : {}),
         link: state.link,
+        sandbox: state.sandbox,
       }),
       mode: state.mode,
       ...(state.trialId ? { trialId: state.trialId } : {}),

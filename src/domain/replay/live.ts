@@ -9,10 +9,18 @@ export interface LiveMatch {
   readonly round: number
   readonly phase: MatchPhase
   readonly elapsed: number
+  /** Battle seconds per real second on the player's screen, 0 while paused; missing before 8.8. */
+  readonly speed?: number
 }
 
 /** A viewing snapshot, never submitted as a finished match or used to award XP. */
-export function liveMatchOf(match: Match, difficulty: Difficulty, id: string, elapsed: number): LiveMatch {
+export function liveMatchOf(
+  match: Match,
+  difficulty: Difficulty,
+  id: string,
+  elapsed: number,
+  speed = 1,
+): LiveMatch {
   const battle = match.pendingBattle
   const stats = match.stats
 
@@ -44,6 +52,7 @@ export function liveMatchOf(match: Match, difficulty: Difficulty, id: string, el
       round: match.round,
       phase: match.phase,
       elapsed,
+      speed,
     }
   }
 
@@ -65,5 +74,6 @@ export function liveMatchOf(match: Match, difficulty: Difficulty, id: string, el
     round: match.round,
     phase: match.phase,
     elapsed,
+    speed,
   }
 }

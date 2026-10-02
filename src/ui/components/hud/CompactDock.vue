@@ -12,6 +12,7 @@ import HeroCard from '../roster/HeroCard.vue'
 import ItemCard from '../roster/ItemCard.vue'
 import StashGrid from '../roster/StashGrid.vue'
 import ShopPanel from '../shop/ShopPanel.vue'
+import SandboxPanel from './SandboxPanel.vue'
 import FightButton from './FightButton.vue'
 
 const store = useMatchStore()
@@ -73,6 +74,7 @@ const tabs = computed(() => [
         <ShopPanel v-else-if="dock.tab === 'shop'" key="shop" />
 
         <div v-else-if="dock.tab === 'heroes'" key="heroes" class="stack">
+          <SandboxPanel />
           <BenchGrid dense />
           <StashGrid dense />
         </div>

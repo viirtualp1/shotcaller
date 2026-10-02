@@ -131,7 +131,10 @@ const teamStats = z.object({
 
 const heroStats = z.object({
   team,
+  /** Rows kept before 8.8 summed every copy of a hero and have no uid. */
+  uid: z.string().max(64).optional(),
   heroId,
+  lane: z.enum(LANE_IDS).optional(),
   bestStars: stars,
   rounds: amount,
   damageDealt: amount,

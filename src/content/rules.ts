@@ -44,7 +44,7 @@ export type Difficulty = 'relaxed' | 'standard'
 export const DUEL_PLANNING_SECONDS = 60
 
 /** Both devices play a duel battle at this speed on the wall clock, so neither can run ahead of the other. */
-export const DUEL_BATTLE_SPEED = 2
+export const DUEL_BATTLE_SPEED = 1
 
 /** Added to a duel's planning time for reading the round summary; the clock starts when the battle ends. */
 export const DUEL_SUMMARY_SECONDS = 10

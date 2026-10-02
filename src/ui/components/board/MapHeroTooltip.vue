@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import type { BoardRenderer } from '@/rendering/BoardRenderer'
 import type { HeroHit } from '@/rendering/views/HeroToken'
 import { useGameText } from '../../composables/useGameText'
-import { locateHero, useMatchStore } from '../../stores/match'
+import { loadoutOf, locateHero, useMatchStore } from '../../stores/match'
 import HeroDetails from '../common/HeroDetails.vue'
 
 const props = defineProps<{ renderer: BoardRenderer; hit: HeroHit }>()
@@ -30,21 +30,24 @@ const { floatingStyles } = useFloating(anchor, floating, {
 
 const enemy = computed(() => props.hit.team === 1)
 
-const located = computed(() => {
+const loadout = computed(() => {
   const view = store.view
   if (!view) {
     return null
   }
 
-  return locateHero(enemy.value ? view.opponent : view.human, props.hit.uid)
+  const player = enemy.value ? view.opponent : view.human
+  const located = locateHero(player, props.hit.uid)
+
+  return located ? loadoutOf(player, located) : null
 })
 </script>
 
 <template>
   <Teleport to="body">
-    <div v-if="located" ref="floating" class="tooltip map-tooltip" :class="{ enemy }" :style="floatingStyles">
+    <div v-if="loadout" ref="floating" class="tooltip map-tooltip" :class="{ enemy }" :style="floatingStyles">
       <span v-if="enemy" class="side">{{ t('card.enemy') }}</span>
-      <HeroDetails :hero-id="located.hero.heroId" :stars="located.hero.stars" :items="located.hero.items" />
+      <HeroDetails v-bind="loadout" />
     </div>
   </Teleport>
 </template>

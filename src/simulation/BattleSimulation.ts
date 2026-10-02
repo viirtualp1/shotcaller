@@ -106,8 +106,11 @@ export class BattleSimulation {
     const ctx = this.ctx
     this.relicSystem = new RelicSystem(ctx)
 
+    /* The training ground sends creeps only when asked for, so dummies take every hit. */
+    const creeps = !setup.sandbox || setup.sandbox.creeps
+
     this.systems = [
-      new WaveSpawnSystem(ctx),
+      ...(creeps ? [new WaveSpawnSystem(ctx)] : []),
       new RespawnSystem(ctx),
       new StatusSystem(ctx),
       new HealAuraSystem(ctx),
@@ -251,6 +254,13 @@ export class BattleSimulation {
 
         const stance = this.setup.stances?.[team][lane]
         lineup.forEach((owned, slot) => factory.hero(owned, team, lane, report, slot, stance))
+      }
+    }
+
+    const dummies = this.setup.sandbox?.dummies ?? 0
+    for (const lane of this.map.lanes) {
+      for (let i = 0; i < dummies; i++) {
+        factory.dummy(1, lane, i, dummies)
       }
     }
   }

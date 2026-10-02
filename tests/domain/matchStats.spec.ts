@@ -5,10 +5,20 @@ import { toMatchView } from '@/application/views'
 import { sequentialIds } from '@/core/ids'
 import { createRng } from '@/core/random/rng'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
+import type { HeroBattleReport } from '@/domain/battle/contracts'
 import { verdictFor } from '@/domain/match/judge'
+import { addRound, emptyMatchStats } from '@/domain/match/matchStats'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
 const FULL_MATCH_TIMEOUT = 15_000
+
+const emptyIncome = {
+  base: 0,
+  interest: 0,
+  farm: 0,
+  win: 0,
+  total: 0,
+}
 
 function prepareMatch(seed: string) {
   const match = createMatch({
@@ -68,11 +78,53 @@ describe('match statistics', () => {
     expect(heroKills).toBeLessThanOrEqual(ours.heroKills)
   })
 
-  it('keeps one row per hero type and team', () => {
+  it('keeps one row per hero fielded, adding up its rounds', () => {
     const { stats } = playOut('rows', 4)
-    const keys = stats.heroes.map((h) => `${h.team}:${h.heroId}`)
+    const keys = stats.heroes.map((h) => `${h.team}:${h.uid}`)
 
     expect(new Set(keys).size).toBe(keys.length)
+    expect(stats.heroes.every((h) => h.uid && h.lane)).toBe(true)
+    expect(Math.max(...stats.heroes.map((h) => h.rounds))).toBeGreaterThan(1)
+  })
+
+  it('keeps two copies of a hero apart', () => {
+    const report = (uid: string, lane: 'top' | 'bot', damageDealt: number): HeroBattleReport => ({
+      uid,
+      team: 0,
+      heroId: 'archer',
+      stars: 1,
+      lane,
+      items: [],
+      damageDealt,
+      damageReceived: 0,
+      structureDamage: 0,
+      healing: 0,
+      lastHits: 0,
+      kills: 0,
+      deaths: 0,
+    })
+
+    const outcome = headlessResolver.resolve(prepareMatch('twins').match.startBattle()._unsafeUnwrap())
+
+    const stats = addRound(
+      emptyMatchStats(),
+      {
+        ...outcome,
+        heroes: [report('a', 'top', 100), report('b', 'bot', 40)],
+      },
+      null,
+      [emptyIncome, emptyIncome],
+      [[], []],
+      {
+        seed: 'twins',
+        structures: outcome.structures,
+      },
+    )
+
+    expect(stats.heroes.map((h) => [h.uid, h.lane, h.damageDealt])).toEqual([
+      ['a', 'top', 100],
+      ['b', 'bot', 40],
+    ])
   })
 
   it('books what each coach bought', () => {

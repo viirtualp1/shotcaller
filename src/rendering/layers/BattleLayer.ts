@@ -10,7 +10,7 @@ import { PALETTE, TEAM_COLORS } from '../theme'
 import { CreepView } from '../views/CreepView'
 import type { EntityView } from '../views/EntityView'
 import { HeroToken, isOverToken } from '../views/HeroToken'
-import { ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
+import { DummyView, ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
 import { RelicView } from '../views/RelicView'
 import { StructureView, type StructureZone } from '../views/StructureView'
 
@@ -234,6 +234,10 @@ export class BattleLayer extends Container {
       })
 
       return [token, this.heroes]
+    }
+
+    if (entity.dummy) {
+      return [new DummyView(team), this.creeps]
     }
 
     if (entity.creep && entity.radius) {

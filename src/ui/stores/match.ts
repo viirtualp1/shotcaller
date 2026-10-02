@@ -26,6 +26,7 @@ import {
   type TeamId,
 } from '@/content/ids'
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
+import { DEFAULT_SANDBOX, type SandboxSettings } from '@/content/sandbox'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
 import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
@@ -33,6 +34,7 @@ import type { DomainError } from '@/domain/errors'
 import type { MatchResult } from '@/domain/match/judge'
 import type { Match, MatchState, RemoteLink } from '@/domain/match/Match'
 import type { PlayerState } from '@/domain/player/Player'
+import type { HeroLoadout } from '@/domain/roster/heroSheet'
 import type { RosterSlot } from '@/domain/roster/Roster'
 import { BattleSimulation } from '@/simulation/BattleSimulation'
 import { liveMatchOf } from '@/domain/replay/live'
@@ -93,7 +95,7 @@ const LIVE_REFRESH_SECONDS = 0.15
 
 const secondsFromNow = (seconds: number) => Date.now() + seconds * 1000
 
-export function locateHero(player: PlayerView, uid: string) {
+export function locateHero(player: PlayerView, uid: string): LocatedHero | null {
   const onBench = player.bench.find((h) => h.uid === uid)
   if (onBench) {
     return {
@@ -113,6 +115,16 @@ export function locateHero(player: PlayerView, uid: string) {
   }
 
   return null
+}
+
+/** A hero as its stat sheet needs it: with its items, and the synergies of its lane when it stands on one. */
+export function loadoutOf(player: PlayerView, { hero, slot }: LocatedHero): HeroLoadout {
+  return {
+    heroId: hero.heroId,
+    stars: hero.stars,
+    items: hero.items,
+    synergies: slot === 'bench' ? [] : player.lanes[slot].report.synergies,
+  }
 }
 
 export const useMatchStore = defineStore('match', () => {
@@ -203,7 +215,8 @@ export const useMatchStore = defineStore('match', () => {
   }
 
   function persist() {
-    if (!match) {
+    /* A training session is never saved, so it cannot take the place of the match against the computer. */
+    if (!match || match.sandbox) {
       return
     }
 
@@ -266,6 +279,22 @@ export const useMatchStore = defineStore('match', () => {
       difficulty: settings.difficulty,
       mode,
       trialId,
+    })
+
+    clearSelection()
+    shopTab.value = 'heroes'
+    refresh()
+  }
+
+  /** The training ground: any hero and item for free, dummies to hit, and nothing saved or counted. */
+  function startSandbox(mode: ModeId = settings.mode) {
+    disposeBattle()
+    profile.forgetLast()
+    duel.value = null
+
+    match = createMatch({
+      mode,
+      sandbox: DEFAULT_SANDBOX,
     })
 
     clearSelection()
@@ -421,6 +450,28 @@ export const useMatchStore = defineStore('match', () => {
         heroId: hero.heroId,
         stars: hero.stars,
       })
+    }
+  }
+
+  /** Training ground only: hires any hero from the full list. */
+  function recruit(heroId: HeroId) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    const purchase = apply(match.human.recruit(heroId))
+    for (const hero of purchase?.promoted ?? []) {
+      notify({
+        kind: 'promoted',
+        heroId: hero.heroId,
+        stars: hero.stars,
+      })
+    }
+  }
+
+  function setSandbox(settings: SandboxSettings) {
+    if (match) {
+      apply(match.setSandbox(settings))
     }
   }
 
@@ -638,10 +689,14 @@ export const useMatchStore = defineStore('match', () => {
     return match ? streamId : null
   }
 
-  function liveMatch() {
+  /** What friends see; `paused` stops their copy of the battle along with this one. */
+  function liveMatch(paused = false) {
     const id = liveMatchId()
+    const battleSpeed = duel.value ? DUEL_BATTLE_SPEED : paused ? 0 : speed.value
 
-    return match && id ? liveMatchOf(match, settings.difficulty, id, session?.simulation.elapsed ?? 0) : null
+    return match && id && !match.sandbox
+      ? liveMatchOf(match, settings.difficulty, id, session?.simulation.elapsed ?? 0, battleSpeed)
+      : null
   }
 
   /** Keeps the start of a battle already under way, so a board sent again after a reload does not restart it. */
@@ -865,6 +920,9 @@ export const useMatchStore = defineStore('match', () => {
     resumeDuel,
     settleDuel,
     leaveToMenu,
+    startSandbox,
+    recruit,
+    setSandbox,
     buy,
     buyItem,
     sell,

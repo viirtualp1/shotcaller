@@ -87,7 +87,8 @@ export class TowerSafety {
         continue
       }
 
-      const range = (structure.attack?.range ?? 0) + margin
+      /* Structures shoot edge to edge, so a hero standing at `point` is in reach well before its centre is. */
+      const range = (structure.attack?.range ?? 0) + structure.radius + BATTLE.hero.radius + margin
       if (distance(structure.position, point) <= range && (ignoreTanks || !this.isTanked(structure, team))) {
         return true
       }

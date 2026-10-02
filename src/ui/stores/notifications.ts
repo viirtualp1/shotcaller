@@ -16,6 +16,8 @@ export type SocialNotice =
     }
   | { readonly kind: 'duelFailed'; readonly reason: DuelFailure }
   | { readonly kind: 'badBoard' }
+  /** A friend started a match or a duel, which can be watched live. */
+  | { readonly kind: 'friendPlaying'; readonly coach: CoachCard; readonly duel: boolean }
 
 export interface SocialNotification {
   readonly id: number
@@ -35,6 +37,7 @@ const LIFETIME_MS: Readonly<Record<SocialNotice['kind'], number>> = {
   duelEnded: 9000,
   duelFailed: 7000,
   badBoard: 9000,
+  friendPlaying: 12000,
 }
 
 /** More at once would cover the screen; the oldest make way. */

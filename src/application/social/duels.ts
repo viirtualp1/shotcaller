@@ -64,6 +64,8 @@ export interface DuelService {
   submitBoard(duelId: string, round: number, board: unknown): Promise<unknown>
   /** The other side's board for a round, once this side has sent its own. */
   opponentBoard(duelId: string, round: number): Promise<unknown>
+  /** Takes this side's board back while the other side has not sent theirs; false once both are in. */
+  withdrawBoard(duelId: string, round: number): Promise<boolean>
   /** The result this device replayed: the winning side, null for a draw, and whether the throne fell. */
   report(duelId: string, winningSide: TeamId | null, byThrone: boolean): Promise<void>
   forfeit(duelId: string): Promise<void>

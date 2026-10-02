@@ -1,9 +1,10 @@
 import { err, ok, type Result } from 'neverthrow'
 import { HEROES } from '@/content/heroes'
-import type { CoachLevel, ItemId, LaneId, LaneStance, ModeId, TeamId } from '@/content/ids'
+import type { CoachLevel, HeroId, ItemId, LaneId, LaneStance, ModeId, TeamId } from '@/content/ids'
 import { ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, ECONOMY, ROSTER } from '@/content/rules'
+import { SANDBOX } from '@/content/sandbox'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng } from '@/core/random/rng'
 import type { HeroPool } from '../economy/HeroPool'
@@ -21,6 +22,8 @@ export interface PlayerDependencies {
   readonly rng: Rng
   readonly ids: IdGenerator
   readonly mode: ModeId
+  /** The training ground: gold never runs out. */
+  readonly unlimitedGold?: boolean
 }
 
 export interface Purchase {
@@ -45,7 +48,7 @@ export const sellValue = (hero: OwnedHero) => HEROES[hero.heroId].tier * COPIES_
 export const itemSellValue = (item: ItemId) => Math.floor(ITEMS[item].cost * ITEM_SELL_RATIO)
 
 export class Player {
-  readonly wallet = new Wallet(ECONOMY.startGold)
+  readonly wallet: Wallet
   readonly progression: CoachProgression
   readonly roster = new Roster(ROSTER.benchSize)
   readonly stash = new Stash()
@@ -57,6 +60,7 @@ export class Player {
     readonly team: TeamId,
     private readonly deps: PlayerDependencies,
   ) {
+    this.wallet = deps.unlimitedGold ? new Wallet(SANDBOX.gold, true) : new Wallet(ECONOMY.startGold)
     this.shop = new Shop(deps.pool, deps.rng)
     this.progression = new CoachProgression(MODES[deps.mode].levels)
   }
@@ -108,23 +112,21 @@ export class Player {
       this.books.heroesBought++
       this.books.goldSpent += cost
 
-      const hero: OwnedHero = {
-        uid: this.deps.ids(),
-        heroId,
-        stars: 1,
-        items: [],
-      }
-
-      this.roster.add(hero)
-      const { promoted, freedItems } = promoteDuplicates(this.roster)
-      this.storeOrRefund(freedItems)
-      this.books.promotions += promoted.length
-
-      return {
-        hero,
-        promoted,
-      }
+      return this.enlist(heroId)
     })
+  }
+
+  /** The training ground: any hero straight from the list, without the shop or the pool. */
+  recruit(heroId: HeroId): Result<Purchase, DomainError> {
+    if (!this.deps.unlimitedGold) {
+      return err({ code: 'wrongPhase' })
+    }
+
+    if (!this.roster.hasBenchSpace && !wouldPromote(this.roster, heroId)) {
+      return err({ code: 'benchFull' })
+    }
+
+    return ok(this.enlist(heroId))
   }
 
   sell(uid: string): Result<number, DomainError> {
@@ -276,6 +278,25 @@ export class Player {
     this.shop.restore(state.shop)
     this.stash.restore(state.stash)
     Object.assign(this.books, state.ledger)
+  }
+
+  private enlist(heroId: HeroId): Purchase {
+    const hero: OwnedHero = {
+      uid: this.deps.ids(),
+      heroId,
+      stars: 1,
+      items: [],
+    }
+
+    this.roster.add(hero)
+    const { promoted, freedItems } = promoteDuplicates(this.roster)
+    this.storeOrRefund(freedItems)
+    this.books.promotions += promoted.length
+
+    return {
+      hero,
+      promoted,
+    }
   }
 
   /** Items with nowhere to go are sold rather than silently lost. */

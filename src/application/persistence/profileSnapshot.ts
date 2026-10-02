@@ -86,6 +86,8 @@ const lineupHero = z.object({
 const heroLine = z.object({
   heroId,
   stars,
+  /** Since 8.8 each copy of a hero has its own line; the lane tells twins apart. */
+  lane: z.enum(LANE_IDS).optional(),
   kills: count,
   deaths: count,
   damage: amount,

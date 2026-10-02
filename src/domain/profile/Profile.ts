@@ -48,9 +48,12 @@ export interface LineupHero {
   readonly items: readonly ItemId[]
 }
 
+/** One hero the coach fielded in a match; two copies of a hero have a line each. */
 export interface MatchHeroLine {
   readonly heroId: HeroId
   readonly stars: StarLevel
+  /** The lane it fought on last; missing on matches before 8.8. */
+  readonly lane?: LaneId
   readonly kills: number
   readonly deaths: number
   readonly damage: number
@@ -283,6 +286,7 @@ export function matchRecordOf(finished: FinishedMatch, meta: { id: string; playe
       .map((h) => ({
         heroId: h.heroId,
         stars: h.bestStars,
+        ...(h.lane ? { lane: h.lane } : {}),
         kills: h.kills,
         deaths: h.deaths,
         damage: h.damageDealt,
@@ -426,16 +430,21 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
 
   const detailed = hasDetails(record)
 
+  /* Two copies of a hero add up their numbers, but the match counts once for that hero. */
   let heroRecords = profile.heroes
+  const counted = new Set<HeroId>()
   for (const line of record.heroes) {
+    const first = !counted.has(line.heroId)
+    counted.add(line.heroId)
+
     heroRecords = add(heroRecords, line.heroId, (h) => ({
-      matches: (h?.matches ?? 0) + 1,
-      wins: (h?.wins ?? 0) + (won ? 1 : 0),
+      matches: (h?.matches ?? 0) + (first ? 1 : 0),
+      wins: (h?.wins ?? 0) + (first && won ? 1 : 0),
       kills: (h?.kills ?? 0) + line.kills,
       deaths: (h?.deaths ?? 0) + line.deaths,
       damage: (h?.damage ?? 0) + line.damage,
       bestStars: Math.max(h?.bestStars ?? 1, line.stars) as StarLevel,
-      detailed: (h?.detailed ?? 0) + (detailed ? 1 : 0),
+      detailed: (h?.detailed ?? 0) + (first && detailed ? 1 : 0),
       healing: (h?.healing ?? 0) + line.healing,
       structureDamage: (h?.structureDamage ?? 0) + line.structureDamage,
       damageReceived: (h?.damageReceived ?? 0) + line.damageReceived,

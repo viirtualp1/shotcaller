@@ -384,7 +384,36 @@
     "ability": "Ability",
     "innate": "Innate",
     "rolePassive": "Role: {role}",
-    "unequipHint": "Click to unequip"
+    "unequipHint": "Click to unequip",
+    "seconds": "{n} s",
+    "statsHint": "White is the hero, green comes from items and lane synergies",
+    "stats": {
+      "hp": "Health",
+      "hpHint": "Health pool",
+      "damage": "Damage",
+      "damageHint": "Damage of one attack",
+      "attackTime": "Attack",
+      "attackTimeHint": "Seconds between attacks: lower hits more often",
+      "armor": "Armor",
+      "armorHint": "Share of attack damage the hero does not take",
+      "moveSpeed": "Speed",
+      "moveSpeedHint": "Movement speed",
+      "spellAmp": "Spells",
+      "spellAmpHint": "Ability power: damage, shields and summons",
+      "healAmp": "Healing",
+      "healAmpHint": "Healing from abilities and the aura"
+    },
+    "mana": {
+      "costHint": "The ability costs {n} mana. When the bar is full, the hero casts it and starts filling it again",
+      "perAttack": "Per attack",
+      "perAttackHint": "Mana for each of the hero’s attacks",
+      "perDamage": "Per 10% lost",
+      "perDamageHint": "Mana for every 10% of health lost to damage",
+      "cast": "Casts after",
+      "castHint": "Attacks that fill the bar from empty, not counting mana from damage taken",
+      "attacks": "{n} attack | {n} attacks",
+      "firstCast": "Fights start with {percent}% mana: the first cast comes after {attacks}"
+    }
   },
   "battle": {
     "speed": "Speed",
@@ -784,7 +813,9 @@
   },
   "itemTip": {
     "passive": "Passive",
-    "bonus": "Bonus"
+    "bonus": "Bonus",
+    "onHero": "On {hero}",
+    "forHero": "If given to {hero}"
   },
   "synergyTip": {
     "active": "Active",
@@ -909,7 +940,9 @@
     "openProfile": "Profile: {name}",
     "message": "Message",
     "blockedCount": "Blocked · {n}",
-    "hideAdding": "Hide"
+    "hideAdding": "Hide",
+    "watch": "Watch",
+    "playing": "In a match"
   },
   "chat": {
     "open": "Message {name}",
@@ -978,7 +1011,9 @@
     "confirmForfeit": "Give up for sure?",
     "resumeTitle": "Duel with {name} in progress",
     "resume": "Back to the duel",
-    "elsewhere": "The duel is running on another device or tab"
+    "elsewhere": "The duel is running on another device or tab",
+    "withdraw": "Not ready yet",
+    "withdrawHint": "Your opponent is still planning: go back and change your lineup"
   },
   "coach": {
     "loading": "Loading the profile…",
@@ -1007,7 +1042,9 @@
     "messages": "{n} new message | {n} new messages",
     "friendRequest": "wants to be your friend",
     "friendAccepted": "is your friend now",
-    "profile": "Profile"
+    "profile": "Profile",
+    "friendInMatch": "started a match",
+    "friendInDuel": "started a duel"
   },
   "systemNotifications": {
     "prompt": "Turn on browser notifications? Messages and duel challenges will reach you even while the game is in the background.",
@@ -1115,5 +1152,18 @@
     "searchHint": "The search expands as you wait. Your match starts automatically when an opponent is found.",
     "hint": "Play a rated match against another coach. The search expands as you wait.",
     "signIn": "Sign in to play online"
+  },
+  "sandbox": {
+    "title": "Training",
+    "tab": "Training",
+    "intro": "Endless gold, any hero and item, and dummies in place of an opponent. Training is not saved and never touches your rating.",
+    "start": "Start training",
+    "dummies": "Dummies on every lane",
+    "creeps": "Creep waves",
+    "hint": "Dummies never hit back or fall. Each hero’s damage is in the round summary.",
+    "leave": "Leave training",
+    "round": "Training · round {round}",
+    "free": "Free",
+    "gold": "Gold never runs out"
   }
 }

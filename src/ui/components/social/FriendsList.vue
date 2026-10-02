@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
-import { Ban, Check, ChevronDown, ChevronUp, Copy, Eye, Info, Swords, UserPlus, X } from '@lucide/vue'
+import { Ban, Check, ChevronDown, ChevronUp, Copy, Info, Swords, UserPlus, X } from '@lucide/vue'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import {
   formatFriendCode,
@@ -17,6 +17,8 @@ import { useCloudStore } from '../../stores/cloud'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
 import CoachAvatar from '../profile/CoachAvatar.vue'
+import PresenceDot from './PresenceDot.vue'
+import WatchLiveButton from './WatchLiveButton.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** Friends, requests and adding by code; shared by the profile page and the friends panel. */
@@ -137,7 +139,7 @@ async function submit() {
 
           <span class="avatar">
             <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
-            <i class="presence" />
+            <PresenceDot :friend-id="entry.id" />
           </span>
         </button>
 
@@ -182,19 +184,7 @@ async function submit() {
           <Swords :size="16" />
         </button>
 
-        <button
-          v-if="
-            friends.statusOf(entry.id)?.activity === 'match' ||
-            friends.statusOf(entry.id)?.activity === 'duel'
-          "
-          type="button"
-          class="icon-btn"
-          :aria-label="t('replay.watchFriend', { name: nameOf(entry.name) })"
-          :title="t('replay.watchFriend', { name: nameOf(entry.name) })"
-          @click="friends.watchMatch(entry.id)"
-        >
-          <Eye :size="16" />
-        </button>
+        <WatchLiveButton :friend-id="entry.id" :name="nameOf(entry.name)" icon-only />
       </li>
     </ul>
 
@@ -403,21 +393,6 @@ p {
 .avatar {
   position: relative;
   display: grid;
-}
-
-.presence {
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--chalk-faint);
-  box-shadow: 0 0 0 2px var(--panel);
-}
-
-.online .presence {
-  background: var(--heal);
 }
 
 .who {

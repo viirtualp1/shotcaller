@@ -23,6 +23,7 @@ import ItemIcon from '../components/common/ItemIcon.vue'
 import FeatureCard from '../components/patchNotes/FeatureCard.vue'
 import CareerRelease from '../components/patchNotes/CareerRelease.vue'
 import MatchmakingRelease from '../components/patchNotes/MatchmakingRelease.vue'
+import TrainingRelease from '../components/patchNotes/TrainingRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
@@ -80,6 +81,8 @@ watch(
         <CareerRelease v-if="patch.campaign === 'career'" />
 
         <MatchmakingRelease v-else-if="patch.campaign === 'matchmaking'" />
+
+        <TrainingRelease v-else-if="patch.campaign === 'training'" />
 
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>

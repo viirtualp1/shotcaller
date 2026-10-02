@@ -11,7 +11,13 @@ import HeroAvatar from '../common/HeroAvatar.vue'
 import HeroDetails from '../common/HeroDetails.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
-const props = defineProps<{ offer: ShopOfferView & { heroId: HeroId }; disabled: boolean; index: number }>()
+const props = defineProps<{
+  offer: ShopOfferView & { heroId: HeroId }
+  disabled: boolean
+  index: number
+  /** The training ground: no price. */
+  free?: boolean
+}>()
 
 defineEmits<{ buy: [slot: number] }>()
 
@@ -44,7 +50,8 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
       </span>
 
       <span class="side">
-        <span class="cost"><span class="coin" /> {{ hero.tier }}</span>
+        <span v-if="free" class="cost free">{{ t('sandbox.free') }}</span>
+        <span v-else class="cost"><span class="coin" /> {{ hero.tier }}</span>
         <span v-if="offer.completesSet" class="badge up">{{ t('shop.completes') }}</span>
 
         <span v-else-if="offer.ownedCopies" class="badge">{{
@@ -148,6 +155,11 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
   font-weight: 700;
   color: var(--gold);
   font-variant-numeric: tabular-nums;
+}
+
+.cost.free {
+  font-size: 11px;
+  color: var(--heal);
 }
 
 .badge {

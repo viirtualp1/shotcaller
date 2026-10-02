@@ -57,7 +57,7 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
   shaman: ['Storm Shaman', 1, 'mage', 0x6fb3ff, 'chainLightning', stats(420, 28, 1.2, 140, 88, 0.05, 80)],
   rogue: ['Rogue', 1, 'ganker', 0x7fbf8f, 'poisonDagger', stats(500, 40, 0.85, 0, 108, 0.1, 70)],
   shade: ['Shade', 2, 'ganker', 0x8a76c4, 'backstab', stats(580, 46, 0.8, 0, 110, 0.1, 70)],
-  pyromancer: ['Pyromancer', 2, 'mage', 0xff7a3d, 'fireball', stats(430, 30, 1.2, 150, 88, 0.05, 90)],
+  pyromancer: ['Pyromancer', 2, 'mage', 0xff7a3d, 'fireball', stats(430, 30, 1.2, 150, 88, 0.05, 100)],
   warden: ['Warden', 2, 'support', 0x5fae6e, 'roots', stats(680, 34, 1.2, 0, 92, 0.2, 100)],
   blademaster: ['Blademaster', 2, 'carry', 0xd8dde6, 'whirl', stats(640, 50, 0.85, 0, 100, 0.15, 90)],
   packLeader: ['Pack Leader', 2, 'initiator', 0x9b7b5b, 'leap', stats(820, 44, 1.15, 0, 100, 0.2, 90)],

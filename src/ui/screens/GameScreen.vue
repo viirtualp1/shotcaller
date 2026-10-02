@@ -22,6 +22,7 @@ import HelpDrawer from '../components/dialogs/HelpDrawer.vue'
 import MatchReportDialog from '../components/dialogs/report/MatchReportDialog.vue'
 import RoundSummaryDialog from '../components/dialogs/RoundSummaryDialog.vue'
 import CompactDock from '../components/hud/CompactDock.vue'
+import SandboxPanel from '../components/hud/SandboxPanel.vue'
 import DragLayer from '../components/hud/DragLayer.vue'
 import GameMenu from '../components/hud/GameMenu.vue'
 import NoticeToast from '../components/hud/NoticeToast.vue'
@@ -213,6 +214,7 @@ watch(
 
     <template v-if="wide">
       <aside ref="left" class="hud-left" :class="{ collapsed: battling }" :inert="battling">
+        <SandboxPanel />
         <SynergyTracker />
         <BenchGrid :dense="touch" />
         <StashGrid :dense="touch" />

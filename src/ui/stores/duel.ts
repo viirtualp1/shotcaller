@@ -108,6 +108,8 @@ export const useDuelStore = defineStore('duel', () => {
   const cancellingSearch = ref(false)
   const searchStartedAt = ref<number | null>(null)
   const searchRecovering = ref(false)
+  /** Fight is being taken back; the server decides whether the other coach was quicker. */
+  const withdrawing = ref(false)
 
   const reconnecting = computed(() => recovering.value || searchRecovering.value || !online.value)
   const matchmaking = computed(() => searchMode.value !== null || cancellingSearch.value)
@@ -130,6 +132,11 @@ export const useDuelStore = defineStore('duel', () => {
 
     return entry.duel.boardRounds[opponentOf(mySide.value)] >= round
   })
+
+  /** Fight can be taken back until the other coach is ready too: then the round starts. */
+  const canWithdraw = computed(
+    () => matchStore.awaiting && !opponentReady.value && !withdrawing.value && !reconnecting.value,
+  )
 
   /** Waiting on a coach who went quiet for longer than a round may take. */
   const canClaim = computed(() => {
@@ -833,6 +840,24 @@ export const useDuelStore = defineStore('duel', () => {
     }
   }
 
+  /** Takes Fight back to plan on; when the other board is already in, the round simply starts. */
+  async function withdraw() {
+    const exchange = boards
+    if (!exchange || !canWithdraw.value) {
+      return
+    }
+
+    withdrawing.value = true
+
+    try {
+      await exchange.withdraw()
+    } catch (error) {
+      fail(error)
+    } finally {
+      withdrawing.value = false
+    }
+  }
+
   function disconnect() {
     generation++
     connected.value = false
@@ -957,6 +982,9 @@ export const useDuelStore = defineStore('duel', () => {
     busy,
     opponentReady,
     canClaim,
+    canWithdraw,
+    withdrawing,
+    withdraw,
     reconnecting,
     inviteSecondsLeft,
     reactionsShown,

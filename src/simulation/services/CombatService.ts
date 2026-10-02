@@ -89,8 +89,15 @@ export class CombatService {
     }
 
     value = this.absorb(target, value)
-    value = Math.min(value, target.health.current)
-    target.health.current -= value
+
+    /* A training dummy takes every hit in full, so damage reads true, and heals before it could fall. */
+    if (target.dummy) {
+      const left = target.health.current - value
+      target.health.current = left <= target.health.max / 2 ? target.health.max : left
+    } else {
+      value = Math.min(value, target.health.current)
+      target.health.current -= value
+    }
 
     this.gainManaFromHit(target, value)
     const hero = creditedHero(source)

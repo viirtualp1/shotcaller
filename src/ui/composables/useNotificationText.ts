@@ -23,7 +23,11 @@ export function useNotificationText() {
       }
     }
 
-    if (notice.kind === 'friendRequest' || notice.kind === 'friendAccepted') {
+    if (
+      notice.kind === 'friendRequest' ||
+      notice.kind === 'friendAccepted' ||
+      notice.kind === 'friendPlaying'
+    ) {
       return {
         name: nameOr(notice.coach.name),
         hero: heroOf(notice.coach.avatar),
@@ -62,6 +66,8 @@ export function useNotificationText() {
         return t(`duel.failures.${notice.reason}`)
       case 'badBoard':
         return t('duel.badBoard')
+      case 'friendPlaying':
+        return t(notice.duel ? 'notifications.friendInDuel' : 'notifications.friendInMatch')
     }
   }
 

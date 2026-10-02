@@ -7,7 +7,7 @@ import { ITEM_SLOTS } from '@/content/items'
 import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
 import { useBoardStore } from '../../stores/board'
-import { useMatchStore } from '../../stores/match'
+import { loadoutOf, useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import HeroDetails from '../common/HeroDetails.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
@@ -28,6 +28,13 @@ const located = computed(() => store.selected ?? store.inspected)
 /** Opponent heroes are shown read-only: no selling, benching or item management. */
 const enemy = computed(() => !store.selected && store.inspected !== null)
 const canManage = computed(() => !enemy.value && store.isPlanning)
+
+const loadout = computed(() => {
+  const view = store.view
+  const hero = located.value
+
+  return view && hero ? loadoutOf(enemy.value ? view.opponent : view.human, hero) : null
+})
 
 const slots = computed(() =>
   Array.from({ length: ITEM_SLOTS }, (_, index) => ({
@@ -99,12 +106,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
         </button>
       </header>
 
-      <HeroDetails
-        class="details"
-        :hero-id="located.hero.heroId"
-        :stars="located.hero.stars"
-        :heading="false"
-      />
+      <HeroDetails v-if="loadout" class="details" v-bind="loadout" :heading="false" :item-icons="false" />
 
       <footer class="bottom">
         <div class="items">
@@ -121,7 +123,12 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
               </button>
 
               <template #content>
-                <ItemDetails :item-id="slot.itemId" :hint="canManage ? t('card.unequipHint') : undefined" />
+                <ItemDetails
+                  :item-id="slot.itemId"
+                  :hero="loadout"
+                  equipped
+                  :hint="canManage ? t('card.unequipHint') : undefined"
+                />
               </template>
             </InfoTooltip>
 

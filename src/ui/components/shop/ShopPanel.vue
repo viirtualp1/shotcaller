@@ -3,7 +3,7 @@ import { Swords, Wand2 } from '@lucide/vue'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { computed } from 'vue'
 import type { ShopOfferView } from '@/application/views'
-import type { HeroId } from '@/content/ids'
+import { HERO_IDS, type HeroId } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
 import { useMatchStore, type ShopTab } from '../../stores/match'
@@ -30,6 +30,17 @@ const heroOffers = computed(() =>
 )
 
 const soldCount = computed(() => human.value.shop.length - heroOffers.value.length)
+
+/** The training ground offers every hero, for free, instead of five random cards. */
+const training = computed(() => store.view?.sandbox !== null)
+
+const catalog = computed(() =>
+  human.value.catalog.filter((o): o is ShopOfferView & { heroId: HeroId } => o.heroId !== null),
+)
+
+function recruit(slot: number) {
+  store.recruit(HERO_IDS[slot]!)
+}
 </script>
 
 <template>
@@ -48,7 +59,19 @@ const soldCount = computed(() => human.value.shop.length - heroOffers.value.leng
       </TabsList>
 
       <TabsContent value="heroes" class="list" data-tour="shop">
-        <div :key="store.rerolls" class="offers">
+        <div v-if="training" class="offers">
+          <HeroOffer
+            v-for="(offer, i) in catalog"
+            :key="offer.heroId"
+            :offer="offer"
+            :index="i"
+            :disabled="locked"
+            free
+            @buy="recruit"
+          />
+        </div>
+
+        <div v-else :key="store.rerolls" class="offers">
           <HeroOffer
             v-for="(offer, i) in heroOffers"
             :key="`${offer.slot}-${offer.heroId}`"

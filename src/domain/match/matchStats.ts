@@ -40,10 +40,16 @@ export interface TeamMatchStats {
   readonly income: IncomeBreakdown
 }
 
-/** One row per hero type and team: copies and upgrades of the same hero are summed. */
+/**
+ * One row per hero the coach fielded: two copies of a hero keep their own rows, and an upgraded hero keeps the row of
+ * the copy that absorbed the others. Rows kept before 8.8 have no uid and stand for every copy of their hero.
+ */
 export interface HeroMatchStats {
   readonly team: TeamId
+  readonly uid?: string
   readonly heroId: HeroId
+  /** The lane the hero fought on last. */
+  readonly lane?: LaneId
   readonly bestStars: StarLevel
   readonly rounds: number
   readonly damageDealt: number
@@ -121,16 +127,19 @@ export function addRound(
     }
   })
 
-  const heroes = new Map(stats.heroes.map((h) => [`${h.team}:${h.heroId}`, h]))
+  const keyOf = (team: TeamId, uid: string | undefined, heroId: HeroId) => `${team}:${uid ?? heroId}`
+  const heroes = new Map(stats.heroes.map((h) => [keyOf(h.team, h.uid, h.heroId), h]))
   const fought = new Set<string>()
 
   for (const report of outcome.heroes) {
-    const key = `${report.team}:${report.heroId}`
+    const key = keyOf(report.team, report.uid, report.heroId)
     const before = heroes.get(key)
 
     heroes.set(key, {
       team: report.team,
+      uid: report.uid,
       heroId: report.heroId,
+      ...(report.lane ? { lane: report.lane } : {}),
       bestStars: Math.max(before?.bestStars ?? 1, report.stars) as StarLevel,
       rounds: (before?.rounds ?? 0) + (fought.has(key) ? 0 : 1),
       damageDealt: (before?.damageDealt ?? 0) + report.damageDealt,

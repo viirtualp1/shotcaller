@@ -11,6 +11,8 @@ import type {
   StructureState,
 } from '../battle/contracts'
 import { fromSide, mirrorOutcome } from '../battle/mirror'
+import { MODES } from '@/content/modes'
+import { SANDBOX, type SandboxSettings } from '@/content/sandbox'
 import type { CoachStrategy } from '../coach/CoachStrategy'
 import { HeroPool, type PoolState } from '../economy/HeroPool'
 import { computeIncome, type IncomeBreakdown } from '../economy/income'
@@ -52,10 +54,14 @@ export interface RemoteLink {
   readonly side: TeamId
 }
 
-/** Who plays the other side: a coach on this device, or a player elsewhere whose board arrives before each battle. */
+/**
+ * Who plays the other side: a coach on this device, a player elsewhere whose board arrives before each battle, or,
+ * on the training ground, nobody: dummies stand in for the other side.
+ */
 export type Rival =
   | { readonly kind: 'coach'; readonly coach: CoachStrategy }
   | { readonly kind: 'remote'; readonly link: RemoteLink }
+  | { readonly kind: 'sandbox'; readonly settings: SandboxSettings }
 
 export interface MatchDependencies {
   readonly rng: Rng
@@ -81,6 +87,16 @@ export interface MatchState {
   readonly stats: MatchStats
   readonly link?: RemoteLink
   readonly opponentReady?: boolean
+  /** Set on the training ground. */
+  readonly sandbox?: SandboxSettings
+}
+
+const NO_INCOME: IncomeBreakdown = {
+  base: 0,
+  interest: 0,
+  farm: 0,
+  win: 0,
+  total: 0,
 }
 
 const copyStructures = (s: PerTeam<StructureState>): [StructureState, StructureState] => [
@@ -99,6 +115,7 @@ export class Match {
   private battle: BattleSetup | null = null
   private matchStats: MatchStats = emptyMatchStats()
   private opponentReady = false
+  private sandboxSettings: SandboxSettings | null
 
   constructor(
     private readonly deps: MatchDependencies,
@@ -112,8 +129,20 @@ export class Match {
     }
 
     this.structureState = [freshStructures(deps.mode), freshStructures(deps.mode)]
+    this.sandboxSettings = deps.rival.kind === 'sandbox' ? deps.rival.settings : null
 
-    this.players = [new Player(0, playerDeps), new Player(1, playerDeps)]
+    /* On the training ground gold never runs out and the board is as big as the mode allows from the start. */
+    this.players = [
+      new Player(0, {
+        ...playerDeps,
+        unlimitedGold: this.sandboxSettings !== null,
+      }),
+      new Player(1, playerDeps),
+    ]
+
+    if (this.sandboxSettings) {
+      this.human.progression.restore(MODES[deps.mode].levels.length, 0)
+    }
 
     if (state) {
       this.restore(state)
@@ -135,6 +164,25 @@ export class Match {
 
   get link() {
     return this.deps.rival.kind === 'remote' ? this.deps.rival.link : null
+  }
+
+  /** The training ground's settings; null in a real match. */
+  get sandbox() {
+    return this.sandboxSettings
+  }
+
+  /** Dummies and creeps for the next battle on the training ground. */
+  setSandbox(settings: SandboxSettings): Result<void, DomainError> {
+    if (!this.sandboxSettings || this.currentPhase !== 'planning') {
+      return err({ code: 'wrongPhase' })
+    }
+
+    this.sandboxSettings = {
+      dummies: Math.min(Math.max(Math.round(settings.dummies), 0), SANDBOX.maxDummies),
+      creeps: settings.creeps,
+    }
+
+    return ok(undefined)
   }
 
   get mode() {
@@ -209,6 +257,7 @@ export class Match {
       lineups: fromSide(this.side, [this.human.roster.lineup(), this.opponent.roster.lineup()]),
       structures: fromSide(this.side, copyStructures(this.structureState)),
       stances: fromSide(this.side, [this.human.roster.stances(), this.opponent.roster.stances()]),
+      ...(this.sandboxSettings ? { sandbox: this.sandboxSettings } : {}),
     }
 
     return ok(this.battle)
@@ -243,8 +292,11 @@ export class Match {
     const outcome = this.side === 0 ? battleOutcome : mirrorOutcome(battleOutcome)
     const winner = judgeRound(outcome, this.mode)
 
+    /* Training rounds pay nothing and leave the buildings standing for the next try. */
     const income = TEAM_IDS.map((team) =>
-      computeIncome(this.players[team].wallet.gold, outcome.stats[team], winner === team, this.mode),
+      this.sandboxSettings
+        ? NO_INCOME
+        : computeIncome(this.players[team].wallet.gold, outcome.stats[team], winner === team, this.mode),
     ) as [IncomeBreakdown, IncomeBreakdown]
 
     TEAM_IDS.forEach((team) => this.players[team].recordRound(verdictFor(team, winner), income[team].total))
@@ -261,10 +313,15 @@ export class Match {
 
     this.battle = null
     this.opponentReady = false
-    this.structureState = copyStructures(outcome.structures)
+
+    const training = this.sandboxSettings !== null
+    this.structureState = training
+      ? [freshStructures(this.mode), freshStructures(this.mode)]
+      : copyStructures(outcome.structures)
+
     this.summary = this.summarize(outcome, winner, income)
     this.matchStats = addRound(this.matchStats, outcome, winner, income, lineups, replay)
-    this.matchResult = judgeMatch(this.structureState, this.currentRound, this.mode)
+    this.matchResult = training ? null : judgeMatch(this.structureState, this.currentRound, this.mode)
     this.currentPhase = this.matchResult ? 'finished' : 'summary'
 
     return ok(this.summary)
@@ -326,6 +383,7 @@ export class Match {
             opponentReady: this.opponentReady,
           }
         : {}),
+      ...(this.sandboxSettings ? { sandbox: this.sandboxSettings } : {}),
     }
   }
 
@@ -340,6 +398,7 @@ export class Match {
     this.battle = state.battle
     this.matchStats = state.stats
     this.opponentReady = state.opponentReady ?? false
+    this.sandboxSettings = state.sandbox ?? this.sandboxSettings
   }
 
   /** Players whose shop and progression run on this device; a remote player's run on theirs. */

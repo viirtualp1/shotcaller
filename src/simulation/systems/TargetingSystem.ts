@@ -6,6 +6,7 @@ import { withinLaneBand } from '../services/laneBand'
 import { beyondHoldLine } from '../services/laneOrders'
 import { isCaughtAlone } from '../services/skirmish'
 import { isThroneNearlyDown } from '../services/TowerSafety'
+import { attackReach, inReach } from './AttackSystem'
 import type { SimulationContext, System } from '../SimulationContext'
 
 const PRIORITY = {
@@ -127,8 +128,8 @@ export class TargetingSystem implements System {
       return null
     }
 
-    const inReach = gap <= (unit.attack?.range ?? 0)
-    if (!inReach && this.ctx.safety.isProtected(attacker, unit.team)) {
+    /* Measured the way attacks are, edge to edge: a hero hit from its own range can always hit back. */
+    if (!inReach(unit, attacker) && this.ctx.safety.isProtected(attacker, unit.team)) {
       return null
     }
 
@@ -142,8 +143,8 @@ export class TargetingSystem implements System {
       return true
     }
 
-    const gap = distance(unit.position, current.position) - current.radius
-    return gap > (unit.attack?.range ?? 0) + REACH_SLACK
+    const gap = distance(unit.position, current.position) - unit.radius - current.radius
+    return gap > attackReach(unit) + REACH_SLACK
   }
 
   private isValid(unit: Unit, target: Unit | null) {

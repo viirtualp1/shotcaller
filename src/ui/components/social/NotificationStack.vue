@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, MessageCircle, Swords, UserPlus, X } from '@lucide/vue'
+import { Check, Eye, MessageCircle, Swords, UserPlus, X } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useNotificationText } from '../../composables/useNotificationText'
@@ -27,6 +27,7 @@ function tone({ notice }: SocialNotification) {
     case 'message':
     case 'friendRequest':
     case 'friendAccepted':
+    case 'friendPlaying':
       return 'social'
     case 'duelEnded':
       return notice.won ? 'good' : 'bad'
@@ -55,6 +56,11 @@ function openChat(item: SocialNotification, friendId: string) {
 function answerRequest(item: SocialNotification, coachId: string, accept: boolean) {
   notifications.dismiss(item.id)
   void (accept ? friends.accept(coachId) : friends.decline(coachId))
+}
+
+function watch(item: SocialNotification, coachId: string) {
+  notifications.dismiss(item.id)
+  friends.watchMatch(coachId)
 }
 
 function viewProfile(item: SocialNotification, coachId: string) {
@@ -136,6 +142,12 @@ function viewProfile(item: SocialNotification, coachId: string) {
           @click="answerRequest(item, item.notice.coach.id, false)"
         >
           {{ t('friends.decline') }}
+        </button>
+      </div>
+
+      <div v-else-if="item.notice.kind === 'friendPlaying'" class="actions">
+        <button type="button" class="btn primary small" @click="watch(item, item.notice.coach.id)">
+          <Eye :size="15" /> {{ t('friends.watch') }}
         </button>
       </div>
 

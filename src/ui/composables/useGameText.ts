@@ -29,11 +29,12 @@ const REDUCTION_PARAMS = new Set(['falloff'])
 const percentGain = (format: Format, multiplier: number) => format(Math.round((multiplier - 1) * 100))
 const percentCut = (format: Format, multiplier: number) => format(Math.round((1 - multiplier) * 100))
 
-function abilityParams(format: Format, id: AbilityId, power: number) {
+/** Healing follows heal power in battle; damage, shields and summons follow spell power. */
+function abilityParams(format: Format, id: AbilityId, power: number, healPower: number) {
   const params: Params = {}
   for (const [key, value] of Object.entries(ABILITY_PARAMS[id])) {
     if (SCALED_PARAMS.has(key)) {
-      params[key] = format(Math.round(value * power))
+      params[key] = format(Math.round(value * (key === 'heal' ? healPower : power)))
     } else if (PERCENT_PARAMS.has(key)) {
       params[key] = format(Math.round(value * 100))
     } else if (REDUCTION_PARAMS.has(key)) {
@@ -89,11 +90,14 @@ export const starsLabel = (stars: StarLevel) => '★'.repeat(stars)
 export function useGameText() {
   const { t, locale } = useI18n<{ message: MessageSchema }>()
   const number: Format = (value) => formatNumber(locale.value, value)
+  const precise: Format = (value) => formatNumber(locale.value, value, 2)
   const signed: Format = (value) => (value > 0 ? `+${number(value)}` : value < 0 ? `−${number(-value)}` : '0')
 
   return {
     t,
     number,
+    /** Up to two decimals, for attack times. */
+    precise,
     /** A change such as a rating delta: "+12", "−8", "0". */
     signed,
     /** Every numeric rating, including changes and rank thresholds, carries its MMR unit. */
@@ -112,7 +116,8 @@ export function useGameText() {
         : null
     },
     abilityName: (id: AbilityId) => ABILITY_NAMES[id],
-    abilityDescription: (id: AbilityId, power = 1) => t(`abilities.${id}`, abilityParams(number, id, power)),
+    abilityDescription: (id: AbilityId, power = 1, healPower = power) =>
+      t(`abilities.${id}`, abilityParams(number, id, power, healPower)),
     synergyName: (id: SynergyId) => t(`synergies.${id}.name`),
     synergyNeed: (id: SynergyId) => t(`synergyNeeds.${id}`),
     synergyEffect: (id: SynergyId) =>

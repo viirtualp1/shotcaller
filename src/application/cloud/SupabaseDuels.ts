@@ -205,6 +205,21 @@ export class SupabaseDuels implements DuelService {
     return data
   }
 
+  async withdrawBoard(duelId: string, round: number) {
+    const { data, error } = await this.client
+      .rpc('withdraw_board', {
+        duel: duelId,
+        board_round: round,
+      })
+      .abortSignal(AbortSignal.timeout(12_000))
+
+    if (error) {
+      throw failure(error)
+    }
+
+    return data === true
+  }
+
   async report(duelId: string, winningSide: TeamId | null, byThrone: boolean) {
     const { error } = await this.client
       .rpc('report_duel', {

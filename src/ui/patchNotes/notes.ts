@@ -48,6 +48,7 @@ export type FeatureArt =
   | { readonly kind: 'leaderboard' }
   | { readonly kind: 'career'; readonly focus: 'trials' | 'contracts' | 'milestones' | 'rewards' }
   | { readonly kind: 'matchmaking'; readonly focus: 'queue' | 'rating' | 'fairness' | 'efficiency' }
+  | { readonly kind: 'training'; readonly focus: 'yard' | 'stats' | 'ready' | 'live' }
   /** The lanes panel with an order on each lane. */
   | { readonly kind: 'orders' }
   /** What one order makes the heroes of a lane do. */
@@ -67,7 +68,7 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking'
+  readonly campaign?: 'career' | 'matchmaking' | 'training'
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
   readonly general?: readonly NoteText[]
@@ -79,6 +80,130 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '8.8',
+    date: '2026-10-03',
+    title: {
+      en: 'Practice makes perfect',
+      ru: 'Тренируйся без счёта',
+    },
+    campaign: 'training',
+    features: [
+      {
+        art: {
+          kind: 'training',
+          focus: 'yard',
+        },
+        title: {
+          en: 'A training yard of your own',
+          ru: 'Своя тренировочная площадка',
+        },
+        text: {
+          en: 'Take **any hero** and **any item** for free, line the lanes with dummies and see what your build really does. Add creep waves when you want to test wave clear. Training never touches your rating or your saved match.',
+          ru: 'Бери **любого героя** и **любые предметы** бесплатно, расставляй манекены на линиях и смотри, на что способна твоя сборка. Нужно проверить, как герой чистит волну, — включи крипов. Тренировка не трогает рейтинг и сохранённый матч.',
+        },
+      },
+      {
+        art: {
+          kind: 'training',
+          focus: 'stats',
+        },
+        title: {
+          en: 'Every number in plain sight',
+          ru: 'Каждая цифра на виду',
+        },
+        text: {
+          en: 'Hero cards show stats the Dota way: **white** for the hero, **green** for what items and synergies add. You can see what the ability costs and **how many attacks** it takes, and an item shows exactly what it will change before you hand it over.',
+          ru: 'Карточка героя показывает статы как в Доте: **белым** — сам герой, **зелёным** — прибавка от предметов и синергий. Видно, сколько стоит способность и **через сколько атак** она сработает, а предмет ещё до покупки показывает, что изменит у героя.',
+        },
+      },
+      {
+        art: {
+          kind: 'training',
+          focus: 'ready',
+        },
+        title: {
+          en: 'Pressed Fight too soon?',
+          ru: 'Рано нажал «В бой»?',
+        },
+        text: {
+          en: 'In a duel you can now **take Fight back** and keep planning while your opponent is still placing heroes. Once both of you are ready, the battle starts.',
+          ru: 'В дуэли готовность теперь можно **отменить** и продолжить расстановку, пока соперник ещё готовится. Как только готовы оба, начинается бой.',
+        },
+      },
+      {
+        art: {
+          kind: 'training',
+          focus: 'live',
+        },
+        title: {
+          en: 'Friends on air',
+          ru: 'Друзья в эфире',
+        },
+        text: {
+          en: 'When a friend starts a match, a card with **Watch** pops up in the corner and their badge pulses gold. Watch from your friends list, their profile or the chat, and the broadcast now plays **smoothly**.',
+          ru: 'Когда друг начинает матч, в углу появляется карточка с кнопкой **«Смотреть»**, а его значок пульсирует золотом. Смотреть можно из списка друзей, профиля или чата, а трансляция теперь идёт **плавно**.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'Duels and ranked matches play at **normal speed**, so every fight is easier to follow.',
+        ru: 'Дуэли и рейтинговые матчи идут на **обычной скорости**: каждый бой проще разглядеть.',
+      },
+      {
+        en: 'Heroes hit back at an enemy hero within their reach, even one standing beside its tower, and wait for their wave where enemy towers cannot reach them.',
+        ru: 'Герои отвечают вражескому герою, до которого дотягиваются, даже если тот стоит у своей башни, и ждут волну там, куда вражеская башня не достаёт.',
+      },
+    ],
+    heroes: [
+      {
+        id: 'pyromancer',
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'fireball',
+            badge: 'nerfed',
+            changes: [
+              {
+                en: 'Damage: **110** → **85**',
+                ru: 'Урон: **110** → **85**',
+              },
+              {
+                en: 'Mana cost: **90** → **100**',
+                ru: 'Стоимость: **90** → **100** маны',
+              },
+            ],
+          },
+        ],
+        changes: [],
+      },
+    ],
+    interface: [
+      {
+        en: 'Round summaries show each hero’s lane and the items it fought with.',
+        ru: 'В сводке раунда у каждого героя видны его линия и предметы, с которыми он дрался.',
+      },
+      {
+        en: 'Two copies of the same hero now get a line each in match details.',
+        ru: 'В деталях матча у двух копий одного героя теперь по своей строке.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Round numbers in past match details are no longer cut off.',
+        ru: 'Номера раундов в деталях прошлого матча больше не обрезаются.',
+      },
+      {
+        en: 'In a friend’s match history, the mode lines up with the rounds and the date.',
+        ru: 'В истории матчей друга режим стоит на одной линии с раундами и датой.',
+      },
+      {
+        en: 'Fielding two copies of a hero no longer counts the match twice for that hero.',
+        ru: 'Две копии героя в составе больше не засчитывают ему матч дважды.',
+      },
+    ],
+  },
   {
     version: '8.7',
     date: '2026-10-02',

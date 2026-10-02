@@ -12,6 +12,8 @@ import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
 import { useSettingsStore } from '../../stores/settings'
 import CoachAvatar from '../profile/CoachAvatar.vue'
+import PresenceDot from './PresenceDot.vue'
+import WatchLiveButton from './WatchLiveButton.vue'
 import EmojiPicker from './EmojiPicker.vue'
 
 const SHOW_COUNTER_FROM = MESSAGE_MAX_LENGTH - 100
@@ -213,7 +215,7 @@ onMounted(focusComposer)
       >
         <span class="avatar">
           <CoachAvatar :hero-id="hero" :photo="friend.photo" :size="36" />
-          <i class="presence" />
+          <PresenceDot :friend-id="friend.id" />
         </span>
 
         <span class="who">
@@ -221,6 +223,8 @@ onMounted(focusComposer)
           <span class="status">{{ statusText(friend.id) }}</span>
         </span>
       </button>
+
+      <WatchLiveButton :friend-id="friend.id" :name="friend.name || t('profile.defaultName')" icon-only />
 
       <button
         v-if="online && !duel.busy"
@@ -390,21 +394,6 @@ onMounted(focusComposer)
 .avatar {
   position: relative;
   display: grid;
-}
-
-.presence {
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--chalk-faint);
-  box-shadow: 0 0 0 2px var(--panel);
-}
-
-.online .presence {
-  background: var(--heal);
 }
 
 .who {

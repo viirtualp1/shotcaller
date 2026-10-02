@@ -13,7 +13,6 @@ const props = withDefaults(defineProps<{ heroes: readonly MeterHero[]; stat: Met
 
 const text = useGameText()
 const { t } = text
-const fighterLabel = useFighterLabels(() => props.heroes)
 
 const rows = computed(() =>
   props.heroes
@@ -21,7 +20,12 @@ const rows = computed(() =>
     .sort((a, b) => b[props.stat] - a[props.stat]),
 )
 
+/** With heroes on more than one lane, every row names its lane, so twins and lane fights read at a glance. */
+const laneShown = computed(() => new Set(rows.value.map((hero) => hero.lane).filter(Boolean)).size > 1)
+
 const maximum = computed(() => Math.max(0, ...rows.value.map((hero) => hero[props.stat])))
+
+const fighterLabel = useFighterLabels(() => props.heroes, laneShown)
 
 const share = (hero: MeterHero) =>
   maximum.value > 0 ? Math.min(100, Math.max(0, (hero[props.stat] / maximum.value) * 100)) : 0
@@ -35,6 +39,8 @@ const share = (hero: MeterHero) =>
 
         <div class="stat-line">
           <div class="reading">
+            <span v-if="laneShown && hero.lane" class="lane">{{ text.slotName(hero.lane) }}</span>
+
             <FighterLabel
               v-bind="fighterLabel(hero)"
               :item-size="16"
@@ -101,10 +107,23 @@ const share = (hero: MeterHero) =>
 }
 .reading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.5ch;
+  grid-template-columns: auto minmax(0, 1fr) 6.5ch;
   align-items: center;
   gap: 8px;
   font-size: 12px;
+}
+.reading:not(:has(.lane)) {
+  grid-template-columns: minmax(0, 1fr) 6.5ch;
+}
+.lane {
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--chalk-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .label {
   color: var(--chalk-dim);
