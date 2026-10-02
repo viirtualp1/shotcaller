@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useAccountPhoto } from '../../composables/useAccountPhoto'
@@ -8,6 +9,7 @@ import RankMedal from './RankMedal.vue'
 const profile = useProfileStore()
 const photo = useAccountPhoto()
 const { t } = useGameText()
+const narrow = useMediaQuery('(max-width: 360px)')
 </script>
 
 <template>
@@ -15,7 +17,7 @@ const { t } = useGameText()
     <CoachAvatar
       :hero-id="profile.avatar"
       :level="profile.level.level"
-      :size="42"
+      :size="narrow ? 34 : 42"
       :photo="photo.shown.value"
     />
 
@@ -25,7 +27,7 @@ const { t } = useGameText()
       <span class="rank">{{ t(`profile.ranks.${profile.rank.tier}`) }}</span>
     </span>
 
-    <RankMedal :tier="profile.rank.tier" :stars="profile.rank.stars" :size="38" />
+    <RankMedal :tier="profile.rank.tier" :stars="profile.rank.stars" :size="narrow ? 30 : 38" />
   </a>
 </template>
 

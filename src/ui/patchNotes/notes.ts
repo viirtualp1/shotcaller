@@ -133,6 +133,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         en: 'Fixed the update prompt getting stuck on “Installing the update” after the new version was already installed. If activation fails, the game unlocks and the update can be retried.',
         ru: 'Исправлено зависание на «Устанавливаем обновление», когда новая версия уже установлена. При ошибке активации игра разблокируется, а установку можно повторить.',
       },
+      {
+        en: 'On mobile, the profile card leaves equal space for Career and Friends. The rank ladder stays open after a tap and fits the screen, and the friends panel closes when its backdrop is tapped.',
+        ru: 'На мобильных карточка профиля оставляет равное место для карьеры и друзей. Список рангов открывается по нажатию и помещается на экране, а панель друзей закрывается по нажатию на затемнение.',
+      },
     ],
   },
   {

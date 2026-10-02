@@ -352,37 +352,31 @@ h1 {
   .coach {
     position: relative;
     inset: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr);
     width: 100%;
     max-width: 100%;
-    flex-wrap: nowrap;
     gap: 8px;
   }
 
+  .coach:has(> .friends),
+  .coach:has(> .sign-in) {
+    grid-template-columns: minmax(0, 2.5fr) repeat(2, minmax(0, 1fr));
+  }
+
   .coach :deep(.chip) {
-    flex: 1;
+    width: 100%;
     max-width: none;
-  }
-
-  .coach :deep(.career-chip),
-  .coach :deep(.friends),
-  .coach :deep(.sign-in) {
-    flex: none;
-  }
-
-  .footer {
-    position: relative;
-    inset: auto;
-    justify-self: start;
-  }
-}
-
-@media (max-width: 480px) {
-  .coach :deep(.chip) {
     gap: 8px;
     padding-inline: 12px;
   }
 
-  .coach :deep(.rank) {
+  .coach :deep(.chip .who) {
+    flex: 1;
+    margin-right: 8px;
+  }
+
+  .coach :deep(.chip .rank) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -391,8 +385,15 @@ h1 {
   .coach :deep(.career-chip),
   .coach :deep(.friends),
   .coach :deep(.sign-in) {
-    width: 56px;
+    width: 100%;
+    min-width: 0;
     padding-inline: 0;
+  }
+
+  .footer {
+    position: relative;
+    inset: auto;
+    justify-self: start;
   }
 }
 </style>

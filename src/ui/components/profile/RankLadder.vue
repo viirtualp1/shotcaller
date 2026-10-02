@@ -41,7 +41,7 @@ ol {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  min-width: max-content;
+  min-width: 0;
   margin: 0;
   padding: 6px 4px 2px;
   list-style: none;
@@ -80,10 +80,13 @@ li.reached:not(:last-child)::after {
 }
 
 .tier {
+  max-width: 100%;
   margin-top: 4px;
   font-size: 12.5px;
   font-weight: 700;
   color: var(--chalk-dim);
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .current .tier {

@@ -12,8 +12,7 @@ import ChatPanel from './ChatPanel.vue'
 import FriendsList from './FriendsList.vue'
 
 /**
- * Friends like a messenger: a small window in the corner with the contact list, where a click on a friend
- * opens the conversation in the same window. It floats over whatever screen the player is on.
+ * Friends and conversations share a window; the backdrop closes it without sending clicks to the game.
  */
 const friends = useFriendsStore()
 const chat = useChatStore()
@@ -113,74 +112,88 @@ watch(
 </script>
 
 <template>
-  <Transition name="social-window" @after-enter="focusChat">
-    <aside
-      v-show="chat.windowOpen"
-      id="social-window"
-      ref="window"
-      class="social-window"
-      :style="viewport.style.value"
-      :aria-label="t('friends.title')"
-    >
-      <ChatPanel
-        v-if="chatting"
-        ref="chatPanel"
-        :key="chatting.id"
-        :friend="chatting"
-        :active="chat.windowOpen"
-        class="panel"
-        @back="back"
-        @close="close"
-      />
+  <Teleport to="body">
+    <Transition name="social-backdrop">
+      <div v-if="chat.windowOpen" class="social-backdrop" aria-hidden="true" @click="close" />
+    </Transition>
 
-      <section v-else class="contacts">
-        <header class="head">
-          <h2 class="hand title">{{ t('friends.title') }}</h2>
+    <Transition name="social-window" @after-enter="focusChat">
+      <aside
+        v-show="chat.windowOpen"
+        id="social-window"
+        ref="window"
+        class="social-window"
+        :style="viewport.style.value"
+        :aria-label="t('friends.title')"
+      >
+        <ChatPanel
+          v-if="chatting"
+          ref="chatPanel"
+          :key="chatting.id"
+          :friend="chatting"
+          :active="chat.windowOpen"
+          class="panel"
+          @back="back"
+          @close="close"
+        />
 
-          <span class="tools">
-            <button
-              v-if="system.supported"
-              type="button"
-              class="icon-btn bell"
-              :class="{ on: system.active }"
-              :aria-label="bellTitle"
-              :title="bellTitle"
-              :disabled="system.permission === 'denied'"
-              @click="toggleBell"
-            >
-              <Bell v-if="system.active" :size="16" />
-              <BellOff v-else :size="16" />
-            </button>
+        <section v-else class="contacts">
+          <header class="head">
+            <h2 class="hand title">{{ t('friends.title') }}</h2>
 
-            <button type="button" class="icon-btn" :aria-label="t('friends.close')" @click="close">
-              <X :size="16" />
-            </button>
-          </span>
-        </header>
+            <span class="tools">
+              <button
+                v-if="system.supported"
+                type="button"
+                class="icon-btn bell"
+                :class="{ on: system.active }"
+                :aria-label="bellTitle"
+                :title="bellTitle"
+                :disabled="system.permission === 'denied'"
+                @click="toggleBell"
+              >
+                <Bell v-if="system.active" :size="16" />
+                <BellOff v-else :size="16" />
+              </button>
 
-        <div v-if="offerNotifications" class="offer">
-          <p>{{ t('systemNotifications.prompt') }}</p>
+              <button type="button" class="icon-btn" :aria-label="t('friends.close')" @click="close">
+                <X :size="16" />
+              </button>
+            </span>
+          </header>
 
-          <div class="offer-actions">
-            <button type="button" class="btn primary small" @click="system.request()">
-              <Bell :size="14" /> {{ t('systemNotifications.enable') }}
-            </button>
+          <div v-if="offerNotifications" class="offer">
+            <p>{{ t('systemNotifications.prompt') }}</p>
 
-            <button type="button" class="btn ghost small" @click="system.promptDismissed = true">
-              {{ t('systemNotifications.later') }}
-            </button>
+            <div class="offer-actions">
+              <button type="button" class="btn primary small" @click="system.request()">
+                <Bell :size="14" /> {{ t('systemNotifications.enable') }}
+              </button>
+
+              <button type="button" class="btn ghost small" @click="system.promptDismissed = true">
+                {{ t('systemNotifications.later') }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="scroll">
-          <FriendsList />
-        </div>
-      </section>
-    </aside>
-  </Transition>
+          <div class="scroll">
+            <FriendsList />
+          </div>
+        </section>
+      </aside>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
+.social-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: rgba(8, 12, 11, 0.62);
+  backdrop-filter: blur(2px);
+}
+
 .social-window {
   position: fixed;
   right: 16px;
@@ -269,11 +282,18 @@ watch(
   overflow-y: auto;
 }
 
+.social-backdrop-enter-active,
+.social-backdrop-leave-active,
 .social-window-enter-active,
 .social-window-leave-active {
   transition:
     opacity 0.18s ease-out,
     transform 0.18s ease-out;
+}
+
+.social-backdrop-enter-from,
+.social-backdrop-leave-to {
+  opacity: 0;
 }
 
 .social-window-enter-from,
