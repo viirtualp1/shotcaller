@@ -352,14 +352,47 @@ h1 {
   .coach {
     position: relative;
     inset: auto;
-    justify-self: start;
+    width: 100%;
     max-width: 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .coach :deep(.chip) {
+    flex: 1;
+    max-width: none;
+  }
+
+  .coach :deep(.career-chip),
+  .coach :deep(.friends),
+  .coach :deep(.sign-in) {
+    flex: none;
   }
 
   .footer {
     position: relative;
     inset: auto;
     justify-self: start;
+  }
+}
+
+@media (max-width: 480px) {
+  .coach :deep(.chip) {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .coach :deep(.rank) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .coach :deep(.career-chip),
+  .coach :deep(.friends),
+  .coach :deep(.sign-in) {
+    width: 56px;
+    padding-inline: 0;
   }
 }
 </style>

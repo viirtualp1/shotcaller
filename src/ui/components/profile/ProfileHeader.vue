@@ -21,11 +21,11 @@ const settings = useSettingsStore()
 const photo = useAccountPhoto()
 const text = useGameText()
 const { t } = text
+const compact = useMediaQuery('(max-width: 720px)')
 
 const editing = ref(false)
 const draft = ref('')
 const input = ref<HTMLInputElement | null>(null)
-const compact = useMediaQuery('(max-width: 720px)')
 
 const name = computed(() => profile.profile.name || t('profile.defaultName'))
 
@@ -170,7 +170,7 @@ function save() {
 
         <span class="bar"><span class="fill" :style="{ width: `${rankShare}%` }" /></span>
 
-        <span class="muted">{{ nextStep }}</span>
+        <span class="muted next-step">{{ nextStep }}</span>
       </div>
     </div>
   </section>
@@ -271,8 +271,10 @@ function save() {
 }
 
 .rename-btn {
+  flex: none;
   width: 30px;
   height: 30px;
+  padding: 0;
   opacity: 0.7;
 }
 
@@ -390,6 +392,8 @@ function save() {
 @media (max-width: 720px) {
   .header {
     flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 12px;
     padding: 14px 12px;
   }
@@ -421,9 +425,8 @@ function save() {
   }
 
   .rename-btn {
-    flex: none;
-    width: 22px;
-    height: 22px;
+    width: 32px;
+    height: 32px;
   }
 
   .name-input {
@@ -451,39 +454,49 @@ function save() {
   }
 
   .xp-value,
-  .since,
-  .rank-text .muted {
+  .since {
     font-size: 9px;
     line-height: 1.3;
   }
 
   .rank {
     flex: none;
-    gap: 8px;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--edge);
   }
 
   .rank-text {
-    width: 80px;
-    gap: 3px;
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-width: 0;
+    gap: 6px 10px;
   }
 
   .rank-name {
-    font-size: 12px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
   }
 
   .rating {
     font-size: 20px;
   }
 
-  .best-mode {
-    font-size: 9px;
-    line-height: 1.3;
-    letter-spacing: 0;
+  .best-mode,
+  .next-step {
+    display: none;
   }
 
   .rank-text .bar {
+    grid-column: 1 / -1;
     width: 100%;
     height: 4px;
+    margin-top: 0;
   }
 }
 </style>

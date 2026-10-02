@@ -117,6 +117,18 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         en: 'After sending feedback, the introductory prompt disappears and only the delivery confirmation remains.',
         ru: 'После отправки обращения вводная подсказка исчезает — остаётся подтверждение отправки.',
       },
+      {
+        en: 'The friends button no longer wraps onto a separate row beside the profile and career buttons.',
+        ru: 'Кнопка друзей больше не переносится на отдельную строку рядом с профилем и карьерой.',
+      },
+      {
+        en: 'The nickname edit icon now fits inside its button.',
+        ru: 'Иконка редактирования ника больше не выходит за границы кнопки.',
+      },
+      {
+        en: 'The rank summary is easier to read, with the rank name and MMR kept on one line.',
+        ru: 'Ранг стал легче читать: название и MMR отображаются в одну строку.',
+      },
     ],
   },
   {
