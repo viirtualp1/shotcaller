@@ -44,6 +44,7 @@ import { useFightRequest } from '../composables/useFightRequest'
 import { useGameText } from '../composables/useGameText'
 import { useHotkeys } from '../composables/useHotkeys'
 import { useDragStore } from '../stores/drag'
+import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { usePauseStore } from '../stores/pause'
@@ -60,6 +61,7 @@ const timer = usePlanningTimerStore()
 const menu = useMenuStore()
 const pause = usePauseStore()
 const drag = useDragStore()
+const duel = useDuelStore()
 const { t } = useGameText()
 const tour = useTutorial()
 
@@ -170,6 +172,17 @@ useHotkeys({
     }
   },
   cancel: escape,
+  togglePause: () => {
+    if (!store.isDuel) {
+      return
+    }
+
+    if (duel.paused) {
+      void duel.unpause()
+    } else {
+      void duel.pause()
+    }
+  },
 })
 
 const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, { immediate: false })

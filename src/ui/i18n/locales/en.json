@@ -549,7 +549,8 @@
       "xp": "Buy experience",
       "sell": "Sell the selected hero or item",
       "menu": "Menu",
-      "fight": "Fight"
+      "fight": "Fight",
+      "pause": "Pause or resume a duel"
     }
   },
   "errors": {

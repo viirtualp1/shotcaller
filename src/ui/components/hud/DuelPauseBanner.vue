@@ -30,6 +30,7 @@ const { t } = useGameText()
           type="button"
           class="btn primary resume"
           :disabled="duel.pausing || (duel.resumeIn ?? 0) > 0"
+          title="F9"
           @click="duel.unpause()"
         >
           <Play :size="16" />

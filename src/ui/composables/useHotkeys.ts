@@ -9,10 +9,11 @@ export interface Hotkeys {
   readonly fight: () => void
   readonly sell: () => void
   readonly cancel: () => void
+  readonly togglePause: () => void
 }
 
 /** Matches physical keys so the shortcuts work on a Russian keyboard layout as well. */
-export function useHotkeys({ reroll, buyXp, fight, sell, cancel }: Hotkeys) {
+export function useHotkeys({ reroll, buyXp, fight, sell, cancel, togglePause }: Hotkeys) {
   const bind = (code: string, action: () => void, skipOnButtons = false) =>
     onKeyStroke(
       (e) => e.code === code,
@@ -39,4 +40,5 @@ export function useHotkeys({ reroll, buyXp, fight, sell, cancel }: Hotkeys) {
   bind('KeyE', sell)
   bind('Escape', cancel)
   bind('Space', fight, true)
+  bind('F9', togglePause)
 }

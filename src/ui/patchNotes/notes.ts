@@ -90,8 +90,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     campaign: 'pause',
     general: [
       {
-        en: 'Either coach can **pause a duel** for both: the battle and the planning clock stop, and nobody can change their lineup. Each coach has **2 pauses** per duel, at least **90 s** apart. The coach who paused can resume at any time, the other after **10 s**, and the duel carries on by itself after **60 s**.',
-        ru: 'Любой из тренеров может **поставить дуэль на паузу** для обоих: бой и таймер планирования останавливаются, а менять расстановку нельзя. У каждого **2 паузы** за дуэль, не чаще раза в **90 с**. Поставивший паузу может снять её когда угодно, соперник — через **10 с**, а через **60 с** дуэль продолжится сама.',
+        en: 'Either coach can **pause a duel** for both: the battle and the planning clock stop, and nobody can change their lineup. Each coach has **2 pauses** per duel, at least **90 s** apart. The coach who paused can resume at any time, the other after **10 s**, and the duel carries on by itself after **60 s**. **F9** pauses and resumes.',
+        ru: 'Любой из тренеров может **поставить дуэль на паузу** для обоих: бой и таймер планирования останавливаются, а менять расстановку нельзя. У каждого **2 паузы** за дуэль, не чаще раза в **90 с**. Поставивший паузу может снять её когда угодно, соперник — через **10 с**, а через **60 с** дуэль продолжится сама. Пауза ставится и снимается клавишей **F9**.',
       },
       {
         en: 'Supports now **heal cores first** and walk behind them instead of leading the fight. They only pick targets their cores are already fighting.',

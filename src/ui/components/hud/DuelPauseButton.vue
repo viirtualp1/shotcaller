@@ -26,7 +26,7 @@ const title = computed(() => {
     class="icon-btn duel-pause"
     :disabled="!duel.canPause"
     :aria-label="title"
-    :title="title"
+    :title="`${title} · F9`"
     @click="duel.pause()"
   >
     <Pause :size="16" />

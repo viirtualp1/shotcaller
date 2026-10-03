@@ -149,6 +149,10 @@ const HOTKEYS: readonly { key: string; label: string }[] = [
     key: 'Space',
     label: 'fight',
   },
+  {
+    key: 'F9',
+    label: 'pause',
+  },
 ]
 
 const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
