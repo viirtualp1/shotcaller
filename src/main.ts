@@ -1,3 +1,4 @@
+import { injectSpeedInsights } from '@vercel/speed-insights'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { migrateLegacyStorage } from './application/persistence/storageKeys'
@@ -10,3 +11,5 @@ migrateLegacyStorage()
 const app = createApp(App).use(createPinia()).use(i18n)
 useSettingsStore()
 app.mount('#app')
+
+injectSpeedInsights({ framework: 'vue' })

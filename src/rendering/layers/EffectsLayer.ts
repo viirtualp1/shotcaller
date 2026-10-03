@@ -44,9 +44,13 @@ export class EffectsLayer extends Container {
       this.ring(victim.position, 34, this.teamColor(killer.team), 0.5)
     })
 
-    this.listen(events, 'damaged', ({ target, amount, crit }) => {
+    this.listen(events, 'damaged', ({ target, source, amount, crit }) => {
       const rounded = Math.round(amount)
       if (rounded <= 0) {
+        return
+      }
+
+      if (this.perspective.seen(target.team) === 0 && source.kind !== 'hero') {
         return
       }
 
