@@ -1,8 +1,60 @@
-<!-- Supabase → Authentication → Emails → Change Email Address. Subject: "The Shotcaller: подтверди почту / confirm your email" -->
-<!-- Players get this when they sign in with an address the game has not seen yet: it becomes their account. -->
-<h2>The Shotcaller</h2>
-<p>Код подтверждения почты · Your confirmation code:</p>
-<p style="font-size: 30px; font-weight: 700; letter-spacing: 6px">{{ .Token }}</p>
-<p>Введи его в игре, и прогресс сохранится в аккаунте {{ .NewEmail }}. Или открой <a href="{{ .ConfirmationURL }}">ссылку</a> на том же устройстве.</p>
-<p>Enter it in the game to keep your progress under {{ .NewEmail }}, or open <a href="{{ .ConfirmationURL }}">this link</a> on the same device.</p>
-<p style="color: #888">Если это был не ты, просто не отвечай на письмо. · If this wasn't you, ignore this letter.</p>
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Supabase → Authentication → Emails → Change Email Address. Subject: "The Shotcaller: confirm your email / подтверди почту" -->
+    <!-- Players get this when they sign in with an address the game has not seen yet: it becomes their account. -->
+    <!-- Code only: a link would open the website instead of the PWA or Discord Activity where the player is signing in. -->
+    <!-- Email clients ignore SVG, web fonts and most CSS: tables, inline styles and a hosted PNG logo only. -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <title>The Shotcaller</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #131b18">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      Your confirmation code: {{ .Token }} · Код подтверждения: {{ .Token }}
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#131b18" style="background-color: #131b18">
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 480px">
+            <tr>
+              <td align="center" style="padding-bottom: 20px">
+                <img src="https://www.theshotcaller.online/pwa-192x192.png" width="64" height="64" alt="The Shotcaller" style="display: block; border: 0; border-radius: 14px" />
+              </td>
+            </tr>
+
+            <tr>
+              <td bgcolor="#1f2b27" style="background-color: #1f2b27; border: 1px solid #3a4743; border-radius: 12px; padding: 32px 28px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ece8dc">
+                <p style="margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #a8b4ac">The Shotcaller</p>
+                <h1 style="margin: 0 0 6px; font-size: 26px; line-height: 1.2; font-weight: 800; color: #ece8dc">Confirm your email</h1>
+                <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5; color: #a8b4ac">Подтверди почту</p>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" bgcolor="#131b18" style="background-color: #131b18; border: 1px solid #f4c55b; border-radius: 10px; padding: 18px 12px">
+                      <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 34px; line-height: 1; font-weight: 700; letter-spacing: 8px; color: #f4c55b">{{ .Token }}</span>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 24px 0 6px; font-size: 15px; line-height: 1.55; color: #ece8dc">Enter this code in the game’s sign-in window to keep this device’s progress under <strong style="color: #f4c55b">{{ .NewEmail }}</strong>.</p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #a8b4ac">Введи этот код в окне входа в игре: прогресс с устройства сохранится в аккаунте {{ .NewEmail }}.</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td align="center" style="padding: 20px 12px 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #71807a">
+                If this wasn’t you, you can ignore this email.<br />
+                Если это был не ты, просто проигнорируй письмо.<br />
+                <a href="https://www.theshotcaller.online/" style="color: #a8b4ac; text-decoration: underline">theshotcaller.online</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

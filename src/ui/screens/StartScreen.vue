@@ -13,6 +13,7 @@ import BoardFrame from '../components/board/BoardFrame.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
 
+import DiscordCard from '../components/patchNotes/DiscordCard.vue'
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
 import CareerChip from '../components/profile/CareerChip.vue'
@@ -171,6 +172,7 @@ useIntervalFn(() => {
 
     <div class="news">
       <MovedCard />
+      <DiscordCard />
       <LatestPatchCard ref="patchCard" />
     </div>
 

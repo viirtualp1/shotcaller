@@ -25,7 +25,7 @@ export type LegalId = (typeof LEGAL_IDS)[number]
 export const LEGAL_UPDATED = '2026-10-03'
 
 /** The team's address for privacy and legal requests. Until it is set, requests go through the in-game form. */
-export const LEGAL_EMAIL: string | null = 'virtualp1.work@gmail.com'
+export const LEGAL_EMAIL: string | null = 'shotcaller.team@gmail.com'
 
 export const legalPath = (id: LegalId) => `/${id}`
 

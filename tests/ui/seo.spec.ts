@@ -25,7 +25,8 @@ describe('public page SEO', () => {
 
     expect(html).toContain(`<h1>Patch ${LATEST_PATCH.version}`)
     expect(html).toContain(escapeHtml(LATEST_PATCH.title.en))
-    expect(html).toContain(escapeHtml(LATEST_PATCH.general![0]!.en.replaceAll('**', '')))
+    const firstLine = [...(LATEST_PATCH.general ?? []), ...(LATEST_PATCH.fixes ?? [])][0]!
+    expect(html).toContain(escapeHtml(firstLine.en.replaceAll('**', '')))
     expect(html).toContain(`href="${patchPath(previous.version)}"`)
     expect(html).not.toContain('#/patches')
     expect(html).toContain('href="/"')

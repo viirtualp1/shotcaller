@@ -19,6 +19,21 @@ export function discordCloudUrl(origin: string) {
   return `${origin}${DISCORD_SUPABASE_PREFIX}`
 }
 
+export interface DiscordEnv {
+  readonly VITE_DISCORD_CLIENT_ID?: string
+  readonly VITE_DISCORD_PUBLIC?: string
+}
+
+/** The Discord-provided install link, offered only once the Activity is announced as public. */
+export function discordInstallUrl(env: DiscordEnv) {
+  const id = env.VITE_DISCORD_CLIENT_ID?.trim()
+  if (!id || !/^\d+$/.test(id) || env.VITE_DISCORD_PUBLIC !== 'true') {
+    return null
+  }
+
+  return `https://discord.com/oauth2/authorize?client_id=${id}`
+}
+
 /** Completes the handshake that tells Discord the Activity has loaded. */
 export async function startDiscordActivity(clientId: string | undefined) {
   if (!clientId) {

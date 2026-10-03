@@ -179,6 +179,11 @@
     },
     "newMatch": "New match",
     "continue": "Continue · round {round}",
+    "discord": {
+      "eyebrow": "Now on Discord",
+      "title": "Play with friends: join a voice channel, open **Activities** and pick The Shotcaller.",
+      "action": "Add to Discord"
+    },
     "move": {
       "eyebrow": "We've moved",
       "title": "This address shuts down shortly.",
@@ -899,7 +904,7 @@
       "send": "Get a code",
       "sentSignIn": "We sent a sign-in code to {email}.",
       "sentSignUp": "{email} is new here: we sent a code to confirm it, and this device's progress goes into the new account.",
-      "codeHint": "Enter the code from the letter, or open its link on this device.",
+      "codeHint": "Enter the code from the letter here. If it is not in your inbox, check the spam folder.",
       "code": "Code",
       "verify": "Sign in",
       "resend": "Send again",

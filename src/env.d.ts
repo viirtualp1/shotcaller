@@ -12,6 +12,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_GOOGLE?: string
   /** The Discord application ID, needed only when the game runs as a Discord Activity. */
   readonly VITE_DISCORD_CLIENT_ID?: string
+  /** `true` once the Activity is public: the main page then invites players to add it in Discord. */
+  readonly VITE_DISCORD_PUBLIC?: string
 }
 
 interface ImportMeta {

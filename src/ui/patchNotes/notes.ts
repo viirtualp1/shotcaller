@@ -81,6 +81,20 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.8.3',
+    date: '2026-10-03',
+    title: {
+      en: 'Sign in with a code',
+      ru: 'Вход по коду',
+    },
+    fixes: [
+      {
+        en: 'Email sign-in now uses only the **code** from the letter, so it works in the installed app and on any device instead of opening the website. If the letter is missing, the sign-in window reminds you to check spam.',
+        ru: 'Вход по почте теперь работает только по **коду** из письма: он срабатывает в установленном приложении и на любом устройстве, а не открывает сайт. Если письма нет, окно входа напомнит проверить «Спам».',
+      },
+    ],
+  },
+  {
     version: '8.8.2',
     date: '2026-10-03',
     title: {

@@ -69,7 +69,9 @@ through Discord's proxy; reload the Activity instead.
 
 1. **App Directory**: fill in the description, images, category, Terms of Service URL and Privacy Policy URL.
    Mention that the Activity uses the existing cloud saves and optional analytics.
-2. Share the install link or let players start it from the Activity launcher. To appear in Discord's
+2. In Vercel, set `VITE_DISCORD_PUBLIC=true` and redeploy. The main page then shows a “Now on Discord” card
+   beside the latest patch, linking to the install link; it stays hidden inside the Activity.
+3. Share the install link or let players start it from the Activity launcher. To appear in Discord's
    Activity discovery, enable discovery in the App Directory settings and follow Discord's current review
    requirements. Apps in 100 or more servers must complete verification.
 
