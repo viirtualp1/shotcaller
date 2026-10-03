@@ -12,7 +12,7 @@ export const ABILITY_PARAMS = {
   },
   prayer: {
     radius: 280,
-    heal: 130,
+    heal: 150,
     hpThreshold: 0.8,
   },
   barrel: {
@@ -48,12 +48,12 @@ export const ABILITY_PARAMS = {
     speed: 380,
   },
   roots: {
-    searchRadius: 160,
+    searchRadius: 240,
     radius: 110,
     duration: 2,
-    damage: 80,
-    heal: 80,
-    healRadius: 170,
+    damage: 100,
+    heal: 110,
+    healRadius: 200,
   },
   whirl: {
     triggerRadius: 90,

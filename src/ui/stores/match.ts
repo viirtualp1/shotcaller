@@ -84,6 +84,8 @@ interface DuelClock {
   readonly battleStartedAt: number | null
   /** When planning runs out: this round's, or the next one's once the battle is over. */
   readonly planningEndsAt: number
+  /** When this device saw the shared pause begin; absent while the duel runs. Kept across a reload. */
+  readonly pausedAt?: number | null
 }
 
 export interface LocatedHero {
@@ -167,7 +169,12 @@ export const useMatchStore = defineStore('match', () => {
   const savedRound = computed(() => saved.value?.round ?? null)
   const phase = computed(() => view.value?.phase ?? null)
   const isDuel = computed(() => duel.value !== null)
-  const isPlanning = computed(() => phase.value === 'planning' && !awaiting.value)
+  /** The duel's shared pause: the battle and both planning clocks stand still, and nobody can plan. */
+  const duelPausedAt = computed(() => (duel.value ? (duelClock.value?.pausedAt ?? null) : null))
+
+  const isPlanning = computed(
+    () => phase.value === 'planning' && !awaiting.value && duelPausedAt.value === null,
+  )
 
   /** When the duel's planning runs out, the summary included; null outside a duel and during its battle. */
   const planningEndsAt = computed(() =>
@@ -736,6 +743,34 @@ export const useMatchStore = defineStore('match', () => {
     }
   }
 
+  /**
+   * Stops or restarts this device's duel clock with the shared pause. Resuming moves the battle and the planning
+   * deadline on by the time spent paused, so both devices pick up where they stopped.
+   */
+  function setDuelPaused(paused: boolean) {
+    const clock = duelClock.value
+    if (!duel.value || !clock || paused === (clock.pausedAt != null)) {
+      return
+    }
+
+    if (paused) {
+      duelClock.value = {
+        ...clock,
+        pausedAt: Date.now(),
+      }
+
+      return
+    }
+
+    const shift = Date.now() - clock.pausedAt!
+    duelClock.value = {
+      ...clock,
+      pausedAt: null,
+      battleStartedAt: clock.battleStartedAt === null ? null : clock.battleStartedAt + shift,
+      planningEndsAt: clock.planningEndsAt + shift,
+    }
+  }
+
   /** Both devices end the battle at the same moment, so the next planning runs out for both at once. */
   function scheduleNextPlanning(battleSeconds: number) {
     const clock = duelClock.value
@@ -752,7 +787,7 @@ export const useMatchStore = defineStore('match', () => {
   }
 
   function tick(realSeconds: number) {
-    if (!session || phase.value !== 'battle') {
+    if (!session || phase.value !== 'battle' || duelPausedAt.value !== null) {
       return
     }
 
@@ -942,6 +977,8 @@ export const useMatchStore = defineStore('match', () => {
     isPlanning,
     isDuel,
     duel,
+    duelPausedAt,
+    setDuelPaused,
     awaiting,
     acceptsOpponent,
     planningEndsAt,

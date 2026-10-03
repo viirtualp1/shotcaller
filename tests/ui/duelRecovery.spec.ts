@@ -1,7 +1,7 @@
 import { createPinia, disposePinia, getActivePinia, setActivePinia } from 'pinia'
 import { nextTick, reactive, ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DuelError, type DuelEntry, type DuelService } from '@/application/social/duels'
+import { DuelError, NO_PAUSE, type DuelEntry, type DuelService } from '@/application/social/duels'
 import type { DuelBinding } from '@/ui/stores/match'
 import { useDuelStore } from '@/ui/stores/duel'
 
@@ -18,6 +18,8 @@ const match = reactive({
   isDuel: false,
   awaiting: false,
   view: null,
+  duelPausedAt: null,
+  setDuelPaused: vi.fn(),
   startDuel: vi.fn<(binding: DuelBinding) => void>(),
   settleDuel: vi.fn(),
   leaveToMenu: vi.fn(),
@@ -58,6 +60,7 @@ const entry = (status: 'invited' | 'active' = 'active'): DuelEntry => ({
     winner: null,
     endedBy: null,
     createdAt: new Date().toISOString(),
+    pause: NO_PAUSE,
   },
   opponent: {
     id: 'guest',
@@ -112,6 +115,8 @@ describe('duel recovery polling', () => {
       report: vi.fn(async () => undefined),
       forfeit: vi.fn(),
       claim: vi.fn(),
+      pause: vi.fn(),
+      unpause: vi.fn(),
       watch: vi.fn(() => () => undefined),
       reactions: vi.fn(() => ({
         send: vi.fn(),

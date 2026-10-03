@@ -3,7 +3,7 @@ import { SANDBOX, TRAINING_CAMPS } from '@/content/sandbox'
 import { direction, distance, offset, stepTowards, type Vec2 } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
-import { aheadOfLaneMates, holdLine } from '../services/laneOrders'
+import { aheadOfCores, aheadOfLaneMates, holdLine } from '../services/laneOrders'
 import { isThroneNearlyDown } from '../services/TowerSafety'
 import { inReach } from './AttackSystem'
 
@@ -172,7 +172,7 @@ export class MovementSystem implements System {
 
   /**
    * Under Hold a hero stops at its line and walks back to it after a chase; under Group it waits for the
-   * lane-mate furthest behind. Returns true when the order kept the hero from walking on.
+   * lane-mate furthest behind. A support also waits behind its cores. Returns true when the hero stays.
    */
   private keepsToOrders(unit: Unit, step: number) {
     const { map, queries } = this.ctx
@@ -192,7 +192,7 @@ export class MovementSystem implements System {
       return true
     }
 
-    return aheadOfLaneMates(map, queries.heroes, unit)
+    return aheadOfLaneMates(map, queries.heroes, unit) || aheadOfCores(map, queries.heroes, unit)
   }
 
   /** Back along the lane the way it came, towards its allies and its own towers. */

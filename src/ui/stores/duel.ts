@@ -10,11 +10,18 @@ import {
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { BoardExchange } from '@/application/social/BoardExchange'
+import {
+  cooldownLeft,
+  pauseEndsIn,
+  pausesLeft as pausesLeftFor,
+  resumeLeft,
+} from '@/application/social/duelPause'
 import { parseRemoteBoard } from '@/application/persistence/snapshot'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import {
   DuelError,
   INVITE_SECONDS,
+  NO_PAUSE,
   ROUND_TIMEOUT_SECONDS,
   sideOf,
   type Duel,
@@ -23,6 +30,7 @@ import {
 } from '@/application/social/duels'
 import type { ReactionId, ReactionLink } from '@/application/social/reactions'
 import { BALANCE_FINGERPRINT } from '@/content/balance'
+import { DUEL_PAUSE } from '@/content/rules'
 import { opponentOf, type ModeId, type TeamId } from '@/content/ids'
 import type { MatchResult } from '@/domain/match/judge'
 import type { PlayerState } from '@/domain/player/Player'
@@ -60,6 +68,8 @@ const secondsSince = (iso: string | null, now: number) => (iso ? (now - Date.par
 export const useDuelStore = defineStore('duel', () => {
   let service: DuelService | null = null
   let userId: string | null = null
+  /** The pause this device already ended on its own, so a refused request is not sent again every second. */
+  let autoResumed: string | null = null
   let stops: (() => void)[] = []
   let reactionLink: ReactionLink | null = null
   let reactionKey = 0
@@ -110,6 +120,10 @@ export const useDuelStore = defineStore('duel', () => {
   const searchRecovering = ref(false)
   /** Fight is being taken back; the server decides whether the other coach was quicker. */
   const withdrawing = ref(false)
+  /** A pause or resume request is on its way. */
+  const pausing = ref(false)
+  /** When this coach last paused, on this device's clock; the server's would carry the clocks' difference. */
+  const lastPauseAt = ref<number | null>(null)
 
   const reconnecting = computed(() => recovering.value || searchRecovering.value || !online.value)
   const matchmaking = computed(() => searchMode.value !== null || cancellingSearch.value)
@@ -138,10 +152,53 @@ export const useDuelStore = defineStore('duel', () => {
     () => matchStore.awaiting && !opponentReady.value && !withdrawing.value && !reconnecting.value,
   )
 
+  const duelPause = computed(() => active.value?.duel.pause ?? NO_PAUSE)
+  const paused = computed(() => duelPause.value.by !== null)
+  const pausedByMe = computed(() => paused.value && duelPause.value.by === userId)
+  const pausesLeft = computed(() => pausesLeftFor(duelPause.value, mySide.value))
+
+  /** Seconds until this coach may pause again; after a reload, measured from the server's record. */
+  const pauseCooldown = computed(() => {
+    const recorded = duelPause.value.last[mySide.value]
+
+    return cooldownLeft(lastPauseAt.value ?? (recorded ? Date.parse(recorded) : null), now.value.getTime())
+  })
+
+  const canPause = computed(
+    () =>
+      matchStore.isDuel &&
+      matchStore.phase !== 'finished' &&
+      active.value?.duel.status === 'active' &&
+      !paused.value &&
+      pausesLeft.value > 0 &&
+      pauseCooldown.value === 0 &&
+      !pausing.value &&
+      !reconnecting.value,
+  )
+
+  /** Seconds until this coach may resume the pause; null while the duel runs. */
+  const resumeIn = computed(() => {
+    const at = matchStore.duelPausedAt
+
+    return paused.value && at !== null ? resumeLeft(at, now.value.getTime(), pausedByMe.value) : null
+  })
+
+  /** Seconds until the pause ends on its own; null while the duel runs. */
+  const resumesIn = computed(() => {
+    const at = matchStore.duelPausedAt
+
+    return paused.value && at !== null ? pauseEndsIn(at, now.value.getTime()) : null
+  })
+
   /** Waiting on a coach who went quiet for longer than a round may take. */
   const canClaim = computed(() => {
     const entry = active.value
     if (!entry || (matchStore.phase !== 'finished' && (!matchStore.awaiting || opponentReady.value))) {
+      return false
+    }
+
+    /* The round keeps its time while the duel is paused; resuming moves its clock on. */
+    if (entry.duel.pause.by !== null) {
       return false
     }
 
@@ -833,6 +890,87 @@ export const useDuelStore = defineStore('duel', () => {
     await service?.forfeit(entry.duel.id).catch(fail)
   }
 
+  /** Sets the active duel's pause right away; the duel row from Realtime confirms or corrects it. */
+  function showPause(duelId: string, pause: Duel['pause']) {
+    const entry = active.value
+    if (entry?.duel.id === duelId) {
+      active.value = {
+        ...entry,
+        duel: {
+          ...entry.duel,
+          pause,
+        },
+      }
+    }
+  }
+
+  /** After a refused pause or resume the server's row shows what actually holds. */
+  function reloadActive(duelId: string) {
+    void service
+      ?.find(duelId)
+      .then((duel) => duel && onDuel(duel))
+      .catch(() => undefined)
+  }
+
+  async function pause() {
+    const entry = active.value
+    if (!service || !entry || !userId || !canPause.value) {
+      return
+    }
+
+    pausing.value = true
+
+    try {
+      await service.pause(entry.duel.id)
+      lastPauseAt.value = Date.now()
+
+      const current = active.value?.duel.pause
+      if (current && current.by === null) {
+        const used: [number, number] = [current.used[0], current.used[1]]
+        used[mySide.value]++
+
+        showPause(entry.duel.id, {
+          ...current,
+          by: userId,
+          since: new Date().toISOString(),
+          used,
+        })
+      }
+    } catch (error) {
+      fail(error)
+      reloadActive(entry.duel.id)
+    } finally {
+      pausing.value = false
+    }
+  }
+
+  async function unpause() {
+    const entry = active.value
+    if (!service || !entry || !paused.value || pausing.value || (resumeIn.value ?? 0) > 0) {
+      return
+    }
+
+    pausing.value = true
+
+    try {
+      await service.unpause(entry.duel.id)
+
+      const current = active.value?.duel.pause
+      if (current && current.by !== null) {
+        showPause(entry.duel.id, {
+          ...current,
+          by: null,
+          since: null,
+        })
+      }
+    } catch (error) {
+      fail(error)
+      reloadActive(entry.duel.id)
+    } finally {
+      pausing.value = false
+    }
+  }
+
   async function claim() {
     const entry = active.value
     if (entry) {
@@ -907,8 +1045,34 @@ export const useDuelStore = defineStore('duel', () => {
     await load().catch(() => undefined)
   }
 
+  /* The pause reaches the match clock from the duel row, however it got here. */
+  watch(
+    [paused, () => matchStore.isDuel],
+    ([isPaused, isDuel]) => matchStore.setDuelPaused(isPaused && isDuel),
+    { immediate: true },
+  )
+
+  watch(
+    () => active.value?.duel.id,
+    () => (lastPauseAt.value = null),
+  )
+
   /** Invites time out on the server; the dialogs close on their own a little after. */
   watch(now, () => {
+    /*
+     * A pause ends after its minute. The coach who paused ends it; the other device steps in a few seconds
+     * later in case that one went away. Each device asks once per pause, so nothing repeats every second.
+     */
+    const pausedAt = matchStore.duelPausedAt
+    const pauseKey = `${active.value?.duel.id}:${duelPause.value.since}`
+    if (paused.value && pausedAt !== null && resumesIn.value === 0 && autoResumed !== pauseKey) {
+      const late = now.value.getTime() - pausedAt >= (DUEL_PAUSE.maxSeconds + 5) * 1000
+      if (pausedByMe.value || late) {
+        autoResumed = pauseKey
+        void unpause()
+      }
+    }
+
     if (incoming.value && inviteSecondsLeft(incoming.value) === 0) {
       incoming.value = null
     }
@@ -985,6 +1149,16 @@ export const useDuelStore = defineStore('duel', () => {
     canWithdraw,
     withdrawing,
     withdraw,
+    paused,
+    pausedByMe,
+    pausesLeft,
+    pauseCooldown,
+    canPause,
+    resumeIn,
+    resumesIn,
+    pausing,
+    pause,
+    unpause,
     reconnecting,
     inviteSecondsLeft,
     reactionsShown,

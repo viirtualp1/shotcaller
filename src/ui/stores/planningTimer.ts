@@ -7,7 +7,7 @@ import { useSettingsStore } from './settings'
 
 /**
  * Planning countdown on standard difficulty and in duels. Real time, so it lives in the UI layer rather than
- * the domain. A duel's clock never pauses and runs to a deadline both devices share: the other player keeps planning.
+ * the domain. A duel's clock runs to a deadline both devices share and stops only for the shared duel pause.
  */
 export const usePlanningTimerStore = defineStore('planningTimer', () => {
   const match = useMatchStore()
@@ -40,6 +40,11 @@ export const usePlanningTimerStore = defineStore('planningTimer', () => {
   )
 
   function tickDuel() {
+    /* The shared pause holds the countdown where it is; resuming moves the deadline on by the pause. */
+    if (match.duelPausedAt !== null) {
+      return
+    }
+
     const deadline = match.planningEndsAt
     remaining.value = duelSecondsLeft()
 

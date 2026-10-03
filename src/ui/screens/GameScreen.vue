@@ -27,6 +27,8 @@ import DragLayer from '../components/hud/DragLayer.vue'
 import GameMenu from '../components/hud/GameMenu.vue'
 import NoticeToast from '../components/hud/NoticeToast.vue'
 import PhaseBanner from '../components/hud/PhaseBanner.vue'
+import DuelPauseBanner from '../components/hud/DuelPauseBanner.vue'
+import DuelPauseButton from '../components/hud/DuelPauseButton.vue'
 import MatchScoreboard from '../components/hud/MatchScoreboard.vue'
 import ReactionStickers from '../components/hud/ReactionStickers.vue'
 import ReactionWheel from '../components/hud/ReactionWheel.vue'
@@ -208,7 +210,10 @@ watch(
       </div>
 
       <div class="corner reactions-corner">
-        <ReactionWheel v-if="store.isDuel" />
+        <template v-if="store.isDuel">
+          <DuelPauseButton />
+          <ReactionWheel />
+        </template>
       </div>
     </header>
 
@@ -259,6 +264,7 @@ watch(
     </div>
 
     <PhaseBanner />
+    <DuelPauseBanner v-if="store.isDuel" />
     <DragLayer />
     <RoundSummaryDialog />
     <ConfirmFightDialog />
@@ -484,6 +490,8 @@ watch(
 
 .hud-top .reactions-corner {
   justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .compact .hud-top :deep(.brand) {

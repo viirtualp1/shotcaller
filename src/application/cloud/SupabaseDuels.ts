@@ -45,6 +45,13 @@ const duelRow = z.object({
   winner: z.uuid().nullable().optional(),
   ended_by: z.enum(['result', 'forfeit', 'timeout']).nullable().optional(),
   created_at: z.string(),
+  /* Servers without the pause migration send none of these: such duels are never paused. */
+  paused_by: z.uuid().nullable().default(null),
+  paused_at: z.string().nullable().default(null),
+  host_pauses: z.int().min(0).default(0),
+  guest_pauses: z.int().min(0).default(0),
+  host_paused_last: z.string().nullable().default(null),
+  guest_paused_last: z.string().nullable().default(null),
 })
 
 function toDuel(row: z.infer<typeof duelRow>): Duel {
@@ -61,6 +68,12 @@ function toDuel(row: z.infer<typeof duelRow>): Duel {
     winner: row.winner ?? null,
     endedBy: row.ended_by ?? null,
     createdAt: row.created_at,
+    pause: {
+      by: row.paused_by,
+      since: row.paused_at,
+      used: [row.host_pauses, row.guest_pauses],
+      last: [row.host_paused_last, row.guest_paused_last],
+    },
   }
 }
 
@@ -243,6 +256,26 @@ export class SupabaseDuels implements DuelService {
 
   async claim(duelId: string) {
     const { error } = await this.client.rpc('claim_duel', { duel: duelId })
+    if (error) {
+      throw failure(error)
+    }
+  }
+
+  async pause(duelId: string) {
+    const { error } = await this.client
+      .rpc('pause_duel', { duel: duelId })
+      .abortSignal(AbortSignal.timeout(12_000))
+
+    if (error) {
+      throw failure(error)
+    }
+  }
+
+  async unpause(duelId: string) {
+    const { error } = await this.client
+      .rpc('resume_duel', { duel: duelId })
+      .abortSignal(AbortSignal.timeout(12_000))
+
     if (error) {
       throw failure(error)
     }

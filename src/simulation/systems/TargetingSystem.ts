@@ -3,7 +3,7 @@ import { distance } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import { creditedHero } from '../services/CombatService'
 import { withinLaneBand } from '../services/laneBand'
-import { beyondHoldLine } from '../services/laneOrders'
+import { beyondCores, beyondHoldLine } from '../services/laneOrders'
 import { isCaughtAlone } from '../services/skirmish'
 import { isThroneNearlyDown } from '../services/TowerSafety'
 import { trainingTargetAllowed } from '../services/training'
@@ -149,7 +149,8 @@ export class TargetingSystem implements System {
       return null
     }
 
-    if (this.exposed(unit)) {
+    /* Backing off a tower beats a trade, unless roots hold the hero there: then it hits back what it can reach. */
+    if (this.exposed(unit) && !(unit.status.root > 0 && inReach(unit, attacker))) {
       return null
     }
 
@@ -202,7 +203,7 @@ export class TargetingSystem implements System {
       return false
     }
 
-    if (this.pastHoldLine(unit, target, gap)) {
+    if (this.pastHoldLine(unit, target, gap) || this.aheadOfCores(unit, target)) {
       return false
     }
 
@@ -248,6 +249,11 @@ export class TargetingSystem implements System {
   /** Under Hold a hero only takes on what is behind its line, or already within its reach from there. */
   private pastHoldLine(hero: Unit, target: Unit, gap: number) {
     return gap > (hero.attack?.range ?? 0) && beyondHoldLine(this.ctx.map, hero, target.position)
+  }
+
+  /** A support fights what its cores fight, within its own reach of them, and never runs ahead of them. */
+  private aheadOfCores(hero: Unit, target: Unit) {
+    return beyondCores(this.ctx.map, this.ctx.queries.heroes, hero, target.position, attackReach(hero))
   }
 
   /** A hero standing in range of an untanked enemy tower backs off instead of picking fights. */
@@ -364,7 +370,11 @@ export class TargetingSystem implements System {
 
   private heroScore(hero: Unit, candidate: Unit, gap: number) {
     const quarry = hero.roamer?.quarry
-    if ((quarry && candidate.kind !== 'hero') || this.pastHoldLine(hero, candidate, gap)) {
+    if (
+      (quarry && candidate.kind !== 'hero') ||
+      this.pastHoldLine(hero, candidate, gap) ||
+      this.aheadOfCores(hero, candidate)
+    ) {
       return Infinity
     }
 

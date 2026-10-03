@@ -180,8 +180,8 @@
     "newMatch": "New match",
     "continue": "Continue · round {round}",
     "discord": {
-      "eyebrow": "Now on Discord",
-      "title": "Play with friends: join a voice channel, open **Activities** and pick The Shotcaller.",
+      "eyebrow": "Now on Discord · Activities",
+      "title": "Play with friends in a voice channel",
       "action": "Add to Discord"
     },
     "move": {
@@ -241,7 +241,7 @@
   "abilities": {
     "charge": "Leaps to the farthest enemy within {radius}: {damage} damage and a {stun} s stun.",
     "volley": "{arrows} arrows at the nearest enemies, {damage} damage each.",
-    "prayer": "Heals the most wounded nearby allied hero for {heal}.",
+    "prayer": "Heals the most wounded nearby core for {heal}; other supports only when no core needs it.",
     "barrel": "Explosion dealing {damage} area damage. Structures take {structureBonus} times more.",
     "chainLightning": "Lightning jumps between {bounces} enemies: {damage} damage to the first, {falloff}% less to each next one.",
     "poisonDagger": "Dagger at the most wounded hero: {damage} damage, then {poison} poison every {tick} s for {duration} s and a {slow}% slow.",
@@ -256,7 +256,7 @@
     "turret": "Deploys a turret for {lifetime} s with {hp} health and {damage} damage per shot. It hits structures too.",
     "hook": "Pulls the farthest hero within {radius}: {damage} damage and a {stun} s stun.",
     "assassinate": "Shoots the most wounded hero within {radius} for {damage} damage.",
-    "shield": "Gives up to {targets} most wounded allies a shield that absorbs {absorb} damage for {duration} s."
+    "shield": "Gives up to {targets} wounded allies, cores first, a shield that absorbs {absorb} damage for {duration} s."
   },
   "synergies": {
     "guardian": {
@@ -1058,7 +1058,18 @@
     "resume": "Back to the duel",
     "elsewhere": "The duel is running on another device or tab",
     "withdraw": "Not ready yet",
-    "withdrawHint": "Your opponent is still planning: go back and change your lineup"
+    "withdrawHint": "Your opponent is still planning: go back and change your lineup",
+    "pause": {
+      "button": "Pause the duel ({n} left)",
+      "none": "No pauses left",
+      "cooldown": "Pause again in {s} s",
+      "title": "Pause",
+      "byYou": "You paused the duel",
+      "byOpponent": "{name} paused the duel",
+      "endsIn": "The duel resumes on its own in {s} s",
+      "resume": "Resume",
+      "resumeIn": "Resume in {s} s"
+    }
   },
   "coach": {
     "loading": "Loading the profile…",

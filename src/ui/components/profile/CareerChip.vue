@@ -105,10 +105,11 @@ const progressLabel = computed(() =>
   color: var(--gold);
 }
 
+/* The icon lines up with the title, not the middle of the card. */
 .content {
   min-width: 0;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
 }
 

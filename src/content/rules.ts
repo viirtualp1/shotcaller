@@ -49,6 +49,18 @@ export const DUEL_BATTLE_SPEED = 1
 /** Added to a duel's planning time for reading the round summary; the clock starts when the battle ends. */
 export const DUEL_SUMMARY_SECONDS = 10
 
+/** The shared duel pause. The server enforces the same numbers in `supabase/migrations`. */
+export const DUEL_PAUSE = {
+  /** Pauses each coach may take per duel. */
+  perCoach: 2,
+  /** Seconds between two pauses by the same coach. */
+  cooldownSeconds: 90,
+  /** The other coach may resume after this many seconds; the coach who paused, at any time. */
+  resumeAfterSeconds: 10,
+  /** A pause ends on its own after this long. */
+  maxSeconds: 60,
+} as const
+
 /** Planning time limit per difficulty; null means the player starts the fight manually. */
 export const DIFFICULTIES: Readonly<Record<Difficulty, { readonly planningSeconds: number | null }>> = {
   relaxed: { planningSeconds: null },
@@ -198,6 +210,11 @@ export const BATTLE = {
     holdMargin: 40,
     /** Under Group no hero walks further than this ahead of the lane-mate furthest behind. */
     groupSpread: 70,
+  },
+  /** Supports walk behind the cores of their lane and heal them instead of leading the fight. */
+  support: {
+    /** How far behind the frontmost core lane-mate a support stays while walking the lane. */
+    trail: 30,
   },
   gank: {
     thinkInterval: 1.2,

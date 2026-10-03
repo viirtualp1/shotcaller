@@ -68,7 +68,7 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking' | 'training'
+  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause'
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
   readonly general?: readonly NoteText[]
@@ -80,6 +80,113 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '8.9',
+    date: '2026-10-03',
+    title: {
+      en: 'Time out',
+      ru: 'Тайм-аут',
+    },
+    campaign: 'pause',
+    general: [
+      {
+        en: 'Either coach can **pause a duel** for both: the battle and the planning clock stop, and nobody can change their lineup. Each coach has **2 pauses** per duel, at least **90 s** apart. The coach who paused can resume at any time, the other after **10 s**, and the duel carries on by itself after **60 s**.',
+        ru: 'Любой из тренеров может **поставить дуэль на паузу** для обоих: бой и таймер планирования останавливаются, а менять расстановку нельзя. У каждого **2 паузы** за дуэль, не чаще раза в **90 с**. Поставивший паузу может снять её когда угодно, соперник — через **10 с**, а через **60 с** дуэль продолжится сама.',
+      },
+      {
+        en: 'Supports now **heal cores first** and walk behind them instead of leading the fight. They only pick targets their cores are already fighting.',
+        ru: 'Саппорты теперь **сначала лечат коров** и идут за ними, а не впереди. Цели они выбирают только среди тех, с кем уже дерутся коры.',
+      },
+    ],
+    roles: [
+      {
+        id: 'support',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Healing aura: **1.2%** → **1.8%** of maximum health per second',
+            ru: 'Аура лечения: **1,2%** → **1,8%** от максимального здоровья в секунду',
+          },
+          {
+            en: 'Aura radius: **170** → **200**',
+            ru: 'Радиус ауры: **170** → **200**',
+          },
+        ],
+      },
+    ],
+    heroes: [
+      {
+        id: 'acolyte',
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'prayer',
+            badge: 'buffed',
+            changes: [
+              {
+                en: 'Heal: **130** → **150**, and the most wounded core is healed before other supports',
+                ru: 'Лечение: **130** → **150**; самый раненый кор лечится раньше других саппортов',
+              },
+            ],
+          },
+        ],
+        changes: [],
+      },
+      {
+        id: 'warden',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Mana: **100** → **80**, so Entangling Roots comes round sooner',
+            ru: 'Мана: **100** → **80**, поэтому Entangling Roots срабатывает чаще',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'roots',
+            badge: 'buffed',
+            changes: [
+              {
+                en: 'Cast range: **160** → **240**',
+                ru: 'Дальность: **160** → **240**',
+              },
+              {
+                en: 'Damage: **80** → **100**',
+                ru: 'Урон: **80** → **100**',
+              },
+              {
+                en: 'Heal: **80** → **110**, in a radius of **170** → **200**',
+                ru: 'Лечение: **80** → **110** в радиусе **170** → **200**',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'oracle',
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'shield',
+            changes: [
+              {
+                en: 'Shields wounded cores before other supports.',
+                ru: 'Сначала защищает раненых коров, затем других саппортов.',
+              },
+            ],
+          },
+        ],
+        changes: [],
+      },
+    ],
+    fixes: [
+      {
+        en: 'A hero held in place by roots beside an enemy tower now hits back at an attacker within reach.',
+        ru: 'Герой, которого корни удерживают у вражеской башни, теперь отвечает обидчику, до которого дотягивается.',
+      },
+    ],
+  },
   {
     version: '8.8.4',
     date: '2026-10-03',

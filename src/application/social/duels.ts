@@ -7,6 +7,24 @@ export type DuelStatus =
 
 export type DuelEnding = 'result' | 'forfeit' | 'timeout'
 
+/** The shared pause of an active duel, as the server keeps it. Times are server timestamps. */
+export interface DuelPause {
+  /** The coach who paused; null while the duel runs. */
+  readonly by: string | null
+  readonly since: string | null
+  /** Pauses each side has taken, host first. */
+  readonly used: readonly [number, number]
+  /** When each side last paused, for the cooldown. */
+  readonly last: readonly [string | null, string | null]
+}
+
+export const NO_PAUSE: DuelPause = {
+  by: null,
+  since: null,
+  used: [0, 0],
+  last: [null, null],
+}
+
 export interface Duel {
   readonly id: string
   /** The inviting coach; fights as team 0. */
@@ -25,6 +43,7 @@ export interface Duel {
   readonly winner: string | null
   readonly endedBy: DuelEnding | null
   readonly createdAt: string
+  readonly pause: DuelPause
 }
 
 /** An open invite or active duel, with the other coach's card. */
@@ -70,6 +89,10 @@ export interface DuelService {
   report(duelId: string, winningSide: TeamId | null, byThrone: boolean): Promise<void>
   forfeit(duelId: string): Promise<void>
   claim(duelId: string): Promise<void>
+  /** Pauses the duel for both coaches; the server checks the pauses left and the cooldown. */
+  pause(duelId: string): Promise<void>
+  /** Ends the pause; does nothing when the duel is not paused. */
+  unpause(duelId: string): Promise<void>
   /** Calls back when an invite arrives or a duel changes. Returns a function that stops listening. */
   watch(onChange: (duel: Duel) => void): () => void
   /** Calls back when the other side's board for a round becomes readable. */

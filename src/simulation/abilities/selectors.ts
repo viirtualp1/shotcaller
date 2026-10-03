@@ -55,6 +55,13 @@ export const healthRatio = (u: Unit) => u.health.current / u.health.max
 export const weakest = (units: readonly Unit[]) =>
   [...units].sort((a, b) => healthRatio(a) - healthRatio(b))[0]
 
+/** Every role but support carries the fight; supports look after these heroes first. */
+export const isCore = (u: Unit) => u.hero?.role !== 'support'
+
+/** Wounded cores first, weakest first; other supports only after them. */
+export const coresFirst = (units: readonly Unit[]) =>
+  [...units].sort((a, b) => Number(isCore(b)) - Number(isCore(a)) || healthRatio(a) - healthRatio(b))
+
 export function densest(ctx: SimulationContext, caster: Unit, searchRadius: number, clusterRadius: number) {
   const candidates = enemiesAround(ctx, caster, caster.position, searchRadius)
   let best: Unit | undefined

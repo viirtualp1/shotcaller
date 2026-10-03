@@ -1,13 +1,13 @@
 import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
-import { alliedHeroesAround, healthRatio, weakest } from './selectors'
+import { alliedHeroesAround, coresFirst, healthRatio } from './selectors'
 
 const P = ABILITY_PARAMS.prayer
 
 export const prayer: Ability = {
   id: 'prayer',
   cast(caster, ctx) {
-    const target = weakest(
+    const [target] = coresFirst(
       alliedHeroesAround(ctx, caster, P.radius).filter((u) => healthRatio(u) < P.hpThreshold),
     )
 

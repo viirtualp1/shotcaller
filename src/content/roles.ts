@@ -39,8 +39,8 @@ export const ROLES: Readonly<Record<RoleId, RoleDefinition>> = {
     itemAttackSpeed: 0.4,
     itemSpellPower: 0.6,
     healAura: {
-      radius: 170,
-      hpPercentPerSecond: 0.012,
+      radius: 200,
+      hpPercentPerSecond: 0.018,
     },
   },
   mage: {

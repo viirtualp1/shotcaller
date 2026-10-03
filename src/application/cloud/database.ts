@@ -70,6 +70,12 @@ export interface Database {
           created_at: string
           started_at: string | null
           finished_at: string | null
+          paused_by: string | null
+          paused_at: string | null
+          host_pauses: number
+          guest_pauses: number
+          host_paused_last: string | null
+          guest_paused_last: string | null
         }
         Insert: never
         Update: never
@@ -258,6 +264,14 @@ export interface Database {
         Args: { duel: string }
         Returns: undefined
       }
+      pause_duel: {
+        Args: { duel: string }
+        Returns: undefined
+      }
+      resume_duel: {
+        Args: { duel: string }
+        Returns: undefined
+      }
       my_duels: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -272,6 +286,12 @@ export interface Database {
           host_board_round: number
           guest_board_round: number
           created_at: string
+          paused_by?: string | null
+          paused_at?: string | null
+          host_pauses?: number
+          guest_pauses?: number
+          host_paused_last?: string | null
+          guest_paused_last?: string | null
           opponent_name: string
           opponent_avatar: string | null
           opponent_photo: string | null
