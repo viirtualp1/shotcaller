@@ -390,6 +390,10 @@ const privacy: LegalDocument = {
           ru: 'Vercel: хостинг сайта и аналитика.',
         },
         {
+          en: 'Resend: delivery of sign-in emails.',
+          ru: 'Resend: доставка писем с кодом для входа.',
+        },
+        {
           en: 'PostHog: gameplay statistics, only with consent.',
           ru: 'PostHog: игровая статистика, только с согласия.',
         },

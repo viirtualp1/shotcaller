@@ -87,7 +87,7 @@ onUnmounted(() => pause.set('training', false))
     </HudPanel>
 
     <HudPanel class="meter-panel">
-      <MeterTabs v-model="meter" />
+      <MeterTabs v-model="meter" :training="training !== null" />
 
       <DamageMeter :stat="meter" />
     </HudPanel>

@@ -13,7 +13,7 @@ const fight = useFightRequest()
 
 <template>
   <div class="fight-slot">
-    <Transition name="fade" mode="out-in">
+    <Transition name="fade" mode="out-in" :duration="{ enter: 200, leave: 0 }">
       <button
         v-if="duel.canClaim"
         key="claim"

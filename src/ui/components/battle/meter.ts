@@ -1,6 +1,6 @@
 import type { HeroBattleReport } from '@/domain/battle/contracts'
 
-export type MeterStat = 'damageDealt' | 'healing'
+export type MeterStat = 'damageDealt' | 'healing' | 'damageReceived'
 
 export type MeterHero = Pick<
   HeroBattleReport,

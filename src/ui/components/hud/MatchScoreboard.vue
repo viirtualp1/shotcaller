@@ -29,9 +29,10 @@ const planningLeft = computed(() =>
 
 const urgent = computed(() => planningLeft.value !== null && planningLeft.value <= URGENT_SECONDS)
 
+/* Both bars drain with the time left, matching the countdown beside them. */
 const progress = computed(() => {
   if (store.live && store.phase === 'battle') {
-    return Math.min(1, store.live.elapsed / store.live.duration)
+    return Math.max(0, 1 - store.live.elapsed / store.live.duration)
   }
 
   if (timer.remaining !== null && timer.total) {

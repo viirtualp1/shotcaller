@@ -309,7 +309,7 @@ const incomeRows = computed(() => {
           </TabsContent>
 
           <TabsContent value="heroes" class="panel">
-            <MeterTabs v-model="meter" />
+            <MeterTabs v-model="meter" :training="(store.view?.sandbox ?? null) !== null" />
             <HeroMeterList :heroes="summary.heroes" :stat="meter" />
           </TabsContent>
 

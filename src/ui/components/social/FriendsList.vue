@@ -40,6 +40,9 @@ const codeInput = useTemplateRef<HTMLInputElement>('codeInput')
 const valid = computed(() => isFriendCode(code.value))
 const ownCode = computed(() => (friends.card ? formatFriendCode(friends.card.friendCode) : ''))
 const succeeded = computed(() => result.value === 'sent' || result.value === 'accepted')
+/** With nobody to list yet, your code and the code field are the whole point: they stay open. */
+const alone = computed(() => !friends.friends.length && !friends.incoming.length)
+const showAdding = computed(() => adding.value || alone.value)
 
 const heroOf = (avatar: string | null) => HERO_IDS.find((id) => id === avatar) ?? 'spearman'
 const nameOf = (name: string) => name || t('profile.defaultName')
@@ -188,7 +191,7 @@ async function submit() {
       </li>
     </ul>
 
-    <p v-if="!friends.friends.length && !friends.incoming.length" class="muted">{{ t('friends.empty') }}</p>
+    <p v-if="alone" class="muted">{{ t('friends.empty') }}</p>
 
     <ul v-if="friends.outgoing.length" class="list">
       <li v-for="entry in friends.outgoing" :key="entry.id" class="row pending">
@@ -211,7 +214,7 @@ async function submit() {
       </li>
     </ul>
 
-    <form v-if="adding" class="add" @submit.prevent="submit">
+    <form v-if="showAdding" class="add" @submit.prevent="submit">
       <div class="own">
         <span class="own-label">{{ t('friends.yourCode') }}</span>
 
@@ -256,7 +259,13 @@ async function submit() {
       </p>
     </form>
 
-    <button type="button" class="btn block add-toggle" :aria-expanded="adding" @click="startAdding">
+    <button
+      v-if="!alone"
+      type="button"
+      class="btn block add-toggle"
+      :aria-expanded="adding"
+      @click="startAdding"
+    >
       <template v-if="adding"><ChevronUp :size="16" /> {{ t('friends.hideAdding') }}</template>
       <template v-else><UserPlus :size="16" /> {{ t('friends.addFriend') }}</template>
     </button>

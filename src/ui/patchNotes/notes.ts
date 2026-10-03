@@ -81,6 +81,32 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.8.4',
+    date: '2026-10-03',
+    title: {
+      en: 'Fixes for duels and friends',
+      ru: 'Исправления для дуэлей и друзей',
+    },
+    fixes: [
+      {
+        en: 'The battle and round summary show **damage taken** again. It stays hidden only in training, where dummies take the hits.',
+        ru: 'В бою и в итогах раунда снова есть **полученный урон**. Он скрыт только в тренировке, где удары принимают манекены.',
+      },
+      {
+        en: 'The battle timer bar now **drains** with the time left, matching the countdown beside it.',
+        ru: 'Полоса таймера боя теперь **убывает** вместе с оставшимся временем, как и обратный отсчёт рядом.',
+      },
+      {
+        en: 'With no friends yet, the friends window opens straight to **your friend code** and the field for adding a friend.',
+        ru: 'Пока друзей нет, окно друзей сразу показывает **твой код друга** и поле для добавления.',
+      },
+      {
+        en: '**Not ready yet** appears the moment you press Fight in a duel.',
+        ru: '**«Отменить готовность»** появляется сразу после нажатия «В бой» в дуэли.',
+      },
+    ],
+  },
+  {
     version: '8.8.3',
     date: '2026-10-03',
     title: {

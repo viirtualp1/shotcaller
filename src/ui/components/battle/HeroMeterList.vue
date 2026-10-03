@@ -68,7 +68,8 @@ const share = (hero: MeterHero) =>
   gap: 8px;
   min-height: 0;
 }
-.hero-meter.enemy {
+.hero-meter.enemy,
+.hero-meter.damageReceived {
   --meter-color: var(--theirs);
 }
 .hero-meter.healing {

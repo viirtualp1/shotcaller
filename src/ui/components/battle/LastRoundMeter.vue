@@ -15,6 +15,7 @@ const roundReport = useRoundReportStore()
 const { t } = useGameText()
 const stat = ref<MeterStat>('damageDealt')
 const summary = computed(() => (store.phase === 'planning' ? (store.view?.summary ?? null) : null))
+const training = computed(() => (store.view?.sandbox ?? null) !== null)
 </script>
 
 <template>
@@ -32,7 +33,7 @@ const summary = computed(() => (store.phase === 'planning' ? (store.view?.summar
       </button>
     </template>
 
-    <MeterTabs v-model="stat" />
+    <MeterTabs v-model="stat" :training="training" />
     <HeroMeterList :heroes="summary.heroes" :stat="stat" class="last-meter" />
   </HudPanel>
 </template>
