@@ -10,18 +10,23 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, useId, useTemplateRef, watch } from 'vue'
 import { accountProblem, type AccountProblem } from '@/application/cloud/accountProblem'
 import type { AccountMode } from '@/application/cloud/CloudStore'
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useCloudStore } from '../../stores/cloud'
+import EmailCodeInput from '../common/EmailCodeInput.vue'
+import { isCompleteEmailCode } from '../common/emailCodeInput'
 
 /** Supabase lets one address get a new code about once a minute. */
 const RESEND_AFTER_S = 60
 
 const cloud = useCloudStore()
 const { t } = useGameText()
+const codeHintId = useId()
+const failureId = useId()
+const codeInput = useTemplateRef<InstanceType<typeof EmailCodeInput>>('codeInput')
 
 useModal(() => cloud.signInOpen)
 
@@ -35,18 +40,6 @@ const problem = ref<AccountProblem | null>(null)
 const rawError = ref('')
 const resendIn = ref(0)
 
-const { pause, resume } = useIntervalFn(
-  () => {
-    resendIn.value = Math.max(0, resendIn.value - 1)
-
-    if (resendIn.value === 0) {
-      pause()
-    }
-  },
-  1000,
-  { immediate: false },
-)
-
 const failure = computed(() => {
   if (!problem.value) {
     return null
@@ -57,18 +50,14 @@ const failure = computed(() => {
     : t(`cloud.email.problems.${problem.value}`)
 })
 
-watch(
-  () => cloud.signInOpen,
-  (open) => {
-    if (open) {
-      step.value = 'email'
-      code.value = ''
-      problem.value = null
-    }
-  },
-)
+const canVerify = computed(() => isCompleteEmailCode(code.value))
+const codeDescription = computed(() => (failure.value ? `${codeHintId} ${failureId}` : codeHintId))
 
 async function run(action: () => Promise<void>) {
+  if (busy.value) {
+    return
+  }
+
   busy.value = true
   problem.value = null
 
@@ -79,6 +68,11 @@ async function run(action: () => Promise<void>) {
     rawError.value = error instanceof Error ? error.message : ''
   } finally {
     busy.value = false
+    await nextTick()
+
+    if (cloud.signInOpen && step.value === 'code') {
+      codeInput.value?.focus(problem.value === 'badCode')
+    }
   }
 }
 
@@ -91,9 +85,44 @@ const send = () =>
     resume()
   })
 
-const verify = () => run(() => cloud.verifyCode(email.value, code.value, mode.value))
+function verify() {
+  if (!canVerify.value) {
+    return
+  }
+
+  return run(() => cloud.verifyCode(email.value, code.value, mode.value))
+}
 
 const google = () => run(() => cloud.signInWithGoogle())
+
+const { pause, resume } = useIntervalFn(
+  () => {
+    resendIn.value = Math.max(0, resendIn.value - 1)
+
+    if (resendIn.value === 0) {
+      pause()
+    }
+  },
+  1000,
+  { immediate: false },
+)
+
+watch(
+  () => cloud.signInOpen,
+  (open) => {
+    if (open) {
+      step.value = 'email'
+      code.value = ''
+      problem.value = null
+    }
+  },
+)
+
+watch(code, () => {
+  if (problem.value === 'badCode') {
+    problem.value = null
+  }
+})
 </script>
 
 <template>
@@ -109,7 +138,15 @@ const google = () => run(() => cloud.signInWithGoogle())
 
           <label class="field">
             <span>{{ t('cloud.email.address') }}</span>
-            <input v-model="email" type="email" required autocomplete="email" inputmode="email" />
+
+            <input
+              v-model="email"
+              type="email"
+              required
+              autocomplete="email"
+              inputmode="email"
+              :disabled="busy"
+            />
           </label>
 
           <button type="submit" class="btn primary big block" :disabled="busy">
@@ -126,26 +163,21 @@ const google = () => run(() => cloud.signInWithGoogle())
         </form>
 
         <form v-else class="form" @submit.prevent="verify">
-          <DialogDescription class="intro">
+          <DialogDescription :id="codeHintId" class="intro">
             {{ t(mode === 'link' ? 'cloud.email.sentSignUp' : 'cloud.email.sentSignIn', { email }) }}
             {{ t('cloud.email.codeHint') }}
           </DialogDescription>
 
-          <label class="field">
-            <span>{{ t('cloud.email.code') }}</span>
+          <EmailCodeInput
+            ref="codeInput"
+            v-model="code"
+            :label="t('cloud.email.code')"
+            :described-by="codeDescription"
+            :invalid="problem === 'badCode'"
+            :disabled="busy"
+          />
 
-            <input
-              v-model="code"
-              required
-              autocomplete="one-time-code"
-              inputmode="numeric"
-              pattern="[0-9]{6,10}"
-              maxlength="10"
-              class="code"
-            />
-          </label>
-
-          <button type="submit" class="btn primary big block" :disabled="busy">
+          <button type="submit" class="btn primary big block" :disabled="busy || !canVerify">
             {{ t('cloud.email.verify') }}
           </button>
 
@@ -154,13 +186,13 @@ const google = () => run(() => cloud.signInWithGoogle())
               {{ resendIn > 0 ? t('cloud.email.resendIn', { s: resendIn }) : t('cloud.email.resend') }}
             </button>
 
-            <button type="button" class="btn ghost" @click="step = 'email'">
+            <button type="button" class="btn ghost" :disabled="busy" @click="step = 'email'">
               {{ t('cloud.email.back') }}
             </button>
           </div>
         </form>
 
-        <p v-if="failure" class="failure" role="alert">{{ failure }}</p>
+        <p v-if="failure" :id="failureId" class="failure" role="alert">{{ failure }}</p>
         <DialogClose class="btn ghost block">{{ t('cloud.email.cancel') }}</DialogClose>
       </DialogContent>
     </DialogPortal>
@@ -216,12 +248,6 @@ const google = () => run(() => cloud.signInWithGoogle())
 .field input:focus {
   outline: none;
   border-color: var(--gold);
-}
-
-.code {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.3em !important;
-  text-align: center;
 }
 
 .or {
