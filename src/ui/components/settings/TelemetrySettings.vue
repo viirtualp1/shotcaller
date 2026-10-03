@@ -83,7 +83,7 @@ function edit() {
   padding: 14px 18px;
   border: 1px solid var(--edge);
   border-radius: var(--radius);
-  background: rgba(17, 24, 21, 0.86);
+  background: var(--card);
   color: var(--chalk);
   font: inherit;
   text-align: left;
@@ -92,7 +92,7 @@ function edit() {
 
 .compact:hover {
   border-color: var(--edge-strong);
-  background: rgba(24, 34, 29, 0.95);
+  background: linear-gradient(180deg, var(--panel-raised), rgba(24, 34, 29, 0.95));
 }
 
 .compact:focus-visible {

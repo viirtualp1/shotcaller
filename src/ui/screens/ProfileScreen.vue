@@ -149,11 +149,11 @@ function play() {
 
       <template v-if="totals.matches">
         <div class="columns" :class="{ single: !cloud.enabled }">
-          <HeroTable />
-          <FriendsCard v-if="cloud.enabled" class="friends" />
+          <HeroTable class="panel-card" />
+          <FriendsCard v-if="cloud.enabled" class="panel-card friends" />
         </div>
 
-        <MatchHistory />
+        <MatchHistory class="panel-card" />
       </template>
 
       <template v-else>
@@ -165,7 +165,7 @@ function play() {
           </button>
         </section>
 
-        <FriendsCard v-if="cloud.enabled" />
+        <FriendsCard v-if="cloud.enabled" class="panel-card" />
       </template>
     </main>
 
@@ -254,7 +254,7 @@ function play() {
   padding: 14px 16px;
   border-radius: var(--radius);
   border: 1px solid var(--edge);
-  background: rgba(17, 24, 21, 0.86);
+  background: var(--card);
 }
 
 .tile-label {
@@ -282,6 +282,11 @@ function play() {
 .tile-note {
   font-size: 12px;
   color: var(--chalk-dim);
+}
+
+/* Panels shared with the match HUD take the profile's card gradient here. */
+.page .panel-card {
+  background: var(--card);
 }
 
 .columns {

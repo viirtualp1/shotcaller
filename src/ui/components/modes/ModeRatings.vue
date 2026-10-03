@@ -50,7 +50,7 @@ const { t } = text
   gap: 16px;
   padding: 18px;
   border-radius: var(--radius);
-  background: linear-gradient(180deg, var(--panel), rgba(17, 24, 21, 0.86));
+  background: var(--card);
   border: 1px solid var(--edge);
 }
 

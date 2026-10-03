@@ -3,6 +3,7 @@
   --board-deep: #131b18;
   --panel: #1f2b27;
   --panel-raised: #273631;
+  --card: linear-gradient(180deg, var(--panel), rgba(17, 24, 21, 0.86));
   --edge: rgba(236, 232, 220, 0.12);
   --edge-strong: rgba(236, 232, 220, 0.28);
   --chalk: #ece8dc;
@@ -65,15 +66,28 @@ body,
   height: 100%;
 }
 
-body {
-  margin: 0;
+/* The root background covers the whole canvas, however far a page scrolls. */
+html {
   background:
-    radial-gradient(ellipse at 50% 45%, rgba(46, 66, 58, 0.55), transparent 70%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.93 0 0 0 0 0.91 0 0 0 0 0.86 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
     var(--board-deep);
+}
+
+body {
+  margin: 0;
   color: var(--chalk);
   font: 14px/1.45 var(--font-ui);
   -webkit-font-smoothing: antialiased;
+}
+
+/* The glow stays with the viewport instead of ending after the first screen of a long page. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 45%, rgba(46, 66, 58, 0.55), transparent 70%);
+  pointer-events: none;
 }
 
 h1,

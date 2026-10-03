@@ -114,7 +114,7 @@ function confirmDeletion() {
   padding: 14px 18px;
   border-radius: var(--radius);
   border: 1px solid var(--edge);
-  background: rgba(17, 24, 21, 0.86);
+  background: var(--card);
 }
 
 .cloud[data-status='synced'] {
