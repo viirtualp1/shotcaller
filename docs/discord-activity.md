@@ -13,6 +13,8 @@ not contact any other host directly.
 - Skips the service worker and update toast; Discord loads the current deployment on every launch.
 - Ships its fonts with the game instead of loading Google Fonts, which Discord's content policy would block.
 - Vercel Analytics and Speed Insights use same-origin `/_vercel/*` paths and work through the root mapping.
+- Shows an **Invite a friend** button on the main screen. On a server it opens Discord's invite dialog; in a
+  direct message, or for a player without permission to create invites, it shares the Activity link instead.
 
 ## 1. Create the application
 

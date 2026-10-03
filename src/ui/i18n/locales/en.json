@@ -170,6 +170,8 @@
     "title": "The Shotcaller"
   },
   "start": {
+    "invite": "Invite a friend",
+    "inviteMessage": "Join me in The Shotcaller!",
     "lede": "You are the coach. Draft a team of up to five heroes, send them down the lanes and watch the match play itself. Break the enemy throne before they break yours.",
     "steps": {
       "shop": "Buy heroes in the shop. Three copies of a hero merge into one with an extra star.",

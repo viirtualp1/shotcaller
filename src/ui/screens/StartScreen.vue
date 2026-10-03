@@ -6,8 +6,9 @@ import {
   useIntervalFn,
   useTimeoutFn,
 } from '@vueuse/core'
-import { Flag, Play, Swords } from '@lucide/vue'
+import { Flag, Play, Swords, UserPlus } from '@lucide/vue'
 import { computed, defineAsyncComponent, ref } from 'vue'
+import { IN_DISCORD, inviteToActivity } from '@/application/discord'
 import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
@@ -89,6 +90,11 @@ function forfeit() {
   void duel.forfeit()
 }
 
+/** Inside Discord, friends join this Activity through Discord's own invite. */
+function inviteFriend() {
+  void inviteToActivity(t('start.inviteMessage'))
+}
+
 useIntervalFn(() => {
   if (!previewVisible.value || visibility.value !== 'visible') {
     return
@@ -155,6 +161,10 @@ useIntervalFn(() => {
           @click="menu.newMatch = true"
         >
           <Swords :size="18" /> {{ t('start.newMatch') }}
+        </button>
+
+        <button v-if="IN_DISCORD" type="button" class="btn block big" @click="inviteFriend">
+          <UserPlus :size="18" /> {{ t('start.invite') }}
         </button>
       </nav>
     </section>

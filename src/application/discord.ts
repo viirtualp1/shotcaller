@@ -1,3 +1,5 @@
+import type { DiscordSDK } from '@discord/embedded-app-sdk'
+
 /** The URL mapping in the Discord Developer Portal that forwards `/.proxy/supabase` to the Supabase project. */
 export const DISCORD_SUPABASE_PREFIX = '/.proxy/supabase'
 
@@ -10,6 +12,9 @@ export function isDiscordActivity(search = typeof location === 'undefined' ? '' 
 
 /** Read once at startup: navigation inside the game may drop the launch parameters later. */
 export const IN_DISCORD = isDiscordActivity()
+
+/** The running Activity once its handshake is done; null outside Discord or when it failed. */
+let activity: Promise<DiscordSDK | null> = Promise.resolve(null)
 
 /**
  * Inside Discord the page may only reach its own origin, so Supabase goes through the Activity's URL mapping.
@@ -35,16 +40,49 @@ export function discordInstallUrl(env: DiscordEnv) {
 }
 
 /** Completes the handshake that tells Discord the Activity has loaded. */
-export async function startDiscordActivity(clientId: string | undefined) {
+export function startDiscordActivity(clientId: string | undefined) {
   if (!clientId) {
     console.error('Discord Activity: VITE_DISCORD_CLIENT_ID is not set.')
 
-    return null
+    return activity
   }
 
-  const { DiscordSDK } = await import('@discord/embedded-app-sdk')
-  const sdk = new DiscordSDK(clientId)
-  await sdk.ready()
+  activity = import('@discord/embedded-app-sdk').then(async ({ DiscordSDK }) => {
+    const sdk = new DiscordSDK(clientId)
+    await sdk.ready()
 
-  return sdk
+    return sdk
+  })
+
+  return activity
+}
+
+/**
+ * Invites friends into this Activity. On a server Discord's own invite dialog opens; in a direct message, or for a
+ * player not allowed to create invites there, the Activity link is shared instead. Resolves to false when nothing
+ * could be opened; a dialog the player simply closes still counts as opened.
+ */
+export async function inviteToActivity(message: string) {
+  const sdk = await activity.catch(() => null)
+  if (!sdk) {
+    return false
+  }
+
+  if (sdk.guildId) {
+    try {
+      await sdk.commands.openInviteDialog()
+
+      return true
+    } catch {
+      /* No invite permission on this server: share the link instead. */
+    }
+  }
+
+  try {
+    await sdk.commands.shareLink({ message })
+
+    return true
+  } catch {
+    return false
+  }
 }
