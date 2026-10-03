@@ -1,3 +1,4 @@
+import { inject } from '@vercel/analytics'
 import { injectSpeedInsights } from '@vercel/speed-insights'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
@@ -12,4 +13,5 @@ const app = createApp(App).use(createPinia()).use(i18n)
 useSettingsStore()
 app.mount('#app')
 
+inject({ framework: 'vue' })
 injectSpeedInsights({ framework: 'vue' })
