@@ -441,6 +441,11 @@ watch(
   overflow: hidden;
 }
 
+/* The training catalog lists every hero; it leaves the round meter room to stay readable. */
+.planning.split > :deep(.shop.training) {
+  max-height: min(440px, 100%);
+}
+
 /* The round meter takes the rest and scrolls there. */
 .planning.split > :deep(.panel) {
   flex: 1 1 auto;

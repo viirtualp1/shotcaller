@@ -39,12 +39,8 @@ const fight = useFightRequest()
         :disabled="!duel.canWithdraw"
         @click="duel.withdraw()"
       >
-        <LoaderCircle :size="18" class="spin" />
-
-        <span v-if="!duel.reconnecting" class="waiting-text">
-          {{ t('duel.waiting') }}
-          <small v-if="duel.canWithdraw"><Undo2 :size="12" /> {{ t('duel.withdraw') }}</small>
-        </span>
+        <template v-if="duel.canWithdraw"><Undo2 :size="18" /> {{ t('duel.withdraw') }}</template>
+        <LoaderCircle v-else :size="18" class="spin" />
       </button>
 
       <button
@@ -77,28 +73,6 @@ const fight = useFightRequest()
 
 .waiting {
   font-size: 15px;
-}
-
-.waiting-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  line-height: 1.15;
-}
-
-.waiting-text small {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
-  font-weight: 700;
-  opacity: 0.75;
-}
-
-.waiting.cancellable:hover small {
-  opacity: 1;
-  text-decoration: underline;
 }
 
 .spin {

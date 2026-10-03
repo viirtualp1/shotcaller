@@ -37,4 +37,21 @@ describe('cloud config', () => {
     expect(error).toHaveBeenCalledOnce()
     error.mockRestore()
   })
+
+  it('reaches Supabase through the URL mapping inside a Discord Activity', () => {
+    expect(
+      cloudConfig(
+        {
+          VITE_SUPABASE_URL: 'https://x.supabase.co',
+          VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_abc',
+          VITE_SUPABASE_GOOGLE: 'true',
+        },
+        'https://123.discordsays.com',
+      ),
+    ).toEqual({
+      url: 'https://123.discordsays.com/.proxy/supabase',
+      key: 'sb_publishable_abc',
+      google: false,
+    })
+  })
 })

@@ -45,7 +45,7 @@ function recruit(slot: number) {
 
 <template>
   <HudPanel class="shop" :class="{ training }" data-drop="sell">
-    <EconomyBar class="economy" />
+    <EconomyBar v-if="!training" class="economy" />
 
     <TabsRoot v-model="tab" class="tabs">
       <TabsList class="tab-list" :aria-label="t('shop.heroes')">
@@ -131,18 +131,6 @@ function recruit(slot: number) {
   overflow-x: hidden;
   overflow-y: auto;
   padding-right: 6px;
-}
-
-/*
- * The training ground lists every hero: the list keeps the height of a normal shop and scrolls, so the panel below
- * it stays in view.
- */
-.shop.training {
-  flex: 0 1 auto;
-}
-
-.training .list {
-  max-height: 318px;
 }
 
 .list[data-state='inactive'] {

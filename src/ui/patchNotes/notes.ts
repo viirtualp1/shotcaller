@@ -81,6 +81,44 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '8.8.2',
+    date: '2026-10-03',
+    title: {
+      en: 'Clearer fights, roomier training',
+      ru: 'Чище бой, просторнее тренировка',
+    },
+    general: [
+      {
+        en: 'The game now has a **Terms of Service** and a **Privacy Policy**. Find both at the bottom of the main screen.',
+        ru: 'У игры появились **Условия использования** и **Политика конфиденциальности**. Обе ссылки внизу главного экрана.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Damage numbers over your own units now show only **hits from enemy heroes**, so creep and tower chip damage no longer buries the moments that matter.',
+        ru: 'Числа урона над твоими юнитами теперь показывают только **удары вражеских героев**: мелкий урон крипов и башен больше не заслоняет важные моменты.',
+      },
+      {
+        en: 'In training, the hero and item list **fills the whole column** without the gold and level header, so more heroes fit on screen at once.',
+        ru: 'В тренировке список героев и предметов **занимает всю колонку** без шапки с золотом и уровнем: на экране помещается больше героев сразу.',
+      },
+      {
+        en: 'While you wait for a duel opponent, the round button offers one clear action: **Not ready yet** takes you back to your lineup.',
+        ru: 'Пока ждёшь соперника в дуэли, у кнопки раунда одно понятное действие: **«Отменить готовность»** возвращает к расстановке.',
+      },
+      {
+        en: 'Profile cards share the soft gradient of the mode ratings, and training settings are tidier.',
+        ru: 'Карточки профиля получили тот же мягкий градиент, что и рейтинги режимов, а настройки тренировки стали аккуратнее.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The background now continues seamlessly on long pages such as patch notes and the profile.',
+        ru: 'Фон больше не обрывается на длинных страницах вроде патчноутов и профиля.',
+      },
+    ],
+  },
+  {
     version: '8.8.1',
     date: '2026-10-03',
     title: {

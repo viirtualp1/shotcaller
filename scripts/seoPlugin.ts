@@ -1,4 +1,6 @@
 import type { Plugin } from 'vite'
+import { LEGAL_DOCUMENTS, LEGAL_IDS, LEGAL_UPDATED, legalPath } from '../src/ui/legal/documents.ts'
+import type { LegalDocument } from '../src/ui/legal/documents.ts'
 import { PATCH_NOTES } from '../src/ui/patchNotes/notes.ts'
 import type { NoteText, PatchNote } from '../src/ui/patchNotes/notes.ts'
 import {
@@ -70,10 +72,30 @@ export function patchArticle(patch: PatchNote) {
   return `<main><article><h1>Patch ${escapeHtml(patch.version)} — ${escapeHtml(patch.title.en)}</h1><time datetime="${patch.date}">${patch.date}</time>${sections.join('')}</article><nav>${navigation}</nav><p><a href="/">Play ${SITE_NAME}</a></p></main>`
 }
 
-function patchHtml(home: string, patch: PatchNote) {
-  const title = escapeHtml(patchTitle(patch, 'en'))
-  const description = escapeHtml(patchSnippet(patch, 'en'))
-  const url = `${SITE_ORIGIN}${patchPath(patch.version)}`
+/** The full English text, so the documents read without JavaScript and in link previews. */
+export function legalArticle(document: LegalDocument) {
+  const paragraphs = (texts: LegalDocument['sections'][number]['paragraphs']) =>
+    (texts ?? []).map((text) => `<p>${escapeHtml(text.en)}</p>`).join('')
+
+  const sections = document.sections
+    .map((section) => {
+      const items = section.items
+        ? `<ul>${section.items.map((item) => `<li>${escapeHtml(item.en)}</li>`).join('')}</ul>`
+        : ''
+
+      return `<section><h2>${escapeHtml(section.title.en)}</h2>${paragraphs(section.paragraphs)}${items}${paragraphs(section.after)}</section>`
+    })
+    .join('')
+
+  const others = LEGAL_IDS.filter((id) => id !== document.id)
+    .map((id) => `<a href="${legalPath(id)}">${escapeHtml(LEGAL_DOCUMENTS[id].title.en)}</a>`)
+    .join(' · ')
+
+  return `<main><article><h1>${escapeHtml(document.title.en)}</h1><p>${escapeHtml(document.summary.en)}</p><p>Last updated <time datetime="${LEGAL_UPDATED}">${LEGAL_UPDATED}</time></p>${sections}</article><nav>${others}</nav><p><a href="/">Play ${SITE_NAME}</a></p></main>`
+}
+
+function pageHtml(home: string, path: string, title: string, description: string, article: string) {
+  const url = `${SITE_ORIGIN}${path}`
   return home
     .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
     .replace(/(<meta name="description" content=")[^"]*/, `$1${description}`)
@@ -81,8 +103,26 @@ function patchHtml(home: string, patch: PatchNote) {
     .replace(/(<meta property="og:description" content=")[^"]*/, `$1${description}`)
     .replace(/(<meta property="og:url" content=")[^"]*/, `$1${url}`)
     .replace(/(<link rel="canonical" href=")[^"]*/, `$1${url}`)
-    .replace(/<div id="app">[\s\S]*?<\/div>/, `<div id="app">${patchArticle(patch)}</div>`)
+    .replace(/<div id="app">[\s\S]*?<\/div>/, `<div id="app">${article}</div>`)
 }
+
+const patchHtml = (home: string, patch: PatchNote) =>
+  pageHtml(
+    home,
+    patchPath(patch.version),
+    escapeHtml(patchTitle(patch, 'en')),
+    escapeHtml(patchSnippet(patch, 'en')),
+    patchArticle(patch),
+  )
+
+const legalHtml = (home: string, document: LegalDocument) =>
+  pageHtml(
+    home,
+    legalPath(document.id),
+    escapeHtml(`${document.title.en} · ${SITE_NAME}`),
+    escapeHtml(document.summary.en),
+    legalArticle(document),
+  )
 
 /** Works on static hosting, with no server rewrites or crawler-specific responses. */
 export function seoPlugin(): Plugin {
@@ -111,6 +151,16 @@ export function seoPlugin(): Plugin {
           }
         }
 
+        for (const id of LEGAL_IDS) {
+          for (const fileName of pageFiles(legalPath(id))) {
+            this.emitFile({
+              type: 'asset',
+              fileName,
+              source: legalHtml(home.source, LEGAL_DOCUMENTS[id]),
+            })
+          }
+        }
+
         for (const fileName of APP_PAGE_PATHS.flatMap(pageFiles)) {
           this.emitFile({
             type: 'asset',
@@ -127,6 +177,10 @@ export function seoPlugin(): Plugin {
           ...PATCH_NOTES.map((patch) => ({
             path: patchPath(patch.version),
             date: patch.date,
+          })),
+          ...LEGAL_IDS.map((id) => ({
+            path: legalPath(id),
+            date: LEGAL_UPDATED,
           })),
         ]
 

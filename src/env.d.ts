@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string
   /** `true` once the Google provider is set up in Supabase. */
   readonly VITE_SUPABASE_GOOGLE?: string
+  /** The Discord application ID, needed only when the game runs as a Discord Activity. */
+  readonly VITE_DISCORD_CLIENT_ID?: string
 }
 
 interface ImportMeta {

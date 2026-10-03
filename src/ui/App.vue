@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { TooltipProvider } from 'reka-ui'
 import { computed } from 'vue'
+import { IN_DISCORD } from '@/application/discord'
 import UpdateToast from './components/common/UpdateToast.vue'
 import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
@@ -18,6 +19,7 @@ import GameScreen from './screens/GameScreen.vue'
 import ReplayScreen from './screens/ReplayScreen.vue'
 import LiveMatchWaiting from './screens/LiveMatchWaiting.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
+import LegalScreen from './screens/LegalScreen.vue'
 import ProfileScreen from './screens/ProfileScreen.vue'
 import CareerScreen from './screens/CareerScreen.vue'
 import StartScreen from './screens/StartScreen.vue'
@@ -35,12 +37,14 @@ import { usePrivacyStore } from './stores/privacy'
 import { useReplayStore } from './stores/replay'
 import { useGameAudio } from './composables/useGameAudio'
 import { useLeaderboardStore } from './stores/leaderboard'
+import { useLegalStore } from './stores/legal'
 
 const store = useMatchStore()
 const patchNotes = usePatchNotesStore()
 const profile = useProfileStore()
 const replay = useReplayStore()
 const leaderboard = useLeaderboardStore()
+const legal = useLegalStore()
 useGameAudio()
 
 /* Started with the app: it picks up a sign-in link and pulls progress saved on other devices. */
@@ -58,7 +62,12 @@ useSystemNotificationsStore()
  * so it shows over a match only while a page such as the patch notes covers the board.
  */
 const showFriendsLauncher = computed(
-  () => replay.match !== null || patchNotes.patch !== null || leaderboard.isOpen || !store.view,
+  () =>
+    replay.match !== null ||
+    patchNotes.patch !== null ||
+    legal.document !== null ||
+    leaderboard.isOpen ||
+    !store.view,
 )
 
 /** Each screen opens at its top, as a new page does, not where the one before was scrolled to. */
@@ -72,7 +81,8 @@ useDocumentHead()
     <MatchmakingStatus />
 
     <Transition name="screen" mode="out-in" @after-leave="scrollToTop">
-      <PatchNotesScreen v-if="patchNotes.patch" />
+      <LegalScreen v-if="legal.document" />
+      <PatchNotesScreen v-else-if="patchNotes.patch" />
       <LeaderboardScreen v-else-if="leaderboard.isOpen" />
       <GameScreen v-else-if="store.view" />
       <CareerScreen v-else-if="profile.isCareer" />
@@ -84,7 +94,8 @@ useDocumentHead()
     <LiveMatchWaiting v-else-if="replay.liveFriend" />
     <SettingsDialog />
     <NewMatchDialog />
-    <UpdateToast />
+    <!-- Discord serves the Activity through its own proxy, and every launch already loads the latest version. -->
+    <UpdateToast v-if="!IN_DISCORD" />
 
     <template v-if="cloud.enabled">
       <SignInDialog />

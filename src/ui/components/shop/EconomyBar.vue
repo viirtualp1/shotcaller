@@ -10,8 +10,6 @@ const store = useMatchStore()
 const { t } = useGameText()
 const human = computed(() => store.view!.human)
 const locked = computed(() => !store.isPlanning)
-/** Gold never runs out on the training ground, and the board is already as big as it gets. */
-const training = computed(() => store.view?.sandbox !== null)
 
 const levelLabel = computed(() =>
   t('shop.level', {
@@ -39,8 +37,7 @@ watch(
 <template>
   <div class="economy" data-tour="economy">
     <div class="stats">
-      <span v-if="training" class="gold" :title="t('sandbox.gold')"><span class="coin" /> ∞</span>
-      <span v-else class="gold"><span class="coin" /> <AnimatedNumber :value="human.gold" /></span>
+      <span class="gold"><span class="coin" /> <AnimatedNumber :value="human.gold" /></span>
 
       <span class="level" :class="{ levelUp }" @animationend="levelUp = false">
         <span class="label">{{ levelLabel }}</span>
@@ -52,7 +49,7 @@ watch(
       </span>
     </div>
 
-    <div v-if="!training" class="buttons">
+    <div class="buttons">
       <button
         type="button"
         class="btn"

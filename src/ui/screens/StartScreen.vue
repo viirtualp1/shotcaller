@@ -10,6 +10,7 @@ import { Flag, Play, Swords } from '@lucide/vue'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
+import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
 
 import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
@@ -176,6 +177,7 @@ useIntervalFn(() => {
     <div class="footer">
       <LanguageSwitch compact />
       <SupportButton />
+      <LegalLinks />
     </div>
   </main>
 </template>

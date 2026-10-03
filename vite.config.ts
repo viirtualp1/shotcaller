@@ -56,8 +56,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        globIgnores: ['**/patches/**', '**/profile/**', '**/career/**', '**/leaderboard/**', '{profile,career,leaderboard}.html'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        globIgnores: ['**/patches/**', '**/profile/**', '**/career/**', '**/leaderboard/**', '{profile,career,leaderboard}.html', '{terms,privacy}{.html,/index.html}', '**/discord-*.js'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         /* Supabase is never cached: saves, friends and duels have to be live. */
@@ -75,21 +75,17 @@ export default defineConfig({
               },
             },
           },
+          /* Fonts ship with the game; each script subset is cached once a page needs it. */
           {
-            urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'google-fonts-css' },
-          },
-          {
-            urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith('.woff2'),
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts',
+              cacheName: 'game-fonts',
               expiration: {
-                maxEntries: 20,
+                maxEntries: 40,
                 maxAgeSeconds: YEAR_SECONDS,
               },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: { statuses: [200] },
             },
           },
         ],
@@ -128,6 +124,11 @@ export default defineConfig({
               /* Only fetched when cloud saves are configured. */
               name: 'supabase',
               test: /node_modules[\\/](@supabase|iceberg-js|tslib)[\\/]/,
+            },
+            {
+              /* Only fetched inside a Discord Activity. */
+              name: 'discord',
+              test: /node_modules[\\/](@discord|big-integer|decimal\.js-light|lodash\.transform|uuid)[\\/]/,
             },
             {
               name: 'vendor',

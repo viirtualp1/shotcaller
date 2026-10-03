@@ -65,20 +65,16 @@ const creeps = computed({
       <ToggleGroupItem value="rounds" class="segmented-option">{{ t('sandbox.rounds') }}</ToggleGroupItem>
     </ToggleGroupRoot>
 
-    <div class="field">
-      <span id="sandbox-dummies" class="label">{{ t('sandbox.dummies') }}</span>
-
-      <ToggleGroupRoot
-        v-model="dummies"
-        type="single"
-        class="segmented-control"
-        aria-labelledby="sandbox-dummies"
-        :disabled="locked"
-      >
-        <ToggleGroupItem value="off" class="segmented-option">{{ t('sandbox.off') }}</ToggleGroupItem>
-        <ToggleGroupItem value="on" class="segmented-option">{{ t('sandbox.on') }}</ToggleGroupItem>
-      </ToggleGroupRoot>
-    </div>
+    <ToggleGroupRoot
+      v-model="dummies"
+      type="single"
+      class="segmented-control"
+      :aria-label="t('sandbox.dummies')"
+      :disabled="locked"
+    >
+      <ToggleGroupItem value="off" class="segmented-option">{{ t('sandbox.off') }}</ToggleGroupItem>
+      <ToggleGroupItem value="on" class="segmented-option">{{ t('sandbox.on') }}</ToggleGroupItem>
+    </ToggleGroupRoot>
 
     <CheckField v-model="creeps" :class="{ locked }">{{ t('sandbox.creeps') }}</CheckField>
 
@@ -97,18 +93,6 @@ const creeps = computed({
 </template>
 
 <style scoped>
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--chalk-dim);
-}
-
 .locked {
   pointer-events: none;
   opacity: 0.6;

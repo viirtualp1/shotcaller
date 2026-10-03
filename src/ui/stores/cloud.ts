@@ -5,6 +5,7 @@ import type { AccountMode, CloudAccount, CloudProfile } from '@/application/clou
 import { cloudConfig } from '@/application/cloud/config'
 import { sendEmailCode } from '@/application/cloud/emailSignIn'
 import { isBlank, ProfileSync } from '@/application/cloud/ProfileSync'
+import { IN_DISCORD } from '@/application/discord'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import type { SupabaseCloud } from '@/application/cloud/SupabaseCloud'
 import type { Profile } from '@/domain/profile/Profile'
@@ -30,7 +31,7 @@ const REFRESH_EVERY_MS = 30_000
 
 /** Cloud saves for the coach profile. The game keeps playing on the local profile; this keeps the account in step. */
 export const useCloudStore = defineStore('cloud', () => {
-  const config = cloudConfig(import.meta.env)
+  const config = cloudConfig(import.meta.env, IN_DISCORD ? location.origin : null)
   const sync = new ProfileSync()
   let client: Promise<SupabaseCloud> | null = null
   let running = false

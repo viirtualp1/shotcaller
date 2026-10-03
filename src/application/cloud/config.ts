@@ -1,3 +1,5 @@
+import { discordCloudUrl } from '../discord'
+
 export interface CloudConfig {
   readonly url: string
   /** The publishable (or legacy anon) key. It is public by design: row level security guards the data. */
@@ -34,8 +36,11 @@ function jwtRole(token: string) {
 /** Secret and service-role keys skip row level security, so the browser must never get one. */
 export const isSecretKey = (key: string) => key.startsWith('sb_secret_') || jwtRole(key) === 'service_role'
 
-/** Cloud saves are optional: without a URL and a key the game simply stays local. */
-export function cloudConfig(env: CloudEnv): CloudConfig | null {
+/**
+ * Cloud saves are optional: without a URL and a key the game simply stays local. A Discord Activity passes its
+ * origin, and Supabase is then reached through the Activity's URL mapping.
+ */
+export function cloudConfig(env: CloudEnv, discordOrigin: string | null = null): CloudConfig | null {
   const url = env.VITE_SUPABASE_URL?.trim()
   const key = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
   if (!url || !key) {
@@ -48,6 +53,14 @@ export function cloudConfig(env: CloudEnv): CloudConfig | null {
     )
 
     return null
+  }
+
+  if (discordOrigin) {
+    return {
+      url: discordCloudUrl(discordOrigin),
+      key,
+      google: false,
+    }
   }
 
   return {

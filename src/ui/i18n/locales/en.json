@@ -743,6 +743,18 @@
     },
     "roleHeroes": "Heroes with this role"
   },
+  "legal": {
+    "back": "Main menu",
+    "documents": "Legal documents",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "updated": "Last updated {date}",
+    "also": "Also read",
+    "short": {
+      "terms": "Terms",
+      "privacy": "Privacy"
+    }
+  },
   "profile": {
     "title": "Profile",
     "back": "Main menu",
@@ -1184,7 +1196,6 @@
   "sandbox": {
     "title": "Training",
     "tab": "Training",
-    "intro": "Endless gold, any hero and item, and dummies in side camps. Switch each lane between dummies and pushing during battle. Training is not saved and never touches your rating.",
     "start": "Start training",
     "dummies": "Dummies in each lane’s camp",
     "on": "On",
@@ -1196,7 +1207,6 @@
     "creeps": "Creep waves",
     "round": "Training · round {round}",
     "free": "Free",
-    "gold": "Gold never runs out",
     "clock": "Battle clock",
     "endless": "No clock",
     "rounds": "Rounds",

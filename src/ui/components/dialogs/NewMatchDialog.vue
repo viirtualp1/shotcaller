@@ -162,9 +162,7 @@ watch(
           </template>
         </SettingsFields>
 
-        <p v-else-if="opponent === 'training'" class="training">{{ t('sandbox.intro') }}</p>
-
-        <section v-else class="ranked">
+        <section v-else-if="opponent !== 'training'" class="ranked">
           <div class="ranked-summary">
             <RankMedal :tier="rank.tier" :stars="rank.stars" :size="44" />
 
@@ -256,16 +254,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.training {
-  margin: 0;
-  padding: 14px 16px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  background: rgba(127, 224, 180, 0.05);
-  color: var(--chalk-dim);
-  font-size: 13px;
 }
 
 .ranked {

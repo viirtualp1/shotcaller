@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick, reactive } from 'vue'
 import { useDocumentHead } from '@/ui/composables/useDocumentHead'
+import { LEGAL_DOCUMENTS, type LegalDocument } from '@/ui/legal/documents'
 import { LATEST_PATCH, type PatchNote } from '@/ui/patchNotes/notes'
 
 const settings = reactive({ locale: 'en' as 'en' | 'ru' })
@@ -15,12 +16,14 @@ const profile = reactive({
 const match = reactive({ view: null as object | null })
 const replay = reactive({ match: null as object | null })
 const leaderboard = reactive({ isOpen: false })
+const legal = reactive({ document: null as LegalDocument | null })
 vi.mock('@/ui/stores/settings', () => ({ useSettingsStore: () => settings }))
 vi.mock('@/ui/stores/patchNotes', () => ({ usePatchNotesStore: () => notes }))
 vi.mock('@/ui/stores/profile', () => ({ useProfileStore: () => profile }))
 vi.mock('@/ui/stores/match', () => ({ useMatchStore: () => match }))
 vi.mock('@/ui/stores/replay', () => ({ useReplayStore: () => replay }))
 vi.mock('@/ui/stores/leaderboard', () => ({ useLeaderboardStore: () => leaderboard }))
+vi.mock('@/ui/stores/legal', () => ({ useLegalStore: () => legal }))
 
 class Element {
   attributes: Record<string, string> = {}
@@ -98,6 +101,13 @@ describe('screen indexing rules', () => {
     await nextTick()
     expect(document.documentElement.lang).toBe('ru')
     expect(document.title).toContain(`Патч ${LATEST_PATCH.version}`)
+
+    legal.document = LEGAL_DOCUMENTS.privacy
+    await nextTick()
+    expect(robots()).toBe('index, follow')
+    expect(document.title).toBe('Политика конфиденциальности · The Shotcaller')
+    expect(canonical()).toBe('https://theshotcaller.online/privacy')
+    legal.document = null
 
     replay.match = {}
     await nextTick()

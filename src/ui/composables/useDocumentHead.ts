@@ -14,6 +14,8 @@ import { useProfileStore } from '../stores/profile'
 import { useReplayStore } from '../stores/replay'
 import { useSettingsStore } from '../stores/settings'
 import { useLeaderboardStore } from '../stores/leaderboard'
+import { useLegalStore } from '../stores/legal'
+import { legalPath } from '../legal/documents'
 
 function meta(attribute: 'name' | 'property', name: string, content: string) {
   let element = document.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`)
@@ -34,6 +36,7 @@ export function useDocumentHead() {
   const match = useMatchStore()
   const replay = useReplayStore()
   const leaderboard = useLeaderboardStore()
+  const legal = useLegalStore()
 
   watch(
     [
@@ -44,14 +47,16 @@ export function useDocumentHead() {
       () => match.view !== null,
       () => replay.match !== null,
       () => leaderboard.isOpen,
+      () => legal.document,
     ],
     () => {
       const locale = settings.locale
       const patch = notes.patch
+      const legalDocument = legal.document
 
       const personal = replay.match
         ? 'replay'
-        : patch
+        : patch || legalDocument
           ? null
           : leaderboard.isOpen
             ? 'leaderboard'
@@ -82,15 +87,19 @@ export function useDocumentHead() {
 
       const title = personal
         ? `${labels[personal]} · ${SITE_NAME}`
-        : patch
-          ? patchTitle(patch, locale)
-          : `${SITE_NAME} — ${locale === 'ru' ? 'Бесплатная стратегия в браузере' : 'Free browser strategy game'}`
+        : legalDocument
+          ? `${legalDocument.title[locale]} · ${SITE_NAME}`
+          : patch
+            ? patchTitle(patch, locale)
+            : `${SITE_NAME} — ${locale === 'ru' ? 'Бесплатная стратегия в браузере' : 'Free browser strategy game'}`
 
       const description = personal
         ? PRIVATE_DESCRIPTIONS[personal][locale]
-        : patch
-          ? patchSnippet(patch, locale)
-          : HOME_DESCRIPTION[locale]
+        : legalDocument
+          ? legalDocument.summary[locale]
+          : patch
+            ? patchSnippet(patch, locale)
+            : HOME_DESCRIPTION[locale]
 
       document.title = title
       document.documentElement.lang = locale
@@ -104,7 +113,8 @@ export function useDocumentHead() {
         canonical?.remove()
         document.querySelector('meta[property="og:url"]')?.remove()
       } else {
-        const url = `${SITE_ORIGIN}${patch ? patchPath(patch.version) : '/'}`
+        const path = legalDocument ? legalPath(legalDocument.id) : patch ? patchPath(patch.version) : '/'
+        const url = `${SITE_ORIGIN}${path}`
         const link = canonical ?? document.createElement('link')
         link.rel = 'canonical'
         link.href = url

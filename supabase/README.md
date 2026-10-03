@@ -93,6 +93,22 @@ If `mmr_leaderboard` is missing, apply its migration in the same project/databas
 An error saying `mmr_leaderboard(unknown) does not exist` means the function is missing;
 the quoted game-mode argument does not need an explicit cast.
 
+## Support notifications
+
+`20261004130000_support_telegram.sql` forwards each new support request to a Telegram chat through
+`pg_net`. Create a bot with @BotFather, send it any message from the chat that should receive requests,
+and read the chat ID from `https://api.telegram.org/bot<token>/getUpdates`. Then store both values in
+Vault from the SQL Editor:
+
+```sql
+select vault.create_secret('<bot token>', 'support_telegram_token');
+select vault.create_secret('<chat id>', 'support_telegram_chat');
+```
+
+Without both secrets the trigger does nothing. Delivery is asynchronous and never blocks a submission;
+Telegram's replies stay in `net._http_response` for a few hours if a message does not arrive. To rotate
+the token, use `vault.update_secret`. Requests remain in `support_requests` for Table Editor review.
+
 ## SQL validation
 
 Account deletion in 8.8.1 requires `20261003160000_delete_account.sql` before the client is deployed.
