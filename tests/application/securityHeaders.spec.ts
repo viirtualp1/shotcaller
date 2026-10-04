@@ -20,6 +20,7 @@ const directive = (name: string) =>
 describe('content security policy', () => {
   it('allows every inline script of the page by its hash and nothing else inline', () => {
     const html = readFileSync('index.html', 'utf8')
+
     const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
       ([, code]) => `'sha256-${createHash('sha256').update(code!).digest('base64')}'`,
     )

@@ -15,7 +15,8 @@ permissions:
 jobs:
   check:
     name: Lint, typecheck, test, build
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to Ubuntu 26 from 2026-10-19; move on purpose once CI passes there.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:

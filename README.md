@@ -1,66 +1,117 @@
 # The Shotcaller
 
-An auto battler in the spirit of Dota. You are the coach: buy heroes, send them down the lanes and watch the fight play out.
+[![CI](https://github.com/viirtualp1/shotcaller/actions/workflows/ci.yml/badge.svg)](https://github.com/viirtualp1/shotcaller/actions/workflows/ci.yml)
 
-## Game modes
+**A browser auto battler in the spirit of Dota. You are the coach, not the hero.**
 
-- **Three lanes**: the classic. Top, mid and bot, one tower per lane, the throne behind them.
-- **Two lanes**: top and bot around the jungle. A good place to start; the tutorial is played here.
-- **One lane**: a long bridge with two towers a side and heal relics in the middle. A short match where kills count toward the round.
+Draft heroes, send them down the lanes, give each lane its orders and watch the fight play itself out.
+The match is won between rounds: who goes where, which synergies you build, and when you push.
 
-Every mode has its own duel rating.
+**[Play at theshotcaller.online →](https://theshotcaller.online)** · free, no install, works offline as an app.
 
-Optional [PostHog gameplay telemetry](docs/telemetry.md) requires an explicit account consent.
-The integration is off until its migration, server functions and deletion scheduler are configured.
+## The game
 
-Cloud saves require all files in `supabase/migrations`, applied in timestamp order.
-Before deploying the updated 9.1 client, apply `20261004160000_leaderboard_friend_requests.sql`.
-It restores requests from the leaderboard for registered accounts while keeping friend codes private
-and reusing the existing block, request limit and cooldown rules.
-`20261004170000_security_hardening.sql` makes new `public` tables private until a migration grants them,
-closes trigger functions to the API and takes coach photos only from the Google identity; deploy the client
-with it, since the client now shows Google-hosted photos only. `20261004171000_pg_net_schema.sql` moves pg_net
-out of `public`. `supabase/tests/security_hardening.sql` lists every SECURITY DEFINER function the API may call:
-add a new RPC there when you grant it.
-`20261004172000_ranked_only_mmr.sql` lets only ranked (matchmaking) duels move MMR; deploy it with the client,
-which stops predicting rating changes for friendly duels.
+- **21 heroes in 6 roles**, each with its own ability. Three copies merge into a stronger hero, and a second star
+  unlocks a talent choice.
+- **8 synergies** that only work between heroes on the same lane, so placement matters as much as the draft.
+- **16 items** with two slots per hero; two copies forge into an upgraded version.
+- **Three maps**: the classic three lanes, two lanes around a jungle, and a short one-lane bridge.
+- **Lane orders**: push, hold or move together, set per lane between rounds.
+- **Play anywhere**: against the computer, in ranked matchmaking with its own MMR for each map, or in a duel
+  with a friend. Friends can chat and watch each other's matches live.
+- **A career** of trials, weekly contracts and milestones, in English and Russian, on desktop, phone and Discord.
 
-`vercel.json` sets the Content Security Policy and other security headers; `npm run preview` sends the same ones.
-Change the inline script in `index.html` only together with its `sha256-` hash in the policy
-(`tests/application/securityHeaders.spec.ts` checks this), and add any new external origin to `connect-src`
-or `img-src` before the client uses it.
-For existing deployments, `20261001130000_cloud_save_capacity.sql` raises the snapshot limits to
-1 MiB per profile and 256 KiB per match so history and round replays fit without discarding data.
-The regression check in `supabase/tests/cloud_save_capacity.sql` runs in a disposable database and rolls back its writes.
+### How to play
 
-The main page's feedback form uses `20261001140000_support_feedback.sql`.
-Read submissions in Supabase **Table Editor → support_requests** and mark them `reviewed` or `closed`.
-Only project administrators can read the inbox; players and guests can submit up to three requests per hour
-and ten per day. Submission shares the text, optional reply email, account/guest ID, language and game version;
-it is separate from gameplay analytics. Contact emails and message text should be retained only as long as support needs them.
+1. Buy heroes in the shop and place them on the lanes.
+2. Give them items and an order for each lane.
+3. Press **Fight**. The round goes to whoever hurt the enemy towers and throne more, and that damage never heals.
+4. Break the enemy throne and the match is yours on the spot.
 
-## How to play
+**Keys:** <kbd>D</kbd> reroll · <kbd>F</kbd> buy XP · <kbd>E</kbd> sell · <kbd>Space</kbd> fight · <kbd>Esc</kbd> menu
 
-- Buy heroes in the shop. Three copies of a hero merge into one stronger hero.
-- Place heroes on the lanes. Synergies only work between heroes on the same lane.
-- Give your heroes items: each has two slots.
-- Press **Fight**. The round goes to whoever hurt the enemy towers and throne more. That damage never heals.
-- Break the enemy throne and the match is yours on the spot.
+## Under the hood
 
-Play against the computer or duel your friends; duels move your rating. The game installs as an app and works offline, except for duels and friends.
+- **Deterministic simulation.** Battles run on fixed steps with maths that gives the same bits in every browser,
+  so a match is fully described by its seed and the boards. Duels exchange boards, never positions: both devices
+  replay the same battle and the server only accepts a result both players agree on.
+- **An ECS battle engine** ([miniplex](https://github.com/hmans/miniplex)) with systems for targeting, movement,
+  abilities and towers, kept apart from rendering and testable headless. Balance scripts play whole matches
+  without a browser.
+- **Pixi.js 8 rendering** on WebGL, loaded lazily, with no `eval` so the site can run under a strict CSP.
+- **Offline first.** A service worker caches the game, and progress syncs to the cloud once you are back online.
+- **Supabase backend** for accounts, saves, friends, chat, duels and matchmaking. Every read and write is
+  checked by row-level security or a database function.
 
-**Keys:** D reroll, F buy XP, E sell, Space fight, Esc menu.
+| Layer | Stack |
+| --- | --- |
+| UI | Vue 3, Pinia, vue-i18n, Reka UI, GSAP |
+| Game | TypeScript, miniplex ECS, Pixi.js 8 |
+| Build | Vite, vite-plugin-pwa, Vitest, ESLint, Prettier |
+| Backend | Supabase: Postgres with row-level security, Realtime, Edge Functions |
+| Hosting | Vercel, Discord Activity |
 
-## Development dependencies
+## Getting started
 
-Use Node 24 (`.nvmrc`) and `npm ci`. Dependency install scripts are declared in `package.json`: esbuild validates its binary and vue-demi selects its Vue 3 exports; fsevents scripts are explicitly disabled because file watching has a portable fallback.
+Requires Node 24 (see `.nvmrc`).
 
-Vue I18n uses the v11 Composition API. Overrides update the i18n build plugin's extensions to v9 (removing its deprecated v10 runtime), Workbox's glob to v13, and the optional PWA asset generator to v2. Both the service-worker build and icon generation are verified with these overrides.
+```bash
+npm ci
+npm run dev
+```
 
-TypeScript stays on 6.0.3: the current TypeScript ESLint parser supports `<6.1.0`, and Vue's type checker still uses the JavaScript compiler API that TypeScript 7 replaced. Upgrade it when both tools support the new compiler.
+The game runs fully offline without any configuration. To enable accounts and online play, copy `.env.example`
+to `.env`, add a Supabase project and apply `supabase/migrations` in order.
 
-## Public pages and performance
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Typecheck and production build, including static patch pages and the sitemap |
+| `npm run preview` | Serve the build with production security headers |
+| `npm test` | Unit, simulation and component tests |
+| `npm run lint` · `npm run format:check` · `npm run typecheck` | The checks CI runs |
+| `npm run balance` | Headless matches for hero and item balance |
 
-`npm run build` generates the home page, static patch articles, `robots.txt` and `sitemap.xml`. Serve `dist` at the domain root; public patch URLs use `/patches/<version>/`. The canonical origin is `https://theshotcaller.online`. Private screens are excluded from the sitemap and use `noindex` metadata.
+### Project layout
 
-The [performance and connection audit](docs/performance-audit.md) includes measured simulation costs, loading changes, device limitations and offline/duel recovery behavior. Reproduce the CPU sample with `TSX_TSCONFIG_PATH=tsconfig.node.json node --import tsx scripts/performance.ts`.
+```text
+src/
+  content/      heroes, items, synergies, maps and rules as data
+  simulation/   the deterministic battle engine: ECS systems, abilities, map
+  domain/       match flow, economy, roster, progression and replays
+  rendering/    Pixi.js board, layers and views
+  application/  sessions, persistence, cloud and social services
+  ui/           Vue screens, components, stores and translations
+supabase/       migrations, SQL tests and Edge Functions
+tests/          Vitest suites for every layer
+scripts/        balance, A/B and performance tools
+```
+
+## Documentation
+
+- [Gameplay telemetry](docs/telemetry.md): consent-based PostHog analytics
+- [Discord Activity](docs/discord-activity.md)
+- [Performance and connection audit](docs/performance-audit.md)
+
+<details>
+<summary>Toolchain notes</summary>
+
+Dependency install scripts are declared in `package.json`: esbuild validates its binary and vue-demi selects its
+Vue 3 exports; fsevents scripts are disabled because file watching has a portable fallback.
+
+Vue I18n uses the v11 Composition API. Overrides update the i18n build plugin's extensions to v9 (removing its
+deprecated v10 runtime), Workbox's glob to v13, and the optional PWA asset generator to v2.
+
+TypeScript stays on 6.0.3: the TypeScript ESLint parser supports `<6.1.0`, and Vue's type checker still uses the
+compiler API that TypeScript 7 replaced.
+
+Reproduce the simulation CPU sample with `TSX_TSCONFIG_PATH=tsconfig.node.json node --import tsx scripts/performance.ts`.
+
+</details>
+
+## License
+
+Copyright © 2026 viirtualp1. All rights reserved.
+
+The source is published so you can read it, learn from it and report issues. It is **not** open source: copying,
+redistributing or running your own copy of the game is not permitted. See [LICENSE](LICENSE).

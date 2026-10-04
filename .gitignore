@@ -15,5 +15,5 @@ coverage
 .idea
 .vscode/*
 !.vscode/extensions.json
-supabase/.temp
+supabase/**/.temp
 supabase/.branches
