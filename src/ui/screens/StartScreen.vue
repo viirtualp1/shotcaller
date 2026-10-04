@@ -1,28 +1,25 @@
 <script setup lang="ts">
-import {
-  useDocumentVisibility,
-  useMediaQuery,
-  useElementSize,
-  useElementVisibility,
-  useIntervalFn,
-} from '@vueuse/core'
-import { Play, Swords, UserPlus } from '@lucide/vue'
-import { defineAsyncComponent, ref } from 'vue'
+import { useDocumentVisibility, useElementVisibility, useIntervalFn, useMediaQuery } from '@vueuse/core'
+import { Play, UserPlus } from '@lucide/vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { IN_DISCORD, inviteToActivity } from '@/application/discord'
 import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
-import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
-
-import DiscordCard from '../components/patchNotes/DiscordCard.vue'
-import LatestPatchCard from '../components/patchNotes/LatestPatchCard.vue'
+import ContractsStrip from '../components/home/ContractsStrip.vue'
+import NewsChips from '../components/home/NewsChips.vue'
+import QuickStarts from '../components/home/QuickStarts.vue'
+import SavedMatchCard from '../components/home/SavedMatchCard.vue'
+import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
-import CareerChip from '../components/profile/CareerChip.vue'
 import ProfileChip from '../components/profile/ProfileChip.vue'
 import SignInButton from '../components/profile/SignInButton.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
+import FriendsCard from '../components/social/FriendsCard.vue'
 import { useGameText } from '../composables/useGameText'
+import { useNewcomer } from '../composables/useNewcomer'
+import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
@@ -44,11 +41,12 @@ const store = useMatchStore()
 const menu = useMenuStore()
 const settings = useSettingsStore()
 const duel = useDuelStore()
+const cloud = useCloudStore()
+const newcomer = useNewcomer()
 const { t } = useGameText()
 const visibility = useDocumentVisibility()
 
 const previewHost = ref<HTMLElement | null>(null)
-const patchCard = ref<InstanceType<typeof LatestPatchCard> | null>(null)
 
 /** The board on show, and for a moment the next mode's board fading in over it. */
 const demos = ref<DemoLayer[]>([
@@ -58,16 +56,9 @@ const demos = ref<DemoLayer[]>([
   },
 ])
 
+/** A returning coach with an account sees their friends beside the menu; the show fight is for everyone else. */
+const social = computed(() => cloud.enabled && cloud.signedIn && !newcomer.value)
 const previewVisible = useElementVisibility(previewHost)
-
-const patchSize = useElementSize(
-  () => patchCard.value?.$el as HTMLElement | undefined,
-  {
-    width: 0,
-    height: 96,
-  },
-  { box: 'border-box' },
-)
 
 /** The new board covers the old one now, so the old one can go. */
 function demoShown(id: number) {
@@ -99,47 +90,52 @@ useIntervalFn(() => {
 <template>
   <MobileHome v-if="phone" />
 
-  <main v-else class="start">
-    <div class="coach" :style="{ '--coach-card-height': `${patchSize.height.value || 96}px` }">
-      <ProfileChip />
-      <CareerChip />
-      <SignInButton />
-    </div>
+  <main v-else class="start" :class="{ social }">
+    <header class="top">
+      <div class="coach">
+        <ProfileChip />
+        <SignInButton />
+      </div>
+
+      <div class="news">
+        <MovedCard />
+        <NewsChips titled />
+      </div>
+    </header>
 
     <section class="copy">
-      <h1 class="hand">{{ t('app.title') }}</h1>
-      <p class="lede">{{ t('start.lede') }}</p>
+      <h1 class="hand" :class="{ compact: !newcomer }">{{ t('app.title') }}</h1>
+      <p v-if="newcomer" class="lede">{{ t('start.lede') }}</p>
 
-      <nav class="menu">
+      <div class="menu">
         <DuelResumeCard />
+        <SavedMatchCard />
 
         <button
-          v-if="store.savedRound"
+          v-if="!store.saved && !duel.resumable"
           type="button"
           class="btn primary block big"
           :disabled="duel.matchmaking"
-          @click="store.continueMatch()"
+          @click="menu.openNewMatch('computer')"
         >
-          <Play :size="18" /> {{ t('start.continue', { round: store.savedRound }) }}
+          <Play :size="18" /> {{ t('start.home.play') }}
         </button>
 
-        <button
-          type="button"
-          class="btn block big"
-          :class="{ primary: !store.savedRound }"
-          :disabled="duel.matchmaking"
-          @click="menu.newMatch = true"
-        >
-          <Swords :size="18" /> {{ t('start.newMatch') }}
+        <QuickStarts />
+
+        <button v-if="IN_DISCORD" type="button" class="btn block" @click="inviteFriend">
+          <UserPlus :size="17" /> {{ t('start.invite') }}
         </button>
 
-        <button v-if="IN_DISCORD" type="button" class="btn block big" @click="inviteFriend">
-          <UserPlus :size="18" /> {{ t('start.invite') }}
-        </button>
-      </nav>
+        <ContractsStrip />
+      </div>
     </section>
 
-    <section ref="previewHost" class="preview">
+    <section v-if="social" class="friends">
+      <FriendsCard />
+    </section>
+
+    <section v-else ref="previewHost" class="preview">
       <BoardFrame>
         <DemoBattle
           v-for="layer in previewVisible ? demos : []"
@@ -150,38 +146,87 @@ useIntervalFn(() => {
       </BoardFrame>
     </section>
 
-    <div class="news">
-      <MovedCard />
-      <DiscordCard />
-      <LatestPatchCard ref="patchCard" />
-    </div>
-
-    <div class="footer">
+    <footer class="footer">
       <LanguageSwitch compact />
       <SupportButton />
       <LegalLinks />
-    </div>
+    </footer>
   </main>
 </template>
 
 <style scoped>
 .start {
-  position: relative;
+  --coach-card-height: 52px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
   align-items: center;
-  gap: 40px;
+  column-gap: clamp(32px, 6vw, 96px);
+  row-gap: 24px;
   max-width: 1480px;
   min-height: 100%;
   margin: 0 auto;
-  padding: calc(32px + env(safe-area-inset-top, 0px)) 24px 32px;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 24px 24px;
+}
+
+/* Beside a friends list the two columns sit together in the middle instead of spreading to the edges. */
+.start.social {
+  grid-template-columns: minmax(0, 440px) minmax(0, 420px);
+  justify-content: center;
+  column-gap: 72px;
+}
+
+/* One row across the top: who you are on the left, what is new on the right. */
+.top,
+.footer {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.top {
+  justify-content: space-between;
+  align-self: start;
+}
+
+/* The header and footer keep to the screen's edges even when the columns gather in the middle. */
+.start.social .top,
+.start.social .footer {
+  width: calc(min(100vw, 1480px) - 48px);
+  justify-self: center;
+}
+
+.coach,
+.news {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  animation: fade-in 0.4s 0.1s ease-out both;
+}
+
+.coach :deep(.chip) {
+  min-width: 0;
+  max-width: 320px;
+  padding-block: 6px;
+  box-shadow: none;
+}
+
+.coach :deep(.sign-in) {
+  box-shadow: none;
+}
+
+.news {
+  justify-content: flex-end;
 }
 
 .copy {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 30rem;
+  max-width: 440px;
   container-type: inline-size;
 }
 
@@ -190,6 +235,11 @@ h1 {
   line-height: 0.9;
   letter-spacing: -0.01em;
   white-space: nowrap;
+}
+
+/* A returning coach knows the name; the title steps back so the match comes first. */
+h1.compact {
+  font-size: min(72px, 15cqi);
 }
 
 .lede {
@@ -204,143 +254,40 @@ h1 {
   flex-direction: column;
   gap: 10px;
   margin-top: 14px;
-  max-width: 340px;
 }
 
-.menu .btn {
+.menu > * {
   animation: slide-in 0.34s ease-out both;
 }
 
-.menu .btn:nth-child(2) {
-  animation-delay: 50ms;
+.menu > :nth-child(2) {
+  animation-delay: 40ms;
 }
 
+.menu > :nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.menu > :nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+
+.preview,
+.friends {
+  min-width: 0;
+}
+
+/* The board is square: it never grows taller than the space between the header and the footer. */
 .preview {
-  min-width: 0;
+  justify-self: center;
+  width: min(100%, max(420px, 100dvh - 200px));
 }
 
-.news {
-  position: absolute;
-  top: calc(24px + env(safe-area-inset-top, 0px));
-  right: 24px;
-  z-index: 1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  max-width: calc(100% - 688px);
-}
-
-.coach {
-  position: absolute;
-  top: calc(24px + env(safe-area-inset-top, 0px));
-  left: 24px;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 10px;
-  max-width: calc(100% - 472px);
-}
-
-.coach :deep(.chip) {
-  min-width: 0;
-  max-width: 320px;
+.friends {
+  animation: fade-in 0.4s 0.15s ease-out both;
 }
 
 .footer {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
   animation: fade-in 0.4s 0.2s ease-out both;
-}
-
-@media (max-width: 1400px) {
-  .news {
-    display: block;
-    max-width: 400px;
-  }
-
-  .news :deep(.patch-card + .patch-card) {
-    margin-top: 12px;
-  }
-}
-
-@media (max-width: 860px) {
-  .start {
-    grid-template-columns: minmax(0, 1fr);
-    padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 24px;
-    gap: 24px;
-  }
-
-  .copy,
-  .menu {
-    max-width: none;
-  }
-
-  .news {
-    position: relative;
-    inset: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: auto;
-    max-width: none;
-  }
-
-  .news :deep(.patch-card) {
-    width: 100%;
-    max-width: none;
-    margin: 0;
-  }
-
-  .coach {
-    position: relative;
-    inset: auto;
-    display: grid;
-    grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr);
-    width: 100%;
-    max-width: 100%;
-    gap: 8px;
-  }
-
-  .coach:has(> .sign-in) {
-    grid-template-columns: minmax(0, 2.5fr) repeat(2, minmax(0, 1fr));
-  }
-
-  .coach :deep(.chip) {
-    width: 100%;
-    max-width: none;
-    gap: 8px;
-    padding-inline: 12px;
-  }
-
-  .coach :deep(.chip .who) {
-    flex: 1;
-    margin-right: 8px;
-  }
-
-  .coach :deep(.chip .rank) {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .coach :deep(.career-chip),
-  .coach :deep(.sign-in) {
-    width: 100%;
-    min-width: 0;
-    padding-inline: 0;
-  }
-
-  .footer {
-    position: relative;
-    inset: auto;
-    justify-self: start;
-  }
 }
 </style>

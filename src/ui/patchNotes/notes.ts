@@ -85,6 +85,38 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '9.2',
+    date: '2026-10-04',
+    title: {
+      en: 'Front and centre',
+      ru: 'Всё под рукой',
+    },
+    general: [
+      {
+        en: 'On a computer, the main menu now puts **your match first**: an unfinished match shows its mode, round and towers, with **Continue** right under it.',
+        ru: 'На компьютере главное меню теперь начинается **с твоего матча**: незаконченная игра показывает режим, раунд и башни, а под ними — кнопку **Продолжить**.',
+      },
+      {
+        en: '**Quick start** for **Computer**, **Online** and **Training**: one click opens a new match already set to that mode.',
+        ru: '**Быстрый старт** для режимов **Компьютер**, **Онлайн** и **Тренировка**: один клик открывает новый матч уже в нужном режиме.',
+      },
+      {
+        en: 'Weekly contracts show the **next one to finish** right in the main menu.',
+        ru: 'Еженедельные контракты показывают, **какой закрыть следующим**, прямо в главном меню.',
+      },
+      {
+        en: 'Signed in, you get your **friends list** beside the menu: see who is online and **watch their matches live** in one click.',
+        ru: 'После входа рядом с меню появляется **список друзей**: видно, кто в сети, а их **матчи можно смотреть вживую** в один клик.',
+      },
+    ],
+    interface: [
+      {
+        en: 'A calmer top bar: your profile on the left, the latest patch and Discord on the right.',
+        ru: 'Верхняя панель стала спокойнее: профиль слева, свежий патч и Discord справа.',
+      },
+    ],
+  },
+  {
     version: '9.1',
     date: '2026-10-04',
     title: {

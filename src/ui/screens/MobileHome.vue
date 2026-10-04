@@ -1,39 +1,26 @@
 <script setup lang="ts">
-import {
-  Bot,
-  ChevronRight,
-  CloudUpload,
-  Play,
-  ScrollText,
-  Settings,
-  Swords,
-  Target,
-  Trophy,
-  User,
-  UserPlus,
-  Users,
-} from '@lucide/vue'
+import { CloudUpload, Play, Settings, Trophy, User, UserPlus, Users } from '@lucide/vue'
 import { computed, defineAsyncComponent } from 'vue'
-import { discordInstallUrl, IN_DISCORD, inviteToActivity } from '@/application/discord'
-import { MODES } from '@/content/modes'
+import { IN_DISCORD, inviteToActivity } from '@/application/discord'
 import BoardFrame from '../components/board/BoardFrame.vue'
-import DiscordIcon from '../components/common/DiscordIcon.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
-import BaseStatus from '../components/hud/BaseStatus.vue'
+import ContractsStrip from '../components/home/ContractsStrip.vue'
+import NewsChips from '../components/home/NewsChips.vue'
+import QuickStarts from '../components/home/QuickStarts.vue'
+import SavedMatchCard from '../components/home/SavedMatchCard.vue'
 import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
 import CoachAvatar from '../components/profile/CoachAvatar.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useGameText } from '../composables/useGameText'
-import { isFresh, LATEST_PATCH } from '../patchNotes/notes'
+import { useNewcomer } from '../composables/useNewcomer'
 import { useChatStore } from '../stores/chat'
 import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
 import { useFriendsStore } from '../stores/friends'
 import { useMatchStore } from '../stores/match'
-import { useMenuStore, type MatchOpponent } from '../stores/menu'
-import { usePatchNotesStore } from '../stores/patchNotes'
+import { useMenuStore } from '../stores/menu'
 import { useProfileStore } from '../stores/profile'
 
 /**
@@ -42,24 +29,6 @@ import { useProfileStore } from '../stores/profile'
  */
 const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
-const QUICK_STARTS: readonly { opponent: MatchOpponent; icon: typeof Bot; label: string }[] = [
-  {
-    opponent: 'computer',
-    icon: Bot,
-    label: 'matchmaking.computer',
-  },
-  {
-    opponent: 'online',
-    icon: Swords,
-    label: 'matchmaking.online',
-  },
-  {
-    opponent: 'training',
-    icon: Target,
-    label: 'sandbox.tab',
-  },
-]
-
 const store = useMatchStore()
 const menu = useMenuStore()
 const duel = useDuelStore()
@@ -67,35 +36,10 @@ const profile = useProfileStore()
 const cloud = useCloudStore()
 const chat = useChatStore()
 const friends = useFriendsStore()
-const notes = usePatchNotesStore()
 const photo = useAccountPhoto()
+const newcomer = useNewcomer()
 const text = useGameText()
 const { t } = text
-const discordHref = IN_DISCORD ? null : discordInstallUrl(import.meta.env)
-
-const saved = computed(() => store.saved)
-/** A coach who has never finished a match gets the pitch and the show fight; everyone else gets straight to it. */
-const newcomer = computed(() => profile.profile.recent.length === 0 && !saved.value && !duel.resumable)
-const completed = computed(() => profile.contracts.filter((contract) => contract.completed).length)
-const nextContract = computed(() => profile.contracts.find((contract) => !contract.completed) ?? null)
-
-const contractShare = computed(() => {
-  const total = profile.contracts.reduce((sum, contract) => sum + contract.target, 0)
-  const done = profile.contracts.reduce((sum, contract) => sum + contract.progress, 0)
-
-  return total ? done / total : 0
-})
-
-const savedLabel = computed(() => {
-  const state = saved.value
-  if (!state) {
-    return ''
-  }
-
-  const against = state.trialId ? t(`career.trials.${state.trialId}.name`) : t('start.home.vsComputer')
-
-  return `${t(`modes.${state.mode}.name`)} · ${against}`
-})
 
 const news = computed(() => friends.incoming.length + chat.totalUnread)
 
@@ -150,30 +94,10 @@ function openFriends() {
 
     <DuelResumeCard />
 
-    <section v-if="saved" class="resume">
-      <div class="resume-meta">
-        <span>{{ savedLabel }}</span>
-        <span>{{ t('hud.round', { round: saved.round, max: MODES[saved.mode].maxRounds }) }}</span>
-      </div>
-
-      <div class="score">
-        <BaseStatus :team="0" :structures="saved.structures[0]" :mode="saved.mode" />
-        <span class="vs">vs</span>
-        <BaseStatus :team="1" :structures="saved.structures[1]" :mode="saved.mode" />
-      </div>
-
-      <button
-        type="button"
-        class="btn primary block big"
-        :disabled="duel.matchmaking"
-        @click="store.continueMatch()"
-      >
-        <Play :size="18" /> {{ t('start.home.continue') }}
-      </button>
-    </section>
+    <SavedMatchCard />
 
     <button
-      v-else-if="!duel.resumable"
+      v-if="!store.saved && !duel.resumable"
       type="button"
       class="btn primary block big"
       :disabled="duel.matchmaking"
@@ -182,19 +106,7 @@ function openFriends() {
       <Play :size="18" /> {{ t('start.home.play') }}
     </button>
 
-    <nav class="quick" :aria-label="t('start.newMatch')">
-      <button
-        v-for="quick in QUICK_STARTS"
-        :key="quick.opponent"
-        type="button"
-        class="tile"
-        :disabled="duel.matchmaking"
-        @click="menu.openNewMatch(quick.opponent)"
-      >
-        <component :is="quick.icon" :size="20" />
-        <span>{{ t(quick.label) }}</span>
-      </button>
-    </nav>
+    <QuickStarts />
 
     <button
       v-if="IN_DISCORD"
@@ -205,39 +117,9 @@ function openFriends() {
       <UserPlus :size="17" /> {{ t('start.invite') }}
     </button>
 
-    <a href="/career" class="contracts" @click.prevent="profile.openCareer()">
-      <span class="contracts-head">
-        <span class="contracts-title"><Trophy :size="15" /> {{ t('career.tabs.weekly') }}</span>
-        <span class="count">{{ completed }}/{{ profile.contracts.length }}</span>
-      </span>
+    <ContractsStrip />
 
-      <span class="track"><span :style="{ width: `${Math.round(contractShare * 100)}%` }" /></span>
-
-      <span class="next">
-        {{
-          nextContract
-            ? t('start.home.next', {
-                name: t(`career.contracts.${nextContract.id}.name`),
-                progress: `${nextContract.progress}/${nextContract.target}`,
-              })
-            : t('start.home.weekDone')
-        }}
-        <ChevronRight :size="15" />
-      </span>
-    </a>
-
-    <div class="news">
-      <a :href="`/patches/${LATEST_PATCH.version}/`" class="chip" @click.prevent="notes.open()">
-        <ScrollText :size="16" />
-        <span>{{ t('patchNotes.patch', { version: LATEST_PATCH.version }) }}</span>
-        <span v-if="isFresh(LATEST_PATCH)" class="fresh">{{ t('start.home.fresh') }}</span>
-      </a>
-
-      <a v-if="discordHref" :href="discordHref" class="chip" target="_blank" rel="noopener">
-        <DiscordIcon :size="16" />
-        <span>Discord</span>
-      </a>
-    </div>
+    <NewsChips />
 
     <section v-if="newcomer" class="preview">
       <BoardFrame>
@@ -302,8 +184,6 @@ function openFriends() {
 }
 
 .identity,
-.contracts,
-.chip,
 .tab {
   text-decoration: none;
 }
@@ -345,177 +225,6 @@ function openFriends() {
   font-size: 15px;
   line-height: 1.5;
   color: var(--chalk-dim);
-}
-
-/* The match waiting for the coach: where it stands, and the button to carry on. */
-.resume {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid rgba(244, 197, 91, 0.45);
-  border-radius: var(--radius);
-  background: rgba(244, 197, 91, 0.06);
-}
-
-.resume-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--chalk-dim);
-}
-
-.resume-meta span:first-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.resume-meta span:last-child {
-  flex: none;
-}
-
-.score {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.score :deep(.who) {
-  display: none;
-}
-
-.vs {
-  font-size: 11px;
-  color: var(--chalk-faint);
-}
-
-.quick {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 64px;
-  padding: 8px 4px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--chalk);
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.tile svg {
-  color: var(--gold);
-}
-
-.tile:disabled {
-  opacity: 0.5;
-}
-
-.contracts {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: inherit;
-}
-
-.contracts-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.contracts-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.contracts-title svg,
-.count {
-  color: var(--gold);
-}
-
-.count {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.track {
-  height: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #ffffff12;
-}
-
-.track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--gold);
-  transition: width 0.4s ease-out;
-}
-
-.next {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12.5px;
-  color: var(--chalk-dim);
-}
-
-.news {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  grid-auto-flow: column;
-  gap: 8px;
-}
-
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--chalk);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.chip svg {
-  flex: none;
-  color: var(--gold);
-}
-
-.fresh {
-  margin-left: auto;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: var(--gold);
-  color: var(--ink);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
 }
 
 .footer {

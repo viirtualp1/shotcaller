@@ -74,8 +74,6 @@
     "open": "Career and trials",
     "contractProgress": "Contracts: {completed}/{total}",
     "levelProgress": "Profile XP to the next level",
-    "nextUnlock": "Level {level} unlocks {name}",
-    "allUnlocked": "All trials unlocked. Improve your records!",
     "unlocked": "Trial unlocked: {name}",
     "tabs": {
       "trials": "Trials",
@@ -181,11 +179,6 @@
     },
     "newMatch": "New match",
     "continue": "Continue · round {round}",
-    "discord": {
-      "eyebrow": "Now on Discord · Activities",
-      "title": "Play with friends in a voice channel",
-      "action": "Add to Discord"
-    },
     "move": {
       "eyebrow": "We've moved",
       "title": "This address shuts down shortly.",
@@ -766,9 +759,7 @@
     "back": "Main menu",
     "patch": "Patch {version}",
     "choose": "Choose a patch",
-    "latest": "Latest update",
     "new": "New",
-    "read": "Read the patch notes",
     "earlier": "In earlier patches",
     "release": "Major update {version}",
     "older": "Previous patch",
