@@ -2,10 +2,13 @@
 import { useEventListener } from '@vueuse/core'
 import { RefreshCw } from '@lucide/vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
-import { onScopeDispose } from 'vue'
+import { computed, onScopeDispose } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { usePwaUpdate } from '../../composables/usePwaUpdate'
+import { useLeaderboardStore } from '../../stores/leaderboard'
+import { useLegalStore } from '../../stores/legal'
 import { useMatchStore } from '../../stores/match'
+import { usePatchNotesStore } from '../../stores/patchNotes'
 
 /** The game stays open for hours, so it asks the server for a new version often; the request is tiny. */
 const UPDATE_CHECK_MS = 60 * 1000
@@ -13,7 +16,15 @@ let registration: ServiceWorkerRegistration | undefined
 let stopChecking: (() => void) | undefined
 
 const match = useMatchStore()
+const patchNotes = usePatchNotesStore()
+const leaderboard = useLeaderboardStore()
+const legal = useLegalStore()
 const { t } = useGameText()
+
+/* The game screen is up, as App picks it: the offer waits for the menu instead of covering the match. */
+const inGame = computed(
+  () => match.view !== null && !legal.document && !patchNotes.patch && !leaderboard.isOpen,
+)
 
 const { updating, failed, applyUpdate, reloadIfUpdating } = usePwaUpdate({
   registration: () => registration,
@@ -77,7 +88,7 @@ onScopeDispose(() => {
   </Transition>
 
   <Transition name="toast">
-    <div v-if="needRefresh" class="toast" role="status" :aria-busy="updating">
+    <div v-if="needRefresh && (!inGame || updating)" class="toast" role="status" :aria-busy="updating">
       <RefreshCw :size="16" class="icon" :class="{ spinning: updating }" />
 
       <span class="text">

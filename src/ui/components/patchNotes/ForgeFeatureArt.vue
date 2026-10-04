@@ -17,6 +17,20 @@ import ItemIcon from '../common/ItemIcon.vue'
 const props = defineProps<{ focus: 'upgrades' | 'talents' | 'items' | 'experiments' }>()
 
 const TALENT_STATES = [0, 1, 'both'] as const
+const BRANCHES = ['M150 0 C 150 40, 70 30, 70 70', 'M150 0 C 150 40, 230 30, 230 70'] as const
+/** Seconds a branch takes to fill, the spark running ahead of the gold. */
+const FILL_SECONDS = 0.9
+
+/**
+ * How long each state stays up once its branch has filled: the right one follows the left after a second, both
+ * light together two seconds later, and the loop rests a little before starting over.
+ */
+const TALENT_HOLD: Readonly<Record<(typeof TALENT_STATES)[number], number>> = {
+  0: 1,
+  1: 2,
+  both: 2.6,
+}
+
 const NEW_ITEMS: readonly ShopItemId[] = ['soulJar', 'soulbond', 'echoShard', 'townPortal', 'cursedBlade']
 const SPARKS = 10
 const ROTATION_SIZE = 15
@@ -146,12 +160,12 @@ function drawRotation(): ReadonlySet<HeroId> {
   return new Set(pool.slice(0, ROTATION_SIZE))
 }
 
-/* Left alone, the fork shows one talent, then the other, then both at three stars, and starts over. */
+/* Left alone, the fork fills one talent, then the other, then both at three stars, and starts over. */
 const { restart } = useAutoCycle(
   () => {
     talent.value = TALENT_STATES[(TALENT_STATES.indexOf(talent.value) + 1) % TALENT_STATES.length]!
   },
-  5000,
+  () => (FILL_SECONDS + TALENT_HOLD[talent.value]) * 1000,
   computed(() => visible.value && props.focus === 'talents'),
 )
 
@@ -203,9 +217,33 @@ useIntervalFn(() => {
     <div v-else-if="focus === 'talents'" class="fork">
       <HeroAvatar hero-id="archer" :size="56" :stars="talent === 'both' ? 3 : 2" class="root" />
 
-      <svg class="paths" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
-        <path :class="{ lit: lit(0) }" d="M150 0 C 150 40, 70 30, 70 70" />
-        <path :class="{ lit: lit(1) }" d="M150 0 C 150 40, 230 30, 230 70" />
+      <!-- A new SVG for every state, so its fills and sparks start over from the hero each time. -->
+      <svg
+        :key="String(talent)"
+        class="paths"
+        viewBox="0 0 300 70"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path v-for="(d, i) in BRANCHES" :key="`track-${i}`" class="track" :d="d" />
+
+        <template v-for="(d, i) in BRANCHES" :key="`fill-${i}`">
+          <template v-if="lit(i as 0 | 1)">
+            <path class="fill" :d="d" :style="{ animationDuration: `${FILL_SECONDS}s` }" />
+
+            <circle class="spark" r="4">
+              <animateMotion :dur="`${FILL_SECONDS}s`" fill="freeze" :path="d" />
+
+              <animate
+                attributeName="opacity"
+                values="1;1;0"
+                keyTimes="0;0.8;1"
+                :dur="`${FILL_SECONDS}s`"
+                fill="freeze"
+              />
+            </circle>
+          </template>
+        </template>
       </svg>
 
       <div class="branches" role="group" :aria-label="copy.pick">
@@ -399,16 +437,26 @@ b {
 
 .paths path {
   fill: none;
-  stroke: #ece8dc30;
   stroke-width: 2.5;
-  stroke-dasharray: 6 6;
-  transition: stroke 0.3s;
 }
 
-.paths path.lit {
+.paths .track {
+  stroke: #ece8dc30;
+  stroke-dasharray: 6 6;
+}
+
+/* The branch fills with gold from the hero down to the talent. */
+.paths .fill {
   stroke: var(--gold);
   stroke-dasharray: 160;
-  animation: draw-path 0.6s ease-out;
+  stroke-dashoffset: 160;
+  filter: drop-shadow(0 0 4px #f4c55b99);
+  animation: draw-path ease-in-out forwards;
+}
+
+.spark {
+  fill: #fff2c4;
+  filter: drop-shadow(0 0 6px #f4c55b);
 }
 
 .branches {
@@ -449,6 +497,8 @@ b {
   border-color: var(--gold);
   background: #f4c55b14;
   box-shadow: 0 0 18px #f4c55b33;
+  /* Lights up as the gold reaches it. */
+  transition-delay: 0.75s;
 }
 
 .both {
