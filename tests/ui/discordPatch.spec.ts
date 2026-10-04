@@ -28,13 +28,14 @@ describe('discord patch posts', () => {
     expect(latestNotedVersion('nothing here')).toBeNull()
   })
 
-  it('links the patch page and keeps the brief short in both languages', () => {
+  it('links the patch page and keeps the brief short, in English', () => {
     const message = patchDiscordMessage(LATEST_PATCH)
     const embed = message.embeds[0]
 
-    expect(embed.title).toBe(`Патч ${LATEST_PATCH.version} — ${LATEST_PATCH.title.ru.replaceAll('**', '')}`)
+    expect(embed.title).toBe(`Patch ${LATEST_PATCH.version} — ${LATEST_PATCH.title.en.replaceAll('**', '')}`)
     expect(embed.url).toBe(`https://theshotcaller.online/patches/${LATEST_PATCH.version}/`)
     expect(embed.description).toContain(LATEST_PATCH.title.en.replaceAll('**', ''))
+    expect(embed.description).not.toMatch(/\p{Script=Cyrillic}/u)
     expect(embed.description.length).toBeLessThan(1200)
     expect(message.allowed_mentions.parse).toEqual([])
     expect(message.username).toBe('The Shotcaller')
@@ -44,9 +45,9 @@ describe('discord patch posts', () => {
     const message = patchDiscordMessage(fix)
 
     expect(message.embeds[0].title).toContain('9.1.1')
-    expect(message.embeds[0].description).toContain('Исправления.')
-    expect(message.embeds[0].description).toContain('**Счёт**')
     expect(message.embeds[0].description).toContain('Bug fixes.')
+    expect(message.embeds[0].description).toContain('**score**')
+    expect(message.embeds[0].description).not.toMatch(/\p{Script=Cyrillic}/u)
     expect(message.embeds[0].url).toBe('https://theshotcaller.online/patches/9.1.1/')
   })
 

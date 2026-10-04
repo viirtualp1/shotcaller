@@ -1,6 +1,5 @@
 import { patchPath, SITE_ORIGIN } from '../seo'
 
-import type { Locale } from '../i18n/index'
 import type { PatchNote } from './notes'
 
 /** Gold from the patch-note palette, as a Discord embed colour. */
@@ -36,7 +35,7 @@ const sentence = (text: string) => {
 }
 
 /** The first feature blurbs, then the opening changes, capped so the channel post stays short. */
-function briefLines(patch: PatchNote, locale: Locale) {
+function briefLines(patch: PatchNote) {
   const lines: string[] = []
 
   for (const feature of patch.features ?? []) {
@@ -44,7 +43,7 @@ function briefLines(patch: PatchNote, locale: Locale) {
       break
     }
 
-    lines.push(`**${tidy(feature.title[locale]).replaceAll('**', '')}.** ${sentence(feature.text[locale])}`)
+    lines.push(`**${tidy(feature.title.en).replaceAll('**', '')}.** ${sentence(feature.text.en)}`)
   }
 
   for (const line of patch.general ?? []) {
@@ -52,16 +51,16 @@ function briefLines(patch: PatchNote, locale: Locale) {
       break
     }
 
-    lines.push(sentence(line[locale]))
+    lines.push(sentence(line.en))
   }
 
   if (lines.length === 0 && patch.fixes?.length) {
     const first = patch.fixes[0]
 
-    lines.push(locale === 'ru' ? 'Исправления.' : 'Bug fixes.')
+    lines.push('Bug fixes.')
 
     if (first) {
-      lines.push(sentence(first[locale]))
+      lines.push(sentence(first.en))
     }
   }
 
@@ -69,24 +68,20 @@ function briefLines(patch: PatchNote, locale: Locale) {
 }
 
 /**
- * A channel post for one release: the patch page, and a short brief in Russian and English.
+ * A channel post for one release: the patch page, and a short English brief.
  * Incoming webhooks post this as the channel's own message.
  */
 export function patchDiscordMessage(patch: PatchNote): DiscordPatchMessage {
-  const russian = briefLines(patch, 'ru').join('\n\n')
-
-  const english = [`**${tidy(patch.title.en).replaceAll('**', '')}**`, ...briefLines(patch, 'en')].join(
-    '\n\n',
-  )
+  const description = [`**${tidy(patch.title.en).replaceAll('**', '')}**`, ...briefLines(patch)].join('\n\n')
 
   return {
     username: 'The Shotcaller',
     allowed_mentions: { parse: [] },
     embeds: [
       {
-        title: `Патч ${patch.version} — ${tidy(patch.title.ru).replaceAll('**', '')}`,
+        title: `Patch ${patch.version} — ${tidy(patch.title.en).replaceAll('**', '')}`,
         url: `${SITE_ORIGIN}${patchPath(patch.version)}/`,
-        description: [russian, english].filter((part) => part.length > 0).join('\n\n'),
+        description,
         color: GOLD,
       },
     ],

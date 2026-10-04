@@ -206,16 +206,31 @@ export function startPresenceServer(
   sweep.unref?.()
 
   return new Promise((resolve, reject) => {
+    let settled = false
+
     const fail = (error: Error) => {
+      if (settled) {
+        return
+      }
+
+      settled = true
       clearInterval(sweep)
       stopListen()
       reject(error)
     }
 
+    sockets.on('error', fail)
     http.once('error', fail)
 
     http.listen(options.port, host, () => {
+      if (settled) {
+        return
+      }
+
+      settled = true
+      sockets.off('error', fail)
       http.off('error', fail)
+
       const address = http.address()
 
       resolve({

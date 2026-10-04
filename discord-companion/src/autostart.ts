@@ -3,30 +3,42 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { companionRoot } from './config.ts'
+import { isPackaged } from './packaged.ts'
 
-const STARTUP_NAME = 'The Shotcaller Discord'
+const STARTUP_NAME = 'The Shotcaller'
 
-function entryPoint(root: string) {
-  const node = process.execPath
-  const tsx = path.join(root, 'node_modules', 'tsx', 'dist', 'cli.mjs')
-  const script = path.join(root, 'src', 'index.ts')
+interface Launch {
+  readonly command: readonly string[]
+  readonly cwd: string
+}
+
+/** The installed exe starts itself. From source, Node runs the TypeScript entry through tsx. */
+function launchOf(root: string): Launch {
+  if (isPackaged()) {
+    return {
+      command: [process.execPath, '--background'],
+      cwd: path.dirname(process.execPath),
+    }
+  }
 
   return {
-    node,
-    tsx,
-    script,
+    command: [
+      process.execPath,
+      path.join(root, 'node_modules', 'tsx', 'dist', 'cli.mjs'),
+      path.join(root, 'src', 'index.ts'),
+    ],
+    cwd: root,
   }
 }
 
-function installWindows(root: string) {
+function installWindows(launch: Launch) {
   const startup = process.env.APPDATA
 
   if (!startup) {
     throw new Error('APPDATA is not set, so the Startup folder cannot be found.')
   }
 
-  const { node, tsx, script } = entryPoint(root)
-  const command = [node, tsx, script].map((part) => `"${part.replaceAll('"', '')}"`).join(' ')
+  const command = launch.command.map((part) => `"${part.replaceAll('"', '')}"`).join(' ')
 
   const file = path.join(
     startup,
@@ -39,7 +51,7 @@ function installWindows(root: string) {
   )
 
   const quotedCommand = `"${command.replaceAll('"', '""')}"`
-  const directory = `"${root.replaceAll('"', '""')}"`
+  const directory = `"${launch.cwd.replaceAll('"', '""')}"`
 
   writeFileSync(
     file,
@@ -55,13 +67,12 @@ function installWindows(root: string) {
   return file
 }
 
-function installMac(root: string) {
-  const { node, tsx, script } = entryPoint(root)
+function installMac(launch: Launch) {
   const directory = path.join(homedir(), 'Library', 'LaunchAgents')
   mkdirSync(directory, { recursive: true })
   const file = path.join(directory, 'online.theshotcaller.discord-companion.plist')
 
-  const args = [node, tsx, script].map(
+  const args = launch.command.map(
     (part) => `    <string>${part.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</string>`,
   )
 
@@ -74,7 +85,7 @@ function installMac(root: string) {
       '  <key>Label</key><string>online.theshotcaller.discord-companion</string>',
       '  <key>RunAtLoad</key><true/>',
       '  <key>WorkingDirectory</key>',
-      `  <string>${root.replaceAll('&', '&amp;')}</string>`,
+      `  <string>${launch.cwd.replaceAll('&', '&amp;')}</string>`,
       '  <key>ProgramArguments</key>',
       '  <array>',
       ...args,
@@ -88,12 +99,11 @@ function installMac(root: string) {
   return file
 }
 
-function installLinux(root: string) {
-  const { node, tsx, script } = entryPoint(root)
+function installLinux(launch: Launch) {
   const directory = path.join(homedir(), '.config', 'autostart')
   mkdirSync(directory, { recursive: true })
   const file = path.join(directory, 'the-shotcaller-discord.desktop')
-  const exec = [node, tsx, script].map((part) => (part.includes(' ') ? `"${part}"` : part)).join(' ')
+  const exec = launch.command.map((part) => (part.includes(' ') ? `"${part}"` : part)).join(' ')
 
   writeFileSync(
     file,
@@ -133,19 +143,29 @@ export function startupFile() {
   return path.join(homedir(), '.config', 'autostart', 'the-shotcaller-discord.desktop')
 }
 
-/** Registers an OS login item that starts the bridge. Windows uses the Startup folder, not the registry. */
+/** Writes the login item that starts the bridge. The installed exe calls this on startup. */
+export function registerStartup(root = companionRoot()) {
+  const launch = launchOf(root)
+
+  if (process.platform === 'win32') {
+    return installWindows(launch)
+  }
+
+  if (process.platform === 'darwin') {
+    return installMac(launch)
+  }
+
+  return installLinux(launch)
+}
+
+/** Registers an OS login item that starts the bridge, then starts it now. Windows uses the Startup folder. */
 export function installStartup(root = companionRoot()) {
-  const file =
-    process.platform === 'win32'
-      ? installWindows(root)
-      : process.platform === 'darwin'
-        ? installMac(root)
-        : installLinux(root)
+  const file = registerStartup(root)
+  const launch = launchOf(root)
+  const [bin, ...args] = launch.command
 
-  const { node, tsx, script } = entryPoint(root)
-
-  const child = spawn(node, [tsx, script], {
-    cwd: root,
+  const child = spawn(bin ?? process.execPath, args, {
+    cwd: launch.cwd,
     detached: true,
     stdio: 'ignore',
     windowsHide: true,

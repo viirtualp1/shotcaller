@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isPackaged } from './packaged.ts'
 
 /**
  * Public Discord application id for The Shotcaller. The Activity uses the same id via
@@ -10,6 +12,10 @@ export const DEFAULT_CLIENT_ID = '1555914530922430464'
 const IMAGE_KEY = /^[a-z0-9_-]{1,64}$/i
 
 export function companionRoot() {
+  if (isPackaged()) {
+    return path.dirname(process.execPath)
+  }
+
   return fileURLToPath(new URL('..', import.meta.url))
 }
 

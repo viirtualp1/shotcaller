@@ -8,6 +8,18 @@ PWA  →  ws://127.0.0.1:38471  →  companion  →  Discord IPC
 
 The Discord Activity (`@discord/embedded-app-sdk`) is separate and is not used here. No bot token is read.
 
+## Players
+
+Ordinary players do not install Node. They download `TheShotcaller.exe` from [GitHub releases](https://github.com/viirtualp1/shotcaller/releases/latest). A push of the patch notes to `main` builds that file and attaches it to the release for the current patch version.
+
+Double-click installs it under `%LOCALAPPDATA%\The Shotcaller\`, adds Start menu and desktop shortcuts, and opens the game. Discord status starts with the game. Signing in to Windows starts the status in the background, without opening a window. A browser tab does not show status.
+
+```bash
+npm run companion:build
+```
+
+`--no-install` runs the exe in place, for a smoke test, and does not open the game. Building the exe needs Windows because the file contains the Windows Node binary.
+
 ## Run
 
 From the repository root, after Node.js is installed:

@@ -104,6 +104,17 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     wide: true,
     features: [
       {
+        art: { kind: 'home', device: 'desktop', scene: 'home' },
+        title: {
+          en: 'Install and play',
+          ru: 'Установи и играй',
+        },
+        text: {
+          en: '**Install The Shotcaller** and Discord shows you are **playing** as soon as the game opens: https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe',
+          ru: '**Установи The Shotcaller** — и Discord покажет, что ты **играешь**, как только откроется игра: https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe',
+        },
+      },
+      {
         art: { kind: 'heroCard' },
         title: {
           en: 'The fight, on the card',

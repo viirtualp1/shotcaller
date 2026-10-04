@@ -2,7 +2,10 @@ import { loadConfig } from './config.ts'
 import { createDiscordConnection } from './discord.ts'
 import { PRESENCE_HOST, PRESENCE_PORT } from './protocol.ts'
 import { startPresenceServer } from './server.ts'
-import { installStartup, uninstallStartup } from './autostart.ts'
+import { installStartup, registerStartup, uninstallStartup } from './autostart.ts'
+import { handOffToInstalledCopy } from './install.ts'
+import { isPackaged } from './packaged.ts'
+import { installShortcuts, openGame } from './play.ts'
 
 function inUse(error: unknown) {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'EADDRINUSE'
@@ -21,6 +24,21 @@ async function main() {
     return
   }
 
+  if (!process.argv.includes('--no-install') && handOffToInstalledCopy()) {
+    return
+  }
+
+  const background = process.argv.includes('--background')
+
+  if (isPackaged() && !process.argv.includes('--no-install')) {
+    registerStartup()
+
+    if (!background) {
+      installShortcuts(process.execPath)
+      openGame()
+    }
+  }
+
   const config = loadConfig()
   const discord = createDiscordConnection(config.clientId, config)
   discord.start()
@@ -35,8 +53,9 @@ async function main() {
   } catch (error) {
     if (inUse(error)) {
       console.log('Discord companion is already running.')
+      await discord.stop()
 
-      return
+      process.exit(0)
     }
 
     throw error

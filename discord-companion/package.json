@@ -5,9 +5,10 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/server.spec.ts",
+    "test": "tsx --test src/server.spec.ts src/play.spec.ts",
     "install-startup": "tsx src/index.ts --install-startup",
-    "uninstall-startup": "tsx src/index.ts --uninstall-startup"
+    "uninstall-startup": "tsx src/index.ts --uninstall-startup",
+    "build:windows": "node build.mjs"
   },
   "dependencies": {
     "discord-rpc": "^4.0.1",
@@ -17,6 +18,8 @@
   "devDependencies": {
     "@types/node": "^24.10.0",
     "@types/ws": "^8.18.1",
+    "esbuild": "^0.28.2",
+    "postject": "^1.0.0-alpha.6",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   }
