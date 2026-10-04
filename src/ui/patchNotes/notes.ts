@@ -85,28 +85,33 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
-    version: '9.2',
+    version: '9.1',
     date: '2026-10-04',
     title: {
       en: 'Front and centre',
       ru: 'Всё под рукой',
     },
+    campaign: 'home',
     general: [
       {
-        en: 'On a computer, the main menu now puts **your match first**: an unfinished match shows its mode, round and towers, with **Continue** right under it.',
-        ru: 'На компьютере главное меню теперь начинается **с твоего матча**: незаконченная игра показывает режим, раунд и башни, а под ними — кнопку **Продолжить**.',
+        en: 'A **new main menu** built around your next move. An unfinished match comes first, with its mode, round and towers: **one tap** and you are back in.',
+        ru: '**Новое главное меню**, построенное вокруг следующего хода. Незаконченный матч идёт первым, с режимом, раундом и башнями: **одно касание** — и ты снова в игре.',
       },
       {
-        en: '**Quick start** for **Computer**, **Online** and **Training**: one click opens a new match already set to that mode.',
-        ru: '**Быстрый старт** для режимов **Компьютер**, **Онлайн** и **Тренировка**: один клик открывает новый матч уже в нужном режиме.',
+        en: '**Quick start** for **Computer**, **Online** and **Training**: each tile opens a new match already set to that mode.',
+        ru: '**Быстрый старт** для режимов **Компьютер**, **Онлайн** и **Тренировка**: каждая плитка открывает новый матч уже в нужном режиме.',
       },
       {
         en: 'Weekly contracts show the **next one to finish** right in the main menu.',
         ru: 'Еженедельные контракты показывают, **какой закрыть следующим**, прямо в главном меню.',
       },
       {
-        en: 'Signed in, you get your **friends list** beside the menu: see who is online and **watch their matches live** in one click.',
-        ru: 'После входа рядом с меню появляется **список друзей**: видно, кто в сети, а их **матчи можно смотреть вживую** в один клик.',
+        en: 'On a phone, **Play**, **Career**, **Friends** and **Profile** sit at the bottom of **every page**, and Friends shows your **unread messages**.',
+        ru: 'На телефоне **Игра**, **Карьера**, **Друзья** и **Профиль** теперь внизу **каждой страницы**, а на Друзьях видно **непрочитанные сообщения**.',
+      },
+      {
+        en: 'Signed in on a computer, your **friends list** sits beside the menu: see who is online and **watch their matches live** in one click.',
+        ru: 'Если ты вошёл в аккаунт на компьютере, рядом с меню появляется **список друзей**: видно, кто в сети, а их **матчи можно смотреть вживую** в один клик.',
       },
     ],
     interface: [
@@ -114,35 +119,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         en: 'A calmer top bar: your profile on the left, the latest patch and Discord on the right.',
         ru: 'Верхняя панель стала спокойнее: профиль слева, свежий патч и Discord справа.',
       },
-    ],
-  },
-  {
-    version: '9.1',
-    date: '2026-10-04',
-    title: {
-      en: 'Pocket coach',
-      ru: 'Тренер в кармане',
-    },
-    campaign: 'home',
-    general: [
-      {
-        en: 'A **new home screen on phones**. Your unfinished match waits at the top with its round and towers: **one tap** and you are back in.',
-        ru: '**Новый главный экран на телефоне**. Незаконченный матч ждёт наверху с раундом и башнями: **одно касание** — и ты снова в игре.',
-      },
-      {
-        en: '**Quick start** for **Computer**, **Online** and **Training**: each tile opens a new match already set to that mode.',
-        ru: '**Быстрый старт** для режимов **Компьютер**, **Онлайн** и **Тренировка**: каждая плитка открывает новый матч уже в нужном режиме.',
-      },
-      {
-        en: 'Weekly contracts show the **next one to finish** right on the home screen.',
-        ru: 'Еженедельные контракты показывают, **какой закрыть следующим**, прямо на главном экране.',
-      },
-      {
-        en: '**Play**, **Career**, **Friends** and **Profile** are always one tap away, and Friends shows your **unread messages**.',
-        ru: '**Игра**, **Карьера**, **Друзья** и **Профиль** всегда в одном касании, а на Друзьях видно **непрочитанные сообщения**.',
-      },
-    ],
-    interface: [
       {
         en: 'Every experiment in the new match settings has an **info button** with a short description of what it changes.',
         ru: 'У каждого эксперимента в настройках нового матча есть **кнопка с описанием**: коротко о том, что он меняет.',

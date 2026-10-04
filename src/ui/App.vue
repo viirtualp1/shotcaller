@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import { TooltipProvider } from 'reka-ui'
 import { computed } from 'vue'
 import { IN_DISCORD } from '@/application/discord'
 import UpdateToast from './components/common/UpdateToast.vue'
+import MobileTabBar from './components/home/MobileTabBar.vue'
 import CloudConflictDialog from './components/dialogs/CloudConflictDialog.vue'
 import NewMatchDialog from './components/dialogs/NewMatchDialog.vue'
 import SignInDialog from './components/dialogs/SignInDialog.vue'
@@ -45,6 +47,7 @@ const profile = useProfileStore()
 const replay = useReplayStore()
 const leaderboard = useLeaderboardStore()
 const legal = useLegalStore()
+const phone = useMediaQuery('(max-width: 860px)')
 useGameAudio()
 
 /* Started with the app: it picks up a sign-in link and pulls progress saved on other devices. */
@@ -70,6 +73,16 @@ const showFriendsLauncher = computed(
     !store.view,
 )
 
+/** The board of a match in progress is on screen, with no page covering it. */
+const onBoard = computed(
+  () => store.view !== null && patchNotes.patch === null && legal.document === null && !leaderboard.isOpen,
+)
+
+/** Phones navigate between pages with a tab bar; a match and a replay keep the whole screen. */
+const showTabs = computed(
+  () => phone.value && !onBoard.value && replay.match === null && replay.liveFriend === null,
+)
+
 /** Each screen opens at its top, as a new page does, not where the one before was scrolled to. */
 const scrollToTop = () => globalThis.scrollTo({ top: 0 })
 
@@ -90,9 +103,14 @@ useDocumentHead()
       <StartScreen v-else />
     </Transition>
 
+    <MobileTabBar v-if="showTabs" />
+
     <ReplayScreen v-if="replay.match" :key="replay.match.id" :match="replay.match" />
+
     <LiveMatchWaiting v-else-if="replay.liveFriend" />
+
     <SettingsDialog />
+
     <NewMatchDialog />
     <!-- Discord serves the Activity through its own proxy, and every launch already loads the latest version. -->
     <UpdateToast v-if="!IN_DISCORD" />
@@ -122,9 +140,15 @@ useDocumentHead()
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 39;
 }
-/* On a phone the start screen's tab bar has the friends button; this one would sit on top of it. */
-:global(#app:has(.mobile-home) .social-launcher) {
+/* The phone's tab bar has the friends button; this one would sit on top of it. */
+:global(#app:has(.mobile-tabs) .social-launcher) {
   display: none;
+}
+
+/* Every page leaves room at the bottom for the tab bar. */
+:global(#app:has(.mobile-tabs)) {
+  --mobile-tabs: 62px;
+  padding-bottom: calc(var(--mobile-tabs) + env(safe-area-inset-bottom, 0px));
 }
 
 .social-launcher.in-replay {

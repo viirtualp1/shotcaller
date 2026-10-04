@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { CloudUpload, Play, Settings, Trophy, User, UserPlus, Users } from '@lucide/vue'
-import { computed, defineAsyncComponent } from 'vue'
+import { CloudUpload, Play, Settings, UserPlus } from '@lucide/vue'
+import { defineAsyncComponent } from 'vue'
 import { IN_DISCORD, inviteToActivity } from '@/application/discord'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
@@ -15,10 +15,8 @@ import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useGameText } from '../composables/useGameText'
 import { useNewcomer } from '../composables/useNewcomer'
-import { useChatStore } from '../stores/chat'
 import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
-import { useFriendsStore } from '../stores/friends'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { useProfileStore } from '../stores/profile'
@@ -34,22 +32,10 @@ const menu = useMenuStore()
 const duel = useDuelStore()
 const profile = useProfileStore()
 const cloud = useCloudStore()
-const chat = useChatStore()
-const friends = useFriendsStore()
 const photo = useAccountPhoto()
 const newcomer = useNewcomer()
 const text = useGameText()
 const { t } = text
-
-const news = computed(() => friends.incoming.length + chat.totalUnread)
-
-function openFriends() {
-  if (cloud.signedIn) {
-    chat.toggleWindow()
-  } else {
-    cloud.signInOpen = true
-  }
-}
 </script>
 
 <template>
@@ -132,38 +118,16 @@ function openFriends() {
       <SupportButton />
       <LegalLinks />
     </footer>
-
-    <nav class="tabs" :aria-label="t('start.home.navigation')">
-      <span class="tab active" aria-current="page"><Play :size="20" /> {{ t('start.home.tabs.play') }}</span>
-
-      <a href="/career" class="tab" @click.prevent="profile.openCareer()">
-        <Trophy :size="20" /> {{ t('start.home.tabs.career') }}
-      </a>
-
-      <button v-if="cloud.enabled" type="button" class="tab" @click="openFriends">
-        <span class="tab-icon">
-          <Users :size="20" />
-          <span v-if="news" class="badge">{{ news }}</span>
-        </span>
-        {{ t('start.home.tabs.friends') }}
-      </button>
-
-      <a href="/profile" class="tab" @click.prevent="profile.open()">
-        <User :size="20" /> {{ t('start.home.tabs.profile') }}
-      </a>
-    </nav>
   </main>
 </template>
 
 <style scoped>
 .mobile-home {
-  --tabs: 62px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-height: 100%;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px
-    calc(var(--tabs) + 20px + env(safe-area-inset-bottom, 0px));
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 20px;
 }
 
 /* One slim row instead of three tall cards: who you are, and the two things you might change. */
@@ -183,8 +147,7 @@ function openFriends() {
   color: inherit;
 }
 
-.identity,
-.tab {
+.identity {
   text-decoration: none;
 }
 
@@ -234,62 +197,5 @@ function openFriends() {
   gap: 10px;
   margin-top: auto;
   padding-top: 8px;
-}
-
-/* Thumb-reach navigation, fixed to the bottom edge: square along it, rounded where it is exposed. */
-.tabs {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 30;
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  min-height: var(--tabs);
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--edge-strong);
-  border-radius: var(--radius) var(--radius) 0 0;
-  background: rgba(15, 22, 20, 0.96);
-  backdrop-filter: blur(8px);
-}
-
-.tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 4px 0;
-  border: 0;
-  background: none;
-  color: var(--chalk-dim);
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.tab.active {
-  color: var(--gold);
-}
-
-.tab-icon {
-  position: relative;
-  display: grid;
-}
-
-.badge {
-  position: absolute;
-  top: -5px;
-  right: -9px;
-  min-width: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: var(--theirs);
-  color: #fff;
-  font-size: 10px;
-  line-height: 16px;
-  text-align: center;
 }
 </style>
