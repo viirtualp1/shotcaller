@@ -1,183 +1,255 @@
 <script setup lang="ts">
-import { Monitor, MousePointerClick, Pause, Play, Smartphone } from '@lucide/vue'
-import { useDocumentVisibility, useElementVisibility, useIntervalFn, useMediaQuery } from '@vueuse/core'
+import { Pause, Play, Sparkles } from '@lucide/vue'
+import {
+  useDocumentVisibility,
+  useElementSize,
+  useElementVisibility,
+  useIntervalFn,
+  useMediaQuery,
+} from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
-import type { FeatureArt as Art } from '../../patchNotes/notes'
 import { useSettingsStore } from '../../stores/settings'
-import FeatureArt from './FeatureArt.vue'
+import HomeFeatureArt from './HomeFeatureArt.vue'
 
-const STEPS = [
-  {
-    kind: 'home',
-    device: 'desktop',
-    scene: 'home',
-  },
-  {
-    kind: 'home',
-    device: 'desktop',
-    scene: 'chat',
-  },
-  {
-    kind: 'home',
-    device: 'desktop',
-    scene: 'career',
-  },
-  {
-    kind: 'home',
-    device: 'phone',
-    scene: 'home',
-  },
-  {
-    kind: 'home',
-    device: 'phone',
-    scene: 'career',
-  },
-  {
-    kind: 'home',
-    device: 'phone',
-    scene: 'chat',
-  },
-] as const satisfies readonly Art[]
+type Scene = 'home' | 'chat' | 'career'
+
+interface Placement {
+  readonly left: number
+  readonly top: number
+  readonly scale: number
+}
+
+const SCENES: readonly Scene[] = ['home', 'chat', 'career']
+
+/* How long each scene stays on screen, and how often its progress bar moves. */
+const SCENE_MS = 6000
+const TICK_MS = 100
+
+/* The drawn size of each device, frame and stand included. */
+const DESKTOP = {
+  width: 700,
+  height: 464,
+}
+
+const PHONE = {
+  width: 248,
+  height: 512,
+}
+
+/* Side by side the phone stands in front of the monitor's frame, lower down, clear of the friends list. */
+const PHONE_OVERLAP = 22
+const PHONE_DROP = 70
+const SIDE_BY_SIDE = DESKTOP.width + PHONE.width - PHONE_OVERLAP
+
+/* Below this width the monitor fills the row and the phone stands in front of its lower left. */
+const STACKED_BELOW = 760
 
 const settings = useSettingsStore()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 const visibility = useDocumentVisibility()
 const host = useTemplateRef<HTMLElement>('host')
+const stage = useTemplateRef<HTMLElement>('stage')
 const visible = useElementVisibility(host)
+const { width: stageWidth } = useElementSize(stage)
 const step = ref(0)
+const elapsed = ref(0)
 const paused = ref(false)
 
-const art = computed(() => STEPS[step.value]!)
+const scene = computed(() => SCENES[step.value]!)
+
+const playing = computed(
+  () => !paused.value && !reducedMotion.value && visible.value && visibility.value === 'visible',
+)
+
+/* A chosen scene, or one shown without motion, keeps a full bar. */
+const progress = computed(() => (paused.value || reducedMotion.value ? 1 : elapsed.value / SCENE_MS))
+
+/* Both devices scale as pictures, so the menus inside keep their proportions at any page width. */
+const layout = computed(() => {
+  const width = stageWidth.value || SIDE_BY_SIDE
+
+  if (width >= STACKED_BELOW) {
+    const scale = Math.min(1, width / SIDE_BY_SIDE)
+    const left = (width - SIDE_BY_SIDE * scale) / 2
+
+    return {
+      height: Math.max(DESKTOP.height, PHONE_DROP + PHONE.height) * scale,
+      desktop: {
+        left,
+        top: 0,
+        scale,
+      } satisfies Placement,
+      phone: {
+        left: left + (DESKTOP.width - PHONE_OVERLAP) * scale,
+        top: PHONE_DROP * scale,
+        scale,
+      } satisfies Placement,
+    }
+  }
+
+  const desktop = Math.min(1, width / DESKTOP.width)
+  const phone = Math.min(1, (width * 0.6) / PHONE.width)
+  const left = (width - DESKTOP.width * desktop) / 2
+  const top = DESKTOP.height * desktop * 0.36
+
+  return {
+    height: Math.max(DESKTOP.height * desktop, top + PHONE.height * phone),
+    desktop: {
+      left,
+      top: 0,
+      scale: desktop,
+    } satisfies Placement,
+    phone: {
+      left,
+      top,
+      scale: phone,
+    } satisfies Placement,
+  }
+})
 
 const copy = computed(() =>
   settings.locale === 'ru'
     ? {
-        eyebrow: 'Главный экран',
+        eyebrow: 'Новое главное меню',
         title: 'Твой следующий ход',
         intro:
-          'Вернись в свой матч, найди компанию или выбери новую цель. Главное меню стало отправной точкой для всего, во что хочется играть.',
-        perks: [
-          'Продолжай матч с того же раунда',
-          'Приглашай друзей и смотри их матчи',
-          'Выбирай испытания и закрывай контракты',
-        ],
-        desktop: 'Компьютер',
-        phone: 'Телефон',
+          'Вернись в свой матч, найди компанию или выбери новую цель. Главное меню теперь начинается с того, во что хочется сыграть, — на компьютере и на телефоне.',
+        sample: 'Пример главного меню на компьютере и телефоне',
+        chapters: 'Что нового в меню',
         pause: 'Остановить показ',
         play: 'Продолжить показ',
-        sample: 'Сцены главного экрана',
-        scenes: ['Продолжи матч', 'Друзья рядом', 'Новая цель'],
-        captions: [
-          'Твой отряд уже ждёт. Продолжи матч или попробуй другой режим.',
-          'Узнай, кто готов играть. Открой чат или загляни в матч друга.',
-          'Следующее испытание — ещё один повод собрать новый отряд.',
-          'Продолжение матча и быстрый старт — в одно касание.',
-          'Перейди к испытаниям через вкладку карьеры.',
-          'Переключись на друзей и продолжи разговор, когда захочешь.',
+        scenes: [
+          {
+            title: 'Назад в одно касание',
+            text: 'Незаконченный матч ждёт первым — с режимом, раундом и башнями. Или начни новый с **быстрого старта**.',
+          },
+          {
+            title: 'Друзья рядом',
+            text: 'Смотри, кто в сети, отвечай в чате и **смотри матчи друзей вживую** в один клик.',
+          },
+          {
+            title: 'Новая цель',
+            text: 'Испытания карьеры и **недельные контракты** под рукой: каждый матч приближает следующую награду.',
+          },
         ],
       }
     : {
-        eyebrow: 'Home screen',
+        eyebrow: 'A new main menu',
         title: 'Your next move',
         intro:
-          'Return to your match, find company or pick a new goal. The main menu is your starting point for everything you want to play.',
-        perks: [
-          'Continue from the same round',
-          'Meet your friends and watch their matches',
-          'Take on trials and finish contracts',
-        ],
-        desktop: 'Computer',
-        phone: 'Phone',
+          'Return to your match, find company or pick a new goal. The main menu now starts with what you want to play, on a computer and on a phone.',
+        sample: 'Sample main menu on a computer and a phone',
+        chapters: 'What is new in the menu',
         pause: 'Pause preview',
         play: 'Resume preview',
-        sample: 'Home screen scenes',
-        scenes: ['Continue your match', 'Friends nearby', 'A new goal'],
-        captions: [
-          'Your squad is waiting. Continue your match or try another mode.',
-          'See who is ready to play. Open a chat or watch a friend’s match.',
-          'Your next trial is another reason to build a new squad.',
-          'Continue a match or start a new one with a single tap.',
-          'Explore your trials through the Career tab.',
-          'Switch to Friends and join the conversation when you choose.',
+        scenes: [
+          {
+            title: 'Back in one tap',
+            text: 'Your unfinished match comes first, with its mode, round and towers. Or start a new one with **quick start**.',
+          },
+          {
+            title: 'Friends nearby',
+            text: 'See who is online, answer a chat and **watch friends’ matches live** in one click.',
+          },
+          {
+            title: 'A new goal',
+            text: 'Career trials and **weekly contracts** are close at hand: every match brings your next reward closer.',
+          },
         ],
       },
 )
 
-function selectStep(index: number) {
+function selectScene(index: number) {
   step.value = index
+  elapsed.value = 0
   paused.value = true
 }
 
-useIntervalFn(() => {
-  if (paused.value || reducedMotion.value || !visible.value || visibility.value !== 'visible') {
+function tick() {
+  if (!playing.value) {
     return
   }
 
-  step.value = (step.value + 1) % STEPS.length
-}, 3500)
+  elapsed.value += TICK_MS
+
+  if (elapsed.value < SCENE_MS) {
+    return
+  }
+
+  elapsed.value = 0
+  step.value = (step.value + 1) % SCENES.length
+}
+
+function placed({ left, top, scale }: Placement) {
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+    scale: String(scale),
+  }
+}
+
+function highlighted(text: string) {
+  return text.split('**')
+}
+
+useIntervalFn(tick, TICK_MS)
 </script>
 
 <template>
   <section ref="host" class="campaign" aria-labelledby="home-release-title">
     <header class="pitch">
-      <p class="eyebrow"><MousePointerClick :size="14" /> {{ copy.eyebrow }}</p>
-      <h2 id="home-release-title" class="hand">{{ copy.title }}</h2>
-      <p class="intro">{{ copy.intro }}</p>
+      <div>
+        <p class="eyebrow"><Sparkles :size="14" /> {{ copy.eyebrow }}</p>
+        <h2 id="home-release-title" class="hand">{{ copy.title }}</h2>
+      </div>
 
-      <ol class="perks">
-        <li v-for="(perk, i) in copy.perks" :key="perk">
-          <span>{{ i + 1 }}</span
-          >{{ perk }}
-        </li>
-      </ol>
+      <p class="intro">{{ copy.intro }}</p>
     </header>
 
-    <div class="showcase">
-      <div class="controls">
-        <button type="button" :aria-pressed="art.device === 'desktop'" @click="selectStep(0)">
-          <Monitor :size="15" /> {{ copy.desktop }}
-        </button>
+    <div
+      ref="stage"
+      class="stage"
+      role="img"
+      :aria-label="copy.sample"
+      :style="{ height: `${layout.height}px` }"
+    >
+      <HomeFeatureArt class="device" device="desktop" :scene="scene" :style="placed(layout.desktop)" />
+      <HomeFeatureArt class="device" device="phone" :scene="scene" :style="placed(layout.phone)" />
+    </div>
 
-        <button type="button" :aria-pressed="art.device === 'phone'" @click="selectStep(3)">
-          <Smartphone :size="15" /> {{ copy.phone }}
-        </button>
+    <div class="chapters" :aria-label="copy.chapters">
+      <button
+        v-for="(item, i) in copy.scenes"
+        :key="item.title"
+        type="button"
+        class="chapter"
+        :aria-pressed="step === i"
+        @click="selectScene(i)"
+      >
+        <span class="meter"><span v-if="step === i" class="fill" :style="{ scale: `${progress} 1` }" /></span>
 
-        <button
-          v-if="!reducedMotion"
-          type="button"
-          class="pause"
-          :aria-label="paused ? copy.play : copy.pause"
-          @click="paused = !paused"
+        <span class="number">{{ i + 1 }}</span>
+
+        <b>{{ item.title }}</b>
+
+        <span class="text"
+          ><template v-for="(part, j) in highlighted(item.text)" :key="j"
+            ><strong v-if="j % 2">{{ part }}</strong>
+
+            <template v-else>{{ part }}</template></template
+          ></span
         >
-          <Play v-if="paused" :size="15" /><Pause v-else :size="15" />
-        </button>
-      </div>
+      </button>
 
-      <div class="stage">
-        <FeatureArt
-          v-for="device in ['desktop', 'phone'] as const"
-          :key="device"
-          v-show="art.device === device"
-          :art="{ kind: 'home', device, scene: art.device === device ? art.scene : 'home' }"
-          class="picture"
-          :class="{ active: art.device === device }"
-        />
-      </div>
-
-      <p class="caption">{{ copy.captions[step] }}</p>
-
-      <div class="steps" :aria-label="copy.sample">
-        <button
-          v-for="(item, i) in STEPS"
-          :key="i"
-          type="button"
-          :aria-label="`${item.device === 'desktop' ? copy.desktop : copy.phone}: ${copy.scenes[item.scene === 'home' ? 0 : item.scene === 'chat' ? 1 : 2]}`"
-          :aria-pressed="step === i"
-          @click="selectStep(i)"
-        >
-          <span />
-        </button>
-      </div>
+      <button
+        v-if="!reducedMotion"
+        type="button"
+        class="pause"
+        :aria-label="paused ? copy.play : copy.pause"
+        @click="paused = !paused"
+      >
+        <Play v-if="paused" :size="15" /><Pause v-else :size="15" />
+      </button>
     </div>
   </section>
 </template>
@@ -188,16 +260,14 @@ useIntervalFn(() => {
   isolation: isolate;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr);
-  align-items: center;
-  gap: 28px;
+  gap: 30px;
   margin-top: 28px;
-  padding: 34px 30px;
+  padding: 36px 34px 30px;
   border: 1px solid #f4c55b40;
   border-radius: var(--radius);
   background:
-    radial-gradient(ellipse at 80% 35%, #f4c55b18, transparent 55%),
-    radial-gradient(ellipse at 5% 90%, #7fe0b410, transparent 45%), linear-gradient(165deg, #1c2a24, #0f1915);
+    radial-gradient(ellipse 60% 50% at 50% 55%, #f4c55b1a, transparent 70%),
+    radial-gradient(ellipse at 0% 100%, #7fe0b412, transparent 45%), linear-gradient(170deg, #1c2a24, #0f1915);
   box-shadow: 0 20px 60px #0004;
 }
 .campaign::before {
@@ -205,8 +275,14 @@ useIntervalFn(() => {
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: repeating-radial-gradient(circle at 78% 46%, transparent 0 34px, #ece8dc07 34px 36px);
-  mask-image: linear-gradient(90deg, transparent 30%, #000);
+  background: repeating-radial-gradient(circle at 50% 62%, transparent 0 46px, #ece8dc06 46px 48px);
+  mask-image: radial-gradient(ellipse at 50% 60%, #000 20%, transparent 70%);
+}
+.pitch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  align-items: end;
+  gap: 16px 48px;
 }
 .eyebrow {
   display: flex;
@@ -214,158 +290,138 @@ useIntervalFn(() => {
   gap: 7px;
   margin: 0;
   color: var(--gold);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 h2 {
-  margin: 14px 0;
-  font-size: clamp(42px, 6vw, 64px);
-  line-height: 1.05;
+  margin: 12px 0 0;
+  font-size: clamp(44px, 7vw, 76px);
+  line-height: 1;
 }
 .intro {
   margin: 0;
   color: var(--chalk-dim);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
 }
-.perks {
-  display: grid;
-  gap: 13px;
-  margin: 24px 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 13px;
-  font-weight: 700;
-}
-.perks li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.perks span {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #f4c55b70;
-  border-radius: 50%;
-  color: var(--gold);
-  font-size: 12px;
-}
-.showcase {
-  min-width: 0;
-}
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 18px;
-}
-.controls button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 6px 10px;
-  border: 1px solid var(--edge-strong);
-  border-radius: var(--radius);
-  background: #ffffff05;
-  color: var(--chalk-dim);
-  font-size: 11px;
-  cursor: pointer;
-}
-.controls [aria-pressed='true'] {
-  border-color: #f4c55b70;
-  color: var(--gold);
-  background: #f4c55b12;
-}
-.controls .pause {
-  padding: 6px 9px;
-}
 .stage {
-  display: grid;
-  align-items: center;
-  height: 400px;
   position: relative;
 }
-.stage > .picture {
+.stage > .device {
   position: absolute;
-  inset: 0;
-  height: 100%;
-  aspect-ratio: auto;
-  width: 100%;
-  padding: 0;
-  background: none;
-  overflow: visible;
+  transform-origin: 0 0;
 }
-.picture.active {
-  animation: device-in 0.3s ease-out;
+.chapters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: stretch;
+  gap: 12px;
 }
-@keyframes device-in {
-  from {
-    opacity: 0;
-    scale: 0.96;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-  }
-}
-.caption {
-  min-height: 72px;
-  margin: 14px auto 8px;
-  max-width: 390px;
-  text-align: center;
-  font-size: 12px;
-  line-height: 1.5;
+.chapter {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
+  gap: 6px 10px;
+  padding: 18px 16px 16px;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: #ffffff04;
   color: var(--chalk-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
 }
-.steps {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
+.chapter:hover {
+  border-color: var(--edge-strong);
 }
-.steps button {
+.chapter[aria-pressed='true'] {
+  border-color: #f4c55b60;
+  background: #f4c55b0d;
+  color: var(--chalk);
+}
+.meter {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--edge);
+}
+.fill {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  transform-origin: 0 50%;
+  transition: scale 0.1s linear;
+}
+.number {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+}
+.chapter[aria-pressed='true'] .number {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.chapter b {
+  align-self: center;
+  font-size: 15px;
+}
+.text {
+  grid-column: 2;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--chalk-dim);
+}
+.text strong {
+  color: var(--gold);
+  font-weight: 700;
+}
+.pause {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--edge-strong);
   border-radius: var(--radius);
-  background: none;
+  background: #0f1915cc;
+  color: var(--chalk-dim);
   cursor: pointer;
 }
-.steps span {
-  width: 15px;
-  height: 3px;
-  border-radius: 999px;
-  background: var(--edge-strong);
+.pause:hover {
+  color: var(--gold);
 }
-.steps [aria-pressed='true'] span {
-  background: var(--gold);
+@media (max-width: 900px) {
+  .pitch {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chapters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .chapter {
+    padding: 14px 14px 12px;
+  }
+  .pause {
+    justify-self: end;
+  }
 }
 @media (max-width: 760px) {
   .campaign {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 28px 18px;
-  }
-  .pitch {
-    max-width: 520px;
-  }
-  .showcase {
-    width: 100%;
-    max-width: 520px;
-    justify-self: center;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .stage > .picture {
-    animation: none;
+    gap: 24px;
+    padding: 28px 18px 20px;
   }
 }
 </style>

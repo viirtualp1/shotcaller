@@ -7,7 +7,7 @@ import { beyondCores, beyondHoldLine } from '../services/laneOrders'
 import { isCaughtAlone } from '../services/skirmish'
 import { isThroneNearlyDown } from '../services/TowerSafety'
 import { trainingTargetAllowed } from '../services/training'
-import { attackReach, inReach } from './AttackSystem'
+import { attackReach, attackSpot, inReach } from './AttackSystem'
 import type { SimulationContext, System } from '../SimulationContext'
 
 const PRIORITY = {
@@ -150,16 +150,15 @@ export class TargetingSystem implements System {
     }
 
     /* Backing off a tower beats a trade, unless roots hold the hero there: then it hits back what it can reach. */
-    if (this.exposed(unit) && !(unit.status.root > 0 && inReach(unit, attacker))) {
-      return null
+    if (this.exposed(unit)) {
+      return unit.status.root > 0 && inReach(unit, attacker) ? attacker : null
     }
 
-    /* Measured the way attacks are, edge to edge: a hero hit from its own range can always hit back. */
-    if (!inReach(unit, attacker) && this.ctx.safety.isProtected(attacker, unit.team)) {
-      return null
-    }
-
-    return attacker
+    /*
+     * An attacker the hero cannot reach without walking under a tower is left alone, or the hero would pick it
+     * every tick, refuse to walk there and stand idle while creeps beat it.
+     */
+    return this.canEngage(unit, attacker) ? attacker : null
   }
 
   /** Farming creeps or hitting buildings never beats answering a hero; a hero fight within reach does. */
@@ -261,14 +260,12 @@ export class TargetingSystem implements System {
     return unit.kind === 'hero' && this.ctx.safety.isUnsafeFor(unit, unit.position)
   }
 
-  /** A hero can shoot into tower range from safety; only closing the distance requires a safe target. */
+  /**
+   * A hero takes on whatever it can hit from outside enemy tower fire, including targets standing under a
+   * tower: what matters is the spot it attacks from, not where the target is.
+   */
   private canEngage(hero: Unit, target: Unit) {
-    const { safety } = this.ctx
-    return (
-      !this.exposed(hero) &&
-      (inReach(hero, target) ||
-        (!safety.isProtected(target, hero.team) && !safety.isUnsafeFor(hero, target.position)))
-    )
+    return !this.exposed(hero) && !this.ctx.safety.isUnsafeFor(hero, attackSpot(hero, target))
   }
 
   private woundedUnderTower(unit: Unit) {

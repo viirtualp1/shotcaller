@@ -47,7 +47,9 @@ watch(twist, (current, previous) => {
     </InfoTooltip>
 
     <InfoTooltip v-if="rotation" side="bottom" clickable>
-      <button type="button" class="chip rotation"><Shuffle :size="13" /> {{ t('experiments.rotation') }}</button>
+      <button type="button" class="chip rotation">
+        <Shuffle :size="13" /> {{ t('experiments.rotation') }}
+      </button>
 
       <template #content>
         <strong>{{ t('experiments.rotationHint') }}</strong>

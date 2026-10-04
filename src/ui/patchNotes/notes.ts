@@ -152,8 +152,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Собственная дуэль больше не вызывает уведомление о старте игры друга. Друзей, которые уже в дуэли, нельзя вызвать повторно.',
       },
       {
-        en: 'Ranged heroes keep attacking nearby creeps from a safe position beside an enemy tower after their hero target falls.',
-        ru: 'После гибели вражеского героя дальнобойные герои продолжают атаковать доступных крипов с безопасной позиции рядом с вражеской башней.',
+        en: 'Heroes beside an enemy tower no longer stand idle after a kill: they step up and hit the creeps they can reach from outside tower fire, and a wounded hero fights back against the creeps hitting it.',
+        ru: 'Герои у вражеской башни больше не стоят без дела после убийства: они подходят и бьют крипов, до которых можно достать вне огня башни, а раненый герой отвечает крипам, которые его бьют.',
       },
       {
         en: 'Opening a chat on your phone leaves the keyboard closed until you tap the message field.',

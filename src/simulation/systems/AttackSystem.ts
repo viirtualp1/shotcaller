@@ -1,6 +1,6 @@
 import { ROLES } from '@/content/roles'
 import { BATTLE } from '@/content/rules'
-import { distance } from '@/core/math/vec2'
+import { direction, distance, offset } from '@/core/math/vec2'
 import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
 
@@ -17,8 +17,16 @@ const soulMultiplier = (unit: Unit) => 1 + (unit.hero?.souls ?? 0) * (unit.itemE
 
 export const attackReach = (unit: Unit) => (unit.attack?.ranged ? unit.attack.range : BATTLE.meleeReach)
 
+/** How far a unit still has to walk straight at its target before it can hit it; zero once in reach. */
+export const distanceToReach = (unit: Unit, target: Unit) =>
+  Math.max(0, distance(unit.position, target.position) - unit.radius - target.radius - attackReach(unit))
+
 export const inReach = (unit: Unit, target: Unit) =>
   distance(unit.position, target.position) - unit.radius - target.radius <= attackReach(unit)
+
+/** Where a unit walking straight at its target stops to hit it. */
+export const attackSpot = (unit: Unit, target: Unit) =>
+  offset(unit.position, direction(unit.position, target.position), distanceToReach(unit, target))
 
 export class AttackSystem implements System {
   constructor(private readonly ctx: SimulationContext) {}

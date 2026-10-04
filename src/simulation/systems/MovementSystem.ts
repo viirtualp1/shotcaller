@@ -5,10 +5,12 @@ import { isAlive, isDisabled, type Unit } from '../ecs/components'
 import type { SimulationContext, System } from '../SimulationContext'
 import { aheadOfCores, aheadOfLaneMates, holdLine } from '../services/laneOrders'
 import { isThroneNearlyDown } from '../services/TowerSafety'
-import { inReach } from './AttackSystem'
+import { distanceToReach, inReach } from './AttackSystem'
 
 const WAYPOINT_REACHED = 8
 const TOWER_LOOKAHEAD = 16
+/** A hero walking up to its target goes this much past the edge of its reach, so rounding cannot leave it short. */
+const ARRIVAL_SLACK = 0.01
 /** Farther than this from its lane, a hero walks back to the lane before going on along it. */
 const LANE_REJOIN_DISTANCE = 60
 
@@ -51,10 +53,17 @@ export class MovementSystem implements System {
           continue
         }
 
-        if (!isThroneNearlyDown(target) && this.leadsUnderTower(unit, target.position, step)) {
+        /*
+         * A hero stops at the spot it attacks from and only looks that far ahead, so it can shoot into tower
+         * range from the edge instead of refusing a target it was allowed to pick.
+         */
+        const remaining = distanceToReach(unit, target)
+        const stride = unit.kind === 'hero' ? Math.min(step, remaining + ARRIVAL_SLACK) : step
+        const ahead = Math.min(stride + TOWER_LOOKAHEAD, Math.max(stride, remaining))
+        if (!isThroneNearlyDown(target) && this.leadsUnderTower(unit, target.position, ahead)) {
           unit.targeting.target = null
         } else {
-          stepTowards(unit.position, target.position, step)
+          stepTowards(unit.position, target.position, stride)
 
           continue
         }
@@ -89,7 +98,7 @@ export class MovementSystem implements System {
       return false
     }
 
-    if (!isAlive(farm) || this.leadsUnderTower(unit, farm.position, step)) {
+    if (!isAlive(farm) || this.leadsUnderTower(unit, farm.position, step + TOWER_LOOKAHEAD)) {
       roamer.farm = null
 
       return false
@@ -100,14 +109,14 @@ export class MovementSystem implements System {
     return true
   }
 
-  /** Heroes never chase a target through the range of an untanked enemy tower. */
-  private leadsUnderTower(unit: Unit, goal: Vec2, step: number) {
+  /** Heroes never chase a target through the range of an untanked enemy tower, looking this far ahead. */
+  private leadsUnderTower(unit: Unit, goal: Vec2, ahead: number) {
     if (unit.kind !== 'hero') {
       return false
     }
 
     const { safety } = this.ctx
-    const probe = offset(unit.position, direction(unit.position, goal), step + TOWER_LOOKAHEAD)
+    const probe = offset(unit.position, direction(unit.position, goal), ahead)
 
     return !safety.isUnsafeFor(unit, unit.position) && safety.isUnsafeFor(unit, probe)
   }
