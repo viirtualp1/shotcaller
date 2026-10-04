@@ -1,29 +1,33 @@
 <script setup lang="ts">
-import { useDocumentVisibility, useElementVisibility, useIntervalFn, useMediaQuery } from '@vueuse/core'
-import { Play, UserPlus } from '@lucide/vue'
-import { computed, defineAsyncComponent, ref } from 'vue'
-import { IN_DISCORD, inviteToActivity } from '@/application/discord'
+import {
+  useDocumentVisibility,
+  useElementVisibility,
+  useIntervalFn,
+  useMediaQuery,
+  useWindowSize,
+} from '@vueuse/core'
+import { Play } from '@lucide/vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
+import { clamp } from '@/core/math/vec2'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
+import CoachCard from '../components/home/CoachCard.vue'
 import ContractsStrip from '../components/home/ContractsStrip.vue'
-import NewsChips from '../components/home/NewsChips.vue'
+import DiscordCard from '../components/home/DiscordCard.vue'
+import PatchHighlight from '../components/home/PatchHighlight.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
 import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
-import ProfileChip from '../components/profile/ProfileChip.vue'
-import SignInButton from '../components/profile/SignInButton.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
-import FriendsCard from '../components/social/FriendsCard.vue'
 import { useGameText } from '../composables/useGameText'
-import { useNewcomer } from '../composables/useNewcomer'
+import { useChatStore } from '../stores/chat'
 import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
-import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
-import { useSettingsStore } from '../stores/settings'
+import { useReplayStore } from '../stores/replay'
 import MobileHome from './MobileHome.vue'
 
 interface DemoLayer {
@@ -33,20 +37,29 @@ interface DemoLayer {
 
 /** The show fight moves on to the next mode this often. */
 const DEMO_MODE_MS = 15_000
+/**
+ * The menu is laid out for a 1152 × 720 screen and grows with a bigger one, the way games scale their interface,
+ * up to half again its size. The board is not scaled: it simply takes the room left between the columns.
+ */
+const UI_BASE_WIDTH = 1152
+const UI_BASE_HEIGHT = 720
+const UI_MAX_ZOOM = 1.5
+
 const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
 /** Phones get their own start screen, laid out for one hand; this one is for wider screens. */
 const phone = useMediaQuery('(max-width: 860px)')
-const store = useMatchStore()
 const menu = useMenuStore()
-const settings = useSettingsStore()
 const duel = useDuelStore()
 const cloud = useCloudStore()
-const newcomer = useNewcomer()
+const chat = useChatStore()
+const replay = useReplayStore()
 const { t } = useGameText()
 const visibility = useDocumentVisibility()
+const viewport = useWindowSize()
 
 const previewHost = ref<HTMLElement | null>(null)
+const mounted = ref(false)
 
 /** The board on show, and for a moment the next mode's board fading in over it. */
 const demos = ref<DemoLayer[]>([
@@ -56,18 +69,17 @@ const demos = ref<DemoLayer[]>([
   },
 ])
 
-/** A returning coach with an account sees their friends beside the menu; the show fight is for everyone else. */
-const social = computed(() => cloud.enabled && cloud.signedIn && !newcomer.value)
 const previewVisible = useElementVisibility(previewHost)
+
+const uiZoom = computed(() => {
+  const fit = Math.min(viewport.width.value / UI_BASE_WIDTH, viewport.height.value / UI_BASE_HEIGHT)
+
+  return Math.round(clamp(fit, 1, UI_MAX_ZOOM) * 100) / 100
+})
 
 /** The new board covers the old one now, so the old one can go. */
 function demoShown(id: number) {
   demos.value = demos.value.filter((layer) => layer.id >= id)
-}
-
-/** Inside Discord, friends join this Activity through Discord's own invite. */
-function inviteFriend() {
-  void inviteToActivity(t('start.inviteMessage'))
 }
 
 useIntervalFn(() => {
@@ -85,200 +97,134 @@ useIntervalFn(() => {
     },
   ]
 }, DEMO_MODE_MS)
+
+/* The friends window sits in the left column here, unless a replay covers the menu. */
+watchEffect(() => {
+  chat.docked = mounted.value && !phone.value && cloud.enabled && !replay.match && !replay.liveFriend
+})
+
+onMounted(() => {
+  mounted.value = true
+})
+
+/* Leaving the menu must not pop the window up over the next page. */
+onBeforeUnmount(() => {
+  mounted.value = false
+  chat.docked = false
+  chat.minimize()
+})
 </script>
 
 <template>
   <MobileHome v-if="phone" />
 
-  <main v-else class="start" :class="{ social }">
-    <header class="top">
-      <div class="coach">
-        <ProfileChip />
-        <SignInButton />
-      </div>
+  <main v-else class="start" :style="{ '--ui-zoom': uiZoom }">
+    <h1 class="sr-only">{{ t('app.title') }}</h1>
 
-      <div class="news">
-        <MovedCard />
-        <NewsChips titled />
-      </div>
-    </header>
+    <div class="layout">
+      <div class="column side">
+        <CoachCard />
 
-    <section class="copy">
-      <h1 class="hand" :class="{ compact: !newcomer }">{{ t('app.title') }}</h1>
-      <p v-if="newcomer" class="lede">{{ t('start.lede') }}</p>
-
-      <div class="home-columns">
         <div class="menu">
           <DuelResumeCard />
           <SavedMatchCard />
-
-          <button
-            v-if="!store.saved && !duel.resumable"
-            type="button"
-            class="btn primary block big"
-            :disabled="duel.matchmaking"
-            @click="menu.openNewMatch('computer')"
-          >
-            <Play :size="18" /> {{ t('start.home.play') }}
-          </button>
-
-          <QuickStarts />
-
-          <button v-if="IN_DISCORD" type="button" class="btn block" @click="inviteFriend">
-            <UserPlus :size="17" /> {{ t('start.invite') }}
-          </button>
-
           <ContractsStrip />
         </div>
 
-        <section v-if="social" class="friends">
-          <FriendsCard fill />
+        <div v-if="cloud.enabled" id="home-friends" class="friends" />
+
+        <footer class="footer">
+          <LanguageSwitch compact />
+          <SupportButton />
+          <LegalLinks />
+        </footer>
+      </div>
+
+      <div class="column center">
+        <section ref="previewHost" class="preview">
+          <BoardFrame>
+            <DemoBattle
+              v-for="layer in previewVisible ? demos : []"
+              :key="layer.id"
+              :mode="layer.mode"
+              @shown="demoShown(layer.id)"
+            />
+          </BoardFrame>
         </section>
       </div>
-    </section>
 
-    <section v-if="!social" ref="previewHost" class="preview">
-      <BoardFrame>
-        <DemoBattle
-          v-for="layer in previewVisible ? demos : []"
-          :key="`${settings.locale}:${layer.id}`"
-          :mode="layer.mode"
-          @shown="demoShown(layer.id)"
-        />
-      </BoardFrame>
-    </section>
+      <div class="column side">
+        <MovedCard />
+        <PatchHighlight />
+        <DiscordCard />
 
-    <footer class="footer">
-      <LanguageSwitch compact />
-      <SupportButton />
-      <LegalLinks />
-    </footer>
+        <div class="launch">
+          <QuickStarts />
+
+          <button
+            type="button"
+            class="play"
+            :disabled="duel.matchmaking"
+            @click="menu.openNewMatch('computer')"
+          >
+            <Play :size="22" />
+            {{ t('start.home.play') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
 <style scoped>
+/* The menu fills the screen inside the page's padding: profile in the top left corner, Play in the bottom right. */
 .start {
-  --coach-card-height: 52px;
-  display: grid;
-  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
-  align-items: center;
-  column-gap: clamp(32px, 6vw, 96px);
-  row-gap: 24px;
-  max-width: 1480px;
-  min-height: 100%;
-  margin: 0 auto;
-  padding: calc(24px + env(safe-area-inset-top, 0px)) 24px 24px;
-}
-
-/* Beside a friends list the two columns sit together in the middle instead of spreading to the edges. */
-.start.social {
-  grid-template-columns: minmax(0, 932px);
-  justify-content: center;
-  column-gap: 0;
-}
-
-.start.social .copy {
-  max-width: none;
-  width: 100%;
-}
-
-.home-columns {
+  --ui-zoom: 1;
+  --gap: calc(24px * var(--ui-zoom));
+  --pad-y: calc(24px * var(--ui-zoom));
+  --pad-x: calc(32px * var(--ui-zoom));
+  --side-min: calc(clamp(240px, 18vw, 290px) * var(--ui-zoom));
+  --height: max(100dvh, 600px);
+  /* The square board takes the full height when the width allows; the side columns share what is left. */
+  --board: min(
+    var(--height) - 2 * var(--pad-y),
+    100vw - 2 * var(--pad-x) - 2 * var(--gap) - 2 * var(--side-min)
+  );
   display: flex;
-  flex-direction: column;
+  height: var(--height);
+  padding: var(--pad-y) var(--pad-x);
 }
 
-.start.social .home-columns {
-  min-height: 300px;
-  display: grid;
-  grid-template-columns: minmax(0, 440px) minmax(0, 420px);
-  column-gap: clamp(24px, 5vw, 72px);
-  align-items: stretch;
-}
-
-.start.social .menu {
-  margin-top: 0;
-}
-
-/* One row across the top: who you are on the left, what is new on the right. */
-.top,
-.footer {
-  display: flex;
-  grid-column: 1 / -1;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-}
-
-.top {
-  justify-content: space-between;
-  align-self: start;
-}
-
-/* The header and footer keep to the screen's edges even when the columns gather in the middle. */
-.start.social .top,
-.start.social .footer {
-  width: calc(min(100vw, 1480px) - 48px);
-  justify-self: center;
-}
-
-.coach,
-.news {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  animation: fade-in 0.4s 0.1s ease-out both;
-}
-
-.coach :deep(.chip) {
-  min-width: 0;
-  max-width: 320px;
-  padding-block: 6px;
-  box-shadow: none;
-}
-
-.coach :deep(.sign-in) {
-  box-shadow: none;
-}
-
-.news {
-  justify-content: flex-end;
-}
-
-.copy {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 440px;
-  container-type: inline-size;
-}
-
-h1 {
-  margin-bottom: 16px;
-  font-size: min(112px, 19cqi);
-  line-height: 0.9;
-  letter-spacing: -0.01em;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-/* A returning coach knows the name; the title steps back so the match comes first. */
-h1.compact {
-  font-size: min(72px, 15cqi);
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(var(--side-min), 1fr) var(--board) minmax(var(--side-min), 1fr);
+  gap: var(--gap);
+  min-height: 0;
 }
 
-.lede {
-  margin: 0;
-  font-size: 17px;
-  color: var(--chalk-dim);
-  white-space: pre-line;
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  animation: fade-in 0.4s 0.1s ease-out both;
 }
 
 .menu {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 14px;
 }
 
 .menu > * {
@@ -289,36 +235,79 @@ h1.compact {
   animation-delay: 40ms;
 }
 
-.menu > :nth-child(3) {
+.menu > :nth-child(n + 3) {
   animation-delay: 80ms;
 }
 
-.menu > :nth-child(n + 4) {
-  animation-delay: 120ms;
+/* The side columns run the full height of the screen and are drawn at the interface scale. */
+.side {
+  zoom: var(--ui-zoom);
+  height: 0;
+  min-height: 100%;
 }
 
-.preview,
 .friends {
-  min-width: 0;
+  flex: 1;
+  display: flex;
+  min-height: 0;
 }
 
-/* The board is square: it never grows taller than the space between the header and the footer. */
+.friends :deep(.social-window) {
+  flex: 1;
+}
+
 .preview {
-  justify-self: center;
-  width: min(100%, max(420px, 100dvh - 200px));
+  width: var(--board);
 }
 
-.friends {
-  position: relative;
-  animation: fade-in 0.4s 0.15s ease-out both;
+/* Picking an opponent and starting the match sit together at the foot of the column. */
+.launch {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
 }
 
-.friends :deep(.panel) {
-  position: absolute;
-  inset: 0;
+.play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--gold);
+  color: var(--ink);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s;
 }
 
+.play:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.play:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Language, support and the legal links close the left column, under the friends list and as wide as it. */
 .footer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
   animation: fade-in 0.4s 0.2s ease-out both;
+}
+
+.footer :deep(.support-button) {
+  justify-content: center;
+  width: 100%;
+}
+
+.footer :deep(.legal-links) {
+  grid-column: 1 / -1;
 }
 </style>

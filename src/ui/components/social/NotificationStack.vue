@@ -79,7 +79,7 @@ function viewProfile(item: SocialNotification, coachId: string) {
     tag="ol"
     name="notification"
     class="notifications"
-    :class="{ 'in-match': match.view !== null, 'beside-window': chat.windowOpen }"
+    :class="{ 'in-match': match.view !== null, 'beside-window': chat.windowOpen && !chat.docked }"
     aria-live="polite"
   >
     <li v-if="duel.outgoing" key="outgoing-duel" class="card duel sticky">

@@ -191,6 +191,10 @@
       "next": "Next: {name} · {progress}",
       "weekDone": "Every contract this week is done",
       "fresh": "New",
+      "discord": {
+        "title": "Play in Discord",
+        "text": "Start matches right in a voice channel with your friends."
+      },
       "navigation": "Main navigation",
       "tabs": {
         "play": "Play",

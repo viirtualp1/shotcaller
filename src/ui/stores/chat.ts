@@ -26,9 +26,14 @@ export const useChatStore = defineStore('chat', () => {
   const minimized = ref(false)
   const atEnd = ref(true)
   const drafts = reactive<Record<string, string>>({})
+  /** The desktop start screen shows the friends window in its own column, open for as long as it is there. */
+  const docked = ref(false)
 
   const windowOpen = computed(
-    () => cloud.signedIn && (friends.open || friendId.value !== null) && !minimized.value && !modals.anyOpen,
+    () =>
+      cloud.signedIn &&
+      !modals.anyOpen &&
+      (docked.value || ((friends.open || friendId.value !== null) && !minimized.value)),
   )
 
   const reading = computed(
@@ -385,6 +390,7 @@ export const useChatStore = defineStore('chat', () => {
   return {
     friendId,
     minimized,
+    docked,
     windowOpen,
     atEnd,
     drafts,

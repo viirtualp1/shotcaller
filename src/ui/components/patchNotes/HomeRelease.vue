@@ -36,12 +36,12 @@ const PHONE = {
   height: 512,
 }
 
-/* Side by side the phone stands in front of the monitor's frame, lower down, clear of the friends list. */
+/* Side by side the phone stands in front of the monitor's frame, lower down. */
 const PHONE_OVERLAP = 22
 const PHONE_DROP = 70
 const SIDE_BY_SIDE = DESKTOP.width + PHONE.width - PHONE_OVERLAP
 
-/* Below this width the monitor fills the row and the phone stands in front of its lower left. */
+/* Below this width the phone stands in front of the monitor's lower right, clear of the friends list. */
 const STACKED_BELOW = 760
 
 const settings = useSettingsStore()
@@ -100,7 +100,7 @@ const layout = computed(() => {
       scale: desktop,
     } satisfies Placement,
     phone: {
-      left,
+      left: left + DESKTOP.width * desktop - PHONE.width * phone,
       top,
       scale: phone,
     } satisfies Placement,

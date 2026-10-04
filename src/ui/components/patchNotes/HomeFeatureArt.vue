@@ -4,22 +4,20 @@ import {
   Bot,
   Eye,
   MessageCircle,
-  MousePointer2,
   Play,
-  ScrollText,
   SendHorizontal,
   Settings,
   Swords,
   Target,
   Trophy,
   User,
-  UserPlus,
   Users,
   Wifi,
 } from '@lucide/vue'
 import { computed } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import HomeDesktopArt from './HomeDesktopArt.vue'
 
 const FRIENDS = [
   {
@@ -50,7 +48,6 @@ const props = defineProps<{ device: 'desktop' | 'phone'; scene: 'home' | 'chat' 
 
 const settings = useSettingsStore()
 
-const avatar = computed(() => (props.device === 'desktop' ? 26 : 21))
 const tab = computed(() => (props.scene === 'career' ? 1 : props.scene === 'chat' ? 2 : 0))
 
 // Historical examples, independent of the player's account and live conversations.
@@ -59,7 +56,6 @@ const copy = computed(() =>
     ? {
         coach: 'Тренер',
         rank: 'Ветеран · 1 240 MMR',
-        news: 'Патч 9.1',
         continue: 'Продолжить',
         round: 'Три линии · Раунд 7 из 20',
         towers: 'Башни 3 : 2',
@@ -67,8 +63,6 @@ const copy = computed(() =>
         contracts: 'Контракты',
         next: 'Первая кровь · 2/3',
         friends: 'Друзья',
-        addFriend: 'Добавить друга',
-        online: '2 в сети',
         statuses: ['В матче · Раунд 4', 'В главном меню', 'Не в сети'],
         chat: 'Сообщение',
         messages: ['Ещё один матч?', 'Давай! Соберу новый отряд.'],
@@ -81,7 +75,6 @@ const copy = computed(() =>
     : {
         coach: 'Coach',
         rank: 'Veteran · 1,240 MMR',
-        news: 'Patch 9.1',
         continue: 'Continue',
         round: 'Three lanes · Round 7 of 20',
         towers: 'Towers 3 : 2',
@@ -89,8 +82,6 @@ const copy = computed(() =>
         contracts: 'Contracts',
         next: 'First blood · 2/3',
         friends: 'Friends',
-        addFriend: 'Add a friend',
-        online: '2 online',
         statuses: ['In a match · Round 4', 'In the main menu', 'Offline'],
         chat: 'Message',
         messages: ['One more match?', 'Let’s go! I’ll try a new squad.'],
@@ -107,185 +98,138 @@ const copy = computed(() =>
   <div class="device" :class="device">
     <div class="bezel">
       <div class="screen">
-        <div v-if="device === 'phone'" class="status">
-          <b>9:41</b>
-          <span class="notch" />
-          <span class="signal"><Wifi :size="11" /><BatteryFull :size="13" /></span>
-        </div>
+        <HomeDesktopArt v-if="device === 'desktop'" :scene="scene" />
 
-        <header class="top">
-          <span class="portrait"><HeroAvatar hero-id="warden" :size="device === 'desktop' ? 28 : 24" /></span>
-
-          <span class="who"
-            ><b>{{ copy.coach }}</b>
-
-            <small>{{ copy.rank }}</small></span
-          >
-
-          <span v-if="device === 'desktop'" class="chip"><ScrollText :size="13" /> {{ copy.news }}</span>
-          <Settings :size="15" class="faint" />
-        </header>
-
-        <div class="body">
-          <div class="main">
-            <!-- Every scene stays in place, so the screen keeps its size while one fades into the next. -->
-            <section
-              class="scene"
-              :class="{ active: scene === 'home' || (device === 'desktop' && scene === 'chat') }"
-            >
-              <h3 class="hand">The Shotcaller</h3>
-
-              <div class="resume">
-                <div class="resume-head">
-                  <small>{{ copy.round }}</small>
-                  <small class="towers">{{ copy.towers }}</small>
-                </div>
-
-                <div class="teams">
-                  <span class="team"
-                    ><HeroAvatar v-for="hero in OURS" :key="hero" :hero-id="hero" :size="avatar"
-                  /></span>
-
-                  <small>vs</small>
-
-                  <span class="team"
-                    ><HeroAvatar v-for="hero in THEIRS" :key="hero" :hero-id="hero" :team="1" :size="avatar"
-                  /></span>
-                </div>
-
-                <span class="continue">
-                  <Play :size="13" /> {{ copy.continue }}
-
-                  <MousePointer2 v-if="device === 'desktop' && scene === 'home'" class="cursor" :size="22" />
-                </span>
-              </div>
-
-              <div class="quick">
-                <span v-for="(icon, i) in QUICK_ICONS" :key="i" class="tile"
-                  ><component :is="icon" :size="device === 'desktop' ? 18 : 16" /> {{ copy.quick[i] }}</span
-                >
-              </div>
-
-              <div class="contracts">
-                <b><Trophy :size="13" /> {{ copy.contracts }} <em>2/3</em></b>
-
-                <small>{{ copy.next }}</small>
-
-                <span class="progress" />
-              </div>
-            </section>
-
-            <section class="scene career" :class="{ active: scene === 'career' }">
-              <h3 class="hand">{{ copy.career }}</h3>
-
-              <div class="level">
-                <small>{{ copy.level }}</small>
-                <span class="progress" />
-              </div>
-
-              <div v-for="(trial, i) in copy.trials" :key="trial" class="trial" :class="{ chosen: i === 2 }">
-                <Target :size="device === 'desktop' ? 18 : 16" />
-
-                <span
-                  ><b>{{ trial }}</b>
-
-                  <small>+{{ TRIAL_XP[i] }} XP · {{ copy.reward }}</small></span
-                >
-
-                <Play :size="12" class="go" />
-
-                <MousePointer2
-                  v-if="device === 'desktop' && scene === 'career' && i === 2"
-                  class="cursor"
-                  :size="22"
-                />
-              </div>
-            </section>
-
-            <section v-if="device === 'phone'" class="scene chat" :class="{ active: scene === 'chat' }">
-              <h3 class="hand">{{ copy.friends }}</h3>
-
-              <div v-for="(friend, i) in FRIENDS.slice(0, 2)" :key="friend.name" class="friend">
-                <HeroAvatar :hero-id="friend.hero" :size="26" />
-
-                <span class="friend-who"
-                  ><b>{{ friend.name }}</b>
-
-                  <small>{{ copy.statuses[i] }}</small></span
-                >
-
-                <Eye v-if="i === 0" :size="15" class="watch" />
-
-                <MessageCircle v-else :size="14" class="faint" />
-              </div>
-
-              <div class="messages">
-                <b class="chat-head"
-                  ><HeroAvatar hero-id="pyromancer" :size="22" />
-
-                  Ember <span class="dot"
-                /></b>
-
-                <p class="bubble">{{ copy.messages[0] }}</p>
-                <p class="bubble mine">{{ copy.messages[1] }}</p>
-
-                <div class="composer">
-                  <span>{{ copy.chat }}…</span><SendHorizontal :size="14" />
-                </div>
-              </div>
-            </section>
+        <template v-else>
+          <div class="status">
+            <b>9:41</b>
+            <span class="notch" />
+            <span class="signal"><Wifi :size="11" /><BatteryFull :size="13" /></span>
           </div>
 
-          <aside v-if="device === 'desktop'" class="friends">
-            <b class="friends-title"
-              ><Users :size="14" /> {{ copy.friends }} <small>{{ copy.online }}</small></b
+          <header class="top">
+            <span class="portrait"><HeroAvatar hero-id="warden" :size="24" /></span>
+
+            <span class="who"
+              ><b>{{ copy.coach }}</b>
+
+              <small>{{ copy.rank }}</small></span
             >
 
-            <div
-              v-for="(friend, i) in FRIENDS"
-              :key="friend.name"
-              class="friend"
-              :class="{ highlighted: scene === 'chat' && i === 0, away: i === 2 }"
+            <Settings :size="15" class="faint" />
+          </header>
+
+          <div class="body">
+            <div class="main">
+              <!-- Every scene stays in place, so the screen keeps its size while one fades into the next. -->
+              <section class="scene" :class="{ active: scene === 'home' }">
+                <h3 class="hand">The Shotcaller</h3>
+
+                <div class="resume">
+                  <div class="resume-head">
+                    <small>{{ copy.round }}</small>
+                    <small class="towers">{{ copy.towers }}</small>
+                  </div>
+
+                  <div class="teams">
+                    <span class="team"
+                      ><HeroAvatar v-for="hero in OURS" :key="hero" :hero-id="hero" :size="21"
+                    /></span>
+
+                    <small>vs</small>
+
+                    <span class="team"
+                      ><HeroAvatar v-for="hero in THEIRS" :key="hero" :hero-id="hero" :team="1" :size="21"
+                    /></span>
+                  </div>
+
+                  <span class="continue"> <Play :size="13" /> {{ copy.continue }} </span>
+                </div>
+
+                <div class="quick">
+                  <span v-for="(icon, i) in QUICK_ICONS" :key="i" class="tile"
+                    ><component :is="icon" :size="16" /> {{ copy.quick[i] }}</span
+                  >
+                </div>
+
+                <div class="contracts">
+                  <b><Trophy :size="13" /> {{ copy.contracts }} <em>2/3</em></b>
+
+                  <small>{{ copy.next }}</small>
+
+                  <span class="progress" />
+                </div>
+              </section>
+
+              <section class="scene career" :class="{ active: scene === 'career' }">
+                <h3 class="hand">{{ copy.career }}</h3>
+
+                <div class="level">
+                  <small>{{ copy.level }}</small>
+                  <span class="progress" />
+                </div>
+
+                <div
+                  v-for="(trial, i) in copy.trials"
+                  :key="trial"
+                  class="trial"
+                  :class="{ chosen: i === 2 }"
+                >
+                  <Target :size="16" />
+
+                  <span
+                    ><b>{{ trial }}</b>
+
+                    <small>+{{ TRIAL_XP[i] }} XP · {{ copy.reward }}</small></span
+                  >
+
+                  <Play :size="12" class="go" />
+                </div>
+              </section>
+
+              <section class="scene chat" :class="{ active: scene === 'chat' }">
+                <h3 class="hand">{{ copy.friends }}</h3>
+
+                <div v-for="(friend, i) in FRIENDS.slice(0, 2)" :key="friend.name" class="friend">
+                  <HeroAvatar :hero-id="friend.hero" :size="26" />
+
+                  <span class="friend-who"
+                    ><b>{{ friend.name }}</b>
+
+                    <small>{{ copy.statuses[i] }}</small></span
+                  >
+
+                  <Eye v-if="i === 0" :size="15" class="watch" />
+
+                  <MessageCircle v-else :size="14" class="faint" />
+                </div>
+
+                <div class="messages">
+                  <b class="chat-head"
+                    ><HeroAvatar hero-id="pyromancer" :size="22" />
+
+                    Ember <span class="dot"
+                  /></b>
+
+                  <p class="bubble">{{ copy.messages[0] }}</p>
+                  <p class="bubble mine">{{ copy.messages[1] }}</p>
+
+                  <div class="composer">
+                    <span>{{ copy.chat }}…</span><SendHorizontal :size="14" />
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <nav class="tabs">
+            <span v-for="(icon, i) in TAB_ICONS" :key="i" :class="{ active: i === tab }"
+              ><component :is="icon" :size="16" />
+
+              {{ copy.tabs[i] }}<i v-if="i === 2 && scene !== 'chat'">1</i></span
             >
-              <HeroAvatar :hero-id="friend.hero" :size="30" />
-
-              <span class="friend-who"
-                ><b>{{ friend.name }}</b>
-
-                <small>{{ copy.statuses[i] }}</small></span
-              >
-
-              <span v-if="i === 0" class="watch"
-                ><Eye :size="15" />
-
-                <MousePointer2 v-if="scene === 'chat'" class="cursor" :size="22"
-              /></span>
-
-              <MessageCircle v-else :size="14" class="faint" />
-            </div>
-
-            <span class="add-friend"><UserPlus :size="13" /> {{ copy.addFriend }}</span>
-
-            <div class="conversation" :class="{ active: scene === 'chat' }">
-              <b class="chat-head"
-                ><HeroAvatar hero-id="pyromancer" :size="22" />
-
-                Ember <span class="dot"
-              /></b>
-
-              <p class="bubble">{{ copy.messages[0] }}</p>
-              <p class="bubble mine">{{ copy.messages[1] }}</p>
-            </div>
-          </aside>
-        </div>
-
-        <nav v-if="device === 'phone'" class="tabs">
-          <span v-for="(icon, i) in TAB_ICONS" :key="i" :class="{ active: i === tab }"
-            ><component :is="icon" :size="16" />
-
-            {{ copy.tabs[i] }}<i v-if="i === 2 && scene !== 'chat'">1</i></span
-          >
-        </nav>
+          </nav>
+        </template>
       </div>
     </div>
 
@@ -378,17 +322,6 @@ small {
   font-size: 0.85em;
   color: var(--chalk-dim);
 }
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
-  border: 1px solid #f4c55b50;
-  border-radius: var(--radius);
-  color: var(--gold);
-  font-size: 11px;
-  font-weight: 700;
-}
 .faint {
   flex: none;
   color: var(--chalk-faint);
@@ -396,12 +329,9 @@ small {
 .body {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 218px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   min-height: 0;
-}
-.phone .body {
-  grid-template-columns: minmax(0, 1fr);
 }
 .main {
   display: grid;
@@ -552,26 +482,6 @@ em {
 .chosen .go {
   color: var(--gold);
 }
-.friends {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 12px;
-  border: 1px solid var(--edge-strong);
-  border-radius: var(--radius);
-  background: #ffffff05;
-}
-.friends-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-.friends-title small {
-  margin-left: auto;
-  color: var(--heal);
-}
 .friend {
   display: flex;
   align-items: center;
@@ -580,52 +490,14 @@ em {
   border-top: 1px solid var(--edge);
   transition: color 0.3s;
 }
-.friend.away {
-  opacity: 0.6;
-}
 .friend-who {
   flex: 1;
   min-width: 0;
-}
-.highlighted {
-  color: var(--gold);
 }
 .watch {
   position: relative;
   display: grid;
   color: var(--gold);
-}
-.add-friend {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  margin-top: auto;
-  padding: 8px;
-  border: 1px dashed var(--edge-strong);
-  border-radius: var(--radius);
-  color: var(--chalk-dim);
-}
-.conversation {
-  position: absolute;
-  inset: auto 8px 8px;
-  padding: 10px;
-  border: 1px solid #f4c55b60;
-  border-radius: var(--radius);
-  background: #1f2b27;
-  box-shadow: 0 -10px 30px #0008;
-  visibility: hidden;
-  opacity: 0;
-  translate: 0 14px;
-  transition:
-    opacity 0.35s,
-    translate 0.35s,
-    visibility 0.35s;
-}
-.conversation.active {
-  visibility: visible;
-  opacity: 1;
-  translate: 0;
 }
 .chat-head {
   display: flex;
@@ -751,52 +623,11 @@ em {
   border-radius: 999px;
   background: linear-gradient(90deg, #ece8dc10, #ece8dc30, #ece8dc10);
 }
-/* The pointer appears on what the scene is about, and presses it once. */
-.cursor {
-  position: absolute;
-  z-index: 2;
-  right: 18%;
-  bottom: -12px;
-  color: var(--chalk);
-  fill: var(--ink);
-  filter: drop-shadow(0 3px 4px #000a);
-  animation: point 0.9s ease-out both;
-}
-.trial .cursor {
-  right: 14px;
-  bottom: -10px;
-}
-.watch .cursor {
-  right: -12px;
-  bottom: -16px;
-}
-@keyframes point {
-  from {
-    opacity: 0;
-    translate: 40px 30px;
-  }
-  70% {
-    opacity: 1;
-    translate: 0 0;
-    scale: 1;
-  }
-  85% {
-    scale: 0.85;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .scene,
-  .conversation,
   .friend,
   .tabs > span {
     transition: none;
-  }
-  .cursor {
-    animation: none;
   }
 }
 </style>

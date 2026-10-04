@@ -56,7 +56,7 @@ usePrivacyStore()
 
 /* Also started with the app, so a signed-in coach shows up online for their friends. */
 useFriendsStore()
-useChatStore()
+const chat = useChatStore()
 useDuelStore()
 useSystemNotificationsStore()
 
@@ -66,11 +66,12 @@ useSystemNotificationsStore()
  */
 const showFriendsLauncher = computed(
   () =>
-    replay.match !== null ||
-    patchNotes.patch !== null ||
-    legal.document !== null ||
-    leaderboard.isOpen ||
-    !store.view,
+    !chat.docked &&
+    (replay.match !== null ||
+      patchNotes.patch !== null ||
+      legal.document !== null ||
+      leaderboard.isOpen ||
+      !store.view),
 )
 
 /** The board of a match in progress is on screen, with no page covering it. */

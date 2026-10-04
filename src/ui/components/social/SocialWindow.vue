@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Bell, BellOff, X } from '@lucide/vue'
 import { useEventListener } from '@vueuse/core'
-import { computed, nextTick, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useVisibleViewport } from '../../composables/useVisibleViewport'
 import { useChatStore } from '../../stores/chat'
@@ -22,6 +22,8 @@ const { t } = useGameText()
 const viewport = useVisibleViewport()
 
 const window = useTemplateRef<HTMLElement>('window')
+/** Set while the window moves between the start screen's column and the corner, which happens without a fade. */
+const moving = ref(false)
 const panel = useTemplateRef<InstanceType<typeof ChatPanel>>('chatPanel')
 
 /** Offered once, until the player answers or closes it. */
@@ -54,7 +56,14 @@ function back() {
   friends.open = true
 }
 
+/* Docked on the start screen, the window stays: closing a conversation goes back to the list. */
 function close() {
+  if (chat.docked) {
+    back()
+
+    return
+  }
+
   chat.minimize()
 
   void nextTick(() =>
@@ -66,7 +75,12 @@ useEventListener(
   document,
   'keydown',
   (event) => {
-    if (event.key !== 'Escape' || event.defaultPrevented || !chat.windowOpen) {
+    if (
+      event.key !== 'Escape' ||
+      event.defaultPrevented ||
+      !chat.windowOpen ||
+      (chat.docked && !chatting.value)
+    ) {
       return
     }
 
@@ -92,12 +106,24 @@ watch(
 
 /* The list catches up on anything Realtime cannot report, such as being removed by a friend. */
 watch(
-  () => friends.open,
+  () => friends.open || chat.docked,
   (open) => {
     if (open) {
       void friends.refresh()
     }
   },
+)
+
+watch(
+  () => chat.docked,
+  () => {
+    moving.value = true
+
+    setTimeout(() => {
+      moving.value = false
+    }, 50)
+  },
+  { flush: 'sync' },
 )
 
 /* A duel that starts takes the player to the board. */
@@ -112,17 +138,18 @@ watch(
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport :to="chat.docked ? '#home-friends' : 'body'" defer>
     <Transition name="social-backdrop">
-      <div v-if="chat.windowOpen" class="social-backdrop" aria-hidden="true" @click="close" />
+      <div v-if="chat.windowOpen && !chat.docked" class="social-backdrop" aria-hidden="true" @click="close" />
     </Transition>
 
-    <Transition name="social-window" @after-enter="focusChat">
+    <Transition name="social-window" :css="!moving" @after-enter="focusChat">
       <aside
-        v-show="chat.windowOpen"
+        v-show="chat.windowOpen || chat.docked"
         id="social-window"
         ref="window"
         class="social-window"
+        :class="{ docked: chat.docked }"
         :style="viewport.style.value"
         :aria-label="t('friends.title')"
       >
@@ -156,7 +183,13 @@ watch(
                 <BellOff v-else :size="16" />
               </button>
 
-              <button type="button" class="icon-btn" :aria-label="t('friends.close')" @click="close">
+              <button
+                v-if="!chat.docked"
+                type="button"
+                class="icon-btn"
+                :aria-label="t('friends.close')"
+                @click="close"
+              >
                 <X :size="16" />
               </button>
             </span>
@@ -207,6 +240,15 @@ watch(
   background: var(--panel);
   border: 1px solid var(--edge-strong);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* In the start screen's column it fills the space beside the board instead of floating over the page. */
+.social-window.docked {
+  position: static;
+  z-index: auto;
+  width: auto;
+  height: 100%;
+  box-shadow: none;
 }
 
 .panel,

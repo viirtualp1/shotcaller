@@ -41,7 +41,7 @@ describe('the 9.1 introduction', () => {
     document.querySelectorAll<HTMLButtonElement>('.chapter')[2]!.click()
     await vi.advanceTimersByTimeAsync(12000)
     expect(chosen()).toBe(2)
-    expect(document.querySelectorAll('.device.desktop .scene.career.active')).toHaveLength(1)
+    expect(document.querySelectorAll('.device.desktop .contracts.focused')).toHaveLength(1)
     expect(document.querySelector('.device.phone .tabs .active')?.textContent).toContain('Career')
   })
 })
