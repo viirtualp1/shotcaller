@@ -8,6 +8,7 @@ import ModeMap from '../components/modes/ModeMap.vue'
 import CoachAvatar from '../components/profile/CoachAvatar.vue'
 import RankMedal from '../components/profile/RankMedal.vue'
 import { useGameText } from '../composables/useGameText'
+import { useUiZoom } from '../composables/useUiZoom'
 import { useCloudStore } from '../stores/cloud'
 import { useLeaderboardStore } from '../stores/leaderboard'
 import { useFriendsStore } from '../stores/friends'
@@ -18,6 +19,7 @@ const leaderboard = useLeaderboardStore()
 const cloud = useCloudStore()
 const friends = useFriendsStore()
 const text = useGameText()
+const zoom = useUiZoom()
 const { t } = text
 
 const shown = ref(PAGE_SIZE)
@@ -97,7 +99,7 @@ watch(
 </script>
 
 <template>
-  <div class="leaderboard-page">
+  <div class="leaderboard-page" :style="{ '--ui-zoom': zoom }">
     <header class="topbar">
       <div class="bar">
         <a href="/" class="btn ghost" @click.prevent="leaderboard.close()"
@@ -260,7 +262,8 @@ watch(
   white-space: nowrap;
 }
 .leaderboard-page {
-  min-height: 100%;
+  min-height: calc((100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px)) / var(--ui-zoom));
+  zoom: var(--ui-zoom);
 }
 .topbar {
   position: sticky;

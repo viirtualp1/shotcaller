@@ -12,6 +12,7 @@ import MatchHistory from '../components/profile/MatchHistory.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import FriendsCard from '../components/social/FriendsCard.vue'
 import { useGameText } from '../composables/useGameText'
+import { useUiZoom } from '../composables/useUiZoom'
 import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
 import { useMenuStore } from '../stores/menu'
@@ -34,6 +35,7 @@ const menu = useMenuStore()
 const duel = useDuelStore()
 const leaderboard = useLeaderboardStore()
 const text = useGameText()
+const zoom = useUiZoom()
 const { t } = text
 
 const picking = ref(false)
@@ -109,7 +111,7 @@ function play() {
 </script>
 
 <template>
-  <div class="profile-page">
+  <div class="profile-page" :style="{ '--ui-zoom': zoom }">
     <header class="topbar">
       <div class="bar">
         <a href="/" class="btn ghost" @click.prevent="profile.close()">
@@ -175,7 +177,8 @@ function play() {
 
 <style scoped>
 .profile-page {
-  min-height: 100%;
+  min-height: calc((100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px)) / var(--ui-zoom));
+  zoom: var(--ui-zoom);
 }
 
 .topbar {

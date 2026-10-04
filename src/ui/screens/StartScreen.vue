@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import {
-  useDocumentVisibility,
-  useElementVisibility,
-  useIntervalFn,
-  useMediaQuery,
-  useWindowSize,
-} from '@vueuse/core'
+import { useDocumentVisibility, useElementVisibility, useIntervalFn, useMediaQuery } from '@vueuse/core'
 import { Play } from '@lucide/vue'
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue'
+import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
-import { clamp } from '@/core/math/vec2'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
@@ -23,6 +16,7 @@ import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
 import MovedCard from '../components/patchNotes/MovedCard.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useGameText } from '../composables/useGameText'
+import { useUiZoom } from '../composables/useUiZoom'
 import { useChatStore } from '../stores/chat'
 import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
@@ -37,14 +31,6 @@ interface DemoLayer {
 
 /** The show fight moves on to the next mode this often. */
 const DEMO_MODE_MS = 15_000
-/**
- * The menu is laid out for a 1152 × 720 screen and grows with a bigger one, the way games scale their interface,
- * up to half again its size. The board is not scaled: it simply takes the room left between the columns.
- */
-const UI_BASE_WIDTH = 1152
-const UI_BASE_HEIGHT = 720
-const UI_MAX_ZOOM = 1.5
-
 const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
 /** Phones get their own start screen, laid out for one hand; this one is for wider screens. */
@@ -56,7 +42,8 @@ const chat = useChatStore()
 const replay = useReplayStore()
 const { t } = useGameText()
 const visibility = useDocumentVisibility()
-const viewport = useWindowSize()
+/* The side columns grow with the window; the board is not scaled and takes the room left between them. */
+const uiZoom = useUiZoom()
 
 const previewHost = ref<HTMLElement | null>(null)
 const mounted = ref(false)
@@ -70,12 +57,6 @@ const demos = ref<DemoLayer[]>([
 ])
 
 const previewVisible = useElementVisibility(previewHost)
-
-const uiZoom = computed(() => {
-  const fit = Math.min(viewport.width.value / UI_BASE_WIDTH, viewport.height.value / UI_BASE_HEIGHT)
-
-  return Math.round(clamp(fit, 1, UI_MAX_ZOOM) * 100) / 100
-})
 
 /** The new board covers the old one now, so the old one can go. */
 function demoShown(id: number) {

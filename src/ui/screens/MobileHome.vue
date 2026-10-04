@@ -1,123 +1,76 @@
 <script setup lang="ts">
-import { CloudUpload, Play, Settings, UserPlus } from '@lucide/vue'
+import { Play } from '@lucide/vue'
 import { defineAsyncComponent } from 'vue'
-import { IN_DISCORD, inviteToActivity } from '@/application/discord'
 import BoardFrame from '../components/board/BoardFrame.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
+import CoachCard from '../components/home/CoachCard.vue'
 import ContractsStrip from '../components/home/ContractsStrip.vue'
-import NewsChips from '../components/home/NewsChips.vue'
+import DiscordCard from '../components/home/DiscordCard.vue'
+import PatchHighlight from '../components/home/PatchHighlight.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
 import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
-import CoachAvatar from '../components/profile/CoachAvatar.vue'
+import MovedCard from '../components/patchNotes/MovedCard.vue'
 import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
-import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useGameText } from '../composables/useGameText'
 import { useNewcomer } from '../composables/useNewcomer'
-import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
-import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
-import { useProfileStore } from '../stores/profile'
 
 /**
- * The start screen on a phone, built around one question: what does the coach do next. The match to carry on
- * comes first, then a new one in a tap, then the week's goals; navigation sits at the bottom, under the thumb.
+ * The start screen on a phone, in the order of the desktop one: the coach, the match to carry on, the week's goals
+ * and what is new. Picking an opponent and Play stay above the navigation, under the thumb, however far it scrolls.
  */
 const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
-const store = useMatchStore()
 const menu = useMenuStore()
 const duel = useDuelStore()
-const profile = useProfileStore()
-const cloud = useCloudStore()
-const photo = useAccountPhoto()
 const newcomer = useNewcomer()
-const text = useGameText()
-const { t } = text
+const { t } = useGameText()
 </script>
 
 <template>
   <main class="mobile-home">
-    <header class="bar">
-      <a href="/profile" class="identity" :aria-label="t('profile.title')" @click.prevent="profile.open()">
-        <CoachAvatar
-          :hero-id="profile.avatar"
-          :level="profile.level.level"
-          :size="38"
-          :photo="photo.shown.value"
-        />
+    <h1 v-if="!newcomer" class="sr-only">{{ t('app.title') }}</h1>
 
-        <span class="who">
-          <strong class="name">{{ profile.profile.name || t('profile.defaultName') }}</strong>
-
-          <span class="rank">
-            {{ t(`profile.ranks.${profile.rank.tier}`) }} · {{ text.mmr(profile.profile.rating) }}
-          </span>
-        </span>
-      </a>
-
-      <button
-        v-if="cloud.enabled && !cloud.signedIn"
-        type="button"
-        class="icon-btn"
-        :aria-label="t('cloud.button.signIn')"
-        @click="cloud.signInOpen = true"
-      >
-        <CloudUpload :size="19" />
-      </button>
-
-      <button type="button" class="icon-btn" :aria-label="t('hud.settings')" @click="menu.settings = true">
-        <Settings :size="19" />
-      </button>
-    </header>
+    <CoachCard />
 
     <section v-if="newcomer" class="pitch">
       <h1 class="hand">{{ t('app.title') }}</h1>
       <p>{{ t('start.lede') }}</p>
+
+      <BoardFrame>
+        <DemoBattle mode="twoLanes" />
+      </BoardFrame>
     </section>
 
     <DuelResumeCard />
 
     <SavedMatchCard />
 
-    <button
-      v-if="!store.saved && !duel.resumable"
-      type="button"
-      class="btn primary block big"
-      :disabled="duel.matchmaking"
-      @click="menu.openNewMatch('computer')"
-    >
-      <Play :size="18" /> {{ t('start.home.play') }}
-    </button>
-
-    <QuickStarts />
-
-    <button
-      v-if="IN_DISCORD"
-      type="button"
-      class="btn block"
-      @click="inviteToActivity(t('start.inviteMessage'))"
-    >
-      <UserPlus :size="17" /> {{ t('start.invite') }}
-    </button>
-
     <ContractsStrip />
 
-    <NewsChips />
+    <MovedCard />
 
-    <section v-if="newcomer" class="preview">
-      <BoardFrame>
-        <DemoBattle mode="twoLanes" />
-      </BoardFrame>
-    </section>
+    <PatchHighlight />
+
+    <DiscordCard />
 
     <footer class="footer">
       <LanguageSwitch compact />
       <SupportButton />
       <LegalLinks />
     </footer>
+
+    <div class="launch">
+      <QuickStarts />
+
+      <button type="button" class="play" :disabled="duel.matchmaking" @click="menu.openNewMatch('computer')">
+        <Play :size="20" />
+        {{ t('start.home.play') }}
+      </button>
+    </div>
   </main>
 </template>
 
@@ -126,59 +79,26 @@ const { t } = text
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 100%;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 20px;
+  min-height: calc(100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px));
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
 }
 
-/* One slim row instead of three tall cards: who you are, and the two things you might change. */
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 48px;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.identity {
-  display: flex;
-  flex: 1;
-  align-items: center;
+.pitch {
+  display: grid;
   gap: 10px;
-  min-width: 0;
-  color: inherit;
-}
-
-.identity {
-  text-decoration: none;
-}
-
-.who {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.name {
-  overflow: hidden;
-  font-size: 15px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rank {
-  overflow: hidden;
-  font-size: 12px;
-  color: var(--chalk-dim);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.icon-btn {
-  width: 40px;
-  height: 40px;
 }
 
 .pitch h1 {
-  margin: 4px 0 6px;
+  margin: 4px 0 0;
   font-size: 46px;
   line-height: 1;
 }
@@ -190,12 +110,58 @@ const { t } = text
   color: var(--chalk-dim);
 }
 
+/* Language, support and the legal links fill one row like the desktop column, then the links wrap below. */
 .footer {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
   padding-top: 8px;
+}
+
+.footer :deep(.support-button) {
+  justify-content: center;
+  width: 100%;
+}
+
+.footer :deep(.legal-links) {
+  grid-column: 1 / -1;
+}
+
+/*
+ * Sits at the end of the page and sticks to the bottom of the screen, just above the navigation, so starting a
+ * match is always one tap away. The fade behind it keeps it readable over whatever scrolls underneath.
+ */
+.launch {
+  position: sticky;
+  bottom: calc(var(--mobile-tabs, 0px) + env(safe-area-inset-bottom, 0px));
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 16px 16px 12px;
+  background: linear-gradient(to bottom, transparent, var(--board-deep) 22px);
+}
+
+.play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--gold);
+  color: var(--ink);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.play:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 </style>

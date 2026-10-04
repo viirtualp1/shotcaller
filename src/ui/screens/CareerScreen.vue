@@ -3,14 +3,16 @@ import { ArrowLeft } from '@lucide/vue'
 import CareerPanel from '../components/profile/CareerPanel.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import { useGameText } from '../composables/useGameText'
+import { useUiZoom } from '../composables/useUiZoom'
 import { useProfileStore } from '../stores/profile'
 
 const profile = useProfileStore()
 const { t } = useGameText()
+const zoom = useUiZoom()
 </script>
 
 <template>
-  <div class="career-page">
+  <div class="career-page" :style="{ '--ui-zoom': zoom }">
     <header class="topbar">
       <nav class="bar" :aria-label="t('career.title')">
         <a href="/" class="btn ghost" @click.prevent="profile.close()">
@@ -28,7 +30,8 @@ const { t } = useGameText()
 
 <style scoped>
 .career-page {
-  min-height: 100%;
+  min-height: calc((100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px)) / var(--ui-zoom));
+  zoom: var(--ui-zoom);
 }
 
 .topbar {
