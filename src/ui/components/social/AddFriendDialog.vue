@@ -10,7 +10,12 @@ import {
   DialogTitle,
 } from 'reka-ui'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
-import { isFriendCode, normalizeFriendCode, formatFriendCode, type FriendRequestResult } from '@/application/social/friends'
+import {
+  isFriendCode,
+  normalizeFriendCode,
+  formatFriendCode,
+  type FriendRequestResult,
+} from '@/application/social/friends'
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useFriendsStore } from '../../stores/friends'
@@ -27,7 +32,7 @@ const code = ref('')
 const result = ref<FriendRequestResult | 'error' | null>(null)
 const sending = ref(false)
 const field = useTemplateRef<InstanceType<typeof FriendCodeInput>>('field')
-  
+
 const ownCode = computed(() => (friends.card ? formatFriendCode(friends.card.friendCode) : ''))
 const valid = computed(() => isFriendCode(code.value))
 const succeeded = computed(() => result.value === 'sent' || result.value === 'accepted')

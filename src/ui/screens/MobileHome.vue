@@ -70,7 +70,12 @@ const mapPaused = ref(false)
       <template v-else>
         <QuickStarts />
 
-        <button type="button" class="play" :disabled="duel.matchmaking" @click="menu.openNewMatch('computer')">
+        <button
+          type="button"
+          class="play"
+          :disabled="duel.matchmaking"
+          @click="menu.openNewMatch('computer')"
+        >
           <Play :size="20" />
           {{ t('start.home.play') }}
         </button>

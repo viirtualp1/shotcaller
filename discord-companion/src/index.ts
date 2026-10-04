@@ -28,7 +28,10 @@ async function main() {
   let server: Awaited<ReturnType<typeof startPresenceServer>>
 
   try {
-    server = await startPresenceServer(discord, { port: PRESENCE_PORT, host: PRESENCE_HOST })
+    server = await startPresenceServer(discord, {
+      port: PRESENCE_PORT,
+      host: PRESENCE_HOST,
+    })
   } catch (error) {
     if (inUse(error)) {
       console.log('Discord companion is already running.')
@@ -57,9 +60,11 @@ async function main() {
   process.on('SIGINT', () => {
     void shutdown()
   })
+
   process.on('SIGTERM', () => {
     void shutdown()
   })
+
   process.on('unhandledRejection', (error) => {
     console.error('Discord companion: unexpected error', error)
   })

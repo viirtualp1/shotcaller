@@ -37,18 +37,25 @@ function imageKeyFromFile(file: string) {
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env, root = companionRoot()) {
   const fromEnv = env.DISCORD_CLIENT_ID?.trim() || env.VITE_DISCORD_CLIENT_ID?.trim()
+
   const clientId =
     (fromEnv && /^\d+$/.test(fromEnv) ? fromEnv : undefined) ??
     clientIdFromEnvFile(`${root}/../.env`) ??
     DEFAULT_CLIENT_ID
 
   const fromImageEnv = env.DISCORD_PRESENCE_LARGE_IMAGE?.trim()
+
   const largeImageKey =
     (fromImageEnv && IMAGE_KEY.test(fromImageEnv) ? fromImageEnv : undefined) ??
     imageKeyFromFile(`${root}/presence.json`)
 
   return {
     clientId,
-    ...(largeImageKey ? { largeImageKey, largeImageText: 'The Shotcaller' } : {}),
+    ...(largeImageKey
+      ? {
+          largeImageKey,
+          largeImageText: 'The Shotcaller',
+        }
+      : {}),
   }
 }

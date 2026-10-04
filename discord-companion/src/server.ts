@@ -78,7 +78,10 @@ export function startPresenceServer(
     discordConnected = connected
 
     for (const session of sessions) {
-      send(session.socket, { type: 'discord-status', connected })
+      send(session.socket, {
+        type: 'discord-status',
+        connected,
+      })
     }
   })
 
@@ -127,11 +130,21 @@ export function startPresenceServer(
     }
 
     sessions.add(session)
-    send(socket, companionMessageSchema.parse({ type: 'ready', discordConnected }))
+
+    send(
+      socket,
+      companionMessageSchema.parse({
+        type: 'ready',
+        discordConnected,
+      }),
+    )
 
     socket.on('message', (data, isBinary) => {
       if (isBinary) {
-        send(socket, { type: 'error', message: 'expected json' })
+        send(socket, {
+          type: 'error',
+          message: 'expected json',
+        })
 
         return
       }
@@ -141,7 +154,10 @@ export function startPresenceServer(
       try {
         json = JSON.parse(textOf(data))
       } catch {
-        send(socket, { type: 'error', message: 'expected json' })
+        send(socket, {
+          type: 'error',
+          message: 'expected json',
+        })
 
         return
       }
@@ -149,7 +165,10 @@ export function startPresenceServer(
       const parsed = presenceMessageSchema.safeParse(json)
 
       if (!parsed.success) {
-        send(socket, { type: 'error', message: 'invalid message' })
+        send(socket, {
+          type: 'error',
+          message: 'invalid message',
+        })
 
         return
       }
@@ -194,6 +213,7 @@ export function startPresenceServer(
     }
 
     http.once('error', fail)
+
     http.listen(options.port, host, () => {
       http.off('error', fail)
       const address = http.address()

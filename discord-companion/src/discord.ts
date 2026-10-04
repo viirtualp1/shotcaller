@@ -17,16 +17,12 @@ function delay(ms: number, isStopped: () => boolean) {
       return
     }
 
-    let watch: ReturnType<typeof setInterval> | undefined
     const timer = setTimeout(() => {
-      if (watch) {
-        clearInterval(watch)
-      }
-
+      clearInterval(watch)
       resolve()
     }, ms)
 
-    watch = setInterval(() => {
+    const watch = setInterval(() => {
       if (!isStopped()) {
         return
       }

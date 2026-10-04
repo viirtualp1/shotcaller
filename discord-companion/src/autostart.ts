@@ -11,7 +11,11 @@ function entryPoint(root: string) {
   const tsx = path.join(root, 'node_modules', 'tsx', 'dist', 'cli.mjs')
   const script = path.join(root, 'src', 'index.ts')
 
-  return { node, tsx, script }
+  return {
+    node,
+    tsx,
+    script,
+  }
 }
 
 function installWindows(root: string) {
@@ -23,6 +27,7 @@ function installWindows(root: string) {
 
   const { node, tsx, script } = entryPoint(root)
   const command = [node, tsx, script].map((part) => `"${part.replaceAll('"', '')}"`).join(' ')
+
   const file = path.join(
     startup,
     'Microsoft',
@@ -32,6 +37,7 @@ function installWindows(root: string) {
     'Startup',
     `${STARTUP_NAME}.vbs`,
   )
+
   const quotedCommand = `"${command.replaceAll('"', '""')}"`
   const directory = `"${root.replaceAll('"', '""')}"`
 
@@ -54,6 +60,7 @@ function installMac(root: string) {
   const directory = path.join(homedir(), 'Library', 'LaunchAgents')
   mkdirSync(directory, { recursive: true })
   const file = path.join(directory, 'online.theshotcaller.discord-companion.plist')
+
   const args = [node, tsx, script].map(
     (part) => `    <string>${part.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</string>`,
   )
@@ -136,6 +143,7 @@ export function installStartup(root = companionRoot()) {
         : installLinux(root)
 
   const { node, tsx, script } = entryPoint(root)
+
   const child = spawn(node, [tsx, script], {
     cwd: root,
     detached: true,

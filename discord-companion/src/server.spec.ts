@@ -50,7 +50,13 @@ test('serves only loopback and refuses a foreign origin', async () => {
 
 test('keeps presence until the last session is gone', async () => {
   const discord = bridge()
-  const server = await startPresenceServer(discord, { port: 0, staleMs: 5_000, sweepMs: 50 })
+
+  const server = await startPresenceServer(discord, {
+    port: 0,
+    staleMs: 5_000,
+    sweepMs: 50,
+  })
+
   const origin = 'https://theshotcaller.online'
 
   try {
@@ -69,8 +75,26 @@ test('keeps presence until the last session is gone', async () => {
     first.send(JSON.stringify({ type: 'ping' }))
     assert.equal((await pong).type, 'pong')
 
-    first.send(JSON.stringify({ type: 'set-presence', payload: { details: 'Playing', state: 'In game' } }))
-    second.send(JSON.stringify({ type: 'set-presence', payload: { details: 'Duel', state: 'Round 2' } }))
+    first.send(
+      JSON.stringify({
+        type: 'set-presence',
+        payload: {
+          details: 'Playing',
+          state: 'In game',
+        },
+      }),
+    )
+
+    second.send(
+      JSON.stringify({
+        type: 'set-presence',
+        payload: {
+          details: 'Duel',
+          state: 'Round 2',
+        },
+      }),
+    )
+
     await waitFor(() => discord.shown.length >= 2)
     assert.equal(discord.shown.at(-1)?.details, 'Duel')
 
@@ -87,14 +111,26 @@ test('keeps presence until the last session is gone', async () => {
 
 test('clears presence after the heartbeat goes quiet', async () => {
   const discord = bridge()
-  const server = await startPresenceServer(discord, { port: 0, staleMs: 200, sweepMs: 30 })
+
+  const server = await startPresenceServer(discord, {
+    port: 0,
+    staleMs: 200,
+    sweepMs: 30,
+  })
 
   try {
     const socket = connect(server.port, 'http://localhost:5173')
     const ready = message(socket)
     await once(socket, 'open')
     assert.equal((await ready).type, 'ready')
-    socket.send(JSON.stringify({ type: 'set-presence', payload: { details: 'Playing' } }))
+
+    socket.send(
+      JSON.stringify({
+        type: 'set-presence',
+        payload: { details: 'Playing' },
+      }),
+    )
+
     await waitFor(() => discord.shown.some((item) => item?.details === 'Playing'))
     await waitFor(() => discord.shown.at(-1) === null)
   } finally {
