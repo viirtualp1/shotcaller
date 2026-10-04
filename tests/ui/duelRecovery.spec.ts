@@ -53,6 +53,7 @@ const entry = (status: 'invited' | 'active' = 'active'): DuelEntry => ({
     guest: 'guest',
     status,
     mode: 'threeLanes',
+    ranked: false,
     seed: 'seed',
     round: 1,
     roundOpenedAt: new Date().toISOString(),
@@ -154,6 +155,7 @@ describe('duel recovery polling', () => {
       id: 'duel',
       seed: 'seed',
       opponentName: 'Other coach',
+      ranked: false,
       won: true,
     })
 

@@ -33,6 +33,8 @@ export interface Duel {
   readonly status: DuelStatus
   /** Picked by the inviting coach. */
   readonly mode: ModeId
+  /** Found by matchmaking rather than picked between friends; only these move MMR. */
+  readonly ranked: boolean
   /** Set once the invite is accepted; both devices derive the battles from it. */
   readonly seed: string | null
   /** The round both coaches are planning now. */

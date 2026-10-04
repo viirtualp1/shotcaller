@@ -12,7 +12,15 @@ import {
   matchRecordOf,
 } from '@/domain/profile/Profile'
 import { levelFor, rankFor, rankStep, ratingChange } from '@/domain/profile/progression'
-import { DRAW, duelMatch as duel, finishedMatch as finished, LOSS, play, WIN } from '../helpers/profile'
+import {
+  DRAW,
+  duelMatch as duel,
+  finishedMatch as finished,
+  friendlyDuelMatch,
+  LOSS,
+  play,
+  WIN,
+} from '../helpers/profile'
 
 describe('coach ranks', () => {
   it('climbs five stars per medal and tops out without stars', () => {
@@ -247,7 +255,20 @@ describe('recordMatch', () => {
     })
   })
 
-  it('moves the rating only for a duel, which also names the opponent', () => {
+  it('leaves the rating alone after a duel between friends', () => {
+    const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), friendlyDuelMatch(WIN))
+
+    expect(record).toMatchObject({
+      duel: { opponentName: 'Rival' },
+      ratingBefore: 0,
+      ratingAfter: 0,
+    })
+
+    expect(isRated(record)).toBe(false)
+    expect(profile.rating).toBe(0)
+  })
+
+  it('moves the rating only for a ranked duel, which also names the opponent', () => {
     const solo = play(createProfile('2026-09-27T10:00:00.000Z'), finished(WIN)).profile
     const { profile, record } = play(createProfile('2026-09-27T10:00:00.000Z'), duel(WIN))
 

@@ -17,6 +17,18 @@ Cloud saves require all files in `supabase/migrations`, applied in timestamp ord
 Before deploying the updated 9.1 client, apply `20261004160000_leaderboard_friend_requests.sql`.
 It restores requests from the leaderboard for registered accounts while keeping friend codes private
 and reusing the existing block, request limit and cooldown rules.
+`20261004170000_security_hardening.sql` makes new `public` tables private until a migration grants them,
+closes trigger functions to the API and takes coach photos only from the Google identity; deploy the client
+with it, since the client now shows Google-hosted photos only. `20261004171000_pg_net_schema.sql` moves pg_net
+out of `public`. `supabase/tests/security_hardening.sql` lists every SECURITY DEFINER function the API may call:
+add a new RPC there when you grant it.
+`20261004172000_ranked_only_mmr.sql` lets only ranked (matchmaking) duels move MMR; deploy it with the client,
+which stops predicting rating changes for friendly duels.
+
+`vercel.json` sets the Content Security Policy and other security headers; `npm run preview` sends the same ones.
+Change the inline script in `index.html` only together with its `sha256-` hash in the policy
+(`tests/application/securityHeaders.spec.ts` checks this), and add any new external origin to `connect-src`
+or `img-src` before the client uses it.
 For existing deployments, `20261001130000_cloud_save_capacity.sql` raises the snapshot limits to
 1 MiB per profile and 256 KiB per match so history and round replays fit without discarding data.
 The regression check in `supabase/tests/cloud_save_capacity.sql` runs in a disposable database and rolls back its writes.

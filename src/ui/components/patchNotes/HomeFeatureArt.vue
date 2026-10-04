@@ -156,10 +156,7 @@ const copy = computed(() =>
                 <span class="continue">
                   <Play :size="13" /> {{ copy.continue }}
 
-                  <template v-if="scene === 'home'">
-                    <MousePointer2 v-if="device === 'desktop'" class="cursor" :size="22" />
-                    <span v-else class="tap" />
-                  </template>
+                  <MousePointer2 v-if="device === 'desktop' && scene === 'home'" class="cursor" :size="22" />
                 </span>
               </div>
 
@@ -286,10 +283,8 @@ const copy = computed(() =>
           <span v-for="(icon, i) in TAB_ICONS" :key="i" :class="{ active: i === tab }"
             ><component :is="icon" :size="16" />
 
-            {{ copy.tabs[i] }}<i v-if="i === 2 && scene !== 'chat'">1</i>
-
-            <span v-if="i === tab && i > 0" class="tap"
-          /></span>
+            {{ copy.tabs[i] }}<i v-if="i === 2 && scene !== 'chat'">1</i></span
+          >
         </nav>
       </div>
     </div>
@@ -756,7 +751,7 @@ em {
   border-radius: 999px;
   background: linear-gradient(90deg, #ece8dc10, #ece8dc30, #ece8dc10);
 }
-/* The pointer and the tap appear on what the scene is about, and press it once. */
+/* The pointer appears on what the scene is about, and presses it once. */
 .cursor {
   position: absolute;
   z-index: 2;
@@ -774,22 +769,6 @@ em {
 .watch .cursor {
   right: -12px;
   bottom: -16px;
-}
-.tap {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
-  border: 2px solid var(--gold);
-  border-radius: 50%;
-  background: #f4c55b26;
-  animation: tap 1.6s ease-out 0.3s both;
-}
-.continue .tap {
-  left: 78%;
 }
 @keyframes point {
   from {
@@ -809,20 +788,6 @@ em {
     scale: 1;
   }
 }
-@keyframes tap {
-  from {
-    opacity: 0;
-    scale: 1.6;
-  }
-  30% {
-    opacity: 1;
-    scale: 0.85;
-  }
-  to {
-    opacity: 0.8;
-    scale: 1;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .scene,
   .conversation,
@@ -830,8 +795,7 @@ em {
   .tabs > span {
     transition: none;
   }
-  .cursor,
-  .tap {
+  .cursor {
     animation: none;
   }
 }

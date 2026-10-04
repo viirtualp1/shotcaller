@@ -179,6 +179,8 @@ export interface DuelInfo {
   /** Null in a friend's match: who they played stays private. */
   readonly opponentName: string | null
   readonly opponentRating?: number
+  /** A matchmaking duel; a duel between friends leaves MMR as it was. */
+  readonly ranked?: boolean
 }
 
 /** What the profile needs from a match once it is over. */
@@ -356,7 +358,7 @@ const withoutRounds = (record: MatchRecord): MatchRecord =>
 
 /** Duels move the rating; before 7.4 matches against the computer did too. */
 export const isRated = (record: Pick<MatchRecord, 'duel' | 'ratingBefore' | 'ratingAfter'>) =>
-  record.duel !== null || record.ratingAfter !== record.ratingBefore
+  record.duel?.ranked === true || record.ratingAfter !== record.ratingBefore
 
 /** Records made before the detailed stats existed have no opponent side and no rounds; their zeros mean nothing. */
 export const hasDetails = (record: MatchRecord) =>
@@ -386,8 +388,8 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
   const won = verdict === 'win'
   const ratingBefore = profile.ratings[mode]
 
-  /* The computer only gives XP; the rating is for beating people, one per mode. */
-  const rating = played.duel
+  /* The computer and friends only give XP; the rating is for beating strangers in ranked, one per mode. */
+  const rating = played.duel?.ranked
     ? Math.max(0, ratingBefore + ratingChange(resultOf(played), ratingBefore, played.duel.opponentRating))
     : ratingBefore
 

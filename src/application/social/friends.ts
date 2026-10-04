@@ -115,9 +115,12 @@ export interface FriendsService {
 
 const CODE_LENGTH = 8
 
+/** Only Google serves coach pictures; the server keeps no other host. */
+const GOOGLE_PHOTO = /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\/\S+$/
+
 /** An https address of a Google account picture, or nothing. */
 export const coachPhoto = (url: string | null | undefined): string | null =>
-  url && url.length <= 2048 && url.startsWith('https://') ? url : null
+  url && url.length <= 2048 && GOOGLE_PHOTO.test(url) ? url : null
 
 /** Accepts any spacing, dashes or case a player may type or paste. */
 export const normalizeFriendCode = (input: string) => input.toUpperCase().replace(/[^A-Z0-9]/g, '')

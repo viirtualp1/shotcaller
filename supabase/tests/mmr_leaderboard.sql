@@ -19,7 +19,7 @@ insert into auth.users(id, is_anonymous) values
   ('71000000-0000-4000-8000-000000000004', true),
   ('71000000-0000-4000-8000-000000000005', false);
 insert into public.coaches(id, friend_code, name, photo, rating) values
-  ('71000000-0000-4000-8000-000000000001', 'AAAA4444', 'Alpha', 'https://example.com/alpha.png', 99999),
+  ('71000000-0000-4000-8000-000000000001', 'AAAA4444', 'Alpha', 'https://lh3.googleusercontent.com/a/alpha', 99999),
   ('71000000-0000-4000-8000-000000000002', 'BBBB4444', 'Bravo', null, 0),
   ('71000000-0000-4000-8000-000000000003', 'CCCC4444', 'Charlie', null, 0),
   ('71000000-0000-4000-8000-000000000004', 'DDDD4444', 'Guest', null, 99999),

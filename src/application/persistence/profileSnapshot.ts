@@ -176,6 +176,7 @@ const matchRecord = z.object({
     .object({
       opponentName: z.string().max(64),
       opponentRating: count.optional(),
+      ranked: z.boolean().optional(),
     })
     .nullable()
     .default(null),

@@ -290,6 +290,7 @@ export const useDuelStore = defineStore('duel', () => {
           id: entry.duel.id,
           seed: entry.duel.seed,
           opponentName: entry.opponent.name,
+          ranked: entry.duel.ranked,
         }
       : null
   }
@@ -300,6 +301,7 @@ export const useDuelStore = defineStore('duel', () => {
         id: entry.duel.id,
         seed: entry.duel.seed,
         opponentName: entry.opponent.name,
+        ranked: entry.duel.ranked,
         won,
       })
     }
@@ -538,6 +540,7 @@ export const useDuelStore = defineStore('duel', () => {
       opponentName: entry.opponent.name,
       exchange: (round, board) => exchange(entry.duel.id, round, board),
       opponentRating: entry.opponent.rating,
+      ranked: entry.duel.ranked,
       finish: (result) => report(entry.duel.id, result),
     }
   }

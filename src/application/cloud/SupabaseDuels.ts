@@ -37,6 +37,7 @@ const duelRow = z.object({
   ]),
   /** Servers without game modes yet send no mode: those duels are three lanes. */
   mode: z.enum(MODE_IDS).default(DEFAULT_MODE),
+  ranked: z.boolean().default(false),
   seed: z.string().max(64).nullable(),
   round: z.int().min(1).max(40),
   round_opened_at: z.string().nullable(),
@@ -61,6 +62,7 @@ function toDuel(row: z.infer<typeof duelRow>): Duel {
     guest: row.guest,
     status: row.status,
     mode: row.mode,
+    ranked: row.ranked,
     seed: row.seed,
     round: row.round,
     roundOpenedAt: row.round_opened_at,

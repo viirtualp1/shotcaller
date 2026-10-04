@@ -1,6 +1,8 @@
 import gsap from 'gsap'
 import mitt from 'mitt'
 import { Application, Container, Point, Sprite, Texture, type FederatedPointerEvent } from 'pixi.js'
+// Shader and uniform code without eval, so the content security policy can forbid it.
+import 'pixi.js/unsafe-eval'
 import type { LaneId } from '@/content/ids'
 import { BATTLE } from '@/content/rules'
 import type { SandboxSettings } from '@/content/sandbox'

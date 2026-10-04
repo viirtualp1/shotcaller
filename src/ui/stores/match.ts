@@ -60,6 +60,7 @@ export interface DuelBinding {
   readonly id: string
   readonly opponentName: string
   readonly opponentRating?: number
+  readonly ranked: boolean
   /** Sends this round's board and resolves with the other player's once both are in. */
   exchange(round: number, board: PlayerState): Promise<PlayerState>
   /** The result this device replayed, seen from its own side: 0 won, 1 lost, null a draw. */
@@ -72,6 +73,8 @@ export interface SettledDuel {
   readonly id: string
   readonly seed: string
   readonly opponentName: string
+  /** Missing in a duel saved by an older version; such a duel counts as friendly. */
+  readonly ranked?: boolean
   readonly won: boolean
 }
 
@@ -903,6 +906,7 @@ export const useMatchStore = defineStore('match', () => {
     const info = {
       id: ended.id,
       opponentName: ended.opponentName,
+      ranked: ended.ranked ?? false,
     }
 
     if (match && duel.value?.id === ended.id) {

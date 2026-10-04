@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
@@ -9,6 +10,15 @@ const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta
 
 const BOARD_COLOR = '#131b18'
 const YEAR_SECONDS = 60 * 60 * 24 * 365
+
+/* `vite preview` sends the same security headers as the production host, so the policy is tried before it ships. */
+const VERCEL: { headers: { headers: { key: string; value: string }[] }[] } = JSON.parse(
+  readFileSync(new URL('./vercel.json', import.meta.url), 'utf8'),
+)
+
+const SECURITY_HEADERS = Object.fromEntries(
+  VERCEL.headers.flatMap((rule) => rule.headers.map((h) => [h.key, h.value])),
+)
 
 export default defineConfig({
   plugins: [
@@ -110,6 +120,7 @@ export default defineConfig({
     }),
   ],
   base: '/',
+  preview: { headers: SECURITY_HEADERS },
   resolve: { alias: { '@': src('') } },
   build: {
     chunkSizeWarningLimit: 600,

@@ -7,7 +7,7 @@ insert into auth.users(id) values
   ('70000000-0000-4000-8000-000000000004'),
   ('70000000-0000-4000-8000-000000000005');
 insert into public.coaches(id, friend_code, name, photo) values
-  ('70000000-0000-4000-8000-000000000001', 'AAAA3333', 'Host', 'https://example.com/host.png'),
+  ('70000000-0000-4000-8000-000000000001', 'AAAA3333', 'Host', 'https://lh3.googleusercontent.com/a/host'),
   ('70000000-0000-4000-8000-000000000002', 'BBBB3333', 'Guest', null),
   ('70000000-0000-4000-8000-000000000003', 'CCCC3333', 'Third', null),
   ('70000000-0000-4000-8000-000000000004', 'DDDD3333', 'Fourth', null),
@@ -93,11 +93,33 @@ begin
     raise exception 'Agreeing reports did not finish the duel: %', game.status;
   end if;
 
-  if (select rating from public.ratings where coach_id = game.host and mode = 'twoLanes') <> 25
-    or (select rating from public.ratings where coach_id = game.guest and mode = 'twoLanes') <> 0
+  -- Friends pick each other, so a friendly duel never moves MMR.
+  if exists (select 1 from public.ratings where coach_id in (game.host, game.guest) and mode = 'twoLanes')
     or exists (select 1 from public.duel_boards where duel_id = game.id)
   then
-    raise exception 'Ratings or boards are wrong after the duel';
+    raise exception 'Ratings or boards are wrong after the friendly duel';
+  end if;
+end;
+$$;
+
+-- The same result in a ranked duel does.
+do $$
+declare
+  game public.duels;
+begin
+  insert into public.duels (host, guest, mode, ranked, status, winner, ended_by, finished_at)
+  values (
+    '70000000-0000-4000-8000-000000000001', '70000000-0000-4000-8000-000000000002', 'twoLanes', true,
+    'finished', '70000000-0000-4000-8000-000000000001', 'result', now()
+  )
+  returning * into game;
+
+  perform public.settle_duel(game);
+
+  if (select rating from public.ratings where coach_id = game.host and mode = 'twoLanes') is distinct from 25
+    or (select rating from public.ratings where coach_id = game.guest and mode = 'twoLanes') is distinct from 0
+  then
+    raise exception 'A ranked duel did not move MMR';
   end if;
 end;
 $$;

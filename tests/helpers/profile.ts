@@ -93,8 +93,17 @@ export function finishedMatch(
   }
 }
 
-/** The same match played as a duel with a friend. */
+/** The same match played as a ranked duel. */
 export const duelMatch = (result: MatchResult, rounds = 6): FinishedMatch => ({
+  ...finishedMatch(result, 'standard', rounds),
+  duel: {
+    opponentName: 'Rival',
+    ranked: true,
+  },
+})
+
+/** The same match played as a duel with a friend. */
+export const friendlyDuelMatch = (result: MatchResult, rounds = 6): FinishedMatch => ({
   ...finishedMatch(result, 'standard', rounds),
   duel: { opponentName: 'Rival' },
 })

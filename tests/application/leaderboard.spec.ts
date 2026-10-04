@@ -11,7 +11,7 @@ const row = {
   position: 1,
   name: 'Alpha',
   avatar: 'archer',
-  photo: 'https://example.com/photo.png',
+  photo: 'https://lh3.googleusercontent.com/a/photo',
   rating: 1500,
 }
 

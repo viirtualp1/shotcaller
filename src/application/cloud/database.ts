@@ -284,6 +284,7 @@ export interface Database {
           guest: string
           status: string
           mode?: string
+          ranked?: boolean
           seed: string | null
           round: number
           round_opened_at: string | null

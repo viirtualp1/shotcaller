@@ -119,6 +119,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         en: 'Signed in on a computer, your **friends list** sits beside the menu: see who is online and **watch their matches live** in one click.',
         ru: 'Если ты вошёл в аккаунт на компьютере, рядом с меню появляется **список друзей**: видно, кто в сети, а их **матчи можно смотреть вживую** в один клик.',
       },
+      {
+        en: 'Duels with friends are now just for fun: **only ranked matches change MMR**, so the leaderboard shows wins against strangers.',
+        ru: 'Дуэли с друзьями теперь просто для удовольствия: **MMR меняют только рейтинговые матчи**, а таблица лидеров показывает победы над незнакомыми соперниками.',
+      },
     ],
     interface: [
       {
@@ -147,6 +151,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
     ],
     fixes: [
+      {
+        en: '**Stronger protection** for your account, friends and chats: guests no longer see anyone’s social data, coach pictures come only from Google accounts, and the game blocks scripts from anywhere else.',
+        ru: '**Усиленная защита** аккаунта, друзей и чатов: гости не видят чужих социальных данных, фото тренеров берутся только из Google-аккаунтов, а игра блокирует сторонние скрипты.',
+      },
       {
         en: 'Your own duel no longer triggers a friend-started-playing notification. Friends already in a duel cannot be challenged again.',
         ru: 'Собственная дуэль больше не вызывает уведомление о старте игры друга. Друзей, которые уже в дуэли, нельзя вызвать повторно.',
