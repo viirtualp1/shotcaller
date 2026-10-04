@@ -107,35 +107,37 @@ useIntervalFn(() => {
       <h1 class="hand" :class="{ compact: !newcomer }">{{ t('app.title') }}</h1>
       <p v-if="newcomer" class="lede">{{ t('start.lede') }}</p>
 
-      <div class="menu">
-        <DuelResumeCard />
-        <SavedMatchCard />
+      <div class="home-columns">
+        <div class="menu">
+          <DuelResumeCard />
+          <SavedMatchCard />
 
-        <button
-          v-if="!store.saved && !duel.resumable"
-          type="button"
-          class="btn primary block big"
-          :disabled="duel.matchmaking"
-          @click="menu.openNewMatch('computer')"
-        >
-          <Play :size="18" /> {{ t('start.home.play') }}
-        </button>
+          <button
+            v-if="!store.saved && !duel.resumable"
+            type="button"
+            class="btn primary block big"
+            :disabled="duel.matchmaking"
+            @click="menu.openNewMatch('computer')"
+          >
+            <Play :size="18" /> {{ t('start.home.play') }}
+          </button>
 
-        <QuickStarts />
+          <QuickStarts />
 
-        <button v-if="IN_DISCORD" type="button" class="btn block" @click="inviteFriend">
-          <UserPlus :size="17" /> {{ t('start.invite') }}
-        </button>
+          <button v-if="IN_DISCORD" type="button" class="btn block" @click="inviteFriend">
+            <UserPlus :size="17" /> {{ t('start.invite') }}
+          </button>
 
-        <ContractsStrip />
+          <ContractsStrip />
+        </div>
+
+        <section v-if="social" class="friends">
+          <FriendsCard fill />
+        </section>
       </div>
     </section>
 
-    <section v-if="social" class="friends">
-      <FriendsCard />
-    </section>
-
-    <section v-else ref="previewHost" class="preview">
+    <section v-if="!social" ref="previewHost" class="preview">
       <BoardFrame>
         <DemoBattle
           v-for="layer in previewVisible ? demos : []"
@@ -171,9 +173,31 @@ useIntervalFn(() => {
 
 /* Beside a friends list the two columns sit together in the middle instead of spreading to the edges. */
 .start.social {
-  grid-template-columns: minmax(0, 440px) minmax(0, 420px);
+  grid-template-columns: minmax(0, 932px);
   justify-content: center;
-  column-gap: 72px;
+  column-gap: 0;
+}
+
+.start.social .copy {
+  max-width: none;
+  width: 100%;
+}
+
+.home-columns {
+  display: flex;
+  flex-direction: column;
+}
+
+.start.social .home-columns {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 420px);
+  column-gap: clamp(24px, 5vw, 72px);
+  align-items: stretch;
+}
+
+.start.social .menu {
+  margin-top: 0;
 }
 
 /* One row across the top: who you are on the left, what is new on the right. */
@@ -231,6 +255,7 @@ useIntervalFn(() => {
 }
 
 h1 {
+  margin-bottom: 16px;
   font-size: min(112px, 19cqi);
   line-height: 0.9;
   letter-spacing: -0.01em;
@@ -284,7 +309,13 @@ h1.compact {
 }
 
 .friends {
+  position: relative;
   animation: fade-in 0.4s 0.15s ease-out both;
+}
+
+.friends :deep(.panel) {
+  position: absolute;
+  inset: 0;
 }
 
 .footer {

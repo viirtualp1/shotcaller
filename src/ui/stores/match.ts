@@ -466,6 +466,12 @@ export const useMatchStore = defineStore('match', () => {
         heroId: hero.heroId,
         stars: hero.stars,
       })
+
+      if (hero.stars === 2 && hero.talent === undefined) {
+        inspectedUid.value = null
+        selectedItem.value = null
+        selectedUid.value = hero.uid
+      }
     }
   }
 
@@ -482,6 +488,12 @@ export const useMatchStore = defineStore('match', () => {
         heroId: hero.heroId,
         stars: hero.stars,
       })
+
+      if (hero.stars === 2 && hero.talent === undefined) {
+        inspectedUid.value = null
+        selectedItem.value = null
+        selectedUid.value = hero.uid
+      }
     }
   }
 

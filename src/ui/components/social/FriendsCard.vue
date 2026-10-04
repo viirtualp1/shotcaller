@@ -4,13 +4,15 @@ import HudPanel from '../common/HudPanel.vue'
 import FriendsList from './FriendsList.vue'
 
 /** The friends list on the profile page. */
+defineProps<{ fill?: boolean }>()
+
 const { t } = useGameText()
 </script>
 
 <template>
-  <HudPanel :title="t('friends.title')" class="panel">
+  <HudPanel :title="t('friends.title')" class="panel" :class="{ fill }">
     <div class="scroll">
-      <FriendsList />
+      <FriendsList :contained="fill" />
     </div>
   </HudPanel>
 </template>
@@ -25,5 +27,18 @@ const { t } = useGameText()
   min-height: 0;
   max-height: 520px;
   overflow-y: auto;
+  overflow-x: clip;
+}
+
+.fill {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fill .scroll {
+  display: flex;
+  flex: 1;
+  max-height: none;
+  overflow: hidden;
 }
 </style>

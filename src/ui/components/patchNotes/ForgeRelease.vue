@@ -305,7 +305,7 @@ function lean(event: PointerEvent) {
           :aria-controls="`forge-scene-${id}`"
           @click="pickStage(id)"
         >
-          <HeroAvatar :hero-id="id" :size="stage === id ? 58 : 44" :stars="1" />
+          <HeroAvatar :hero-id="id" :size="58" :stars="1" />
           <span class="name">{{ copy.heroes[id].name }}</span>
           <span class="tag">{{ copy.heroes[id].tag }}</span>
         </button>
@@ -647,9 +647,12 @@ h2 {
 }
 
 .pedestal :deep(.avatar) {
-  transition:
-    width 0.3s,
-    height 0.3s;
+  transform: scale(0.76);
+  transition: transform 0.3s;
+}
+
+.pedestal.on :deep(.avatar) {
+  transform: scale(1);
 }
 
 .name {
@@ -664,7 +667,7 @@ h2 {
 }
 
 .case {
-  min-height: 300px;
+  height: 350px;
   padding: 22px 18px;
   border: 1px solid var(--edge);
   border-radius: var(--radius);

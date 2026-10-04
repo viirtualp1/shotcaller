@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home and social UI preview</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Onest:wght@400;500;600;700&display=swap"
+    />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // Local account and service fixtures. Social actions do not call a server.
+      import { createApp, h, ref } from 'vue'
+      import { createPinia } from 'pinia'
+      import { TooltipProvider } from 'reka-ui'
+      import { createProfile } from '/src/domain/profile/Profile.ts'
+      import { finishedMatch, play, WIN } from '/tests/helpers/profile.ts'
+      import { createMatch } from '/src/application/createMatch.ts'
+      import { liveMatchOf } from '/src/domain/replay/live.ts'
+      import { i18n } from '/src/ui/i18n/index.ts'
+      import { useCloudStore } from '/src/ui/stores/cloud.ts'
+      import { useProfileStore } from '/src/ui/stores/profile.ts'
+      import { useSettingsStore } from '/src/ui/stores/settings.ts'
+      import { useMenuStore } from '/src/ui/stores/menu.ts'
+      import { useReplayStore } from '/src/ui/stores/replay.ts'
+      import { useNotificationsStore } from '/src/ui/stores/notifications.ts'
+      import { useLeaderboardStore } from '/src/ui/stores/leaderboard.ts'
+      import StartScreen from '/src/ui/screens/StartScreen.vue'
+      import LeaderboardScreen from '/src/ui/screens/LeaderboardScreen.vue'
+      import ReplayScreen from '/src/ui/screens/ReplayScreen.vue'
+      import SettingsDialog from '/src/ui/components/dialogs/SettingsDialog.vue'
+      import NewMatchDialog from '/src/ui/components/dialogs/NewMatchDialog.vue'
+      import SocialWindow from '/src/ui/components/social/SocialWindow.vue'
+      import NotificationStack from '/src/ui/components/social/NotificationStack.vue'
+      import '/src/ui/styles/base.css'
+
+      const query = new URLSearchParams(location.search)
+      const screen = ref('home')
+      const count = Number(query.get('count') || 4)
+      const contacts = Array.from({ length: count }, (_, i) => ({
+        id: `friend-${i}`,
+        name: ['Ember', 'River', 'Oak', 'Ash'][i] || `Coach ${i}`,
+        avatar: ['pyromancer', 'oracle', 'warden', 'archer'][i % 4],
+        photo: null,
+        rating: 1240,
+        status: 'friend',
+        since: '2026-10-01T12:00:00.000Z',
+      }))
+      const online = new Map(
+        contacts.slice(0, 3).map((coach, i) => [
+          coach.id,
+          {
+            activity: ['menu', 'duel', 'match'][i],
+            round: i === 0 ? null : 4,
+          },
+        ]),
+      )
+      let onPresence = () => undefined
+      const pinia = createPinia()
+      const cloud = useCloudStore(pinia)
+      const settings = useSettingsStore(pinia)
+      const profile = useProfileStore(pinia)
+      const menu = useMenuStore(pinia)
+      const replay = useReplayStore(pinia)
+      const notifications = useNotificationsStore(pinia)
+      settings.locale = query.get('lang') === 'ru' ? 'ru' : 'en'
+      i18n.global.locale.value = settings.locale
+      profile.profile = {
+        ...play(createProfile('2026-10-01T12:00:00.000Z'), finishedMatch(WIN)).profile,
+        name: 'Preview coach',
+      }
+      cloud.connect = async () => ({
+        friends: () => ({
+          card: async () => ({
+            id: 'fixture',
+            name: 'Preview coach',
+            friendCode: 'ABCD2345',
+            rating: 1240,
+            avatar: 'warden',
+            photo: null,
+          }),
+          list: async () => contacts,
+          blocked: async () => [],
+          setPhoto: async () => undefined,
+          watch: () => () => undefined,
+          presence: () => ({
+            onChange: (fn) => {
+              onPresence = fn
+              fn(online)
+            },
+            update: () => undefined,
+            leave: () => undefined,
+          }),
+          request: async () => 'sent',
+          requestLeaderboard: async (id) => {
+            contacts.push({ ...contacts[0], id, status: 'outgoing' })
+            return 'sent'
+          },
+          publishLiveMatch: async () => false,
+          keepLiveMatch: async () => false,
+        }),
+        chat: () => ({
+          conversation: async (id) => [
+            {
+              id: 1,
+              sender: id,
+              recipient: 'fixture',
+              body: 'One more match?',
+              createdAt: '2026-10-04T05:00:00.000Z',
+              readAt: null,
+            },
+          ],
+          unread: async () => new Map(),
+          watch: () => () => undefined,
+          markRead: async () => undefined,
+        }),
+        duels: () => ({ mine: async () => [], watch: () => () => undefined }),
+        leaderboard: () => ({
+          read: async () => [
+            { id: 'friend-0', name: 'Ember', rating: 1240, avatar: 'pyromancer', photo: null, position: 1 },
+            { id: 'rival', name: 'New rival', rating: 1200, avatar: 'oracle', photo: null, position: 2 },
+            {
+              id: 'fixture',
+              name: 'Preview coach',
+              rating: 1000,
+              avatar: 'warden',
+              photo: null,
+              position: 3,
+            },
+          ],
+        }),
+      })
+      cloud.enabled = true
+      cloud.account = { id: 'fixture', anonymous: false, email: null, photo: null }
+
+      function watchLive(live = true) {
+        const match = createMatch({ seed: 'home-preview' })
+        match.startBattle({ allowEmptyBoard: true })
+        const snapshot = liveMatchOf(match, 'standard', 'live-preview', 0, 0)
+        if (live) {
+          replay.openLive('friend-0', async () => snapshot)
+        } else {
+          replay.open(snapshot.record)
+        }
+      }
+
+      function burst() {
+        onPresence(new Map())
+        onPresence(new Map(contacts.map((coach) => [coach.id, { activity: 'match', round: 1 }])))
+      }
+
+      createApp({
+        render: () =>
+          h(TooltipProvider, null, {
+            default: () => [
+              h(screen.value === 'home' ? StartScreen : LeaderboardScreen),
+              h(SettingsDialog),
+              h(NewMatchDialog),
+              h(SocialWindow),
+              h(NotificationStack),
+              ...(replay.match ? [h(ReplayScreen, { match: replay.match, key: replay.match.id })] : []),
+              h(
+                'nav',
+                {
+                  style:
+                    'position:fixed;left:12px;bottom:4px;z-index:20;display:flex;gap:4px;max-width:90vw;flex-wrap:wrap;font-size:10px',
+                },
+                [
+                  h(
+                    'button',
+                    {
+                      onClick: () => {
+                        screen.value = 'home'
+                      },
+                    },
+                    'Fixture home',
+                  ),
+                  h(
+                    'button',
+                    {
+                      onClick: () => {
+                        useLeaderboardStore(pinia).open()
+                        screen.value = 'leaderboard'
+                      },
+                    },
+                    'Fixture leaderboard',
+                  ),
+                  h(
+                    'button',
+                    {
+                      onClick: () => {
+                        menu.settings = true
+                      },
+                    },
+                    'Fixture settings',
+                  ),
+                  h('button', { onClick: () => watchLive() }, 'Fixture live'),
+                  h('button', { onClick: () => watchLive(false) }, 'Fixture replay'),
+                  h('button', { onClick: burst }, 'Fixture game starts'),
+                  h(
+                    'button',
+                    {
+                      onClick: () =>
+                        notifications.push(
+                          { kind: 'message', friendId: 'friend-0', body: 'One more match?', count: 1 },
+                          'message:friend-0',
+                        ),
+                    },
+                    'Fixture message',
+                  ),
+                ],
+              ),
+            ],
+          }),
+      })
+        .use(pinia)
+        .use(i18n)
+        .mount('#app')
+    </script>
+  </body>
+</html>

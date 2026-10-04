@@ -98,4 +98,89 @@ describe('social notifications', () => {
 
     expect(notifications.items).toHaveLength(0)
   })
+
+  it('groups a hundred game starts into one card without replacing messages or restarting its lifetime', () => {
+    const notifications = useNotificationsStore()
+    notifications.push(message(1), 'message:c1')
+
+    notifications.push(
+      {
+        kind: 'friendPlaying',
+        coach,
+        duel: false,
+      },
+      'friendPlaying:c1',
+    )
+
+    const id = notifications.find('friendPlaying')!.id
+    vi.advanceTimersByTime(6000)
+
+    for (let i = 2; i <= 100; i++) {
+      notifications.push(
+        {
+          kind: 'friendPlaying',
+          coach: {
+            ...coach,
+            id: `c${i}`,
+          },
+          duel: true,
+        },
+        `friendPlaying:c${i}`,
+      )
+    }
+
+    expect(notifications.items).toHaveLength(2)
+    expect(notifications.find('message:c1')).not.toBeNull()
+    const activity = notifications.find('friendPlaying')!
+    expect(activity.id).toBe(id)
+    expect(activity.notice.kind === 'friendPlaying' && activity.notice.others).toHaveLength(99)
+    vi.advanceTimersByTime(6000)
+    expect(notifications.find('friendPlaying')).toBeNull()
+
+    notifications.push({
+      kind: 'friendPlaying',
+      coach,
+      duel: false,
+    })
+
+    expect(notifications.items).toHaveLength(0)
+    vi.advanceTimersByTime(48000)
+
+    notifications.push({
+      kind: 'friendPlaying',
+      coach,
+      duel: false,
+    })
+
+    expect(notifications.items).toHaveLength(1)
+  })
+
+  it('removes a player who stops or becomes our opponent from the grouped card', () => {
+    const notifications = useNotificationsStore()
+    notifications.push({
+      kind: 'friendPlaying',
+      coach,
+      duel: false,
+    })
+
+    notifications.push({
+      kind: 'friendPlaying',
+      coach: {
+        ...coach,
+        id: 'c2',
+      },
+      duel: true,
+    })
+
+    notifications.dismissKey('friendPlaying:c1')
+
+    expect(notifications.find('friendPlaying')!.notice).toMatchObject({
+      coach: { id: 'c2' },
+      duel: true,
+      others: [],
+    })
+
+    notifications.dismissKey('friendPlaying:c2')
+    expect(notifications.items).toHaveLength(0)
+  })
 })

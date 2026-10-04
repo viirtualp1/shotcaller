@@ -30,11 +30,20 @@ const EXPERIMENTS = [
   },
 ] as const
 
-withDefaults(defineProps<{ language?: boolean; sound?: boolean; showDifficulty?: boolean }>(), {
-  language: true,
-  sound: true,
-  showDifficulty: true,
-})
+withDefaults(
+  defineProps<{
+    language?: boolean
+    sound?: boolean
+    showDifficulty?: boolean
+    showExperiments?: boolean
+  }>(),
+  {
+    language: true,
+    sound: true,
+    showDifficulty: true,
+    showExperiments: true,
+  },
+)
 
 const settings = useSettingsStore()
 const audio = useAudioStore()
@@ -49,13 +58,6 @@ const difficulty = computed({
       settings.difficulty = value as Difficulty
     }
   },
-})
-
-const difficultyHint = computed(() => {
-  const seconds = DIFFICULTIES[settings.difficulty].planningSeconds
-  return seconds === null
-    ? t('settings.difficultyHint.relaxed')
-    : t('settings.difficultyHint.standard', { s: seconds })
 })
 
 const musicVolumePercent = computed({
@@ -77,6 +79,13 @@ function setVolume(target: 'music' | 'effects', event: Event) {
   }
 }
 
+function difficultyHint(id: Difficulty) {
+  const seconds = DIFFICULTIES[id].planningSeconds
+  return seconds === null
+    ? t('settings.difficultyHint.relaxed')
+    : t('settings.difficultyHint.standard', { s: seconds })
+}
+
 function openOrdersPatch() {
   menu.gameMenu = false
   menu.newMatch = false
@@ -96,12 +105,14 @@ function openOrdersPatch() {
         class="segmented-control"
         :aria-label="t('settings.difficulty')"
       >
-        <ToggleGroupItem v-for="id in DIFFICULTY_IDS" :key="id" :value="id" class="segmented-option">
-          {{ t(`settings.difficulties.${id}`) }}
-        </ToggleGroupItem>
-      </ToggleGroupRoot>
+        <div v-for="id in DIFFICULTY_IDS" :key="id" class="difficulty-option">
+          <ToggleGroupItem :value="id" class="segmented-option">
+            {{ t(`settings.difficulties.${id}`) }}
+          </ToggleGroupItem>
 
-      <p class="hint">{{ difficultyHint }}</p>
+          <ExperimentInfo :title="t(`settings.difficulties.${id}`)" :text="difficultyHint(id)" hover />
+        </div>
+      </ToggleGroupRoot>
     </section>
 
     <section v-if="language" class="field">
@@ -146,12 +157,12 @@ function openOrdersPatch() {
       </label>
     </section>
 
-    <div class="after">
+    <div v-if="showExperiments || $slots.beforeExperiments" class="after">
       <slot name="beforeExperiments" />
 
-      <hr v-if="$slots.beforeExperiments" class="divider" />
+      <hr v-if="showExperiments && $slots.beforeExperiments" class="divider" />
 
-      <section class="field experiments">
+      <section v-if="showExperiments" class="field experiments">
         <h3 class="label"><FlaskConical :size="16" /> {{ t('settings.experiments') }}</h3>
 
         <div class="experiment">
@@ -196,6 +207,29 @@ function openOrdersPatch() {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--chalk-dim);
+}
+
+.difficulty-option {
+  display: flex;
+  align-items: center;
+  padding-right: 6px;
+  min-width: 0;
+  border-radius: var(--radius);
+}
+
+.difficulty-option:has([data-state='on']) {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.difficulty-option .segmented-option {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 6px;
+}
+
+.difficulty-option:has([data-state='on']) :deep(.about) {
+  color: var(--ink);
 }
 
 .volume {
@@ -253,5 +287,12 @@ function openOrdersPatch() {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+@media (max-width: 380px) {
+  .difficulty-option .segmented-option {
+    padding-inline: 3px;
+    font-size: 11px;
+  }
 }
 </style>

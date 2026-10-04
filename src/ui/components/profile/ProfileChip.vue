@@ -10,6 +10,7 @@ const profile = useProfileStore()
 const photo = useAccountPhoto()
 const { t } = useGameText()
 const narrow = useMediaQuery('(max-width: 360px)')
+const desktop = useMediaQuery('(min-width: 861px)')
 </script>
 
 <template>
@@ -17,7 +18,7 @@ const narrow = useMediaQuery('(max-width: 360px)')
     <CoachAvatar
       :hero-id="profile.avatar"
       :level="profile.level.level"
-      :size="narrow ? 34 : 42"
+      :size="desktop ? 32 : narrow ? 34 : 42"
       :photo="photo.shown.value"
     />
 

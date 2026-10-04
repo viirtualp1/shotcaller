@@ -211,7 +211,7 @@ export class TargetingSystem implements System {
       return this.mayHitStructure(unit, target)
     }
 
-    return !this.exposed(unit) && !this.ctx.safety.isProtected(target, unit.team)
+    return this.canEngage(unit, target)
   }
 
   private throneToFinish(unit: Unit) {
@@ -259,6 +259,16 @@ export class TargetingSystem implements System {
   /** A hero standing in range of an untanked enemy tower backs off instead of picking fights. */
   private exposed(unit: Unit) {
     return unit.kind === 'hero' && this.ctx.safety.isUnsafeFor(unit, unit.position)
+  }
+
+  /** A hero can shoot into tower range from safety; only closing the distance requires a safe target. */
+  private canEngage(hero: Unit, target: Unit) {
+    const { safety } = this.ctx
+    return (
+      !this.exposed(hero) &&
+      (inReach(hero, target) ||
+        (!safety.isProtected(target, hero.team) && !safety.isUnsafeFor(hero, target.position)))
+    )
   }
 
   private woundedUnderTower(unit: Unit) {
@@ -393,12 +403,7 @@ export class TargetingSystem implements System {
       return gap + (pushing ? PRIORITY.pushPrefersStructures : PRIORITY.heroStructurePenalty)
     }
 
-    const { safety } = this.ctx
-    if (
-      this.exposed(hero) ||
-      safety.isProtected(candidate, hero.team) ||
-      safety.isUnsafeFor(hero, candidate.position)
-    ) {
+    if (!this.canEngage(hero, candidate)) {
       return Infinity
     }
 

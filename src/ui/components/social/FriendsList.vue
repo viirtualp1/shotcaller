@@ -22,6 +22,8 @@ import WatchLiveButton from './WatchLiveButton.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** Friends, requests and adding by code; shared by the profile page and the friends panel. */
+defineProps<{ contained?: boolean }>()
+
 const cloud = useCloudStore()
 const friends = useFriendsStore()
 const chat = useChatStore()
@@ -36,6 +38,7 @@ const code = ref('')
 const result = ref<FriendRequestResult | 'error' | null>(null)
 const sending = ref(false)
 const codeInput = useTemplateRef<HTMLInputElement>('codeInput')
+const contacts = useTemplateRef<HTMLElement>('contacts')
 
 const valid = computed(() => isFriendCode(code.value))
 const ownCode = computed(() => (friends.card ? formatFriendCode(friends.card.friendCode) : ''))
@@ -53,7 +56,12 @@ async function startAdding() {
 
   if (adding.value) {
     await nextTick()
-    codeInput.value?.focus()
+
+    if (contacts.value) {
+      contacts.value.scrollTop = contacts.value.scrollHeight
+    }
+
+    codeInput.value?.focus({ preventScroll: true })
   }
 }
 
@@ -89,175 +97,203 @@ async function submit() {
     <button type="button" class="btn" @click="friends.refresh()">{{ t('friends.retry') }}</button>
   </div>
 
-  <div v-else class="friends-list">
-    <section v-if="friends.incoming.length" class="group">
-      <h3 class="section">{{ t('friends.incoming') }}</h3>
+  <div v-else class="friends-list" :class="{ contained }">
+    <div ref="contacts" class="contacts">
+      <section v-if="friends.incoming.length" class="group">
+        <h3 class="section">{{ t('friends.incoming') }}</h3>
 
-      <ul class="list">
-        <li v-for="entry in friends.incoming" :key="entry.id" class="row request">
-          <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
+        <ul class="list">
+          <li v-for="entry in friends.incoming" :key="entry.id" class="row request">
+            <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
 
-          <span class="who">
-            <strong class="name">{{ nameOf(entry.name) }}</strong>
-            <span class="status">{{ t('friends.wantsToBeFriends') }}</span>
-          </span>
+            <span class="who">
+              <strong class="name">{{ nameOf(entry.name) }}</strong>
+              <span class="status">{{ t('friends.wantsToBeFriends') }}</span>
+            </span>
+
+            <button
+              type="button"
+              class="icon-btn accept"
+              :aria-label="t('friends.accept')"
+              :title="t('friends.accept')"
+              @click="friends.accept(entry.id)"
+            >
+              <Check :size="16" />
+            </button>
+
+            <button
+              type="button"
+              class="icon-btn"
+              :aria-label="t('friends.decline')"
+              :title="t('friends.decline')"
+              @click="friends.decline(entry.id)"
+            >
+              <X :size="16" />
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <ul v-if="friends.friends.length" class="list">
+        <li
+          v-for="entry in friends.friends"
+          :key="entry.id"
+          class="row"
+          :class="{ online: friends.isOnline(entry.id) }"
+        >
+          <button
+            type="button"
+            class="profile"
+            :aria-label="t('chat.open', { name: nameOf(entry.name) })"
+            @click="chat.open(entry.id)"
+          >
+            <RankMedal :tier="rankFor(entry.rating).tier" :stars="rankFor(entry.rating).stars" :size="30" />
+
+            <span class="avatar">
+              <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
+              <PresenceDot :friend-id="entry.id" />
+            </span>
+          </button>
 
           <button
             type="button"
-            class="icon-btn accept"
-            :aria-label="t('friends.accept')"
-            :title="t('friends.accept')"
-            @click="friends.accept(entry.id)"
+            class="open"
+            :aria-label="t('chat.open', { name: nameOf(entry.name) })"
+            @click="chat.open(entry.id)"
           >
-            <Check :size="16" />
+            <span class="who">
+              <strong class="name">{{ nameOf(entry.name) }}</strong>
+              <span class="status">{{ statusText(entry.id) }}</span>
+            </span>
+
+            <span
+              v-if="chat.unreadFrom(entry.id)"
+              class="unread"
+              :aria-label="t('chat.unread', { n: chat.unreadFrom(entry.id) })"
+            >
+              {{ chat.unreadFrom(entry.id) }}
+            </span>
           </button>
 
           <button
             type="button"
             class="icon-btn"
-            :aria-label="t('friends.decline')"
-            :title="t('friends.decline')"
-            @click="friends.decline(entry.id)"
+            :aria-label="t('friends.openProfile', { name: nameOf(entry.name) })"
+            :title="t('friends.openProfile', { name: nameOf(entry.name) })"
+            @click="friends.openProfile(entry.id)"
+          >
+            <Info :size="16" />
+          </button>
+
+          <button
+            v-if="friends.isOnline(entry.id) && friends.statusOf(entry.id)?.activity !== 'duel' && !duel.busy"
+            type="button"
+            class="icon-btn duel"
+            :aria-label="t('duel.challengeName', { name: nameOf(entry.name) })"
+            :title="t('duel.challenge')"
+            @click="duel.challenge(entry.id)"
+          >
+            <Swords :size="16" />
+          </button>
+
+          <WatchLiveButton :friend-id="entry.id" :name="nameOf(entry.name)" icon-only />
+        </li>
+      </ul>
+
+      <p v-if="alone" class="muted">{{ t('friends.empty') }}</p>
+
+      <ul v-if="friends.outgoing.length" class="list">
+        <li v-for="entry in friends.outgoing" :key="entry.id" class="row pending">
+          <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
+
+          <span class="who">
+            <strong class="name">{{ nameOf(entry.name) }}</strong>
+            <span class="status">{{ t('friends.outgoing') }}</span>
+          </span>
+
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="t('friends.cancel')"
+            :title="t('friends.cancel')"
+            @click="friends.remove(entry.id)"
           >
             <X :size="16" />
           </button>
         </li>
       </ul>
-    </section>
 
-    <ul v-if="friends.friends.length" class="list">
-      <li
-        v-for="entry in friends.friends"
-        :key="entry.id"
-        class="row"
-        :class="{ online: friends.isOnline(entry.id) }"
-      >
-        <button
-          type="button"
-          class="profile"
-          :aria-label="t('chat.open', { name: nameOf(entry.name) })"
-          @click="chat.open(entry.id)"
-        >
-          <RankMedal :tier="rankFor(entry.rating).tier" :stars="rankFor(entry.rating).stars" :size="30" />
+      <form v-if="showAdding" class="add" @submit.prevent="submit">
+        <div class="own">
+          <span class="own-label">{{ t('friends.yourCode') }}</span>
 
-          <span class="avatar">
-            <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
-            <PresenceDot :friend-id="entry.id" />
-          </span>
-        </button>
+          <div class="own-row">
+            <strong class="own-code">{{ ownCode }}</strong>
 
-        <button
-          type="button"
-          class="open"
-          :aria-label="t('chat.open', { name: nameOf(entry.name) })"
-          @click="chat.open(entry.id)"
-        >
-          <span class="who">
-            <strong class="name">{{ nameOf(entry.name) }}</strong>
-            <span class="status">{{ statusText(entry.id) }}</span>
-          </span>
+            <button
+              type="button"
+              class="icon-btn"
+              :aria-label="t('friends.copy')"
+              :title="copied ? t('friends.copied') : t('friends.copy')"
+              :disabled="!canCopy"
+              @click="copy(ownCode)"
+            >
+              <Check v-if="copied" :size="16" class="good" />
+              <Copy v-else :size="16" />
+            </button>
+          </div>
+        </div>
 
-          <span
-            v-if="chat.unreadFrom(entry.id)"
-            class="unread"
-            :aria-label="t('chat.unread', { n: chat.unreadFrom(entry.id) })"
-          >
-            {{ chat.unreadFrom(entry.id) }}
-          </span>
-        </button>
+        <div class="add-row">
+          <input
+            ref="codeInput"
+            v-model="code"
+            class="code-input"
+            maxlength="12"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            placeholder="ABCD-2345"
+            :aria-label="t('friends.codeLabel')"
+            @input="result = null"
+          />
 
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="t('friends.openProfile', { name: nameOf(entry.name) })"
-          :title="t('friends.openProfile', { name: nameOf(entry.name) })"
-          @click="friends.openProfile(entry.id)"
-        >
-          <Info :size="16" />
-        </button>
-
-        <button
-          v-if="friends.isOnline(entry.id) && !duel.busy"
-          type="button"
-          class="icon-btn duel"
-          :aria-label="t('duel.challengeName', { name: nameOf(entry.name) })"
-          :title="t('duel.challenge')"
-          @click="duel.challenge(entry.id)"
-        >
-          <Swords :size="16" />
-        </button>
-
-        <WatchLiveButton :friend-id="entry.id" :name="nameOf(entry.name)" icon-only />
-      </li>
-    </ul>
-
-    <p v-if="alone" class="muted">{{ t('friends.empty') }}</p>
-
-    <ul v-if="friends.outgoing.length" class="list">
-      <li v-for="entry in friends.outgoing" :key="entry.id" class="row pending">
-        <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
-
-        <span class="who">
-          <strong class="name">{{ nameOf(entry.name) }}</strong>
-          <span class="status">{{ t('friends.outgoing') }}</span>
-        </span>
-
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="t('friends.cancel')"
-          :title="t('friends.cancel')"
-          @click="friends.remove(entry.id)"
-        >
-          <X :size="16" />
-        </button>
-      </li>
-    </ul>
-
-    <form v-if="showAdding" class="add" @submit.prevent="submit">
-      <div class="own">
-        <span class="own-label">{{ t('friends.yourCode') }}</span>
-
-        <div class="own-row">
-          <strong class="own-code">{{ ownCode }}</strong>
-
-          <button
-            type="button"
-            class="icon-btn"
-            :aria-label="t('friends.copy')"
-            :title="copied ? t('friends.copied') : t('friends.copy')"
-            :disabled="!canCopy"
-            @click="copy(ownCode)"
-          >
-            <Check v-if="copied" :size="16" class="good" />
-            <Copy v-else :size="16" />
+          <button type="submit" class="btn primary" :disabled="!valid || sending">
+            {{ t('friends.add') }}
           </button>
         </div>
-      </div>
 
-      <div class="add-row">
-        <input
-          ref="codeInput"
-          v-model="code"
-          class="code-input"
-          maxlength="12"
-          autocomplete="off"
-          autocapitalize="characters"
-          spellcheck="false"
-          placeholder="ABCD-2345"
-          :aria-label="t('friends.codeLabel')"
-          @input="result = null"
-        />
+        <p v-if="result" class="result" :class="{ good: succeeded }" role="status">
+          {{ t(`friends.results.${result}`) }}
+        </p>
+      </form>
 
-        <button type="submit" class="btn primary" :disabled="!valid || sending">
-          {{ t('friends.add') }}
+      <template v-if="friends.blocked.length">
+        <button
+          type="button"
+          class="blocked-toggle"
+          :aria-expanded="showBlocked"
+          @click="showBlocked = !showBlocked"
+        >
+          <Ban :size="13" /> {{ t('friends.blockedCount', { n: friends.blocked.length }) }}
+          <ChevronDown :size="13" class="chevron" :class="{ open: showBlocked }" />
         </button>
-      </div>
 
-      <p v-if="result" class="result" :class="{ good: succeeded }" role="status">
-        {{ t(`friends.results.${result}`) }}
-      </p>
-    </form>
+        <ul v-if="showBlocked" class="list">
+          <li v-for="entry in friends.blocked" :key="entry.id" class="row pending">
+            <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
+
+            <span class="who">
+              <strong class="name">{{ nameOf(entry.name) }}</strong>
+            </span>
+
+            <button type="button" class="btn ghost small" @click="friends.unblock(entry.id)">
+              {{ t('friends.unblock') }}
+            </button>
+          </li>
+        </ul>
+      </template>
+    </div>
 
     <button
       v-if="!alone"
@@ -269,40 +305,37 @@ async function submit() {
       <template v-if="adding"><ChevronUp :size="16" /> {{ t('friends.hideAdding') }}</template>
       <template v-else><UserPlus :size="16" /> {{ t('friends.addFriend') }}</template>
     </button>
-
-    <template v-if="friends.blocked.length">
-      <button
-        type="button"
-        class="blocked-toggle"
-        :aria-expanded="showBlocked"
-        @click="showBlocked = !showBlocked"
-      >
-        <Ban :size="13" /> {{ t('friends.blockedCount', { n: friends.blocked.length }) }}
-        <ChevronDown :size="13" class="chevron" :class="{ open: showBlocked }" />
-      </button>
-
-      <ul v-if="showBlocked" class="list">
-        <li v-for="entry in friends.blocked" :key="entry.id" class="row pending">
-          <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
-
-          <span class="who">
-            <strong class="name">{{ nameOf(entry.name) }}</strong>
-          </span>
-
-          <button type="button" class="btn ghost small" @click="friends.unblock(entry.id)">
-            {{ t('friends.unblock') }}
-          </button>
-        </li>
-      </ul>
-    </template>
   </div>
 </template>
 
 <style scoped>
-.friends-list {
+.friends-list,
+.contacts {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.friends-list.contained {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.contained .contacts {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+.contacts > * {
+  flex-shrink: 0;
+}
+
+.add-toggle {
+  flex: none;
 }
 
 p {

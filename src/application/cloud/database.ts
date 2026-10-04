@@ -185,6 +185,10 @@ export interface Database {
         Args: { code: string }
         Returns: string
       }
+      request_leaderboard_friend: {
+        Args: { other: string }
+        Returns: string
+      }
       respond_friend: {
         Args: { other: string; accept: boolean }
         Returns: undefined

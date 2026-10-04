@@ -15,6 +15,7 @@ import type {
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { useAccountPhoto } from '../composables/useAccountPhoto'
 import { useCloudStore } from './cloud'
+import { useDuelStore } from './duel'
 import { useMatchStore } from './match'
 import { useNotificationsStore } from './notifications'
 import { usePauseStore } from './pause'
@@ -48,6 +49,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   const cloud = useCloudStore()
   const match = useMatchStore()
+  const duel = useDuelStore()
   const notifications = useNotificationsStore()
   const accountPhoto = useAccountPhoto()
   const replay = useReplayStore()
@@ -81,6 +83,20 @@ export const useFriendsStore = defineStore('friends', () => {
   const outgoing = computed(() => entries.value.filter((e) => e.status === 'outgoing').sort(byName))
   const onlineCount = computed(() => friends.value.filter((f) => isOnline(f.id)).length)
 
+  /** Presence can arrive before the accepted invite; both stages identify our own opponent. */
+  const ownOpponents = computed(
+    () =>
+      new Set(
+        [
+          duel.active?.opponent.id,
+          duel.outgoing?.opponent.id,
+          duel.incoming?.opponent.id,
+          duel.resumable?.opponent.id,
+          duel.challenging,
+        ].filter((id): id is string => !!id),
+      ),
+  )
+
   function isOnline(id: string) {
     return online.value.has(id)
   }
@@ -106,7 +122,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
     for (const id of now) {
       const friend = friends.value.find((entry) => entry.id === id)
-      if (!before.has(id) && friend && replay.liveFriend !== id) {
+      if (!before.has(id) && friend && replay.liveFriend !== id && !ownOpponents.value.has(id)) {
         notifications.push(
           {
             kind: 'friendPlaying',
@@ -367,13 +383,15 @@ export const useFriendsStore = defineStore('friends', () => {
     await refresh()
   }
 
-  async function add(code: string): Promise<FriendRequestResult | 'error'> {
+  async function request(
+    run: (friends: FriendsService) => Promise<FriendRequestResult>,
+  ): Promise<FriendRequestResult | 'error'> {
     if (!service) {
       return 'error'
     }
 
     try {
-      const result = await service.request(code)
+      const result = await run(service)
       await refresh()
 
       return result
@@ -381,6 +399,9 @@ export const useFriendsStore = defineStore('friends', () => {
       return 'error'
     }
   }
+
+  const add = (code: string) => request((friends) => friends.request(code))
+  const addLeaderboard = (id: string) => request((friends) => friends.requestLeaderboard(id))
 
   async function act(run: (friends: FriendsService) => Promise<void>) {
     if (!service) {
@@ -418,6 +439,13 @@ export const useFriendsStore = defineStore('friends', () => {
   })
 
   watch([() => status.value, accountPhoto.shown], () => publishPhoto())
+
+  watch(ownOpponents, (ids) => {
+    for (const id of ids) {
+      notifications.dismissKey(`friendPlaying:${id}`)
+    }
+  })
+
   watch([() => status.value, () => match.phase], () => void publishLive())
   useIntervalFn(() => void publishLive(), LIVE_MATCH_INTERVAL)
 
@@ -454,6 +482,7 @@ export const useFriendsStore = defineStore('friends', () => {
     watchMatch,
     refresh,
     add,
+    addLeaderboard,
     accept,
     decline,
     remove,

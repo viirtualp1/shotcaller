@@ -63,6 +63,11 @@ function watch(item: SocialNotification, coachId: string) {
   friends.watchMatch(coachId)
 }
 
+function showFriends(item: SocialNotification) {
+  notifications.dismiss(item.id)
+  friends.open = true
+}
+
 function viewProfile(item: SocialNotification, coachId: string) {
   notifications.dismiss(item.id)
   void friends.openProfile(coachId)
@@ -105,7 +110,7 @@ function viewProfile(item: SocialNotification, coachId: string) {
 
         <span class="text">
           <strong v-if="coach" class="name">{{ coach.name }}</strong>
-          <span class="headline">{{ title }}</span>
+          <span class="headline" :class="{ message: item.notice.kind === 'message' }">{{ title }}</span>
         </span>
 
         <button
@@ -146,7 +151,11 @@ function viewProfile(item: SocialNotification, coachId: string) {
       </div>
 
       <div v-else-if="item.notice.kind === 'friendPlaying'" class="actions">
-        <button type="button" class="btn primary small" @click="watch(item, item.notice.coach.id)">
+        <button v-if="item.notice.others?.length" type="button" class="btn small" @click="showFriends(item)">
+          <Eye :size="15" /> {{ t('friends.title') }}
+        </button>
+
+        <button v-else type="button" class="btn primary small" @click="watch(item, item.notice.coach.id)">
           <Eye :size="15" /> {{ t('friends.watch') }}
         </button>
       </div>
@@ -259,6 +268,10 @@ function viewProfile(item: SocialNotification, coachId: string) {
   font-size: 11.5px;
   font-weight: 500;
   color: var(--ours);
+}
+
+.social .headline.message {
+  color: var(--gold);
 }
 
 .close {

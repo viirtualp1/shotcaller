@@ -55,6 +55,11 @@ export type FeatureArt =
   | { readonly kind: 'order'; readonly order: LaneStance }
   /** The 9.0 forge: merging items, picking talents, the new items and the new experiments. */
   | { readonly kind: 'forge'; readonly focus: 'upgrades' | 'talents' | 'items' | 'experiments' }
+  | {
+      readonly kind: 'home'
+      readonly device: 'desktop' | 'phone'
+      readonly scene: 'home' | 'chat' | 'career'
+    }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -92,6 +97,7 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       ru: 'Всё под рукой',
     },
     campaign: 'home',
+    wide: true,
     general: [
       {
         en: 'A **new main menu** built around your next move. An unfinished match comes first, with its mode, round and towers: **one tap** and you are back in.',
@@ -116,12 +122,24 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     ],
     interface: [
       {
+        en: '**Add friends from the leaderboard** and find your next rival. Sign in, send a request and arrange your next match together.',
+        ru: '**Добавляй друзей из таблицы лидеров** и находи следующего соперника. Войди в аккаунт, отправь заявку и договорись о новом матче.',
+      },
+      {
+        en: 'Adjust the sound and **save** from the main menu. Choose difficulty and experiments when starting a new match.',
+        ru: 'Настрой звук и нажми **«Сохранить»** в главном меню. Сложность и эксперименты выбирай при запуске нового матча.',
+      },
+      {
         en: 'A calmer top bar: your profile on the left, the latest patch and Discord on the right.',
         ru: 'Верхняя панель стала спокойнее: профиль слева, свежий патч и Discord справа.',
       },
       {
-        en: 'Every experiment in the new match settings has an **info button** with a short description of what it changes.',
-        ru: 'У каждого эксперимента в настройках нового матча есть **кнопка с описанием**: коротко о том, что он меняет.',
+        en: 'Difficulty and experiments have **info buttons** to help you choose how your next match plays.',
+        ru: 'У сложности и экспериментов есть **кнопки с описанием**, чтобы выбрать правила следующего матча.',
+      },
+      {
+        en: 'Friends starting games share **one notification**, shown at most **once a minute**. Open your friends list to choose a match to watch.',
+        ru: 'Старты игр друзей объединяются в **одно уведомление**, которое появляется не чаще **раза в минуту**. Открой список друзей и выбери матч для просмотра.',
       },
       {
         en: 'Tapping a notification now takes you there: a message opens **that chat**, a duel challenge opens the game so you can **accept or decline**.',
@@ -129,6 +147,22 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
     ],
     fixes: [
+      {
+        en: 'Your own duel no longer triggers a friend-started-playing notification. Friends already in a duel cannot be challenged again.',
+        ru: 'Собственная дуэль больше не вызывает уведомление о старте игры друга. Друзей, которые уже в дуэли, нельзя вызвать повторно.',
+      },
+      {
+        en: 'Ranged heroes keep attacking nearby creeps from a safe position beside an enemy tower after their hero target falls.',
+        ru: 'После гибели вражеского героя дальнобойные герои продолжают атаковать доступных крипов с безопасной позиции рядом с вражеской башней.',
+      },
+      {
+        en: 'Opening a chat on your phone leaves the keyboard closed until you tap the message field.',
+        ru: 'При открытии чата на телефоне клавиатура остаётся закрытой, пока ты не нажмёшь на поле сообщения.',
+      },
+      {
+        en: 'Career hints remain within reach, and opening the form to add a friend no longer shifts your scroll position.',
+        ru: 'Подсказки карьеры остаются доступными, а открытие формы добавления друга больше не сбивает прокрутку.',
+      },
       {
         en: 'The keyboard stays open after you send a message or open the emoji list.',
         ru: 'Клавиатура больше не закрывается после отправки сообщения и при открытии списка смайликов.',

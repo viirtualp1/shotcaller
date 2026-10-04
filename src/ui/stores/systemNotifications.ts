@@ -113,7 +113,9 @@ export const useSystemNotificationsStore = defineStore('systemNotifications', ()
       }
     }
 
-    return notice.kind === 'friendRequest' ? { kind: 'friends' } : { kind: 'game' }
+    return notice.kind === 'friendRequest' || notice.kind === 'friendPlaying'
+      ? { kind: 'friends' }
+      : { kind: 'game' }
   }
 
   /** A game the tap has just opened signs back in first; the chat needs the account. */

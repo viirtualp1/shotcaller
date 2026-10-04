@@ -1,6 +1,6 @@
 import { createPinia, disposePinia, getActivePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { reactive, ref } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
 import type { FriendEntry, FriendsService, PresenceStatus } from '@/application/social/friends'
 import { useFriendsStore } from '@/ui/stores/friends'
 
@@ -17,6 +17,13 @@ const cloud = reactive({
   account: { id: 'owner' },
   connect: vi.fn(),
 })
+
+const duel = reactive({
+  active: null as { opponent: { id: string } } | null,
+  outgoing: null as { opponent: { id: string } } | null,
+})
+
+vi.mock('@/ui/stores/duel', () => ({ useDuelStore: () => duel }))
 
 vi.mock('@/ui/stores/cloud', () => ({ useCloudStore: () => cloud }))
 vi.mock('@/ui/stores/notifications', () => ({ useNotificationsStore: () => notifications }))
@@ -70,6 +77,8 @@ describe('friends starting a match', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    duel.active = null
+    duel.outgoing = null
 
     const service = {
       card: vi.fn(async () => null),
@@ -124,6 +133,30 @@ describe('friends starting a match', () => {
     )
 
     expect(friends.isPlaying('bo')).toBe(false)
+    expect(notifications.dismissKey).toHaveBeenCalledWith('friendPlaying:bo')
+  })
+
+  it('does not announce the opponent in our own duel, including before the accepted invite arrives', async () => {
+    await ready()
+    onPresence(new Map())
+    duel.outgoing = { opponent: { id: 'bo' } }
+    onPresence(new Map([['bo', playing('duel')]]))
+    expect(notifications.push).not.toHaveBeenCalled()
+
+    duel.outgoing = null
+    duel.active = { opponent: { id: 'bo' } }
+    await nextTick()
+    expect(notifications.dismissKey).toHaveBeenCalledWith('friendPlaying:bo')
+  })
+
+  it('takes back a presence notice if our accepted duel arrives later', async () => {
+    await ready()
+    onPresence(new Map())
+    onPresence(new Map([['bo', playing('duel')]]))
+    expect(notifications.push).toHaveBeenCalledTimes(1)
+
+    duel.active = { opponent: { id: 'bo' } }
+    await nextTick()
     expect(notifications.dismissKey).toHaveBeenCalledWith('friendPlaying:bo')
   })
 })

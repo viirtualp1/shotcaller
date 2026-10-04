@@ -20,7 +20,13 @@ useModal(() => menu.settings)
 
       <DialogContent class="sheet settings" :aria-describedby="undefined">
         <DialogTitle class="title hand">{{ t('settings.title') }}</DialogTitle>
-        <SettingsFields :show-difficulty="!match.view?.sandbox" />
+
+        <SettingsFields
+          :language="!!match.view"
+          :show-difficulty="!!match.view && !match.view.sandbox"
+          :show-experiments="!!match.view"
+        />
+
         <DialogClose class="btn primary block">{{ t('settings.close') }}</DialogClose>
       </DialogContent>
     </DialogPortal>

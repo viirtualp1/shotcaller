@@ -6,6 +6,12 @@ import ChatPanel from '@/ui/components/social/ChatPanel.vue'
 import { i18n } from '@/ui/i18n'
 
 const FRIEND = 'friend-1'
+const phone = reactive({ value: true })
+
+vi.mock('@vueuse/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vueuse/core')>()),
+  useMediaQuery: () => phone,
+}))
 
 interface Message {
   id: string
@@ -104,6 +110,7 @@ function arrive(sender: string) {
 /* The conversation loads after the panel opens, as it does in the game. */
 beforeEach(async () => {
   chat.messages = []
+  phone.value = true
 
   app = createApp(ChatPanel, {
     friend,
@@ -121,6 +128,24 @@ afterEach(() => {
 })
 
 describe('chat scrolling on a phone', () => {
+  it('opens and reopens without focusing the composer on a phone', async () => {
+    const field = document.querySelector<HTMLTextAreaElement>('textarea')!
+    const panel = app._instance!.exposed as { focusComposer: () => void }
+    expect(document.activeElement).not.toBe(field)
+
+    panel.focusComposer()
+    await settle()
+    expect(document.activeElement).not.toBe(field)
+  })
+
+  it('still focuses the composer automatically on a desktop', async () => {
+    phone.value = false
+    const panel = app._instance!.exposed as { focusComposer: () => void }
+    panel.focusComposer()
+    await settle()
+    expect(document.activeElement).toBe(document.querySelector('textarea'))
+  })
+
   it('stays at the newest message when the keyboard or layout moves the list', async () => {
     const el = list()
     el.scrollTop = 1600

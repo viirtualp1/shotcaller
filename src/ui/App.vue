@@ -148,6 +148,8 @@ useDocumentHead()
 /* Every page leaves room at the bottom for the tab bar. */
 :global(#app:has(.mobile-tabs)) {
   --mobile-tabs: 62px;
+  min-height: 100%;
+  height: auto;
   padding-bottom: calc(var(--mobile-tabs) + env(safe-area-inset-bottom, 0px));
 }
 

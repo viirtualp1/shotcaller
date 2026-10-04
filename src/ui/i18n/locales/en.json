@@ -661,7 +661,7 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
-    "close": "Done",
+    "close": "Save",
     "difficulty": "Difficulty",
     "difficulties": {
       "relaxed": "Relaxed",
@@ -1134,7 +1134,8 @@
     "friendAccepted": "is your friend now",
     "profile": "Profile",
     "friendInMatch": "started a match",
-    "friendInDuel": "started a duel"
+    "friendInDuel": "started a duel",
+    "friendsPlaying": "{n} friends started playing"
   },
   "systemNotifications": {
     "prompt": "Turn on browser notifications? Messages and duel challenges will reach you even while the game is in the background.",
@@ -1183,6 +1184,7 @@
     "noRounds": "Round lineups are kept for the last 5 matches played since 8.0."
   },
   "replay": {
+    "leaveLive": "Leave",
     "liveTitle": "Live",
     "watchFriend": "Watch {name} play",
     "waitingRound": "Next battle soon",
@@ -1395,6 +1397,7 @@
     }
   },
   "experiments": {
+    "twistChanged": "New round twist",
     "twist": "Round twist",
     "rotation": "Rotation",
     "rotationHint": "Heroes in this match"

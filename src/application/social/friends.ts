@@ -87,6 +87,8 @@ export interface FriendsService {
   card(): Promise<OwnCard>
   list(): Promise<FriendEntry[]>
   request(code: string): Promise<FriendRequestResult>
+  /** Sends a request to a ranked coach without revealing their private friend code. */
+  requestLeaderboard(coachId: string): Promise<FriendRequestResult>
   respond(coachId: string, accept: boolean): Promise<void>
   /** Unfriends, or takes back a request that was not answered yet. */
   remove(coachId: string): Promise<void>

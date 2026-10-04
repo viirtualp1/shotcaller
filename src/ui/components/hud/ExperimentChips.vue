@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Shuffle, Sparkles } from '@lucide/vue'
-import { computed } from 'vue'
+import { useTimeoutFn } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 import { TWISTS } from '@/content/experiments'
 import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
@@ -12,23 +13,32 @@ import InfoTooltip from '../common/InfoTooltip.vue'
 const match = useMatchStore()
 const text = useGameText()
 const { t } = text
+const changed = ref(false)
 const twist = computed(() => match.view?.twist ?? null)
 const rotation = computed(() => match.view?.rotation ?? null)
+
+const { start } = useTimeoutFn(
+  () => {
+    changed.value = false
+  },
+  7000,
+  { immediate: false },
+)
+
+watch(twist, (current, previous) => {
+  if (current && previous && current !== previous) {
+    changed.value = true
+    start()
+  }
+})
 </script>
 
 <template>
   <div v-if="twist || rotation" class="chips">
-    <InfoTooltip v-if="twist" side="bottom">
-      <Transition name="twist" mode="out-in">
-        <span
-          :key="twist"
-          class="chip twist"
-          tabindex="0"
-          :style="{ '--twist': cssColor(TWISTS[twist].color) }"
-        >
-          <Sparkles :size="13" /> {{ text.twistName(twist) }}
-        </span>
-      </Transition>
+    <InfoTooltip v-if="twist" side="bottom" clickable>
+      <button type="button" class="chip twist" :style="{ '--twist': cssColor(TWISTS[twist].color) }">
+        <Sparkles :size="13" /> {{ text.twistName(twist) }}
+      </button>
 
       <template #content>
         <strong>{{ t('experiments.twist') }}</strong>
@@ -36,22 +46,37 @@ const rotation = computed(() => match.view?.rotation ?? null)
       </template>
     </InfoTooltip>
 
-    <InfoTooltip v-if="rotation" side="bottom">
-      <span class="chip rotation" tabindex="0"><Shuffle :size="13" /> {{ t('experiments.rotation') }}</span>
+    <InfoTooltip v-if="rotation" side="bottom" clickable>
+      <button type="button" class="chip rotation"><Shuffle :size="13" /> {{ t('experiments.rotation') }}</button>
 
       <template #content>
         <strong>{{ t('experiments.rotationHint') }}</strong>
 
         <span class="roster">
-          <HeroAvatar v-for="id in rotation" :key="id" :hero-id="id" :size="26" />
+          <span v-for="id in rotation" :key="id" class="rotation-hero">
+            <HeroAvatar :hero-id="id" :size="32" />
+            <span>{{ text.heroName(id) }}</span>
+          </span>
         </span>
       </template>
     </InfoTooltip>
+
+    <Transition name="twist">
+      <div v-if="changed && twist" :key="twist" class="twist-change" role="status">
+        <Sparkles :size="20" />
+
+        <div>
+          <strong>{{ t('experiments.twistChanged') }} · {{ text.twistName(twist) }}</strong>
+          <p>{{ text.twistEffect(twist) }}</p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
 .chips {
+  position: relative;
   display: flex;
   justify-content: center;
   gap: 6px;
@@ -68,6 +93,7 @@ const rotation = computed(() => match.view?.rotation ?? null)
   border-radius: 0 0 var(--radius) var(--radius);
   background: color-mix(in srgb, var(--twist) 14%, var(--panel));
   color: var(--twist);
+  font-family: inherit;
   font-size: 12px;
   white-space: nowrap;
   cursor: help;
@@ -85,9 +111,43 @@ p {
 
 .roster {
   display: grid;
-  grid-template-columns: repeat(5, 26px);
-  gap: 8px 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 12px;
+  width: min(280px, calc(100vw - 48px));
   margin-top: 8px;
+}
+
+.rotation-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.twist-change {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(360px, calc(100vw - 24px));
+  padding: 14px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 10px 32px #0008;
+  color: var(--gold);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.twist-change > svg {
+  flex: none;
 }
 
 .twist-enter-active,

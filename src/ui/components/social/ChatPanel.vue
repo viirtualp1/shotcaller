@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onClickOutside, useResizeObserver, useTextareaAutosize } from '@vueuse/core'
+import { onClickOutside, useMediaQuery, useResizeObserver, useTextareaAutosize } from '@vueuse/core'
 import { ArrowDown, ArrowLeft, SendHorizontal, Smile, Swords, X } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { MESSAGE_MAX_LENGTH } from '@/application/social/chat'
@@ -31,6 +31,7 @@ const duel = useDuelStore()
 const settings = useSettingsStore()
 const { t } = useGameText()
 const statusText = useFriendStatus()
+const phone = useMediaQuery('(max-width: 860px)')
 const list = useTemplateRef<HTMLElement>('list')
 const field = useTemplateRef<HTMLTextAreaElement>('field')
 const emoji = useTemplateRef<HTMLElement>('emoji')
@@ -63,7 +64,7 @@ const online = computed(() => friends.isOnline(props.friend.id))
 const canSend = computed(() => input.value.trim().length > 0 && !chat.sending)
 
 function focusComposer() {
-  if (props.active) {
+  if (props.active && !phone.value) {
     field.value?.focus({ preventScroll: true })
   }
 }
@@ -275,7 +276,7 @@ onMounted(focusComposer)
       <WatchLiveButton :friend-id="friend.id" :name="friend.name || t('profile.defaultName')" icon-only />
 
       <button
-        v-if="online && !duel.busy"
+        v-if="online && friends.statusOf(friend.id)?.activity !== 'duel' && !duel.busy"
         type="button"
         class="icon-btn duel"
         :aria-label="t('duel.challengeName', { name: friend.name || t('profile.defaultName') })"

@@ -14,6 +14,9 @@ Optional [PostHog gameplay telemetry](docs/telemetry.md) requires an explicit ac
 The integration is off until its migration, server functions and deletion scheduler are configured.
 
 Cloud saves require all files in `supabase/migrations`, applied in timestamp order.
+Before deploying the updated 9.1 client, apply `20261004160000_leaderboard_friend_requests.sql`.
+It restores requests from the leaderboard for registered accounts while keeping friend codes private
+and reusing the existing block, request limit and cooldown rules.
 For existing deployments, `20261001130000_cloud_save_capacity.sql` raises the snapshot limits to
 1 MiB per profile and 256 KiB per match so history and round replays fit without discarding data.
 The regression check in `supabase/tests/cloud_save_capacity.sql` runs in a disposable database and rolls back its writes.

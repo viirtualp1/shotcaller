@@ -13,6 +13,10 @@ export function useNotificationText() {
 
   /** The coach a notification is about, for its avatar and name. */
   function coachOf({ notice }: SocialNotification) {
+    if (notice.kind === 'friendPlaying' && notice.others?.length) {
+      return null
+    }
+
     if (notice.kind === 'message') {
       const friend = friends.friends.find((f) => f.id === notice.friendId)
 
@@ -67,6 +71,10 @@ export function useNotificationText() {
       case 'badBoard':
         return t('duel.badBoard')
       case 'friendPlaying':
+        if (notice.others?.length) {
+          return t('notifications.friendsPlaying', { n: notice.others.length + 1 }, notice.others.length + 1)
+        }
+
         return t(notice.duel ? 'notifications.friendInDuel' : 'notifications.friendInMatch')
     }
   }

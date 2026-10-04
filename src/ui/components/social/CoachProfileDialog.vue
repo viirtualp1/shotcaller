@@ -85,7 +85,14 @@ const hero = computed(
 const photo = computed(() => entry.value?.photo ?? profile.value?.photo ?? null)
 
 const level = computed(() => (profile.value ? levelFor(profile.value.xp).level : null))
-const canDuel = computed(() => entry.value !== null && friends.isOnline(entry.value.id) && !duel.busy)
+
+const canDuel = computed(
+  () =>
+    entry.value !== null &&
+    friends.isOnline(entry.value.id) &&
+    friends.statusOf(entry.value.id)?.activity !== 'duel' &&
+    !duel.busy,
+)
 
 const tiles = computed(() => {
   /* A coach who has not played yet still has a record: all zeros. */

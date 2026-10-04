@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiment and promotion preview</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { createApp, h } from 'vue'
+      import { createPinia } from 'pinia'
+      import { TooltipProvider } from 'reka-ui'
+      import { TWIST_IDS } from '/src/content/experiments.ts'
+      import { useMatchStore } from '/src/ui/stores/match.ts'
+      import { useSettingsStore } from '/src/ui/stores/settings.ts'
+      import { i18n } from '/src/ui/i18n/index.ts'
+      import MatchScoreboard from '/src/ui/components/hud/MatchScoreboard.vue'
+      import HeroCard from '/src/ui/components/roster/HeroCard.vue'
+      import '/src/ui/styles/base.css'
+
+      const pinia = createPinia()
+      const settings = useSettingsStore(pinia)
+      settings.locale = new URLSearchParams(location.search).get('lang') === 'ru' ? 'ru' : 'en'
+      settings.difficulty = 'relaxed'
+      settings.heroRotation = true
+      settings.roundTwists = true
+      const match = useMatchStore(pinia)
+      match.newMatch('threeLanes')
+
+      createApp({
+        render: () =>
+          h(TooltipProvider, {}, () => [
+            h('div', { style: 'display:flex;justify-content:center' }, h(MatchScoreboard)),
+            h('div', { style: 'margin:80px auto;max-width:380px' }, [
+              h(
+                'button',
+                {
+                  onClick: () => {
+                    match.view = {
+                      ...match.view,
+                      twist: TWIST_IDS[(TWIST_IDS.indexOf(match.view.twist) + 1) % TWIST_IDS.length],
+                    }
+                  },
+                },
+                'Next twist',
+              ),
+              h(
+                'button',
+                {
+                  onClick: () => {
+                    match.startSandbox()
+                    match.recruit('archer')
+                    match.recruit('archer')
+                    match.recruit('archer')
+                  },
+                },
+                'Promote hero',
+              ),
+              h(HeroCard, { docked: true }),
+            ]),
+          ]),
+      })
+        .use(pinia)
+        .use(i18n)
+        .mount('#app')
+    </script>
+  </body>
+</html>

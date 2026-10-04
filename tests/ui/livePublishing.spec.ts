@@ -25,6 +25,16 @@ const match = reactive({
 vi.mock('@/ui/stores/cloud', () => ({ useCloudStore: () => cloud }))
 vi.mock('@/ui/stores/match', () => ({ useMatchStore: () => match }))
 
+vi.mock('@/ui/stores/duel', () => ({
+  useDuelStore: () => ({
+    active: null,
+    outgoing: null,
+    incoming: null,
+    resumable: null,
+    challenging: null,
+  }),
+}))
+
 vi.mock('@/ui/stores/notifications', () => ({
   useNotificationsStore: () => ({
     clear: vi.fn(),

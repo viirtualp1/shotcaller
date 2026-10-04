@@ -16,6 +16,7 @@ import MatchmakingFeatureArt from './MatchmakingFeatureArt.vue'
 import LeaderboardFeatureArt from './LeaderboardFeatureArt.vue'
 import TrainingFeatureArt from './TrainingFeatureArt.vue'
 import ForgeFeatureArt from './ForgeFeatureArt.vue'
+import HomeFeatureArt from './HomeFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** A made-up rank per mode, only to show that each has its own. */
@@ -106,6 +107,8 @@ onMounted(() => {
     <TrainingFeatureArt v-else-if="art.kind === 'training'" :focus="art.focus" />
 
     <ForgeFeatureArt v-else-if="art.kind === 'forge'" :focus="art.focus" />
+
+    <HomeFeatureArt v-else-if="art.kind === 'home'" :device="art.device" :scene="art.scene" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">

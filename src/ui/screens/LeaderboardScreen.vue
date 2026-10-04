@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ArrowLeft, ChevronDown, LoaderCircle, Trophy } from '@lucide/vue'
+import { ArrowLeft, Check, ChevronDown, LoaderCircle, Trophy, UserPlus } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { HERO_IDS, MODE_IDS } from '@/content/ids'
+import type { FriendRequestResult } from '@/application/social/friends'
 import { rankFor } from '@/domain/profile/progression'
 import ModeMap from '../components/modes/ModeMap.vue'
 import CoachAvatar from '../components/profile/CoachAvatar.vue'
@@ -9,22 +10,83 @@ import RankMedal from '../components/profile/RankMedal.vue'
 import { useGameText } from '../composables/useGameText'
 import { useCloudStore } from '../stores/cloud'
 import { useLeaderboardStore } from '../stores/leaderboard'
+import { useFriendsStore } from '../stores/friends'
 
 const PAGE_SIZE = 25
 
 const leaderboard = useLeaderboardStore()
 const cloud = useCloudStore()
+const friends = useFriendsStore()
 const text = useGameText()
 const { t } = text
 
 const shown = ref(PAGE_SIZE)
+const requesting = ref(new Set<string>())
+const results = ref<Record<string, FriendRequestResult | 'error'>>({})
 
 const rows = computed(() => leaderboard.rows.slice(0, shown.value))
 const ownId = computed(() => cloud.account?.id)
 
+const relationships = computed(
+  () =>
+    new Map([
+      ...friends.friends.map((friend) => [friend.id, 'friend'] as const),
+      ...friends.incoming.map((friend) => [friend.id, 'incoming'] as const),
+      ...friends.outgoing.map((friend) => [friend.id, 'outgoing'] as const),
+    ]),
+)
+
+function canAdd(id: string) {
+  return (
+    cloud.signedIn &&
+    id !== ownId.value &&
+    relationships.value.get(id) !== 'friend' &&
+    !friends.blocked.some((coach) => coach.id === id) &&
+    results.value[id] !== 'friends' &&
+    results.value[id] !== 'accepted'
+  )
+}
+
+function requested(id: string) {
+  return relationships.value.get(id) === 'outgoing' || results.value[id] === 'sent'
+}
+
+async function addFriend(id: string) {
+  if (!canAdd(id) || requested(id) || requesting.value.has(id) || friends.status !== 'ready') {
+    return
+  }
+
+  requesting.value.add(id)
+  const account = ownId.value
+
+  try {
+    let result: FriendRequestResult | 'error'
+    if (relationships.value.get(id) === 'incoming') {
+      await friends.accept(id)
+      result = 'accepted'
+    } else {
+      result = await friends.addLeaderboard(id)
+    }
+
+    if (ownId.value === account) {
+      results.value[id] = result
+    }
+  } catch {
+    if (ownId.value === account) {
+      results.value[id] = 'error'
+    }
+  } finally {
+    requesting.value.delete(id)
+  }
+}
+
 function heroOf(avatar: string | null) {
   return HERO_IDS.find((id) => id === avatar) ?? 'spearman'
 }
+
+watch(ownId, () => {
+  results.value = {}
+})
 
 watch(
   () => leaderboard.mode,
@@ -110,9 +172,47 @@ watch(
                 <div class="coach">
                   <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="34" />
 
-                  <span class="nickname" :title="entry.name || t('profile.defaultName')">{{
-                    entry.name || t('profile.defaultName')
-                  }}</span>
+                  <div class="identity">
+                    <span class="nickname" :title="entry.name || t('profile.defaultName')">{{
+                      entry.name || t('profile.defaultName')
+                    }}</span>
+
+                    <button
+                      v-if="canAdd(entry.id)"
+                      type="button"
+                      class="btn ghost small friend-action"
+                      :aria-label="`${relationships.get(entry.id) === 'incoming' ? t('friends.accept') : t('friends.addFriend')}: ${entry.name || t('profile.defaultName')}`"
+                      :disabled="
+                        requested(entry.id) || requesting.has(entry.id) || friends.status !== 'ready'
+                      "
+                      @click="addFriend(entry.id)"
+                    >
+                      <LoaderCircle v-if="requesting.has(entry.id)" :size="12" class="spin" />
+
+                      <Check
+                        v-else-if="requested(entry.id) || relationships.get(entry.id) === 'incoming'"
+                        :size="12"
+                      />
+
+                      <UserPlus v-else :size="12" />
+                      {{
+                        requested(entry.id)
+                          ? t('friends.results.sent')
+                          : relationships.get(entry.id) === 'incoming'
+                            ? t('friends.accept')
+                            : t('friends.addFriend')
+                      }}
+                    </button>
+
+                    <small
+                      v-if="
+                        results[entry.id] && !['sent', 'accepted', 'friends'].includes(results[entry.id]!)
+                      "
+                      class="request-result"
+                      role="status"
+                      >{{ t(`friends.results.${results[entry.id]}`) }}</small
+                    >
+                  </div>
                 </div>
               </td>
 
@@ -302,6 +402,30 @@ td {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.identity .nickname {
+  max-width: 100%;
+}
+
+.friend-action {
+  min-height: 24px;
+  padding: 3px 5px;
+  color: var(--gold);
+  font-size: 10px;
+}
+
+.request-result {
+  font-size: 10px;
+  color: var(--theirs);
 }
 .rating {
   display: flex;

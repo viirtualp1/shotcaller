@@ -418,7 +418,7 @@ onBeforeUnmount(() => {
     </div>
 
     <aside ref="sideEl" class="side">
-      <HudPanel class="actions">
+      <HudPanel class="actions" :class="{ 'live-actions': replay.liveFriend }">
         <div class="controls">
           <button v-if="!replay.liveFriend" type="button" class="btn" @click="toggle()">
             <Pause v-if="playing" :size="14" />
@@ -451,11 +451,12 @@ onBeforeUnmount(() => {
 
           <button
             type="button"
-            class="icon-btn close"
-            :aria-label="t('replay.close')"
+            :class="[replay.liveFriend ? 'btn' : 'icon-btn', 'close']"
+            :aria-label="t(replay.liveFriend ? 'replay.leaveLive' : 'replay.close')"
             @click="replay.close()"
           >
             <X :size="16" />
+            <span v-if="replay.liveFriend">{{ t('replay.leaveLive') }}</span>
           </button>
         </div>
       </HudPanel>
@@ -538,6 +539,11 @@ onBeforeUnmount(() => {
 
 .controls .close {
   margin-left: auto;
+}
+
+.live-actions {
+  align-self: flex-end;
+  width: fit-content;
 }
 
 .speeds {

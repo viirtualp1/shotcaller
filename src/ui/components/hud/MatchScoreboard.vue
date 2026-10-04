@@ -54,13 +54,19 @@ const history = computed(() =>
 </script>
 
 <template>
-  <div class="scoreboard" :class="{ trial: !!view.trialId }" data-tour="scoreboard">
+  <div
+    class="scoreboard"
+    :class="{ attached: !!(view.trialId || view.twist || view.rotation) }"
+    data-tour="scoreboard"
+  >
+    <div v-if="view.trialId || view.twist || view.rotation" class="modifiers">
+      <TrialObjective />
+      <ExperimentChips />
+    </div>
+
     <BaseStatus :team="0" :structures="structures[0]" :mode="store.view!.mode" />
 
     <div class="center">
-      <TrialObjective />
-      <ExperimentChips />
-
       <span class="round">{{
         view.sandbox?.endless
           ? t('sandbox.title')
@@ -144,12 +150,18 @@ const history = computed(() =>
   gap: 2px;
 }
 
-.scoreboard.trial {
+.scoreboard.attached {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  row-gap: 2px;
   padding-top: 0;
 }
 
-.trial .center {
-  align-self: flex-start;
+.modifiers {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
 }
 
 .round {

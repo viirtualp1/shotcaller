@@ -1,101 +1,124 @@
 <script setup lang="ts">
-import {
-  Bot,
-  MousePointerClick,
-  Play,
-  ScrollText,
-  Settings,
-  Swords,
-  Target,
-  Trophy,
-  User,
-  Users,
-} from '@lucide/vue'
-import { computed } from 'vue'
-import type { HeroId } from '@/content/ids'
+import { Monitor, MousePointerClick, Pause, Play, Smartphone } from '@lucide/vue'
+import { useDocumentVisibility, useElementVisibility, useIntervalFn, useMediaQuery } from '@vueuse/core'
+import { computed, ref, useTemplateRef } from 'vue'
+import type { FeatureArt as Art } from '../../patchNotes/notes'
 import { useSettingsStore } from '../../stores/settings'
-import HeroAvatar from '../common/HeroAvatar.vue'
+import FeatureArt from './FeatureArt.vue'
 
-/**
- * The 9.1 introduction: the new home screen held in one hand. A finger taps its way down the screen, from the match
- * waiting to be continued to the tabs at the bottom. The coach, round and contracts are a fixed example.
- */
-const OURS: readonly HeroId[] = ['blademaster', 'oracle', 'herald']
-const THEIRS: readonly HeroId[] = ['butcher', 'frostWitch', 'stonewright']
+const STEPS = [
+  {
+    kind: 'home',
+    device: 'desktop',
+    scene: 'home',
+  },
+  {
+    kind: 'home',
+    device: 'desktop',
+    scene: 'chat',
+  },
+  {
+    kind: 'home',
+    device: 'desktop',
+    scene: 'career',
+  },
+  {
+    kind: 'home',
+    device: 'phone',
+    scene: 'home',
+  },
+  {
+    kind: 'home',
+    device: 'phone',
+    scene: 'career',
+  },
+  {
+    kind: 'home',
+    device: 'phone',
+    scene: 'chat',
+  },
+] as const satisfies readonly Art[]
 
 const settings = useSettingsStore()
+const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+const visibility = useDocumentVisibility()
+const host = useTemplateRef<HTMLElement>('host')
+const visible = useElementVisibility(host)
+const step = ref(0)
+const paused = ref(false)
+
+const art = computed(() => STEPS[step.value]!)
 
 const copy = computed(() =>
   settings.locale === 'ru'
     ? {
-        eyebrow: 'Главный экран · Телефон',
-        title: 'Одно касание до игры',
-        intro: 'Всё важное помещается на одном экране: открыл игру — и сразу в матч',
+        eyebrow: 'Главный экран',
+        title: 'Твой следующий ход',
+        intro:
+          'Вернись в свой матч, найди компанию или выбери новую цель. Главное меню стало отправной точкой для всего, во что хочется играть.',
         perks: [
-          'Матч продолжается в одно касание',
-          'Быстрый старт любого режима',
-          'Вкладки под большим пальцем',
+          'Продолжай матч с того же раунда',
+          'Приглашай друзей и смотри их матчи',
+          'Выбирай испытания и закрывай контракты',
         ],
-        coach: 'Тренер',
-        rank: 'Ветеран · 1 240 MMR',
-        mode: 'Три линии · против компьютера',
-        round: 'Раунд 7 из 20',
-        continue: 'Продолжить',
-        computer: 'Компьютер',
-        online: 'Онлайн',
-        training: 'Тренировка',
-        contracts: 'Контракты',
-        next: 'Дальше: Первая кровь · 2/3',
-        news: 'Патч 9.1',
-        fresh: 'Новое',
-        tabs: ['Игра', 'Карьера', 'Друзья', 'Профиль'],
+        desktop: 'Компьютер',
+        phone: 'Телефон',
+        pause: 'Остановить показ',
+        play: 'Продолжить показ',
+        sample: 'Сцены главного экрана',
+        scenes: ['Продолжи матч', 'Друзья рядом', 'Новая цель'],
+        captions: [
+          'Твой отряд уже ждёт. Продолжи матч или попробуй другой режим.',
+          'Узнай, кто готов играть. Открой чат или загляни в матч друга.',
+          'Следующее испытание — ещё один повод собрать новый отряд.',
+          'Продолжение матча и быстрый старт — в одно касание.',
+          'Перейди к испытаниям через вкладку карьеры.',
+          'Переключись на друзей и продолжи разговор, когда захочешь.',
+        ],
       }
     : {
-        eyebrow: 'Home screen · Phone',
-        title: 'One tap to play',
-        intro: 'Everything that matters fits on one screen: open the game and jump straight into a match',
-        perks: ['Continue your match in one tap', 'Quick start for every mode', 'Tabs under your thumb'],
-        coach: 'Coach',
-        rank: 'Veteran · 1,240 MMR',
-        mode: 'Three lanes · vs computer',
-        round: 'Round 7 of 20',
-        continue: 'Continue',
-        computer: 'Computer',
-        online: 'Online',
-        training: 'Training',
-        contracts: 'Contracts',
-        next: 'Next: First blood · 2/3',
-        news: 'Patch 9.1',
-        fresh: 'New',
-        tabs: ['Play', 'Career', 'Friends', 'Profile'],
+        eyebrow: 'Home screen',
+        title: 'Your next move',
+        intro:
+          'Return to your match, find company or pick a new goal. The main menu is your starting point for everything you want to play.',
+        perks: [
+          'Continue from the same round',
+          'Meet your friends and watch their matches',
+          'Take on trials and finish contracts',
+        ],
+        desktop: 'Computer',
+        phone: 'Phone',
+        pause: 'Pause preview',
+        play: 'Resume preview',
+        sample: 'Home screen scenes',
+        scenes: ['Continue your match', 'Friends nearby', 'A new goal'],
+        captions: [
+          'Your squad is waiting. Continue your match or try another mode.',
+          'See who is ready to play. Open a chat or watch a friend’s match.',
+          'Your next trial is another reason to build a new squad.',
+          'Continue a match or start a new one with a single tap.',
+          'Explore your trials through the Career tab.',
+          'Switch to Friends and join the conversation when you choose.',
+        ],
       },
 )
 
-const quick = computed(() => [
-  {
-    icon: Bot,
-    label: copy.value.computer,
-  },
-  {
-    icon: Swords,
-    label: copy.value.online,
-  },
-  {
-    icon: Target,
-    label: copy.value.training,
-  },
-])
+function selectStep(index: number) {
+  step.value = index
+  paused.value = true
+}
 
-const tabs = computed(() =>
-  [Play, Trophy, Users, User].map((icon, i) => ({
-    icon,
-    label: copy.value.tabs[i],
-  })),
-)
+useIntervalFn(() => {
+  if (paused.value || reducedMotion.value || !visible.value || visibility.value !== 'visible') {
+    return
+  }
+
+  step.value = (step.value + 1) % STEPS.length
+}, 3500)
 </script>
 
 <template>
-  <section class="campaign" aria-labelledby="home-release-title">
+  <section ref="host" class="campaign" aria-labelledby="home-release-title">
     <header class="pitch">
       <p class="eyebrow"><MousePointerClick :size="14" /> {{ copy.eyebrow }}</p>
       <h2 id="home-release-title" class="hand">{{ copy.title }}</h2>
@@ -103,78 +126,57 @@ const tabs = computed(() =>
 
       <ol class="perks">
         <li v-for="(perk, i) in copy.perks" :key="perk">
-          <span class="step">{{ i + 1 }}</span> {{ perk }}
+          <span>{{ i + 1 }}</span
+          >{{ perk }}
         </li>
       </ol>
     </header>
 
-    <div class="stage" aria-hidden="true">
-      <div class="phone">
-        <div class="screen">
-          <div class="top">
-            <span class="avatar"><HeroAvatar hero-id="warden" :size="26" /></span>
+    <div class="showcase">
+      <div class="controls">
+        <button type="button" :aria-pressed="art.device === 'desktop'" @click="selectStep(0)">
+          <Monitor :size="15" /> {{ copy.desktop }}
+        </button>
 
-            <span class="who">
-              <b>{{ copy.coach }}</b>
-              <small>{{ copy.rank }}</small>
-            </span>
+        <button type="button" :aria-pressed="art.device === 'phone'" @click="selectStep(3)">
+          <Smartphone :size="15" /> {{ copy.phone }}
+        </button>
 
-            <Settings :size="13" class="gear" />
-          </div>
+        <button
+          v-if="!reducedMotion"
+          type="button"
+          class="pause"
+          :aria-label="paused ? copy.play : copy.pause"
+          @click="paused = !paused"
+        >
+          <Play v-if="paused" :size="15" /><Pause v-else :size="15" />
+        </button>
+      </div>
 
-          <div class="resume">
-            <div class="row">
-              <small>{{ copy.mode }}</small>
-              <small>{{ copy.round }}</small>
-            </div>
+      <div class="stage">
+        <FeatureArt
+          v-for="device in ['desktop', 'phone'] as const"
+          :key="device"
+          v-show="art.device === device"
+          :art="{ kind: 'home', device, scene: art.device === device ? art.scene : 'home' }"
+          class="picture"
+          :class="{ active: art.device === device }"
+        />
+      </div>
 
-            <div class="teams">
-              <span class="team">
-                <HeroAvatar v-for="hero in OURS" :key="hero" :hero-id="hero" :size="22" />
-              </span>
+      <p class="caption">{{ copy.captions[step] }}</p>
 
-              <span class="vs">vs</span>
-
-              <span class="team">
-                <HeroAvatar v-for="hero in THEIRS" :key="hero" :hero-id="hero" :team="1" :size="22" />
-              </span>
-            </div>
-
-            <span class="continue tap t1"><Play :size="11" /> {{ copy.continue }}</span>
-          </div>
-
-          <div class="quick">
-            <span v-for="(tile, i) in quick" :key="tile.label" class="tile tap" :class="`t${i + 2}`">
-              <component :is="tile.icon" :size="14" />
-              {{ tile.label }}
-            </span>
-          </div>
-
-          <div class="contracts">
-            <span class="row">
-              <b><Trophy :size="11" /> {{ copy.contracts }}</b>
-              <b class="count">2/3</b>
-            </span>
-
-            <small>{{ copy.next }}</small>
-          </div>
-
-          <div class="news">
-            <ScrollText :size="11" /> {{ copy.news }} <i>{{ copy.fresh }}</i>
-          </div>
-
-          <nav class="tabs">
-            <span
-              v-for="(tab, i) in tabs"
-              :key="i"
-              class="tab"
-              :class="{ active: i === 0, 'tap t5': i === 1 }"
-            >
-              <component :is="tab.icon" :size="13" />
-              {{ tab.label }}
-            </span>
-          </nav>
-        </div>
+      <div class="steps" :aria-label="copy.sample">
+        <button
+          v-for="(item, i) in STEPS"
+          :key="i"
+          type="button"
+          :aria-label="`${item.device === 'desktop' ? copy.desktop : copy.phone}: ${copy.scenes[item.scene === 'home' ? 0 : item.scene === 'chat' ? 1 : 2]}`"
+          :aria-pressed="step === i"
+          @click="selectStep(i)"
+        >
+          <span />
+        </button>
       </div>
     </div>
   </section>
@@ -186,33 +188,26 @@ const tabs = computed(() =>
   isolation: isolate;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr);
   align-items: center;
   gap: 28px;
   margin-top: 28px;
-  padding: 34px 32px 0;
+  padding: 34px 30px;
   border: 1px solid #f4c55b40;
   border-radius: var(--radius);
   background:
-    radial-gradient(ellipse at 72% 40%, #f4c55b18, transparent 55%),
-    radial-gradient(ellipse at 10% 90%, #7fe0b410, transparent 45%), linear-gradient(165deg, #1c2a24, #0f1915);
+    radial-gradient(ellipse at 80% 35%, #f4c55b18, transparent 55%),
+    radial-gradient(ellipse at 5% 90%, #7fe0b410, transparent 45%), linear-gradient(165deg, #1c2a24, #0f1915);
   box-shadow: 0 20px 60px #0004;
 }
-
-/* Faint chalk rings behind the phone, like a tap still spreading across the board. */
 .campaign::before {
   content: '';
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: repeating-radial-gradient(circle at 72% 46%, transparent 0 34px, #ece8dc07 34px 36px);
-  mask-image: linear-gradient(90deg, transparent 35%, #000);
+  background: repeating-radial-gradient(circle at 78% 46%, transparent 0 34px, #ece8dc07 34px 36px);
+  mask-image: linear-gradient(90deg, transparent 30%, #000);
 }
-
-.pitch {
-  padding-bottom: 34px;
-}
-
 .eyebrow {
   display: flex;
   align-items: center;
@@ -221,43 +216,38 @@ const tabs = computed(() =>
   color: var(--gold);
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-
 h2 {
-  margin: 12px 0;
-  font-size: clamp(42px, 6.4vw, 66px);
+  margin: 14px 0;
+  font-size: clamp(42px, 6vw, 64px);
   line-height: 1.05;
 }
-
 .intro {
-  max-width: 400px;
   margin: 0;
   color: var(--chalk-dim);
   font-size: 14px;
   line-height: 1.6;
 }
-
 .perks {
   display: grid;
-  gap: 10px;
-  margin: 22px 0 0;
+  gap: 13px;
+  margin: 24px 0 0;
   padding: 0;
   list-style: none;
   font-size: 13px;
   font-weight: 700;
 }
-
 .perks li {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
-.step {
+.perks span {
   display: grid;
   place-items: center;
+  flex: none;
   width: 24px;
   height: 24px;
   border: 1px solid #f4c55b70;
@@ -265,287 +255,116 @@ h2 {
   color: var(--gold);
   font-size: 12px;
 }
-
-/* The phone rises from the bottom edge of the card, cut off below the tabs. */
-.stage {
+.showcase {
+  min-width: 0;
+}
+.controls {
   display: flex;
   justify-content: center;
-  align-self: end;
-}
-
-.phone {
-  width: 250px;
-  padding: 10px 10px 0;
-  border: 2px solid #ece8dc30;
-  border-bottom: 0;
-  border-radius: 30px 30px 0 0;
-  background: #0b1310;
-  box-shadow:
-    0 -10px 50px #f4c55b14,
-    0 0 0 6px #ffffff05;
-  rotate: -3deg;
-  translate: 0 8px;
-}
-
-.screen {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 10px 0;
-  border-radius: 22px 22px 0 0;
-  background: linear-gradient(180deg, #1c2a24, #13201b);
-  font-size: 10px;
-}
-
-.top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.avatar {
-  display: grid;
-  overflow: hidden;
-  border: 1px solid var(--gold);
-  border-radius: 50%;
-}
-
-.who {
-  display: grid;
-  flex: 1;
-  line-height: 1.25;
-}
-
-.who small,
-.contracts small {
-  color: var(--chalk-faint);
-  font-size: 9px;
-}
-
-.gear {
-  color: var(--chalk-dim);
-}
-
-.resume {
-  display: grid;
-  gap: 8px;
-  padding: 9px;
-  border: 1px solid #f4c55b50;
-  border-radius: var(--radius);
-  background: #f4c55b0d;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
   gap: 6px;
-  color: var(--chalk-dim);
+  margin-bottom: 18px;
 }
-
-.row small {
-  font-size: 9px;
-}
-
-.teams {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.team {
-  display: flex;
-  gap: 2px;
-}
-
-.vs {
-  color: var(--chalk-faint);
-  font-size: 9px;
-}
-
-.continue {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 7px;
-  border-radius: var(--radius);
-  background: var(--gold);
-  color: #1b1405;
-  font-weight: 800;
-}
-
-.quick {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.tile {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  padding: 8px 2px;
-  border: 1px solid var(--edge-strong);
-  border-radius: var(--radius);
-  background: #ffffff06;
-  font-weight: 700;
-}
-
-.tile svg {
-  color: var(--gold);
-}
-
-.contracts {
-  display: grid;
-  gap: 4px;
-  padding: 8px 9px;
-  border: 1px solid var(--edge-strong);
-  border-radius: var(--radius);
-  background: #ffffff04;
-}
-
-.contracts b {
+.controls button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  color: var(--chalk);
-}
-
-.contracts .count {
-  color: var(--gold);
-}
-
-.news {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 9px;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 10px;
   border: 1px solid var(--edge-strong);
   border-radius: var(--radius);
-  font-weight: 700;
+  background: #ffffff05;
+  color: var(--chalk-dim);
+  font-size: 11px;
+  cursor: pointer;
 }
-
-.news i {
-  padding: 1px 5px;
-  border-radius: var(--radius);
-  background: var(--gold);
-  color: #1b1405;
-  font-size: 8px;
-  font-style: normal;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-/* Attached to the bottom of the screen: square along that edge. */
-.tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin: 4px -10px 0;
-  padding: 7px 0 12px;
-  border-top: 1px solid var(--edge-strong);
-  background: #0f1915;
-}
-
-.tab {
-  display: grid;
-  justify-items: center;
-  gap: 3px;
-  color: var(--chalk-faint);
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.tab.active {
+.controls [aria-pressed='true'] {
+  border-color: #f4c55b70;
   color: var(--gold);
+  background: #f4c55b12;
 }
-
-/* One finger goes down the screen: each target lights up in turn, then the loop starts over. */
-.tap {
+.controls .pause {
+  padding: 6px 9px;
+}
+.stage {
+  display: grid;
+  align-items: center;
+  height: 400px;
   position: relative;
-  animation: press 7.5s ease-out infinite;
 }
-
-.tap::after {
-  content: '';
+.stage > .picture {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 26px;
-  height: 26px;
-  margin: -13px 0 0 -13px;
-  border: 2px solid var(--gold);
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-  animation: ripple 7.5s ease-out infinite;
-  animation-delay: inherit;
+  inset: 0;
+  height: 100%;
+  aspect-ratio: auto;
+  width: 100%;
+  padding: 0;
+  background: none;
+  overflow: visible;
 }
-
-.t1 {
-  animation-delay: 0s;
+.picture.active {
+  animation: device-in 0.3s ease-out;
 }
-
-.t2 {
-  animation-delay: 1.5s;
-}
-
-.t3 {
-  animation-delay: 3s;
-}
-
-.t4 {
-  animation-delay: 4.5s;
-}
-
-.t5 {
-  animation-delay: 6s;
-}
-
-@keyframes press {
-  0%,
-  14%,
-  100% {
-    scale: 1;
-    filter: none;
-  }
-
-  3% {
-    scale: 0.95;
-    filter: brightness(1.25);
-  }
-}
-
-@keyframes ripple {
-  0% {
-    opacity: 0.9;
-    scale: 0.4;
-  }
-
-  14%,
-  100% {
+@keyframes device-in {
+  from {
     opacity: 0;
-    scale: 2.2;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
   }
 }
-
+.caption {
+  min-height: 72px;
+  margin: 14px auto 8px;
+  max-width: 390px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--chalk-dim);
+}
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.steps button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+}
+.steps span {
+  width: 15px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--edge-strong);
+}
+.steps [aria-pressed='true'] span {
+  background: var(--gold);
+}
 @media (max-width: 760px) {
   .campaign {
-    grid-template-columns: 1fr;
-    padding: 28px 18px 0;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 28px 18px;
   }
-
   .pitch {
-    padding-bottom: 0;
+    max-width: 520px;
   }
-
-  .phone {
-    rotate: none;
+  .showcase {
+    width: 100%;
+    max-width: 520px;
+    justify-self: center;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .tap,
-  .tap::after {
+  .stage > .picture {
     animation: none;
   }
 }

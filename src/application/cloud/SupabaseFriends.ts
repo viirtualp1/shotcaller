@@ -167,6 +167,19 @@ export class SupabaseFriends implements FriendsService {
     return data as FriendRequestResult
   }
 
+  async requestLeaderboard(coachId: string) {
+    const { data, error } = await this.client.rpc('request_leaderboard_friend', { other: coachId })
+    if (error) {
+      throw error
+    }
+
+    if (!REQUEST_RESULTS.has(data)) {
+      throw new Error(`Unexpected friend request result: ${data}`)
+    }
+
+    return data as FriendRequestResult
+  }
+
   async respond(coachId: string, accept: boolean) {
     const { error } = await this.client.rpc('respond_friend', {
       other: coachId,
