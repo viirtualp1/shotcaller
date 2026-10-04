@@ -2,8 +2,9 @@
 import { useElementVisibility, useIntervalFn, usePreferredReducedMotion } from '@vueuse/core'
 import { Shuffle, Sparkles } from '@lucide/vue'
 import { computed, ref } from 'vue'
-import type { HeroId, ShopItemId } from '@/content/ids'
+import { HERO_IDS, type HeroId, type ShopItemId } from '@/content/ids'
 import type { TwistId } from '@/content/experiments'
+import { cssColor } from '@/rendering/theme'
 import { useAutoCycle } from '../../composables/useAutoCycle'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
@@ -16,6 +17,39 @@ import ItemIcon from '../common/ItemIcon.vue'
 const props = defineProps<{ focus: 'upgrades' | 'talents' | 'items' | 'experiments' }>()
 
 const TALENT_STATES = [0, 1, 'both'] as const
+const NEW_ITEMS: readonly ShopItemId[] = ['soulJar', 'soulbond', 'echoShard', 'townPortal', 'cursedBlade']
+const SPARKS = 10
+const ROTATION_SIZE = 15
+/** Twist cards on the table: the one on air and the ones stacked behind it. */
+const DECK_DEPTH = 3
+
+/* Twist colours as they shipped in 9.0. */
+const TWIST_ORDER: readonly { id: TwistId; color: number }[] = [
+  {
+    id: 'bloodMoon',
+    color: 0xd9534f,
+  },
+  {
+    id: 'fog',
+    color: 0x9fb4c7,
+  },
+  {
+    id: 'siegeTide',
+    color: 0xd7b98a,
+  },
+  {
+    id: 'manaSurge',
+    color: 0x6fb3ff,
+  },
+  {
+    id: 'stoneWalls',
+    color: 0xa7a08f,
+  },
+  {
+    id: 'tailwind',
+    color: 0x7fe0b4,
+  },
+]
 
 const settings = useSettingsStore()
 const motion = usePreferredReducedMotion()
@@ -23,105 +57,10 @@ const root = ref<HTMLElement | null>(null)
 const visible = useElementVisibility(root)
 const talent = ref<(typeof TALENT_STATES)[number]>(0)
 const spotlight = ref(0)
-
-const NEW_ITEMS: readonly ShopItemId[] = ['soulJar', 'soulbond', 'echoShard', 'townPortal', 'cursedBlade']
-
-const TWIST_ORDER: readonly TwistId[] = [
-  'bloodMoon',
-  'fog',
-  'siegeTide',
-  'manaSurge',
-  'stoneWalls',
-  'tailwind',
-]
-
-/** A sample rotation: fifteen heroes in, six out. */
-const ROTATION: readonly { id: HeroId; in: boolean }[] = [
-  {
-    id: 'spearman',
-    in: true,
-  },
-  {
-    id: 'archer',
-    in: true,
-  },
-  {
-    id: 'acolyte',
-    in: false,
-  },
-  {
-    id: 'sapper',
-    in: true,
-  },
-  {
-    id: 'shaman',
-    in: true,
-  },
-  {
-    id: 'rogue',
-    in: false,
-  },
-  {
-    id: 'herald',
-    in: true,
-  },
-  {
-    id: 'shade',
-    in: true,
-  },
-  {
-    id: 'pyromancer',
-    in: true,
-  },
-  {
-    id: 'warden',
-    in: false,
-  },
-  {
-    id: 'blademaster',
-    in: true,
-  },
-  {
-    id: 'packLeader',
-    in: true,
-  },
-  {
-    id: 'necromancer',
-    in: false,
-  },
-  {
-    id: 'stonewright',
-    in: true,
-  },
-  {
-    id: 'frostWitch',
-    in: true,
-  },
-  {
-    id: 'giant',
-    in: true,
-  },
-  {
-    id: 'engineer',
-    in: false,
-  },
-  {
-    id: 'butcher',
-    in: true,
-  },
-  {
-    id: 'sniper',
-    in: false,
-  },
-  {
-    id: 'oracle',
-    in: true,
-  },
-  {
-    id: 'changeling',
-    in: true,
-  },
-]
+/** How many twist cards have been dealt; the newest is on top. */
+const dealt = ref(0)
+const shuffles = ref(0)
+const rotation = ref<ReadonlySet<HeroId>>(drawRotation())
 
 const copy = computed(() =>
   settings.locale === 'ru'
@@ -141,15 +80,15 @@ const copy = computed(() =>
           'Сила ценой трона',
         ],
         twists: {
-          bloodMoon: 'Кровавая луна',
-          fog: 'Туман',
-          siegeTide: 'Осадный прилив',
-          manaSurge: 'Прилив маны',
-          stoneWalls: 'Каменные стены',
-          tailwind: 'Попутный ветер',
+          bloodMoon: ['Кровавая луна', 'Герои наносят на 25% больше урона'],
+          fog: ['Туман', 'Дальний бой бьёт на 25% ближе'],
+          siegeTide: ['Осадный прилив', 'Крипы бьют строения на 60% сильнее'],
+          manaSurge: ['Прилив маны', 'Мана копится на 50% быстрее'],
+          stoneWalls: ['Каменные стены', 'Строения получают на 30% меньше урона'],
+          tailwind: ['Попутный ветер', 'Герои бегают на 30% быстрее'],
         },
+        twist: 'Правило раунда',
         roster: '15 из 21 героя',
-        round: 'Раунд 4',
       }
     : {
         stat: 'attack speed',
@@ -167,19 +106,45 @@ const copy = computed(() =>
           'Power at the throne’s cost',
         ],
         twists: {
-          bloodMoon: 'Blood Moon',
-          fog: 'Fog',
-          siegeTide: 'Siege Tide',
-          manaSurge: 'Mana Surge',
-          stoneWalls: 'Stone Walls',
-          tailwind: 'Tailwind',
+          bloodMoon: ['Blood Moon', 'Heroes deal 25% more damage'],
+          fog: ['Fog', 'Ranged heroes reach 25% less far'],
+          siegeTide: ['Siege Tide', 'Creeps hit buildings 60% harder'],
+          manaSurge: ['Mana Surge', 'Heroes gain mana 50% faster'],
+          stoneWalls: ['Stone Walls', 'Buildings take 30% less damage'],
+          tailwind: ['Tailwind', 'Heroes move 30% faster'],
         },
+        twist: 'Round twist',
         roster: '15 of 21 heroes',
-        round: 'Round 4',
       },
 )
 
+/** The cards on the table, back to front: the newest one is on air. */
+const deck = computed(() =>
+  Array.from({ length: DECK_DEPTH }, (_, i) => {
+    const number = dealt.value - (DECK_DEPTH - 1 - i)
+    const twist = TWIST_ORDER[((number % TWIST_ORDER.length) + TWIST_ORDER.length) % TWIST_ORDER.length]!
+
+    return {
+      number,
+      depth: DECK_DEPTH - 1 - i,
+      ...twist,
+    }
+  }),
+)
+
 const lit = (branch: 0 | 1) => talent.value === 'both' || talent.value === branch
+
+/** A sample draw: fifteen heroes in and the rest left out, the way one match deals them. */
+function drawRotation(): ReadonlySet<HeroId> {
+  const pool = [...HERO_IDS]
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+
+    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
+  }
+
+  return new Set(pool.slice(0, ROTATION_SIZE))
+}
 
 /* Left alone, the fork shows one talent, then the other, then both at three stars, and starts over. */
 const { restart } = useAutoCycle(
@@ -195,6 +160,17 @@ function pickTalent(state: (typeof TALENT_STATES)[number]) {
   restart()
 }
 
+/* Every few seconds the next twist goes on air and the pool is dealt again. */
+useAutoCycle(
+  () => {
+    dealt.value++
+    shuffles.value++
+    rotation.value = drawRotation()
+  },
+  5000,
+  computed(() => visible.value && props.focus === 'experiments'),
+)
+
 /* The new items take turns in the spotlight. */
 useIntervalFn(() => {
   if (motion.value !== 'reduce') {
@@ -205,16 +181,22 @@ useIntervalFn(() => {
 
 <template>
   <div ref="root" class="forge" :class="focus">
-    <!-- Two copies fly together, flash, and come out as one upgrade. -->
+    <!-- Two copies swing in, melt into one flash, and the upgrade springs out of it. -->
     <div v-if="focus === 'upgrades'" class="merge" aria-hidden="true">
-      <span class="copy left"><ItemIcon item-id="gloves" :size="52" /></span>
-      <span class="copy right"><ItemIcon item-id="gloves" :size="52" /></span>
-      <span class="flash" />
+      <span class="copy" style="--dir: -1"><ItemIcon item-id="gloves" :size="52" /></span>
+      <span class="copy" style="--dir: 1"><ItemIcon item-id="gloves" :size="52" /></span>
+      <span class="bloom" />
+      <span class="ring" />
+
+      <span class="sparks">
+        <i v-for="n in SPARKS" :key="n" :style="{ '--a': `${(n * 360) / SPARKS}deg` }" />
+      </span>
 
       <span class="result">
         <ItemIcon item-id="gloves+" :size="72" />
-        <span class="numbers"><s>+20%</s> <b>+40%</b> {{ copy.stat }}</span>
       </span>
+
+      <span class="numbers"><s>+20%</s> <b>+40%</b> {{ copy.stat }}</span>
     </div>
 
     <!-- A two-star hero and the fork between its talents; three stars light both paths. -->
@@ -260,22 +242,39 @@ useIntervalFn(() => {
       </Transition>
     </div>
 
-    <!-- A fanned deck of twists, and a hero pool with six heroes left out. -->
+    <!--
+      Twists go on air like captions on a broadcast: each new card drops in over the last, which sinks back into
+      the stack. Below, the pool is dealt again and again, fifteen heroes in and the rest left out.
+    -->
     <div v-else class="lab" aria-hidden="true">
-      <div class="deck">
-        <span v-for="(id, i) in TWIST_ORDER" :key="id" class="card" :style="{ '--i': i }">
-          <Sparkles :size="13" /> {{ copy.twists[id] }}
+      <TransitionGroup tag="div" name="deal" class="deck">
+        <span
+          v-for="card in deck"
+          :key="card.number"
+          class="card"
+          :style="{ '--depth': card.depth, '--twist': cssColor(card.color) }"
+        >
+          <span class="kicker"><Sparkles :size="11" /> {{ copy.twist }}</span>
+          <strong>{{ copy.twists[card.id][0] }}</strong>
+          <span class="rule">{{ copy.twists[card.id][1] }}</span>
         </span>
-
-        <span class="round">{{ copy.round }}</span>
-      </div>
+      </TransitionGroup>
 
       <div class="pool">
-        <span class="label"><Shuffle :size="13" /> {{ copy.roster }}</span>
+        <span class="label">
+          <Shuffle :key="shuffles" :size="14" class="shuffle" />
+          {{ copy.roster }}
+        </span>
 
         <span class="grid">
-          <span v-for="hero in ROTATION" :key="hero.id" class="seat" :class="{ out: !hero.in }">
-            <HeroAvatar :hero-id="hero.id" :size="22" />
+          <span
+            v-for="(id, i) in HERO_IDS"
+            :key="id"
+            class="seat"
+            :class="{ out: !rotation.has(id) }"
+            :style="{ '--d': `${(i % 7) * 40 + Math.floor(i / 7) * 60}ms` }"
+          >
+            <HeroAvatar :hero-id="id" :size="24" />
           </span>
         </span>
       </div>
@@ -305,59 +304,83 @@ b {
   color: var(--gold);
 }
 
-/* Upgrades: a 3.6 s loop of two copies meeting in a flash. */
+/*
+ * Upgrades, a 4.2 s loop. The copies arc toward each other, tilt and shrink as they heat up; a bloom, a ring and
+ * a burst of sparks cover the merge; the upgrade springs out, its plus clicks on, and the numbers rise.
+ */
 .merge {
+  --loop: 4.2s;
   position: relative;
-  width: 260px;
-  height: 200px;
+  width: 280px;
+  height: 210px;
+}
+
+.copy,
+.bloom,
+.ring,
+.sparks,
+.result {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  translate: -50% -50%;
 }
 
 .copy {
-  position: absolute;
-  top: 50px;
-  animation: 3.6s ease-in-out infinite;
+  animation: converge var(--loop) cubic-bezier(0.5, 0, 0.6, 1) infinite;
 }
 
-.copy.left {
-  left: 10px;
-  animation-name: from-left;
-}
-
-.copy.right {
-  right: 10px;
-  animation-name: from-right;
-}
-
-.flash {
-  position: absolute;
-  top: 34px;
-  left: 50%;
-  width: 90px;
-  height: 90px;
-  translate: -50% 0;
+.bloom {
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff6d9, #f4c55b88 40%, transparent 70%);
+  background: radial-gradient(circle, #fff7dc 0%, #f4c55bcc 30%, #ff8a3d44 55%, transparent 72%);
   opacity: 0;
-  animation: flash 3.6s ease-out infinite;
+  animation: bloom var(--loop) ease-out infinite;
+}
+
+.ring {
+  width: 70px;
+  height: 70px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  opacity: 0;
+  animation: ring var(--loop) ease-out infinite;
+}
+
+.sparks i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px;
+  border-radius: 50%;
+  background: #ffd27a;
+  box-shadow: 0 0 8px #ff9d4d;
+  opacity: 0;
+  animation: spark var(--loop) cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
 }
 
 .result {
-  position: absolute;
-  top: 40px;
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  translate: -50% 0;
   opacity: 0;
-  animation: reveal 3.6s ease-out infinite;
-  white-space: nowrap;
+  animation: spring var(--loop) infinite;
+}
+
+.result :deep(.plus) {
+  animation: plus-click var(--loop) infinite;
 }
 
 .numbers {
+  position: absolute;
+  bottom: 18px;
+  left: 0;
+  right: 0;
+  text-align: center;
   font-size: 13px;
   color: var(--chalk-dim);
+  opacity: 0;
+  animation: numbers var(--loop) ease-out infinite;
 }
 
 /* Talents: the chosen branch is drawn in gold, the other stays chalk. */
@@ -490,161 +513,293 @@ b {
   translate: 0 -6px;
 }
 
-/* Experiments: the twist deck fans out and shuffles; the pool greys out the heroes left home. */
+/* Experiments. */
 .lab {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 22px;
+  width: 100%;
 }
 
 .deck {
   position: relative;
-  width: 240px;
-  height: 90px;
+  width: min(250px, 100%);
+  height: 92px;
+  perspective: 700px;
 }
 
+/* A caption card; the ones further back sit higher, smaller and dimmer, like a stack of slates. */
 .card {
   position: absolute;
-  top: 10px;
-  left: 50%;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  width: 128px;
-  padding: 10px 8px;
-  border: 1px solid #f4c55b66;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 12px 10px 16px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--twist) 55%, transparent);
   border-radius: var(--radius);
-  background: linear-gradient(160deg, #2a2418, #17130c);
-  color: var(--gold);
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 6px 14px #0006;
-  transform-origin: 50% 160%;
-  translate: -50% 0;
-  rotate: calc((var(--i) - 2.5) * 9deg);
-  animation: shuffle 6s ease-in-out infinite;
-  animation-delay: calc(var(--i) * -1s);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--twist) 20%, #15120c), #110e09 70%);
+  box-shadow: 0 10px 22px #0008;
+  transform: translateY(calc(var(--depth) * -12px)) scale(calc(1 - var(--depth) * 0.06));
+  transform-origin: 50% 0;
+  opacity: calc(1 - var(--depth) * 0.3);
+  z-index: calc(10 - var(--depth));
+  transition:
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.6s;
 }
 
-.round {
+/* The coloured edge a broadcast caption carries. */
+.card::before {
+  content: '';
   position: absolute;
-  bottom: -14px;
-  left: 50%;
-  translate: -50% 0;
-  color: var(--chalk-faint);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--twist);
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--twist);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.card strong {
+  color: var(--chalk);
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.rule {
+  color: var(--chalk-dim);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A new card flips down onto the stack; the oldest one fades away at the back. */
+.deal-enter-active {
+  transition:
+    transform 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.15),
+    opacity 0.35s;
+}
+
+.deal-enter-from {
+  transform: translateY(-34px) rotateX(-80deg) scale(1.04);
+  opacity: 0;
+}
+
+.deal-leave-active {
+  transition:
+    transform 0.5s,
+    opacity 0.4s;
+}
+
+.deal-leave-to {
+  transform: translateY(-40px) scale(0.8);
+  opacity: 0;
 }
 
 .pool {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: var(--chalk-dim);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
+}
+
+/* The shuffle icon gives a full turn each time the pool is dealt again. */
+.shuffle {
+  color: var(--gold);
+  animation: turn 0.8s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, 22px);
-  gap: 5px;
+  grid-template-columns: repeat(7, 24px);
+  gap: 10px 12px;
+}
+
+/* Seats change in a wave across the grid when the pool is dealt again. */
+.seat {
+  transition:
+    opacity 0.45s,
+    filter 0.45s,
+    transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+  transition-delay: var(--d);
 }
 
 .seat.out {
-  opacity: 0.22;
+  opacity: 0.2;
   filter: grayscale(1);
+  transform: scale(0.8);
 }
 
-@keyframes from-left {
-  0%,
-  10% {
-    translate: 0 0;
-    opacity: 1;
-  }
-
-  42% {
-    translate: 92px 0;
-    opacity: 1;
-  }
-
-  48%,
-  100% {
-    translate: 92px 0;
+@keyframes converge {
+  0% {
+    transform: translateX(calc(var(--dir) * 96px)) rotate(0) scale(1);
     opacity: 0;
   }
-}
 
-@keyframes from-right {
-  0%,
-  10% {
-    translate: 0 0;
+  8%,
+  14% {
+    transform: translateX(calc(var(--dir) * 96px)) rotate(0) scale(1);
     opacity: 1;
+    filter: none;
   }
 
-  42% {
-    translate: -92px 0;
-    opacity: 1;
+  28% {
+    transform: translateX(calc(var(--dir) * 60px)) translateY(-28px) rotate(calc(var(--dir) * -12deg))
+      scale(0.94);
   }
 
-  48%,
-  100% {
-    translate: -92px 0;
-    opacity: 0;
-  }
-}
-
-@keyframes flash {
-  0%,
   40% {
-    opacity: 0;
-    scale: 0.4;
+    transform: translateX(calc(var(--dir) * 8px)) translateY(-4px) rotate(calc(var(--dir) * -34deg))
+      scale(0.7);
+    opacity: 1;
+    filter: brightness(1.9) drop-shadow(0 0 10px #f4c55b);
   }
 
-  48% {
+  44%,
+  100% {
+    transform: translateX(0) rotate(calc(var(--dir) * -40deg)) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes bloom {
+  0%,
+  38% {
+    opacity: 0;
+    scale: 0.3;
+  }
+
+  44% {
     opacity: 1;
-    scale: 1.3;
+    scale: 1.15;
+  }
+
+  62%,
+  100% {
+    opacity: 0;
+    scale: 1.5;
+  }
+}
+
+@keyframes ring {
+  0%,
+  41% {
+    opacity: 0;
+    scale: 0.3;
+  }
+
+  44% {
+    opacity: 1;
+    scale: 0.6;
+  }
+
+  64%,
+  100% {
+    opacity: 0;
+    scale: 2.4;
+  }
+}
+
+@keyframes spark {
+  0%,
+  41% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateX(0);
+  }
+
+  44% {
+    opacity: 1;
+    transform: rotate(var(--a)) translateX(10px);
+  }
+
+  62%,
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateX(82px);
+  }
+}
+
+@keyframes spring {
+  0%,
+  42% {
+    opacity: 0;
+    scale: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+    scale: 1.18;
+  }
+
+  56% {
+    scale: 0.95;
+  }
+
+  61%,
+  90% {
+    opacity: 1;
+    scale: 1;
+  }
+
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}
+
+@keyframes plus-click {
+  0%,
+  54% {
+    scale: 0;
+  }
+
+  60% {
+    scale: 1.5;
   }
 
   65%,
   100% {
-    opacity: 0;
-    scale: 1.6;
+    scale: 1;
   }
 }
 
-@keyframes reveal {
+@keyframes numbers {
   0%,
-  46% {
-    opacity: 0;
-    scale: 0.7;
-  }
-
   56% {
-    opacity: 1;
-    scale: 1.08;
+    opacity: 0;
+    translate: 0 8px;
   }
 
-  62%,
-  92% {
+  64%,
+  90% {
     opacity: 1;
-    scale: 1;
+    translate: 0 0;
   }
 
   100% {
     opacity: 0;
-    scale: 1;
+    translate: 0 0;
   }
 }
 
@@ -658,36 +813,30 @@ b {
   }
 }
 
-@keyframes shuffle {
-  0%,
-  70%,
-  100% {
-    rotate: calc((var(--i) - 2.5) * 9deg);
-  }
-
-  80% {
-    rotate: calc((2.5 - var(--i)) * 4deg);
-    translate: -50% -8px;
+@keyframes turn {
+  from {
+    rotate: -360deg;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .copy,
-  .flash,
-  .card {
-    animation: none;
+  .bloom,
+  .ring,
+  .sparks i {
+    display: none;
   }
 
-  .copy {
-    opacity: 0;
-  }
-
-  .result {
+  .result,
+  .numbers,
+  .result :deep(.plus) {
     opacity: 1;
+    scale: 1;
     animation: none;
   }
 
-  .paths path.lit {
+  .paths path.lit,
+  .shuffle {
     animation: none;
   }
 }
