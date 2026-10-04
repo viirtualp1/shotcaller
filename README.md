@@ -111,7 +111,7 @@ Reproduce the simulation CPU sample with `TSX_TSCONFIG_PATH=tsconfig.node.json n
 
 ## License
 
-Copyright © 2026 viirtualp1. All rights reserved.
+Copyright © 2026 Nikita Zinin. All rights reserved.
 
 The source is published so you can read it, learn from it and report issues. It is **not** open source: copying,
 redistributing or running your own copy of the game is not permitted. See [LICENSE](LICENSE).

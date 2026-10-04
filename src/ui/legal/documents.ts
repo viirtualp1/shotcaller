@@ -22,14 +22,18 @@ export const LEGAL_IDS = ['terms', 'privacy'] as const
 export type LegalId = (typeof LEGAL_IDS)[number]
 
 /** The date both documents last changed; update it with any change to their text. */
-export const LEGAL_UPDATED = '2026-10-03'
+export const LEGAL_UPDATED = '2026-10-04'
 
-/** The team's address for privacy and legal requests. Until it is set, requests go through the in-game form. */
+/** The address for privacy and legal requests. Until it is set, requests go through the in-game form. */
 export const LEGAL_EMAIL: string | null = 'shotcaller.team@gmail.com'
 
 export const legalPath = (id: LegalId) => `/${id}`
 
-const OPERATOR = 'The Shotcaller team'
+/** The game is run by one person, who is also the controller of players' personal data. */
+const OPERATOR: LegalText = {
+  en: 'Nikita Zinin',
+  ru: 'Никита Зинин',
+}
 
 const contact: LegalSection = {
   title: {
@@ -67,8 +71,8 @@ const terms: LegalDocument = {
       },
       paragraphs: [
         {
-          en: `These Terms apply to The Shotcaller at theshotcaller.online and as a Discord Activity, run by ${OPERATOR}. By playing, you agree to them. If you do not agree, do not use the game.`,
-          ru: `Эти условия действуют для The Shotcaller на theshotcaller.online и в виде активности Discord. Игру ведёт ${OPERATOR}. Играя, ты принимаешь эти условия. Если ты с ними не согласен, не пользуйся игрой.`,
+          en: `These Terms apply to The Shotcaller at theshotcaller.online and as a Discord Activity, run by ${OPERATOR.en}, an individual developer. By playing, you agree to them. If you do not agree, do not use the game.`,
+          ru: `Эти условия действуют для The Shotcaller на theshotcaller.online и в виде активности Discord. Игру ведёт частный разработчик ${OPERATOR.ru}. Играя, ты принимаешь эти условия. Если ты с ними не согласен, не пользуйся игрой.`,
         },
       ],
     },
@@ -183,8 +187,12 @@ const terms: LegalDocument = {
       },
       paragraphs: [
         {
-          en: `The game, its code, artwork, names and music belong to ${OPERATOR} or its licensors. You may play, share links and post screenshots or videos for non-commercial purposes. Do not copy, redistribute or sell the game or its assets.`,
-          ru: `Игра, её код, графика, названия и музыка принадлежат ${OPERATOR} или её лицензиарам. Можно играть, делиться ссылками и публиковать скриншоты и видео в некоммерческих целях. Нельзя копировать, распространять или продавать игру и её материалы.`,
+          en: `The game, its code, artwork, names and music belong to ${OPERATOR.en} or his licensors. You may play, share links and post screenshots or videos for non-commercial purposes. Do not copy, redistribute or sell the game or its assets.`,
+          ru: `Игра, её код, графика, названия и музыка принадлежат ${OPERATOR.ru} или его лицензиарам. Можно играть, делиться ссылками и публиковать скриншоты и видео в некоммерческих целях. Нельзя копировать, распространять или продавать игру и её материалы.`,
+        },
+        {
+          en: 'The game uses open-source software, fonts and sounds under their own licenses. They are listed at theshotcaller.online/third-party-notices.txt and theshotcaller.online/audio/CREDITS.md.',
+          ru: 'Игра использует открытое ПО, шрифты и звуки на условиях их собственных лицензий. Они перечислены на theshotcaller.online/third-party-notices.txt и theshotcaller.online/audio/CREDITS.md.',
         },
       ],
     },
@@ -250,8 +258,8 @@ const privacy: LegalDocument = {
       },
       paragraphs: [
         {
-          en: `The Shotcaller is a free browser game at theshotcaller.online, also available as a Discord Activity. ${OPERATOR} runs it and is the controller of the personal data described here. Contact details are at the end of this policy.`,
-          ru: `The Shotcaller — бесплатная браузерная игра на theshotcaller.online, также доступная как активность Discord. Игру ведёт ${OPERATOR}, она же является оператором описанных здесь персональных данных. Контакты указаны в конце политики.`,
+          en: `The Shotcaller is a free browser game at theshotcaller.online, also available as a Discord Activity. ${OPERATOR.en}, an individual developer, runs it and is the controller of the personal data described here. Contact details are at the end of this policy.`,
+          ru: `The Shotcaller — бесплатная браузерная игра на theshotcaller.online, также доступная как активность Discord. Игру ведёт частный разработчик ${OPERATOR.ru}, он же является оператором описанных здесь персональных данных. Контакты указаны в конце политики.`,
         },
       ],
     },
@@ -310,8 +318,8 @@ const privacy: LegalDocument = {
       },
       paragraphs: [
         {
-          en: 'When you send feedback, we receive its category, subject and message, the reply email if you give one, your account or guest identifier, language and game version. Requests are stored in our database and forwarded to the team’s Telegram chat so they are answered quickly.',
-          ru: 'Когда ты отправляешь обращение, мы получаем категорию, тему и текст, адрес для ответа, если ты его указал, идентификатор аккаунта или гостя, язык и версию игры. Обращения хранятся в нашей базе данных и пересылаются в Telegram-чат команды, чтобы мы быстрее отвечали.',
+          en: 'When you send feedback, we receive its category, subject and message, the reply email if you give one, your account or guest identifier, language and game version. Requests are stored in our database and forwarded to our support Telegram chat so they are answered quickly.',
+          ru: 'Когда ты отправляешь обращение, мы получаем категорию, тему и текст, адрес для ответа, если ты его указал, идентификатор аккаунта или гостя, язык и версию игры. Обращения хранятся в нашей базе данных и пересылаются в наш Telegram-чат поддержки, чтобы мы быстрее отвечали.',
         },
       ],
     },
@@ -398,8 +406,8 @@ const privacy: LegalDocument = {
           ru: 'PostHog: игровая статистика, только с согласия.',
         },
         {
-          en: 'Telegram: delivery of support requests to the team.',
-          ru: 'Telegram: доставка обращений команде.',
+          en: 'Telegram: delivery of support requests.',
+          ru: 'Telegram: доставка обращений в поддержку.',
         },
         {
           en: 'Google: sign-in, if you choose it.',

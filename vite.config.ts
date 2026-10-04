@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 import { seoPlugin } from './scripts/seoPlugin.ts'
+import { thirdPartyNotices } from './scripts/thirdPartyNotices.ts'
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url))
 
@@ -24,6 +25,7 @@ export default defineConfig({
   plugins: [
     vue(),
     seoPlugin(),
+    thirdPartyNotices(),
     VitePWA({
       /* A new version waits for the player's go-ahead: reloading on its own could cut into a duel. */
       registerType: 'prompt',
