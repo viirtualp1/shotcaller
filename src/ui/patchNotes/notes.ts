@@ -62,6 +62,8 @@ export type FeatureArt =
     }
   /** The in-match hero card: live health and mana bars beside the ability. */
   | { readonly kind: 'heroCard' }
+  /** The desktop installer: the game window and Discord status open together. */
+  | { readonly kind: 'install' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -104,14 +106,14 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     wide: true,
     features: [
       {
-        art: { kind: 'home', device: 'desktop', scene: 'home' },
+        art: { kind: 'install' },
         title: {
           en: 'Install and play',
           ru: 'Установи и играй',
         },
         text: {
-          en: '**Install The Shotcaller** and Discord shows you are **playing** as soon as the game opens: https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe',
-          ru: '**Установи The Shotcaller** — и Discord покажет, что ты **играешь**, как только откроется игра: https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe',
+          en: '[**Install The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe) and Discord shows you are **playing** as soon as the game opens.',
+          ru: '[**Установи The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe) — и Discord покажет, что ты **играешь**, как только откроется игра.',
         },
       },
       {
@@ -127,8 +129,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
     ],
     card: {
-      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first, with rank and MMR beside your name. Friends, their code and live matches sit in that same layout. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up with the fight.',
-      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**, ранг и MMR рядом с именем. Друзья, их код и живые матчи стоят в том же виде. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают от боя.',
+      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first, with rank and MMR beside your name. Friends, their code and live matches sit in that same layout. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up with the fight. A new way to play is here: the **installer**.',
+      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**, ранг и MMR рядом с именем. Друзья, их код и живые матчи стоят в том же виде. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают от боя. Появился новый способ играть — **установщик**.',
     },
     general: [
       {

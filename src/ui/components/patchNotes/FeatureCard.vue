@@ -37,6 +37,13 @@ withDefaults(defineProps<{ feature: FeatureNote; wide?: boolean }>(), { wide: fa
   transform: translateY(-2px);
 }
 
+.feature:not(.wide) {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  gap: 0;
+}
+
 .picture {
   border-bottom: 1px solid var(--edge);
 }
@@ -57,9 +64,11 @@ withDefaults(defineProps<{ feature: FeatureNote; wide?: boolean }>(), { wide: fa
 
 .text {
   margin: 0;
+  min-width: 0;
   font-size: 14px;
   line-height: 1.5;
   color: var(--chalk-dim);
+  overflow-wrap: anywhere;
 }
 
 .wide {

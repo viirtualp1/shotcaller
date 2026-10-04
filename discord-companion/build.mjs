@@ -1,8 +1,10 @@
 import { execFileSync } from 'node:child_process'
-import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
+import pngToIco from 'png-to-ico'
+import { Data, NtExecutable, NtExecutableResource, Resource } from 'resedit'
 
 const FUSE = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2'
 
@@ -54,5 +56,37 @@ const postject = path.join(root, 'node_modules', 'postject', 'dist', 'cli.js')
 execFileSync(process.execPath, [postject, exe, 'NODE_SEA_BLOB', blob, '--sentinel-fuse', FUSE], {
   stdio: 'inherit',
 })
+
+const logo = path.join(root, '..', 'public', 'pwa-512x512.png')
+const ico = await pngToIco(logo, { interpolation: 'bicubicInterpolation' })
+const binary = NtExecutable.from(readFileSync(exe), { ignoreCert: true })
+const resources = NtExecutableResource.from(binary)
+const icons = Data.IconFile.from(ico).icons.map((item) => item.data)
+const groups = Resource.IconGroupEntry.fromEntries(resources.entries)
+
+if (groups.length === 0) {
+  groups.push({
+    id: 1,
+    lang: 1033,
+  })
+}
+
+for (const group of groups) {
+  Resource.IconGroupEntry.replaceIconsForResource(resources.entries, group.id, group.lang, icons)
+}
+
+for (const info of Resource.VersionInfo.fromEntries(resources.entries)) {
+  for (const language of info.getAllLanguagesForStringValues()) {
+    info.setStringValue(language, 'FileDescription', 'The Shotcaller')
+    info.setStringValue(language, 'ProductName', 'The Shotcaller')
+    info.setStringValue(language, 'InternalName', 'TheShotcaller')
+    info.setStringValue(language, 'OriginalFilename', 'TheShotcaller.exe')
+  }
+
+  info.outputToResourceEntries(resources.entries)
+}
+
+resources.outputResource(binary)
+writeFileSync(exe, Buffer.from(binary.generate()))
 
 console.log(exe)

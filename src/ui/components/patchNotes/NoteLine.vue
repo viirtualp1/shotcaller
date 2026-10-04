@@ -6,58 +6,86 @@ import { useSettingsStore } from '../../stores/settings'
 const props = defineProps<{ text: NoteText }>()
 const settings = useSettingsStore()
 
-const URL = /https?:\/\/[^\s]+/g
+const TOKEN = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|\*\*(.+?)\*\*|(https?:\/\/[^\s]+)/g
 
-/** Odd parts sat between `**` marks and are highlighted. */
-const parts = computed(() => props.text[settings.locale].split(/\*\*(.+?)\*\*/))
+interface Piece {
+  text: string
+  href?: string
+  mark?: boolean
+}
 
-function linked(part: string) {
-  const chunks: { text: string; href?: string }[] = []
+/** Highlights sit between `**`. A `[label](https://…)` is a link, and its label can hold highlights too. */
+function pieces(source: string): Piece[] {
+  const out: Piece[] = []
   let last = 0
 
-  for (const match of part.matchAll(URL)) {
+  for (const match of source.matchAll(TOKEN)) {
     const index = match.index ?? 0
 
     if (index > last) {
-      chunks.push({ text: part.slice(last, index) })
+      out.push({ text: source.slice(last, index) })
     }
 
-    const href = match[0] ?? ''
-    chunks.push({
-      text: href,
-      href,
-    })
+    const href = match[2] ?? match[4]
 
-    last = index + href.length
+    if (href) {
+      out.push({
+        text: match[1] ?? href,
+        href,
+      })
+    } else if (match[3]) {
+      out.push({
+        text: match[3],
+        mark: true,
+      })
+    }
+
+    last = index + match[0].length
   }
 
-  if (last < part.length || chunks.length === 0) {
-    chunks.push({ text: part.slice(last) })
+  if (last < source.length) {
+    out.push({ text: source.slice(last) })
   }
 
-  return chunks
+  return out
 }
+
+function marked(text: string) {
+  return text
+    .split(/\*\*(.+?)\*\*/)
+    .map((bit, index) => ({
+      text: bit,
+      mark: index % 2 === 1,
+    }))
+    .filter((bit) => bit.text.length > 0)
+}
+
+const line = computed(() => pieces(props.text[settings.locale]))
 </script>
 
 <template>
-  <span>
-    <template v-for="(part, i) in parts" :key="i">
-      <b v-if="i % 2" class="value">{{ part }}</b>
+  <span class="line">
+    <template v-for="(piece, i) in line" :key="i">
+      <a v-if="piece.href" class="link" :href="piece.href" target="_blank" rel="noreferrer">
+        <template v-for="(bit, j) in marked(piece.text)" :key="j">
+          <b v-if="bit.mark" class="value">{{ bit.text }}</b>
 
-      <template v-else>
-        <template v-for="(chunk, j) in linked(part)" :key="j">
-          <a v-if="chunk.href" class="link" :href="chunk.href" target="_blank" rel="noreferrer">{{
-            chunk.text
-          }}</a>
-
-          <template v-else>{{ chunk.text }}</template>
+          <template v-else>{{ bit.text }}</template>
         </template>
-      </template>
+      </a>
+
+      <b v-else-if="piece.mark" class="value">{{ piece.text }}</b>
+
+      <template v-else>{{ piece.text }}</template>
     </template>
   </span>
 </template>
 
 <style scoped>
+.line {
+  overflow-wrap: anywhere;
+}
+
 .value {
   color: var(--gold);
   font-weight: 700;
@@ -66,6 +94,8 @@ function linked(part: string) {
 
 .link {
   color: var(--gold);
+  font-weight: 700;
+  text-decoration: underline;
   text-underline-offset: 2px;
 }
 </style>
