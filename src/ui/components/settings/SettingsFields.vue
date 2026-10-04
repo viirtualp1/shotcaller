@@ -9,11 +9,26 @@ import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
 import { useAudioStore } from '../../stores/audio'
 import CheckField from '../common/CheckField.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import LanguageSwitch from './LanguageSwitch.vue'
 
 const DIFFICULTY_IDS = Object.keys(DIFFICULTIES) as Difficulty[]
 
 const LANE_ORDERS_PATCH = '8.5'
+
+/** Experiments explained in a tooltip; lane orders link to their own illustrated guide instead. */
+const EXPERIMENTS = [
+  {
+    key: 'heroRotation',
+    name: 'settings.heroRotation',
+    hint: 'settings.heroRotationHint',
+  },
+  {
+    key: 'roundTwists',
+    name: 'settings.roundTwists',
+    hint: 'settings.roundTwistsHint',
+  },
+] as const
 
 withDefaults(defineProps<{ language?: boolean; sound?: boolean; showDifficulty?: boolean }>(), {
   language: true,
@@ -139,7 +154,7 @@ function openOrdersPatch() {
       <section class="field experiments">
         <h3 class="label"><FlaskConical :size="16" /> {{ t('settings.experiments') }}</h3>
 
-        <div class="lane-orders">
+        <div class="experiment">
           <CheckField v-model="settings.laneOrders">{{ t('settings.laneOrders') }}</CheckField>
 
           <a
@@ -152,10 +167,20 @@ function openOrdersPatch() {
           </a>
         </div>
 
-        <CheckField v-model="settings.heroRotation">{{ t('settings.heroRotation') }}</CheckField>
-        <p class="hint">{{ t('settings.heroRotationHint') }}</p>
-        <CheckField v-model="settings.roundTwists">{{ t('settings.roundTwists') }}</CheckField>
-        <p class="hint">{{ t('settings.roundTwistsHint') }}</p>
+        <div v-for="experiment in EXPERIMENTS" :key="experiment.key" class="experiment">
+          <CheckField v-model="settings[experiment.key]">{{ t(experiment.name) }}</CheckField>
+
+          <InfoTooltip side="top">
+            <button type="button" class="about" :aria-label="t(experiment.hint)">
+              <Info :size="15" />
+            </button>
+
+            <template #content>
+              <strong>{{ t(experiment.name) }}</strong>
+              <p class="about-text">{{ t(experiment.hint) }}</p>
+            </template>
+          </InfoTooltip>
+        </div>
       </section>
     </div>
   </div>
@@ -183,12 +208,6 @@ function openOrdersPatch() {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--chalk-dim);
-}
-
-.hint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--chalk-faint);
 }
 
 .volume {
@@ -233,13 +252,7 @@ function openOrdersPatch() {
   gap: 14px;
 }
 
-.hint {
-  margin: -4px 0 0 28px;
-  font-size: 12px;
-  color: var(--chalk-faint);
-}
-
-.lane-orders {
+.experiment {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -255,7 +268,21 @@ function openOrdersPatch() {
   color: var(--chalk-dim);
 }
 
-.about:hover {
+.about:hover,
+.about:focus-visible {
   color: var(--gold);
+}
+
+button.about {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: help;
+}
+
+.about-text {
+  max-width: 30ch;
+  margin: 4px 0 0;
+  color: var(--chalk-dim);
 }
 </style>

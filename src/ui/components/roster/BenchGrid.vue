@@ -6,8 +6,8 @@ import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
-import HeroPeek from '../common/HeroPeek.vue'
 import HudPanel from '../common/HudPanel.vue'
+import HeroTooltipCard from './HeroTooltipCard.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 
 /** `dense`: small fixed-size slots, so a touch screen fits the whole grid without scrolling. */
@@ -91,7 +91,13 @@ function onPanelClick() {
         </button>
 
         <template #content>
-          <HeroPeek :hero-id="hero.heroId" :stars="hero.stars" :items="hero.items" :souls="hero.souls" />
+          <HeroTooltipCard
+            :hero-id="hero.heroId"
+            :stars="hero.stars"
+            :items="hero.items"
+            :souls="hero.souls"
+            :talent="hero.talent"
+          />
         </template>
       </InfoTooltip>
 
