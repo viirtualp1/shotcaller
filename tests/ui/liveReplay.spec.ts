@@ -66,6 +66,34 @@ describe('watching a live match', () => {
     expect(load).toHaveBeenCalledTimes(calls)
   })
 
+  it('keeps the playback clock when a poll brings back the snapshot already shown', async () => {
+    vi.useFakeTimers()
+    const replay = useReplayStore()
+    const first = snapshot()
+    const load = vi.fn().mockResolvedValue(first)
+    replay.openLive('friend', load)
+    await settle()
+    const received = replay.liveReceivedAt
+
+    vi.advanceTimersByTime(3000)
+    load.mockResolvedValueOnce({ ...first })
+    poll()
+    await settle()
+    expect(replay.liveReceivedAt).toBe(received)
+
+    vi.advanceTimersByTime(3000)
+
+    load.mockResolvedValueOnce({
+      ...first,
+      elapsed: 7,
+    })
+
+    poll()
+    await settle()
+    expect(replay.liveReceivedAt).toBeGreaterThan(received)
+    vi.useRealTimers()
+  })
+
   it('retries transport errors and ignores responses after closing', async () => {
     const replay = useReplayStore()
     const load = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(snapshot())

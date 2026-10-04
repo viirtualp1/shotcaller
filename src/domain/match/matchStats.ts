@@ -7,13 +7,27 @@ import {
   type StarLevel,
   type TeamId,
 } from '@/content/ids'
+import type { TwistId } from '@/content/experiments'
+import type { TalentChoice } from '@/content/talents'
 import type { BattleOutcome, LaneStances, PerTeam, StructureState } from '../battle/contracts'
 import type { IncomeBreakdown } from '../economy/income'
 import type { Lineup } from '../roster/Roster'
 import { emptyStructureState } from './structures'
 
 /** A hero as it fought one round; a tuple, because a whole match of these is kept in the profile. */
-export type RoundPick = readonly [heroId: HeroId, stars: StarLevel, lane: LaneId, items: readonly ItemId[]]
+/** What a hero brought into the round besides its stars and items; missing when there is nothing. */
+export interface PickExtras {
+  readonly souls?: number
+  readonly talent?: TalentChoice
+}
+
+export type RoundPick = readonly [
+  heroId: HeroId,
+  stars: StarLevel,
+  lane: LaneId,
+  items: readonly ItemId[],
+  extras?: PickExtras,
+]
 
 /** Both lineups of one round, the player's first. */
 export type RoundLineups = PerTeam<readonly RoundPick[]>
@@ -24,11 +38,23 @@ export interface RoundReplay {
   readonly structures: PerTeam<StructureState>
   /** Lane orders, player's first; tapes from before orders have none. */
   readonly stances?: PerTeam<LaneStances>
+  /** The round's twist, in matches played with that experiment. */
+  readonly twist?: TwistId
 }
 
+/* Souls and talents change the fight, so a replay needs them; tapes recorded without them simply have none. */
 export const picksOf = (lineup: Lineup): RoundPick[] =>
   LANE_IDS.flatMap((lane) =>
-    lineup[lane].map((hero): RoundPick => [hero.heroId, hero.stars, lane, [...hero.items]]),
+    lineup[lane].map((hero): RoundPick => {
+      const extras: PickExtras = {
+        ...(hero.souls ? { souls: hero.souls } : {}),
+        ...(hero.talent !== undefined ? { talent: hero.talent } : {}),
+      }
+
+      return Object.keys(extras).length
+        ? [hero.heroId, hero.stars, lane, [...hero.items], extras]
+        : [hero.heroId, hero.stars, lane, [...hero.items]]
+    }),
   )
 
 export interface TeamMatchStats {

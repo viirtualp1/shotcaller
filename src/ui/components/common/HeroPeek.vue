@@ -3,7 +3,7 @@ import { BowArrow, Shield, Sword, Timer } from '@lucide/vue'
 import { computed } from 'vue'
 import { previewHeroVitals, type HeroVitals } from '@/application/heroVitals'
 import { HEROES } from '@/content/heroes'
-import type { HeroId, ItemId, StarLevel, SynergyId } from '@/content/ids'
+import type { HeroId, ItemId, RoleId, StarLevel, SynergyId } from '@/content/ids'
 import { starsLabel, useGameText } from '../../composables/useGameText'
 import HeroResources from './HeroResources.vue'
 import ItemIcon from './ItemIcon.vue'
@@ -15,11 +15,15 @@ const props = withDefaults(
     items?: readonly ItemId[]
     synergies?: readonly SynergyId[]
     vitals?: HeroVitals | null
+    role?: RoleId
+    souls?: number
   }>(),
   {
     items: () => [],
     synergies: () => [],
     vitals: null,
+    role: undefined,
+    souls: 0,
   },
 )
 
@@ -60,7 +64,7 @@ const stats = computed(() => [
         >{{ text.heroName(heroId) }} <span class="stars">{{ starsLabel(stars) }}</span></strong
       >
 
-      <span class="role">{{ text.roleName(hero.role) }} · {{ text.abilityName(hero.ability) }}</span>
+      <span class="role">{{ text.heroRoleName(heroId, role) }} · {{ text.abilityName(hero.ability) }}</span>
     </header>
 
     <HeroResources :values="values" :live="Boolean(vitals)" />

@@ -1,5 +1,4 @@
 import { Container } from 'pixi.js'
-import { HEROES } from '@/content/heroes'
 import { distance, type Vec2 } from '@/core/math/vec2'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import { isAlive, type Entity } from '@/simulation/ecs/components'
@@ -10,7 +9,7 @@ import { PALETTE, TEAM_COLORS } from '../theme'
 import { CreepView } from '../views/CreepView'
 import type { EntityView } from '../views/EntityView'
 import { HeroToken, isOverToken } from '../views/HeroToken'
-import { DummyView, ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
+import { BannerView, DummyView, ProjectileView, TurretView, ZoneView } from '../views/MiscViews'
 import { RelicView } from '../views/RelicView'
 import { StructureView, type StructureZone } from '../views/StructureView'
 
@@ -228,7 +227,7 @@ export class BattleLayer extends Container {
       const token = new HeroToken({
         color: entity.color ?? PALETTE.chalk,
         team,
-        icon: this.icons[HEROES[entity.hero.heroId].role],
+        icon: this.icons[entity.hero.role],
         stars: entity.hero.stars,
         items: entity.hero.items,
       })
@@ -246,6 +245,13 @@ export class BattleLayer extends Container {
 
     if (entity.structure) {
       return [new StructureView(team, entity.structure.type), this.structures]
+    }
+
+    if (entity.banner) {
+      return [
+        new BannerView(entity.color ?? TEAM_COLORS[team], team, entity.banner.radius, entity.banner.stance),
+        this.zones,
+      ]
     }
 
     if (entity.kind === 'turret') {

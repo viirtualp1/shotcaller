@@ -12,6 +12,9 @@ import type { Lineup } from '@/domain/roster/Roster'
 import { BattleSimulation, headlessResolver } from '@/simulation/BattleSimulation'
 import { laneMapFor } from '@/simulation/map/LaneMap'
 
+/** A whole match, run alongside the rest of the suite. */
+const FULL_MATCH_TIMEOUT = 30_000
+
 function lineup(prefix: string, lanes: Partial<Record<LaneId, HeroId[]>>): Lineup {
   const build = (lane: LaneId) =>
     (lanes[lane] ?? []).map((heroId, i) => ({
@@ -133,12 +136,16 @@ describe('game modes', () => {
     expect(run('threeLanes').relics).toBe(0)
   })
 
-  it('ends a one-lane match by the round limit of the mode at the latest', () => {
-    const match = playMatch('oneLane', 'short')
-    expect(match.round).toBeLessThanOrEqual(MODES.oneLane.maxRounds)
-    expect(match.stats.lineups).toHaveLength(match.round)
-    expect(match.stats.lineups.at(-1)![0].every(([, , lane]) => lane === 'mid')).toBe(true)
-  })
+  it(
+    'ends a one-lane match by the round limit of the mode at the latest',
+    { timeout: FULL_MATCH_TIMEOUT },
+    () => {
+      const match = playMatch('oneLane', 'short')
+      expect(match.round).toBeLessThanOrEqual(MODES.oneLane.maxRounds)
+      expect(match.stats.lineups).toHaveLength(match.round)
+      expect(match.stats.lineups.at(-1)![0].every(([, , lane]) => lane === 'mid')).toBe(true)
+    },
+  )
 
   it('starts every mode at level 1, with the heroes on the map the mode allows', () => {
     const board = (mode: ModeId) =>

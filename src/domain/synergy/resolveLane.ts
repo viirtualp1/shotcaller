@@ -12,22 +12,61 @@ export interface SynergySuggestion {
 
 export interface LaneReport {
   readonly lane: LaneId
+  /** The role each hero fights in, in lineup order; adaptive heroes have already picked theirs. */
+  readonly roles: readonly RoleId[]
   readonly synergies: readonly SynergyId[]
   readonly suggestions: readonly SynergySuggestion[]
   synergyModifiersFor(role: RoleId): StatModifiers
   modifiersFor(role: RoleId): StatModifiers
 }
 
-export function resolveLane(lane: LaneId, heroIds: readonly HeroId[], mode: ModeId): LaneReport {
-  const roles = heroIds.map((id) => HEROES[id].role)
-
-  const active = SYNERGIES.filter((s) =>
+const activeSynergies = (lane: LaneId, roles: readonly RoleId[], mode: ModeId) =>
+  SYNERGIES.filter((s) =>
     s.isActive({
       mode,
       lane,
       roles,
     }),
   )
+
+/**
+ * Adaptive heroes, in lineup order, take the role that switches on the most synergies of the lane. A tie keeps
+ * the hero's own role, then goes to the first role in the usual order, so the choice never surprises a coach.
+ */
+export function laneRoles(lane: LaneId, heroIds: readonly HeroId[], mode: ModeId) {
+  const roles = heroIds.map((id) => HEROES[id].role)
+  heroIds.forEach((id, index) => {
+    const hero = HEROES[id]
+    if (!hero.adaptive) {
+      return
+    }
+
+    const countWith = (role: RoleId) =>
+      activeSynergies(
+        lane,
+        roles.map((r, i) => (i === index ? role : r)),
+        mode,
+      ).length
+
+    let best = hero.role
+    let bestCount = countWith(best)
+    for (const role of ROLE_IDS) {
+      const count = countWith(role)
+      if (count > bestCount) {
+        best = role
+        bestCount = count
+      }
+    }
+
+    roles[index] = best
+  })
+
+  return roles
+}
+
+export function resolveLane(lane: LaneId, heroIds: readonly HeroId[], mode: ModeId): LaneReport {
+  const roles = laneRoles(lane, heroIds, mode)
+  const active = activeSynergies(lane, roles, mode)
 
   const suggestions = SYNERGIES.filter((s) => !active.includes(s))
     .map((s) => ({
@@ -52,6 +91,7 @@ export function resolveLane(lane: LaneId, heroIds: readonly HeroId[], mode: Mode
 
   return {
     lane,
+    roles,
     synergies: active.map((s) => s.id),
     suggestions,
     synergyModifiersFor,

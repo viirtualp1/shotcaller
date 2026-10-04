@@ -3,14 +3,16 @@ import { Axe, BowArrow, Droplet, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
 import { previewHeroVitals, type HeroVitals } from '@/application/heroVitals'
 import { HEROES } from '@/content/heroes'
-import type { HeroId, ItemId, StarLevel, SynergyId } from '@/content/ids'
+import type { HeroId, ItemId, RoleId, StarLevel, SynergyId } from '@/content/ids'
+import { ITEMS } from '@/content/items'
+import { activeTalents, type TalentChoice } from '@/content/talents'
 import { ROLES } from '@/content/roles'
 import { BATTLE } from '@/content/rules'
 import { heroSheet } from '@/domain/roster/heroSheet'
 import { cssColor } from '@/rendering/theme'
 import { starsLabel, useGameText } from '../../composables/useGameText'
 import { useHeroStats } from '../../composables/useHeroStats'
-import { ROLE_ICONS } from '../../icons'
+import { ADAPTIVE_ICON, ROLE_ICONS } from '../../icons'
 import ItemIcon from './ItemIcon.vue'
 import HeroResources from './HeroResources.vue'
 
@@ -29,6 +31,10 @@ const props = withDefaults(
     /** Off where the hero's item slots are already on screen next to the sheet. */
     itemIcons?: boolean
     vitals?: HeroVitals | null
+    /** The role the hero took on its lane; an adaptive hero has none on the bench. */
+    role?: RoleId
+    souls?: number
+    talent?: TalentChoice
   }>(),
   {
     items: () => [],
@@ -36,6 +42,9 @@ const props = withDefaults(
     heading: true,
     itemIcons: true,
     vitals: null,
+    role: undefined,
+    souls: 0,
+    talent: undefined,
   },
 )
 
@@ -44,7 +53,16 @@ const { t } = text
 const stats = useHeroStats()
 
 const hero = computed(() => HEROES[props.heroId])
-const role = computed(() => ROLES[hero.value.role])
+const playedRole = computed(() => props.role ?? hero.value.role)
+const roleRules = computed(() => ROLES[playedRole.value])
+/** An adaptive hero off the lanes has no role yet: it shows the mask and how it picks one. */
+const undecided = computed(() => Boolean(hero.value.adaptive && !props.role))
+const roleIcon = computed(() => (undecided.value ? ADAPTIVE_ICON : ROLE_ICONS[playedRole.value]))
+
+const soulMax = computed(
+  () => props.items.map((id) => ITEMS[id].effects.soulMax ?? 0).find((max) => max > 0) ?? 0,
+)
+
 const range = computed(() => hero.value.stats.range)
 const innate = computed(() => text.heroPassive(props.heroId))
 
@@ -54,6 +72,9 @@ const sheet = computed(() =>
     stars: props.stars,
     items: props.items,
     synergies: props.synergies,
+    role: playedRole.value,
+    souls: props.souls,
+    ...(props.talent !== undefined ? { talent: props.talent } : {}),
   }),
 )
 
@@ -63,7 +84,7 @@ const mana = computed(() => sheet.value.mana)
 /** Mana per attack the hero gets on its own, role included; items and synergies add the rest. */
 const basePerAttack = computed(() => BATTLE.manaPerAttack * sheet.value.base.manaGain)
 const bonusPerAttack = computed(() => Math.round((mana.value.perAttack - basePerAttack.value) * 10) / 10)
-const startingMana = computed(() => role.value.startingManaRatio ?? 0)
+const startingMana = computed(() => roleRules.value.startingManaRatio ?? 0)
 const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
 </script>
 
@@ -85,9 +106,9 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
         <span v-if="range" class="range">{{ text.number(range) }}</span>
       </span>
 
-      <span class="chip role" :style="{ '--role': cssColor(role.color) }">
-        <component :is="ROLE_ICONS[hero.role]" :size="13" />
-        {{ text.roleName(hero.role) }}
+      <span class="chip role" :style="{ '--role': cssColor(roleRules.color) }">
+        <component :is="roleIcon" :size="13" />
+        {{ text.heroRoleName(heroId, props.role) }}
       </span>
     </div>
 
@@ -122,7 +143,17 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
         {{ text.abilityName(hero.ability) }}
       </strong>
 
-      <p>{{ text.abilityDescription(hero.ability, sheet.total.spellPower, sheet.total.healPower) }}</p>
+      <p>
+        {{
+          text.abilityDescription(
+            hero.ability,
+            sheet.total.spellPower,
+            sheet.total.healPower,
+            props.role,
+            activeTalents(stars, talent),
+          )
+        }}
+      </p>
 
       <dl class="mana">
         <div :title="t('card.mana.perAttackHint')">
@@ -160,10 +191,19 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
       <p>{{ innate }}</p>
     </section>
 
-    <section class="block passive" :style="{ '--role': cssColor(role.color) }">
-      <span class="label">{{ t('card.rolePassive', { role: text.roleName(hero.role) }) }}</span>
-      <p>{{ text.rolePassive(hero.role) }}</p>
+    <section v-if="undecided" class="block passive">
+      <span class="label">{{ t('card.rolePassive', { role: t('roles.adaptive.name') }) }}</span>
+      <p>{{ t('roles.adaptive.passive') }}</p>
     </section>
+
+    <section v-else class="block passive" :style="{ '--role': cssColor(roleRules.color) }">
+      <span class="label">{{ t('card.rolePassive', { role: text.roleName(playedRole) }) }}</span>
+      <p>{{ text.rolePassive(playedRole) }}</p>
+    </section>
+
+    <p v-if="soulMax" class="souls">
+      {{ t('card.souls', { n: text.number(Math.min(souls, soulMax)), max: text.number(soulMax) }) }}
+    </p>
 
     <ul v-if="itemIcons && items.length" class="items">
       <li v-for="(item, i) in items" :key="`${item}-${i}`">
@@ -388,6 +428,12 @@ p {
 .first-cast {
   font-size: 11.5px;
   color: var(--chalk-faint);
+}
+
+.souls {
+  margin: 0;
+  font-size: 12px;
+  color: #d9c2ff;
 }
 
 .items {

@@ -48,9 +48,26 @@ export const useReplayStore = defineStore('replay', () => {
         return
       }
 
+      /*
+       * The player's device and this one both work on a timer, so a poll often brings back the snapshot already
+       * shown. Only news moves the clock that playback runs on from; otherwise the battle would fall back and stall.
+       */
+      const previous = live.value
+
+      const news =
+        !previous ||
+        previous.round !== snapshot.round ||
+        previous.phase !== snapshot.phase ||
+        previous.elapsed !== snapshot.elapsed ||
+        previous.speed !== snapshot.speed
+
       match.value = snapshot.record
       live.value = snapshot
-      liveReceivedAt.value = Date.now()
+
+      if (news) {
+        liveReceivedAt.value = Date.now()
+      }
+
       round.value = Math.max(1, snapshot.record.replays.length)
       liveStatus.value = snapshot.phase === 'finished' ? 'ended' : 'watching'
 

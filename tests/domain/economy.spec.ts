@@ -11,7 +11,11 @@ import { MODES } from '@/content/modes'
 import { freshStructures } from '@/domain/match/structures'
 
 const totalInPool = (pool: HeroPool) => HERO_IDS.reduce((sum, id) => sum + pool.available(id), 0)
-const initialTotal = HERO_IDS.reduce((sum, id) => sum + POOL_COPIES[HEROES[id].tier], 0)
+
+const initialTotal = HERO_IDS.reduce(
+  (sum, id) => sum + (HEROES[id].copies ?? POOL_COPIES[HEROES[id].tier]),
+  0,
+)
 
 describe('shop and pool', () => {
   it('conserves hero copies across rerolls, purchases and sales', () => {

@@ -10,7 +10,8 @@ import { verdictFor } from '@/domain/match/judge'
 import { addRound, emptyMatchStats } from '@/domain/match/matchStats'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
-const FULL_MATCH_TIMEOUT = 15_000
+/* Whole matches run alongside the rest of the suite; 9.0's larger pool and talents made them longer on CI. */
+const FULL_MATCH_TIMEOUT = 30_000
 
 const emptyIncome = {
   base: 0,

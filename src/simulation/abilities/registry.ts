@@ -9,12 +9,15 @@ import { charge } from './charge'
 import { fireball } from './fireball'
 import { hook } from './hook'
 import { leap } from './leap'
+import { mend } from './mend'
+import { mimic } from './mimic'
 import { poisonDagger } from './poisonDagger'
 import { prayer } from './prayer'
 import { quake } from './quake'
 import { raiseDead } from './raiseDead'
 import { roots } from './roots'
 import { shield } from './shield'
+import { standard } from './standard'
 import { turret } from './turret'
 import { volley } from './volley'
 import { whirl } from './whirl'
@@ -40,4 +43,7 @@ export const ABILITIES: AbilityRegistry = {
   hook,
   assassinate,
   shield,
+  standard,
+  mend,
+  mimic,
 }

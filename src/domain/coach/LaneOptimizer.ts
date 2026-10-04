@@ -53,7 +53,7 @@ export class LaneOptimizer {
       )
 
       const power = group.reduce(
-        (sum, h) => sum + heroPower(h) * effectiveness(report.synergyModifiersFor(HEROES[h.heroId].role)),
+        (sum, h, i) => sum + heroPower(h) * effectiveness(report.synergyModifiersFor(report.roles[i]!)),
         0,
       )
 

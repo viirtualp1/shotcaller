@@ -17,7 +17,7 @@ export class MovementSystem implements System {
 
   update(dt: number) {
     for (const unit of this.ctx.queries.movers) {
-      if (!isAlive(unit) || isDisabled(unit) || unit.status.root > 0) {
+      if (!isAlive(unit) || isDisabled(unit) || unit.status.root > 0 || unit.channel) {
         continue
       }
 

@@ -15,6 +15,7 @@ import CareerFeatureArt from './CareerFeatureArt.vue'
 import MatchmakingFeatureArt from './MatchmakingFeatureArt.vue'
 import LeaderboardFeatureArt from './LeaderboardFeatureArt.vue'
 import TrainingFeatureArt from './TrainingFeatureArt.vue'
+import ForgeFeatureArt from './ForgeFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** A made-up rank per mode, only to show that each has its own. */
@@ -70,7 +71,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="art" :class="{ career: art.kind === 'career' }" aria-hidden="true">
+  <!-- The forge pictures take clicks, so they speak for themselves; the others are decoration. -->
+  <div
+    class="art"
+    :class="{ career: art.kind === 'career', forge: art.kind === 'forge' }"
+    :aria-hidden="art.kind === 'forge' ? undefined : 'true'"
+  >
     <img v-if="art.kind === 'map' && picture" class="map" :src="picture" alt="" />
 
     <div v-else-if="art.kind === 'modes'" class="row">
@@ -98,6 +104,8 @@ onMounted(() => {
     <LeaderboardFeatureArt v-else-if="art.kind === 'leaderboard'" />
 
     <TrainingFeatureArt v-else-if="art.kind === 'training'" :focus="art.focus" />
+
+    <ForgeFeatureArt v-else-if="art.kind === 'forge'" :focus="art.focus" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">
@@ -145,7 +153,8 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.art.career {
+.art.career,
+.art.forge {
   min-height: 310px;
 }
 

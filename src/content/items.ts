@@ -1,4 +1,4 @@
-import type { ItemId, RoleId } from './ids'
+import type { ItemId, RoleId, ShopItemId, UpgradedItemId } from './ids'
 import { combineModifiers, type StatModifiers } from './modifiers'
 import { ROLES } from './roles'
 
@@ -15,6 +15,22 @@ export interface ItemEffects {
   readonly critChance?: number
   /** Damage multiplier of a critical strike. */
   readonly critMultiplier?: number
+  /** Attack damage per soul; the wearer keeps one soul per hero kill from round to round. */
+  readonly soulDamage?: number
+  readonly soulMax?: number
+  /** Share of damage passed to the other bonded hero of the lane, who takes it with its own protection. */
+  readonly bond?: number
+  /** The bond holds while the pair stands this close. */
+  readonly bondRange?: number
+  /** The ability goes off a second time, this much weaker, after `echoDelay` seconds; its stuns are as short. */
+  readonly echo?: number
+  readonly echoDelay?: number
+  /** Once a round the wearer travels to an allied tower under attack below this share of health… */
+  readonly portal?: number
+  /** …if the tower is at least this far away. */
+  readonly portalDistance?: number
+  /** Damage to the wearer's own throne every time the wearer dies; it counts for the enemy in the round. Flat in every round. */
+  readonly curse?: number
 }
 
 export interface ItemDefinition {
@@ -40,7 +56,7 @@ const item = (
   effects,
 })
 
-export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
+const SHOP_ITEMS: Readonly<Record<ShopItemId, ItemDefinition>> = {
   broadsword: item(
     'broadsword',
     'Broadsword',
@@ -70,7 +86,175 @@ export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = {
   ),
   thornMail: item('thornMail', 'Thorn Mail', 4, { damageTaken: 0.95 }, { thorns: 0.3 }),
   aegis: item('aegis', 'Aegis', 6, {}, { revive: 0.6 }),
+  soulJar: item(
+    'soulJar',
+    'Soul Jar',
+    4,
+    {},
+    {
+      soulDamage: 0.04,
+      soulMax: 10,
+    },
+  ),
+  soulbond: item(
+    'soulbond',
+    'Soulbond',
+    3,
+    {},
+    {
+      bond: 0.35,
+      bondRange: 320,
+    },
+  ),
+  echoShard: item(
+    'echoShard',
+    'Echo Shard',
+    4,
+    { manaGain: 0.8 },
+    {
+      echo: 0.5,
+      echoDelay: 1.5,
+    },
+  ),
+  townPortal: item(
+    'townPortal',
+    'Town Portal',
+    2,
+    {},
+    {
+      portal: 0.65,
+      portalDistance: 250,
+    },
+  ),
+  cursedBlade: item(
+    'cursedBlade',
+    'Cursed Blade',
+    4,
+    {
+      damage: 1.4,
+      attackSpeed: 1.15,
+    },
+    { curse: 80 },
+  ),
 }
+
+type Upgrade = Pick<ItemDefinition, 'modifiers' | 'effects'>
+
+/**
+ * What two copies of an item merge into. Every number is written out, so a later change to the plain item does not
+ * quietly change its upgrade too.
+ */
+const UPGRADES: Readonly<Record<ShopItemId, Upgrade>> = {
+  broadsword: {
+    modifiers: {},
+    effects: {
+      critChance: 0.3,
+      critMultiplier: 2.25,
+    },
+  },
+  gloves: {
+    modifiers: { attackSpeed: 1.4 },
+    effects: {},
+  },
+  chainmail: {
+    modifiers: { damageTaken: 0.72 },
+    effects: {},
+  },
+  vitality: {
+    modifiers: { maxHp: 1.45 },
+    effects: {},
+  },
+  boots: {
+    modifiers: { speed: 1.4 },
+    effects: {},
+  },
+  staff: {
+    modifiers: { spellPower: 1.9 },
+    effects: {},
+  },
+  chalice: {
+    modifiers: { healPower: 1.65 },
+    effects: {},
+  },
+  manaStone: {
+    modifiers: { manaGain: 1.9 },
+    effects: {},
+  },
+  vampireFang: {
+    modifiers: {},
+    effects: {
+      lifesteal: 0.32,
+      spellLifesteal: 0.16,
+    },
+  },
+  thornMail: {
+    modifiers: { damageTaken: 0.9 },
+    effects: { thorns: 0.5 },
+  },
+  aegis: {
+    modifiers: {},
+    effects: { revive: 1 },
+  },
+  soulJar: {
+    modifiers: {},
+    effects: {
+      soulDamage: 0.06,
+      soulMax: 10,
+    },
+  },
+  soulbond: {
+    modifiers: {},
+    effects: {
+      bond: 0.5,
+      bondRange: 420,
+    },
+  },
+  echoShard: {
+    modifiers: { manaGain: 0.9 },
+    effects: {
+      echo: 0.75,
+      echoDelay: 1.5,
+    },
+  },
+  townPortal: {
+    modifiers: {},
+    effects: {
+      portal: 0.8,
+      portalDistance: 150,
+    },
+  },
+  cursedBlade: {
+    modifiers: {
+      damage: 1.75,
+      attackSpeed: 1.25,
+    },
+    effects: { curse: 80 },
+  },
+}
+
+export const isUpgraded = (id: ItemId): id is UpgradedItemId => id.endsWith('+')
+
+/** The shop item an item was made from; a shop item is its own base. */
+export const baseItemOf = (id: ItemId) => (isUpgraded(id) ? id.slice(0, -1) : id) as ShopItemId
+
+export const upgradeOf = (id: ShopItemId): UpgradedItemId => `${id}+`
+
+/** An upgrade is worth both copies that went into it, so selling or merging never makes or loses gold. */
+export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = Object.fromEntries(
+  Object.values(SHOP_ITEMS).flatMap((plain) => [
+    [plain.id, plain],
+    [
+      upgradeOf(plain.id as ShopItemId),
+      {
+        ...plain,
+        ...UPGRADES[plain.id as ShopItemId],
+        id: upgradeOf(plain.id as ShopItemId),
+        name: `${plain.name}+`,
+        cost: plain.cost * 2,
+      },
+    ],
+  ]),
+) as Record<ItemId, ItemDefinition>
 
 export const ITEM_SLOTS = 2
 export const STASH_SIZE = 6
@@ -94,7 +278,7 @@ export function itemModifiers(id: ItemId, role: RoleId): Partial<StatModifiers> 
 export function loadoutModifiers(items: readonly ItemId[], role: RoleId): StatModifiers {
   const parts = items.map((id) => itemModifiers(id, role))
   const result = combineModifiers(...parts)
-  for (const key of ['attackSpeed', 'spellPower', 'manaGain'] as const) {
+  for (const key of ['damage', 'attackSpeed', 'spellPower', 'manaGain'] as const) {
     result[key] = 1 + parts.reduce((sum, modifiers) => sum + (modifiers[key] ?? 1) - 1, 0)
   }
 

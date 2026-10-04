@@ -1,14 +1,14 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Vec2 } from '@/core/math/vec2'
 import type { Unit } from '../ecs/components'
 import type { Ability } from './Ability'
 import { enemiesAround, nearest } from './selectors'
-
-const P = ABILITY_PARAMS.chainLightning
+import { paramsOf } from './params'
 
 export const chainLightning: Ability = {
   id: 'chainLightning',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'chainLightning')
+
     const first = nearest(
       caster.position,
       enemiesAround(ctx, caster, caster.position, caster.attack.range + P.rangeBonus),

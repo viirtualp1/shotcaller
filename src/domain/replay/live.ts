@@ -68,6 +68,7 @@ export function liveMatchOf(
           seed: battle.seed,
           structures: fromSide(match.side, battle.structures),
           stances: fromSide(match.side, battle.stances ?? [{}, {}]),
+          ...(battle.twist ? { twist: battle.twist } : {}),
         },
       ],
     },

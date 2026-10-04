@@ -13,6 +13,7 @@ import type {
 } from '@/content/ids'
 import type { CreepVariant, StructureType } from '@/content/units'
 import type { SandboxGoal } from '@/content/sandbox'
+import type { TalentChoice } from '@/content/talents'
 import type { Vec2 } from '@/core/math/vec2'
 import type { Prd } from '@/core/random/prd'
 import type { LanePath } from '../map/LaneMap'
@@ -61,12 +62,23 @@ export interface Mana {
   current: number
   max: number
   gain: number
+  /** Mana per second the hero gains on its own; scaled by `gain` like any other mana. */
+  regen: number
 }
 
 export interface Caster {
   ability: AbilityId
   power: number
   healPower: number
+  /** Stuns of the cast under way are multiplied by this; an Echo Shard repeat casts at half length. */
+  stunScale: number
+  /** The hero's talents in effect for its own ability. */
+  talents: readonly TalentChoice[]
+}
+
+/** A repeat of the last cast, waiting to go off. */
+export interface Echo {
+  remaining: number
 }
 
 export interface HeroData {
@@ -84,6 +96,10 @@ export interface HeroData {
   structureDamage: number
   healing: number
   lastHits: number
+  /** The lane the hero was sent to; a Town Portal can move it to another one during the round. */
+  startLane: LaneId
+  /** Soul Jar charges; they grow with every hero kill and stay for the next round. */
+  souls: number
 }
 
 export interface Roamer {
@@ -200,6 +216,47 @@ export interface ItemEffectsState {
   spellLifesteal: number
   thorns: number
   revive: number
+  soulDamage: number
+  soulMax: number
+  echo: number
+  echoDelay: number
+  /** Health share an allied tower must be under for a Town Portal; zero once it has been used this round. */
+  portal: number
+  portalDistance: number
+  curse: number
+}
+
+/** Two heroes of a lane sharing a Soulbond: part of the damage either takes goes to the other. */
+export interface Bond {
+  partner: Unit
+  share: number
+  range: number
+}
+
+/** A Battle Standard on the ground; what it does depends on the order its lane was given. */
+export interface Banner {
+  stance: LaneStance | null
+  radius: number
+}
+
+/** Effects of a nearby Battle Standard, set again every step while the unit stands by it. */
+export interface Rally {
+  damage: number
+  attackSpeed: number
+  structureDamage: number
+  damageTaken: number
+}
+
+/** A hero standing still to repair a building; a stun or death breaks it. */
+export interface Channel {
+  structure: Unit
+  remaining: number
+  tick: number
+  tickTimer: number
+  /** Health restored every tick. */
+  repair: number
+  /** Under Hold the repair also takes back the enemy's building damage of the round. */
+  reclaims: boolean
 }
 
 export interface Entity {
@@ -234,6 +291,11 @@ export interface Entity {
   retreat?: Retreat
   defend?: Defend
   itemEffects?: ItemEffectsState
+  bond?: Bond
+  banner?: Banner
+  rally?: Rally
+  channel?: Channel
+  echo?: Echo
   crit?: CriticalStrike
   bash?: Bash
   evasion?: Evasion

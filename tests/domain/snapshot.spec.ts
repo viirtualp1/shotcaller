@@ -7,6 +7,9 @@ import { createRng } from '@/core/random/rng'
 import { GreedyCoach } from '@/domain/coach/GreedyCoach'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
+/** These play several rounds first, alongside the rest of the suite. */
+const PLAYED_MATCH_TIMEOUT = 20_000
+
 function playedMatch() {
   const match = createMatch({
     seed: 'save',
@@ -31,7 +34,7 @@ function playedMatch() {
 }
 
 describe('match snapshots', () => {
-  it('restores the exact visible state', () => {
+  it('restores the exact visible state', { timeout: PLAYED_MATCH_TIMEOUT }, () => {
     const original = playedMatch()
 
     const restored = restoreMatch(parseSnapshot(serializeSnapshot(original.snapshot()))!, {
@@ -41,7 +44,7 @@ describe('match snapshots', () => {
     expect(toMatchView(restored)).toEqual(toMatchView(original))
   })
 
-  it('continues the same random stream after loading', () => {
+  it('continues the same random stream after loading', { timeout: PLAYED_MATCH_TIMEOUT }, () => {
     const original = playedMatch()
 
     const restored = restoreMatch(parseSnapshot(serializeSnapshot(original.snapshot()))!, {
@@ -53,7 +56,7 @@ describe('match snapshots', () => {
     expect(restored.human.shop.slots).toEqual(original.human.shop.slots)
   })
 
-  it('keeps an unfinished battle so it can be replayed', () => {
+  it('keeps an unfinished battle so it can be replayed', { timeout: PLAYED_MATCH_TIMEOUT }, () => {
     const match = playedMatch()
     const setup = match.startBattle()._unsafeUnwrap()
 

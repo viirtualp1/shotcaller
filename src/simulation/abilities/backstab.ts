@@ -1,13 +1,13 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import { direction, offset } from '@/core/math/vec2'
 import type { Ability } from './Ability'
 import { enemiesAround, weakest } from './selectors'
-
-const P = ABILITY_PARAMS.backstab
+import { paramsOf } from './params'
 
 export const backstab: Ability = {
   id: 'backstab',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'backstab')
+
     const heroes = enemiesAround(ctx, caster, caster.position, P.radius, {
       heroesOnly: true,
       excludeProtected: true,

@@ -8,6 +8,7 @@ import type {
   StructureSlot,
   TeamId,
 } from '@/content/ids'
+import type { TwistId } from '@/content/experiments'
 import type { SandboxSettings } from '@/content/sandbox'
 import type { Lineup } from '../roster/Roster'
 
@@ -27,6 +28,8 @@ export interface BattleSetup {
   readonly stances?: PerTeam<LaneStances>
   /** Set on the training ground: dummies stand on the other side's lanes, and creeps come only when asked for. */
   readonly sandbox?: SandboxSettings
+  /** The round's twist, when the match plays with that experiment. */
+  readonly twist?: TwistId
 }
 
 export interface TeamBattleStats {
@@ -43,6 +46,8 @@ export interface HeroBattleReport {
   /** Lane and items are missing on round summaries saved before 8.5. */
   readonly lane?: LaneId
   readonly items?: readonly ItemId[]
+  /** Soul Jar charges at the end of the round; missing when the hero has none. */
+  readonly souls?: number
   readonly damageDealt: number
   readonly damageReceived: number
   readonly structureDamage: number

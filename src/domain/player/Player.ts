@@ -1,17 +1,18 @@
 import { err, ok, type Result } from 'neverthrow'
 import { HEROES } from '@/content/heroes'
 import type { CoachLevel, HeroId, ItemId, LaneId, LaneStance, ModeId, TeamId } from '@/content/ids'
-import { ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS } from '@/content/items'
+import { isUpgraded, ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS, upgradeOf } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, ECONOMY, ROSTER } from '@/content/rules'
 import { SANDBOX } from '@/content/sandbox'
+import type { TalentChoice } from '@/content/talents'
 import type { IdGenerator } from '@/core/ids'
 import type { Rng } from '@/core/random/rng'
 import type { HeroPool } from '../economy/HeroPool'
 import { Shop, type ShopSlot } from '../economy/Shop'
 import { Wallet } from '../economy/Wallet'
 import type { DomainError } from '../errors'
-import { Stash } from '../items/Stash'
+import { mergesWith, Stash } from '../items/Stash'
 import { emptyLedger, type Ledger } from './ledger'
 import { CoachProgression } from '../progression/CoachProgression'
 import { promoteDuplicates, wouldPromote } from '../roster/promotion'
@@ -165,17 +166,24 @@ export class Player {
     })
   }
 
-  buyItem(item: ItemId): Result<void, DomainError> {
-    if (this.stash.isFull) {
+  /** Returns the upgrade when the new item merged with a copy waiting in the stash. */
+  buyItem(item: ItemId): Result<ItemId | null, DomainError> {
+    if (isUpgraded(item)) {
+      return err({ code: 'itemNotFound' })
+    }
+
+    if (!this.stash.accepts(item)) {
       return err({ code: 'stashFull' })
     }
 
     return this.wallet
       .spend(ITEMS[item].cost)
       .andThen(() => this.stash.put(item))
-      .map(() => {
+      .map((upgrade) => {
         this.books.itemsBought++
         this.books.goldSpent += ITEMS[item].cost
+
+        return upgrade
       })
   }
 
@@ -190,17 +198,38 @@ export class Player {
     })
   }
 
-  equip(stashIndex: number, uid: string): Result<void, DomainError> {
-    const location = this.roster.locate(uid)
-    if (!location) {
+  /**
+   * Gives a stash item to a hero. A hero already carrying a copy gets the upgrade in that slot instead, even with
+   * both slots taken; the result is the upgrade, or null for a plain equip.
+   */
+  equip(stashIndex: number, uid: string): Result<ItemId | null, DomainError> {
+    const hero = this.roster.locate(uid)?.hero
+    if (!hero) {
       return err({ code: 'heroNotFound' })
     }
 
-    if (location.hero.items.length >= ITEM_SLOTS) {
+    const item = this.stash.items[stashIndex]
+    if (!item) {
+      return err({ code: 'itemNotFound' })
+    }
+
+    const copy = hero.items.findIndex((carried) => mergesWith(item, carried))
+    if (copy < 0 && hero.items.length >= ITEM_SLOTS) {
       return err({ code: 'itemSlotsFull' })
     }
 
-    return this.stash.take(stashIndex).map((item) => void location.hero.items.push(item))
+    return this.stash.take(stashIndex).map((taken) => {
+      if (copy >= 0 && !isUpgraded(taken)) {
+        const upgrade = upgradeOf(taken)
+        hero.items[copy] = upgrade
+
+        return upgrade
+      }
+
+      hero.items.push(taken)
+
+      return null
+    })
   }
 
   unequip(uid: string, itemIndex: number): Result<void, DomainError> {
@@ -227,6 +256,22 @@ export class Player {
 
   swap(a: string, b: string): Result<void, DomainError> {
     return this.roster.swap(a, b)
+  }
+
+  /** A hero that has just reached two stars takes one of its two talents, for good. */
+  chooseTalent(uid: string, talent: TalentChoice): Result<void, DomainError> {
+    const hero = this.roster.locate(uid)?.hero
+    if (!hero) {
+      return err({ code: 'heroNotFound' })
+    }
+
+    if (hero.stars !== 2 || hero.talent !== undefined) {
+      return err({ code: 'talentUnavailable' })
+    }
+
+    hero.talent = talent
+
+    return ok(undefined)
   }
 
   /** An order for one of the mode's lanes; null leaves the lane to its heroes. */

@@ -40,6 +40,10 @@ export function promoteDuplicates(roster: Roster) {
     for (const hero of consumed) {
       roster.remove(hero.uid)
 
+      if ((hero.souls ?? 0) > (keeper.souls ?? 0)) {
+        keeper.souls = hero.souls
+      }
+
       for (const item of hero.items) {
         if (keeper.items.length < ITEM_SLOTS) {
           keeper.items.push(item)

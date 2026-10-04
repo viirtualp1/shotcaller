@@ -19,7 +19,7 @@ import {
 } from '@lucide/vue'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed, type Component } from 'vue'
-import { ITEM_IDS, ROLE_IDS, SYNERGY_IDS } from '@/content/ids'
+import { ROLE_IDS, SHOP_ITEM_IDS, SYNERGY_IDS } from '@/content/ids'
 import { ITEMS } from '@/content/items'
 import { DEFAULT_MODE, MODES } from '@/content/modes'
 import { ROLES } from '@/content/roles'
@@ -285,9 +285,10 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
 
         <section>
           <h3 class="section-title"><Wand2 :size="15" /> {{ t('help.items') }}</h3>
+          <p>{{ t('help.itemMerge') }}</p>
 
           <ul class="grid">
-            <li v-for="id in ITEM_IDS" :key="id" class="card item">
+            <li v-for="id in SHOP_ITEM_IDS" :key="id" class="card item">
               <span class="item-head">
                 <ItemIcon :item-id="id" :size="30" />
 

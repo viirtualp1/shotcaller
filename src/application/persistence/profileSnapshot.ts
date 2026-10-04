@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import { ACHIEVEMENT_IDS, CONTRACT_IDS, TRIAL_IDS } from '@/content/career'
+import { TWIST_IDS } from '@/content/experiments'
+import { ITEMS } from '@/content/items'
 import { HERO_IDS, ITEM_IDS, LANE_IDS, LANE_STANCES, MODE_IDS, SYNERGY_IDS } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { PROFILE } from '@/content/profile'
@@ -114,15 +116,31 @@ const structureHp = z.object({
   throne: amount,
 })
 
+const pickExtras = z.object({
+  souls: z
+    .int()
+    .min(0)
+    .max(ITEMS.soulJar.effects.soulMax ?? 0)
+    .optional(),
+  talent: z.union([z.literal(0), z.literal(1)]).optional(),
+})
+
 const roundReplay = z.object({
   seed: z.string().min(1).max(80),
   structures: pair(structureHp),
   stances: pair(z.partialRecord(z.enum(LANE_IDS), z.enum(LANE_STANCES))).optional(),
+  twist: z.enum(TWIST_IDS).optional(),
 })
 
-/** A hero as it fought one round: id, stars, lane and items. */
+/** A hero as it fought one round: id, stars, lane, items, then souls and talent when it had any. */
 const roundPick = z
-  .tuple([heroId, stars, z.enum(LANE_IDS), z.array(z.enum(ITEM_IDS)).max(2).readonly()])
+  .tuple([
+    heroId,
+    stars,
+    z.enum(LANE_IDS),
+    z.array(z.enum(ITEM_IDS)).max(2).readonly(),
+    pickExtras.optional(),
+  ])
   .readonly()
 
 const matchRecord = z.object({

@@ -27,6 +27,15 @@ export interface HeroDefinition {
   readonly ability: AbilityId
   readonly stats: HeroStats
   readonly bash?: HeroBash
+  /**
+   * Takes on whichever role switches on the most synergies of its lane; `role` is the one it keeps on the bench
+   * and on a lane where no role adds a synergy.
+   */
+  readonly adaptive?: boolean
+  /** Copies in the shared pool when the hero is rarer than the rest of its tier. */
+  readonly copies?: number
+  /** Mana gained every second on top of attacks and hits, for heroes whose ability waits on something else. */
+  readonly manaRegen?: number
 }
 
 type Row = [name: string, tier: Tier, role: RoleId, color: number, ability: AbilityId, stats: HeroStats]
@@ -68,6 +77,9 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
   butcher: ['Butcher', 3, 'ganker', 0xc4506a, 'hook', stats(1050, 64, 1.2, 0, 102, 0.18, 75)],
   sniper: ['Sniper', 3, 'carry', 0xc7b27a, 'assassinate', stats(480, 52, 1.1, 230, 86, 0.05, 100)],
   oracle: ['Oracle', 3, 'support', 0xe4d6ff, 'shield', stats(560, 40, 1.1, 150, 90, 0.08, 70)],
+  herald: ['Herald', 1, 'initiator', 0xd9a441, 'standard', stats(700, 34, 1.15, 0, 92, 0.18, 80)],
+  stonewright: ['Stonewright', 2, 'support', 0x9aa3ad, 'mend', stats(660, 32, 1.25, 0, 88, 0.22, 90)],
+  changeling: ['Changeling', 3, 'carry', 0xb28ce0, 'mimic', stats(560, 40, 1, 120, 96, 0.1, 90)],
 }
 
 const BASHERS: Partial<Record<HeroId, HeroBash>> = {
@@ -75,6 +87,29 @@ const BASHERS: Partial<Record<HeroId, HeroBash>> = {
     chance: 0.2,
     stun: 0.8,
   },
+}
+
+/**
+ * The Changeling adapts its role and is rare: four copies make a second star hard and a third impossible.
+ * The Stonewright builds mana on its own.
+ */
+const TRAITS: Partial<Record<HeroId, Pick<HeroDefinition, 'adaptive' | 'copies' | 'manaRegen'>>> = {
+  changeling: {
+    adaptive: true,
+    copies: 4,
+  },
+  /* A held lane fights little, and Mend still has to be ready when the tower comes under attack. */
+  stonewright: { manaRegen: 5 },
+}
+
+/** The ability an adaptive hero casts in each role: the one of the role's tier-one hero. */
+export const ROLE_SIGNATURES: Readonly<Record<RoleId, AbilityId>> = {
+  carry: 'volley',
+  support: 'prayer',
+  mage: 'chainLightning',
+  initiator: 'charge',
+  pusher: 'barrel',
+  ganker: 'poisonDagger',
 }
 
 export const HEROES: Readonly<Record<HeroId, HeroDefinition>> = Object.fromEntries(
@@ -89,6 +124,7 @@ export const HEROES: Readonly<Record<HeroId, HeroDefinition>> = Object.fromEntri
       ability,
       stats: heroStats,
       bash: BASHERS[id as HeroId],
+      ...TRAITS[id as HeroId],
     },
   ]),
 ) as Record<HeroId, HeroDefinition>

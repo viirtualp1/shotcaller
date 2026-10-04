@@ -3,6 +3,7 @@ import { trialById, type TrialId } from '@/content/career'
 import type { ModeId } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { opponentStyleFor, type Difficulty } from '@/content/rules'
+import type { MatchRules } from '@/content/experiments'
 import type { SandboxSettings } from '@/content/sandbox'
 import { createRng } from '@/core/random/rng'
 import type { CoachStrategy } from '@/domain/coach/CoachStrategy'
@@ -21,6 +22,8 @@ export interface MatchOptions {
   readonly trialId?: TrialId
   /** Opens the training ground: dummies on the other side, and gold that never runs out. */
   readonly sandbox?: SandboxSettings
+  /** Experiments; they apply only against the computer, outside career trials. */
+  readonly rules?: MatchRules
 }
 
 function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
@@ -62,6 +65,7 @@ export function createMatch(options: MatchOptions = {}) {
     }),
     mode: trial?.mode ?? options.mode ?? DEFAULT_MODE,
     ...(trial ? { trialId: trial.id } : {}),
+    ...(options.rules && !trial && !options.link && !options.sandbox ? { rules: options.rules } : {}),
   })
 }
 
@@ -79,6 +83,7 @@ export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'see
       }),
       mode: state.mode,
       ...(state.trialId ? { trialId: state.trialId } : {}),
+      ...(state.rules ? { rules: state.rules } : {}),
     },
     state,
   )

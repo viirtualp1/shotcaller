@@ -1,13 +1,12 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import { isAlive } from '../ecs/components'
 import type { Ability } from './Ability'
 import { alliedHeroesAround, enemiesAround, nearest } from './selectors'
-
-const P = ABILITY_PARAMS.roots
+import { paramsOf } from './params'
 
 export const roots: Ability = {
   id: 'roots',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'roots')
     const current = caster.targeting.target
 
     const target =
@@ -21,7 +20,7 @@ export const roots: Ability = {
 
     const power = caster.caster.power
     for (const enemy of enemiesAround(ctx, caster, target.position, P.radius)) {
-      enemy.status.root = Math.max(enemy.status.root, P.duration)
+      enemy.status.root = Math.max(enemy.status.root, P.duration * caster.caster.stunScale)
       ctx.combat.dealDamage(caster, enemy, P.damage * power, 'magical')
     }
 

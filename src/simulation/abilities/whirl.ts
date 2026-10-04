@@ -1,12 +1,11 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { enemiesAround } from './selectors'
-
-const P = ABILITY_PARAMS.whirl
+import { paramsOf } from './params'
 
 export const whirl: Ability = {
   id: 'whirl',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'whirl')
     if (caster.spin || !enemiesAround(ctx, caster, caster.position, P.triggerRadius).length) {
       return false
     }

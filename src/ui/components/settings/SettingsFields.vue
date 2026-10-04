@@ -151,6 +151,11 @@ function openOrdersPatch() {
             <Info :size="15" />
           </a>
         </div>
+
+        <CheckField v-model="settings.heroRotation">{{ t('settings.heroRotation') }}</CheckField>
+        <p class="hint">{{ t('settings.heroRotationHint') }}</p>
+        <CheckField v-model="settings.roundTwists">{{ t('settings.roundTwists') }}</CheckField>
+        <p class="hint">{{ t('settings.roundTwistsHint') }}</p>
       </section>
     </div>
   </div>
@@ -226,6 +231,12 @@ function openOrdersPatch() {
 
 .experiments {
   gap: 14px;
+}
+
+.hint {
+  margin: -4px 0 0 28px;
+  font-size: 12px;
+  color: var(--chalk-faint);
 }
 
 .lane-orders {

@@ -1,14 +1,15 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import { direction, offset } from '@/core/math/vec2'
 import type { Ability } from './Ability'
 import { enemiesAround, nearest } from './selectors'
+import { paramsOf } from './params'
 
-const P = ABILITY_PARAMS.turret
 const DEPLOY_DISTANCE = 22
 
 export const turret: Ability = {
   id: 'turret',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'turret')
+
     const target = nearest(
       caster.position,
       enemiesAround(ctx, caster, caster.position, P.triggerRadius, { includeStructures: true }),

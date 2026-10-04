@@ -1,5 +1,5 @@
-import type { World } from 'miniplex'
-import type { Vec2 } from '@/core/math/vec2'
+import type { Query, With, World } from 'miniplex'
+import { distance, type Vec2 } from '@/core/math/vec2'
 import { BATTLE } from '@/content/rules'
 import { ROLES } from '@/content/roles'
 import {
@@ -7,6 +7,7 @@ import {
   isHero,
   type DamageType,
   type Entity,
+  type HeroUnit,
   type PoisonPayload,
   type Unit,
 } from '../ecs/components'
@@ -22,6 +23,8 @@ export interface DamageOptions {
   readonly crit?: boolean
   /** A basic attack rather than an ability; items heal more from these. */
   readonly attack?: boolean
+  /** The share a Soulbond passed on; it is never passed on again. */
+  readonly bonded?: boolean
 }
 
 export interface SplashOptions extends DamageOptions {
@@ -33,13 +36,17 @@ export const creditedHero = (source: Entity) =>
 
 /** Applies damage and healing; deaths are only flagged here and resolved by DeathSystem at the end of a step. */
 export class CombatService {
+  private readonly structures: Query<With<Unit, 'structure'>>
+
   constructor(
     private readonly world: World<Entity>,
     private readonly events: SimulationEmitter,
     private readonly index: SpatialIndex,
     private readonly structureScale: number,
     private readonly safety: TowerSafety,
-  ) {}
+  ) {
+    this.structures = world.with('kind', 'health', 'radius', 'armor', 'status', 'structure')
+  }
 
   /** A basic attack landing: the target may evade it, then the attacker may crit and bash. */
   landAttack(source: Unit, target: Unit, amount: number) {
@@ -86,9 +93,29 @@ export class CombatService {
       return 0
     }
 
-    let value = amount * (target.damageTaken ?? 1)
+    const bond = target.bond
+    if (
+      bond &&
+      !options.bonded &&
+      isAlive(bond.partner) &&
+      distance(target.position, bond.partner.position) <= bond.range
+    ) {
+      const passed = amount * bond.share
+      amount -= passed
+
+      this.dealDamage(source, bond.partner, passed, type, {
+        ...options,
+        bonded: true,
+      })
+    }
+
+    let value = amount * (target.damageTaken ?? 1) * (target.rally?.damageTaken ?? 1)
     if (target.kind === 'structure') {
-      value *= (source.structureDamage ?? 1) * this.structureScale * (options.structureBonus ?? 1)
+      value *=
+        (source.structureDamage ?? 1) *
+        (source.rally?.structureDamage ?? 1) *
+        this.structureScale *
+        (options.structureBonus ?? 1)
     }
 
     if (type === 'physical') {
@@ -167,6 +194,31 @@ export class CombatService {
     }
 
     return healed
+  }
+
+  /** Building repair grows with the rounds as fast as the damage buildings take. */
+  repair(structure: Unit, amount: number, healer: HeroUnit, reclaims: boolean) {
+    if (!isAlive(structure)) {
+      return 0
+    }
+
+    const before = structure.health.current
+    structure.health.current = Math.min(structure.health.max, before + amount * this.structureScale)
+    const restored = structure.health.current - before
+    if (restored <= 0) {
+      return 0
+    }
+
+    healer.hero.healing += restored
+
+    this.events.emit('repaired', {
+      structure,
+      healer,
+      amount: restored,
+      reclaims,
+    })
+
+    return restored
   }
 
   grantShield(target: Unit, amount: number, duration: number) {
@@ -270,6 +322,41 @@ export class CombatService {
     }
   }
 
+  /** A Cursed Blade hurts its wearer's own throne on death, never to the last point of health. */
+  private curse(hero: HeroUnit, killer: Unit) {
+    const curse = hero.itemEffects?.curse ?? 0
+    if (curse <= 0) {
+      return
+    }
+
+    const throne = this.structures.entities.find(
+      (s) => s.team === hero.team && s.structure.type === 'throne' && isAlive(s),
+    )
+
+    if (!throne) {
+      return
+    }
+
+    const before = throne.health.current
+    throne.health.current = Math.max(1, before - curse)
+    const amount = before - throne.health.current
+    if (amount <= 0) {
+      return
+    }
+
+    this.events.emit('structureDamaged', {
+      structure: throne,
+      amount,
+      attackerTeam: killer.team,
+    })
+
+    this.events.emit('cursed', {
+      hero,
+      throne,
+      amount,
+    })
+  }
+
   private tryRevive(target: Unit) {
     const revive = target.itemEffects?.revive ?? 0
     if (!isHero(target) || revive <= 0 || !target.itemEffects) {
@@ -299,6 +386,11 @@ export class CombatService {
         if (farm) {
           hero.hero.farmStacks += farm.perHeroKill
         }
+
+        const soulMax = hero.itemEffects?.soulMax ?? 0
+        if (soulMax > 0) {
+          hero.hero.souls = Math.min(soulMax, hero.hero.souls + 1)
+        }
       }
 
       this.events.emit('heroKilled', {
@@ -306,6 +398,8 @@ export class CombatService {
         killer,
         creditedHero: hero,
       })
+
+      this.curse(target, killer)
     } else if (target.kind === 'creep') {
       if (hero) {
         hero.hero.lastHits++

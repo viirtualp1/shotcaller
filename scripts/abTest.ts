@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util'
 import { HEROES } from '@/content/heroes'
-import { HERO_IDS, LANE_IDS, type HeroId, type LaneId, type StarLevel } from '@/content/ids'
+import { HERO_IDS, LANE_IDS, LANE_STANCES, type HeroId, type LaneId, type StarLevel } from '@/content/ids'
 import { createRng, type Rng } from '@/core/random/rng'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { judgeRound, totalStructureDamage } from '@/domain/match/judge'
@@ -26,8 +26,17 @@ const { values } = parseArgs({
       type: 'string',
       default: 'ab',
     },
+    /** An order for the candidate's lane, to see what heroes such as the Herald make of it. */
+    order: {
+      type: 'string',
+    },
   },
 })
+
+const order = LANE_STANCES.find((id) => id === values.order) ?? null
+if (values.order && !order) {
+  throw new Error(`Unknown order ${values.order}; pick one of ${LANE_STANCES.join(', ')}`)
+}
 
 const tier = Number(values.tier)
 const setupCount = Number(values.setups)
@@ -87,6 +96,7 @@ for (let i = 0; i < setupCount; i++) {
       seed: `${values.seed}-battle-${i}`,
       lineups: [lineup, theirs],
       structures: [freshStructures(), freshStructures()],
+      stances: [order ? { [lane]: order } : {}, {}],
     }
 
     const outcome = headlessResolver.resolve(setup)
@@ -109,7 +119,10 @@ const percent = (count: number) => `${Math.round((count / setupCount) * 100)}%`.
 const rows = [...tallies].sort((a, b) => b[1].margin - a[1].margin)
 const meanMargin = rows.reduce((sum, [, t]) => sum + t.margin, 0) / rows.length / setupCount
 
-console.log(`tier ${tier}, ${setupCount} setups, mean building-damage margin ${Math.round(meanMargin)}`)
+console.log(
+  `tier ${tier}${order ? `, order ${order}` : ''}, ${setupCount} setups, ` +
+    `mean building-damage margin ${Math.round(meanMargin)}`,
+)
 
 for (const [id, t] of rows) {
   const margin = t.margin / setupCount

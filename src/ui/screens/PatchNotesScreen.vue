@@ -25,13 +25,14 @@ import CareerRelease from '../components/patchNotes/CareerRelease.vue'
 import MatchmakingRelease from '../components/patchNotes/MatchmakingRelease.vue'
 import TrainingRelease from '../components/patchNotes/TrainingRelease.vue'
 import PauseRelease from '../components/patchNotes/PauseRelease.vue'
+import ForgeRelease from '../components/patchNotes/ForgeRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
 import PatchPicker from '../components/patchNotes/PatchPicker.vue'
 import { useGameText } from '../composables/useGameText'
 import { vOpticalAlign } from '../directives/opticalAlign'
-import { ROLE_ICONS } from '../icons'
+import { ADAPTIVE_ICON, ROLE_ICONS } from '../icons'
 import type { PatchNote } from '../patchNotes/notes'
 import { usePatchNotesStore } from '../stores/patchNotes'
 import { useSettingsStore } from '../stores/settings'
@@ -72,7 +73,7 @@ watch(
     </header>
 
     <Transition name="fade" mode="out-in">
-      <main :key="patch.version" class="page">
+      <main :key="patch.version" class="page" :class="{ wide: patch.wide }">
         <section class="masthead">
           <h1 v-optical-align class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
@@ -86,6 +87,8 @@ watch(
         <TrainingRelease v-else-if="patch.campaign === 'training'" />
 
         <PauseRelease v-else-if="patch.campaign === 'pause'" />
+
+        <ForgeRelease v-else-if="patch.campaign === 'forge'" :version="patch.version" />
 
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>
@@ -180,8 +183,11 @@ watch(
                 <h3>{{ text.heroName(entry.id) }}</h3>
 
                 <span class="meta role" :style="{ color: cssColor(ROLES[HEROES[entry.id].role].color) }">
-                  <component :is="ROLE_ICONS[HEROES[entry.id].role]" :size="13" />
-                  {{ text.roleName(HEROES[entry.id].role) }}
+                  <component
+                    :is="HEROES[entry.id].adaptive ? ADAPTIVE_ICON : ROLE_ICONS[HEROES[entry.id].role]"
+                    :size="13"
+                  />
+                  {{ text.heroRoleName(entry.id) }}
                 </span>
               </div>
 
@@ -279,6 +285,10 @@ watch(
   max-width: calc(var(--page) + 40px);
   margin: 0 auto;
   padding: 0 20px calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+.page.wide {
+  --page: 1140px;
 }
 
 .masthead {

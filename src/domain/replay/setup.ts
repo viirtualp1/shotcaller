@@ -1,5 +1,6 @@
 import { BALANCE_FINGERPRINT } from '@/content/balance'
 import type { HeroId, ItemId, LaneId, StarLevel, TeamId } from '@/content/ids'
+import type { TalentChoice } from '@/content/talents'
 import type { BattleSetup } from '../battle/contracts'
 import { fromSide } from '../battle/mirror'
 import type { RoundPick } from '../match/matchStats'
@@ -14,6 +15,8 @@ export interface ReplayHero {
   readonly stars: StarLevel
   readonly lane: LaneId
   readonly items: readonly ItemId[]
+  readonly souls?: number
+  readonly talent?: TalentChoice
 }
 
 /** `ready` can be watched. `stale` was saved, but the balance has moved on. `missing` never recorded a fight. */
@@ -28,7 +31,7 @@ export function replayAvailability(record: MatchRecord): ReplayAvailability {
   return record.balance === BALANCE_FINGERPRINT ? 'ready' : 'stale'
 }
 
-function castOf(team: TeamId, [heroId, stars, lane, items]: RoundPick, index: number): ReplayHero {
+function castOf(team: TeamId, [heroId, stars, lane, items, extras]: RoundPick, index: number): ReplayHero {
   return {
     uid: `${team}:${lane}:${index}`,
     team,
@@ -36,6 +39,7 @@ function castOf(team: TeamId, [heroId, stars, lane, items]: RoundPick, index: nu
     stars,
     lane,
     items,
+    ...extras,
   }
 }
 
@@ -54,6 +58,8 @@ function lineupOf(picks: readonly RoundPick[], team: TeamId): Lineup {
       heroId: hero.heroId,
       stars: hero.stars,
       items: [...hero.items],
+      ...(hero.souls ? { souls: hero.souls } : {}),
+      ...(hero.talent !== undefined ? { talent: hero.talent } : {}),
     })
   })
 
@@ -97,6 +103,7 @@ export function replaySetup(record: MatchRecord, round: number): { side: TeamId;
       lineups: fromSide(record.side, seen),
       structures: fromSide(record.side, tape.structures),
       stances: tape.stances && fromSide(record.side, tape.stances),
+      ...(tape.twist ? { twist: tape.twist } : {}),
     },
   }
 }

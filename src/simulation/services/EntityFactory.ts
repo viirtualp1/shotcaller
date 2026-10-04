@@ -1,5 +1,4 @@
 import type { World } from 'miniplex'
-import { ABILITY_PARAMS } from '@/content/abilities'
 import { HEROES } from '@/content/heroes'
 import type { ItemId, LaneId, LaneStance, StructureSlot, TeamId, TowerSlot } from '@/content/ids'
 import { ITEMS, loadoutModifiers } from '@/content/items'
@@ -7,6 +6,7 @@ import { combineModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
 import { SANDBOX, TRAINING_CAMPS } from '@/content/sandbox'
+import { activeTalents, talentManaCost } from '@/content/talents'
 import { CREEPS, STRUCTURES, type CreepVariant, type StructureType } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
 import { createPrd } from '@/core/random/prd'
@@ -14,7 +14,9 @@ import type { Rng } from '@/core/random/rng'
 import type { OwnedHero } from '@/domain/roster/Roster'
 import type { LaneReport } from '@/domain/synergy/resolveLane'
 import type { Entity, HeroUnit, ItemEffectsState, Projectile, Unit, Zone } from '../ecs/components'
+import type { TwistDefinition } from '@/content/experiments'
 import type { LaneMap } from '../map/LaneMap'
+import { paramsOf } from '../abilities/params'
 
 const SPAWN_JITTER = 4
 
@@ -25,6 +27,7 @@ const freshStatus = () => ({
   slowFactor: 0,
 })
 
+/** Sustain adds up across slots; a second copy of any other effect does nothing more than the first. */
 function itemEffects(items: readonly ItemId[]) {
   return items.reduce<ItemEffectsState>(
     (acc, id) => {
@@ -34,6 +37,13 @@ function itemEffects(items: readonly ItemId[]) {
         spellLifesteal: acc.spellLifesteal + (effects.spellLifesteal ?? 0),
         thorns: acc.thorns + (effects.thorns ?? 0),
         revive: Math.max(acc.revive, effects.revive ?? 0),
+        soulDamage: Math.max(acc.soulDamage, effects.soulDamage ?? 0),
+        soulMax: Math.max(acc.soulMax, effects.soulMax ?? 0),
+        echo: Math.max(acc.echo, effects.echo ?? 0),
+        echoDelay: Math.max(acc.echoDelay, effects.echoDelay ?? 0),
+        portal: Math.max(acc.portal, effects.portal ?? 0),
+        portalDistance: Math.max(acc.portalDistance, effects.portalDistance ?? 0),
+        curse: Math.max(acc.curse, effects.curse ?? 0),
       }
     },
     {
@@ -41,6 +51,13 @@ function itemEffects(items: readonly ItemId[]) {
       spellLifesteal: 0,
       thorns: 0,
       revive: 0,
+      soulDamage: 0,
+      soulMax: 0,
+      echo: 0,
+      echoDelay: 0,
+      portal: 0,
+      portalDistance: 0,
+      curse: 0,
     },
   )
 }
@@ -76,10 +93,12 @@ export interface CreepSpawn {
 }
 
 export class EntityFactory {
+  /** `twist` is the round's experimental rule, the same for both sides. */
   constructor(
     private readonly world: World<Entity>,
     private readonly map: LaneMap,
     private readonly rng: Rng,
+    private readonly twist: TwistDefinition | null = null,
   ) {}
 
   tower(team: TeamId, slot: TowerSlot, hp: number) {
@@ -134,6 +153,7 @@ export class EntityFactory {
         max: stats.hp,
       },
       armor: stats.armor,
+      ...(this.twist?.structureDamageTaken ? { damageTaken: this.twist.structureDamageTaken } : {}),
       status: freshStatus(),
       attack: {
         damage: stats.damage,
@@ -167,14 +187,21 @@ export class EntityFactory {
 
   hero(owned: OwnedHero, team: TeamId, lane: LaneId, report: LaneReport, slot: number, stance?: LaneStance) {
     const definition = HEROES[owned.heroId]
-    const role = ROLES[definition.role]
+    const roleId = report.roles[slot] ?? definition.role
+    const role = ROLES[roleId]
     const stats = definition.stats
     const star = STAR_POWER[owned.stars]
+    const effects = itemEffects(owned.items)
+    const talents = activeTalents(owned.stars, owned.talent)
+    const manaCost = stats.mana * talentManaCost(definition.ability, talents)
 
     const mods = combineModifiers(
-      report.modifiersFor(definition.role),
-      loadoutModifiers(owned.items, definition.role),
+      report.modifiersFor(roleId),
+      loadoutModifiers(owned.items, roleId),
+      this.twist?.heroes ?? {},
     )
+
+    const range = stats.range * (stats.range > 0 ? (this.twist?.rangedReach ?? 1) : 1)
 
     const maxHp = stats.hp * star * mods.maxHp
     const base = this.map.base(team)
@@ -194,7 +221,7 @@ export class EntityFactory {
       },
       armor: stats.armor,
       damageTaken: mods.damageTaken,
-      itemEffects: itemEffects(owned.items),
+      itemEffects: effects,
       structureDamage: BATTLE.hero.structureDamage * mods.structureDamage,
       speed: stats.speed * mods.speed,
       status: freshStatus(),
@@ -202,11 +229,11 @@ export class EntityFactory {
         damage: stats.damage * star * mods.damage,
         interval: stats.attackInterval / mods.attackSpeed,
         cooldown: this.rng.range(0, 0.3),
-        range: stats.range,
-        ranged: stats.range > 0,
+        range,
+        ranged: range > 0,
       },
       targeting: {
-        aggroRange: Math.max(BATTLE.hero.aggroRange, stats.range + BATTLE.hero.aggroRangeBonus),
+        aggroRange: Math.max(BATTLE.hero.aggroRange, range + BATTLE.hero.aggroRangeBonus),
         target: null,
         chasing: false,
         prefersStructures: false,
@@ -219,21 +246,27 @@ export class EntityFactory {
         stance,
       },
       mana: {
-        current: stats.mana * (role.startingManaRatio ?? 0),
-        max: stats.mana,
+        current: manaCost * (role.startingManaRatio ?? 0),
+        max: manaCost,
         gain: mods.manaGain,
+        regen: definition.manaRegen ?? 0,
       },
       caster: {
         ability: definition.ability,
         power: star * mods.spellPower,
         healPower: star * mods.healPower,
+        stunScale: 1,
+        talents,
       },
       hero: {
         uid: owned.uid,
         heroId: owned.heroId,
         stars: owned.stars,
-        role: definition.role,
+        role: roleId,
         lane,
+        startLane: lane,
+        /* Souls wait in the hero while it has no jar, and wake up when it gets one again. */
+        souls: Math.min(owned.souls ?? 0, effects.soulMax || Infinity),
         items: [...owned.items],
         farmStacks: 0,
         kills: 0,
@@ -301,7 +334,7 @@ export class EntityFactory {
         max: hp,
       },
       armor: stats.armor,
-      structureDamage: stats.structureDamage,
+      structureDamage: stats.structureDamage * (this.twist?.creepSiege ?? 1),
       speed: stats.speed,
       status: freshStatus(),
       attack: {
@@ -330,7 +363,7 @@ export class EntityFactory {
   }
 
   turret(owner: HeroUnit, position: Vec2) {
-    const p = ABILITY_PARAMS.turret
+    const p = paramsOf(owner, 'turret')
     const power = owner.caster.power
     return this.world.add({
       team: owner.team,
@@ -365,7 +398,7 @@ export class EntityFactory {
   }
 
   skeleton(owner: HeroUnit, position: Vec2) {
-    const p = ABILITY_PARAMS.raiseDead
+    const p = paramsOf(owner, 'raiseDead')
     const power = owner.caster.power
     const path = this.map.path(owner.team, owner.hero.lane)
     const { segment } = this.map.project(path, position)
@@ -405,6 +438,32 @@ export class EntityFactory {
         variant: 'melee',
         mega: false,
         summoned: true,
+      },
+      owner,
+      ...(owner.training ? { training: owner.training } : {}),
+      lifetime: p.lifetime,
+    }) as Unit
+  }
+
+  /** A Battle Standard: it has health and can be cut down, but never attacks or moves. */
+  banner(owner: HeroUnit, position: Vec2) {
+    const p = paramsOf(owner, 'standard')
+    const hp = p.hp * owner.caster.power
+    return this.world.add({
+      team: owner.team,
+      kind: 'turret',
+      position: { ...position },
+      ...(owner.color !== undefined ? { color: owner.color } : {}),
+      radius: 7,
+      health: {
+        current: hp,
+        max: hp,
+      },
+      armor: 0.2,
+      status: freshStatus(),
+      banner: {
+        stance: owner.laneFollower?.stance ?? null,
+        radius: p.radius,
       },
       owner,
       ...(owner.training ? { training: owner.training } : {}),

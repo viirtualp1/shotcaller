@@ -1,12 +1,11 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { densest, enemiesAround, stun } from './selectors'
-
-const P = ABILITY_PARAMS.leap
+import { paramsOf } from './params'
 
 export const leap: Ability = {
   id: 'leap',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'leap')
     const center = densest(ctx, caster, P.searchRadius, P.radius)
     if (!center || ctx.safety.isProtected(center, caster.team)) {
       return false
@@ -24,7 +23,7 @@ export const leap: Ability = {
 
     for (const enemy of enemiesAround(ctx, caster, landing, P.radius)) {
       ctx.combat.dealDamage(caster, enemy, P.damage * caster.caster.power, 'magical')
-      stun(enemy, P.stun)
+      stun(enemy, P.stun, caster)
     }
 
     ctx.events.emit('burst', {

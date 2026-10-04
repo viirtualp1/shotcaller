@@ -44,6 +44,10 @@ export const useSettingsStore = defineStore('settings', () => {
   /** Lane orders are an experiment: off until the coach turns them on. */
   const laneOrders = useLocalStorage(STORAGE_KEYS.laneOrders, false)
 
+  /** Experiments that change the rules of new matches against the computer. */
+  const heroRotation = useLocalStorage(STORAGE_KEYS.heroRotation, false)
+  const roundTwists = useLocalStorage(STORAGE_KEYS.roundTwists, false)
+
   /** Whether the next match starts with the tutorial; asked again each time a match is set up. */
   const tutorialWanted = ref(firstVisit)
 
@@ -67,6 +71,8 @@ export const useSettingsStore = defineStore('settings', () => {
     planningSeconds,
     mode,
     laneOrders,
+    heroRotation,
+    roundTwists,
     tutorialWanted,
   }
 })

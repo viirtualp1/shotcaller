@@ -235,10 +235,15 @@
     "ganker": {
       "name": "Ganker",
       "passive": "Roams the whole map and hunts wounded heroes on any lane. Never attacks towers or the throne: with nobody to fight, goes after enemy creeps, on another lane if needed. {speed}% faster and evades {evasion}% of attacks."
+    },
+    "adaptive": {
+      "name": "Adaptive",
+      "passive": "Takes the role that switches on the most synergies on its lane, and that role's passive with it. If no role adds a synergy, it fights as a carry."
     }
   },
   "innate": {
-    "bash": "Bash: {chance}% chance for an attack to stun the target for {stun} s."
+    "bash": "Bash: {chance}% chance for an attack to stun the target for {stun} s.",
+    "manaRegen": "Patience: gains {mana} mana every second, even when it does not fight."
   },
   "abilities": {
     "charge": "Leaps to the farthest enemy within {radius}: {damage} damage and a {stun} s stun.",
@@ -258,7 +263,11 @@
     "turret": "Deploys a turret for {lifetime} s with {hp} health and {damage} damage per shot. It hits structures too.",
     "hook": "Pulls the farthest hero within {radius}: {damage} damage and a {stun} s stun.",
     "assassinate": "Shoots the most wounded hero within {radius} for {damage} damage.",
-    "shield": "Gives up to {targets} wounded allies, cores first, a shield that absorbs {absorb} damage for {duration} s."
+    "shield": "Gives up to {targets} wounded allies, cores first, a shield that absorbs {absorb} damage for {duration} s.",
+    "standard": "Plants a banner for {lifetime} s with {hp} health. Allies within {radius} get what the lane's order calls for. Push: creeps attack {pushAttackSpeed}% faster and hit buildings {pushStructureDamage}% harder. Defence: towers and the throne take {holdProtection}% less damage. Together: heroes deal {groupDamage}% more damage, and enemies where it lands are stunned for {stun} s. No order: heroes take {guard}% less damage.",
+    "mend": "Stands still to repair the most damaged allied tower or throne within {radius}: {repair} health per second for {duration} s, more in later rounds. A stun breaks it. Under Defence, the repair also wins back the building damage the enemy dealt this round.",
+    "mimic": "Casts the ability of the role it takes: {carry} as a carry, {support} as a support, {mage} as a mage, {initiator} as an initiator, {pusher} as a pusher, {ganker} as a ganker.",
+    "mimicAs": "{ability}: {effect}"
   },
   "synergies": {
     "guardian": {
@@ -315,7 +324,12 @@
     "manaStone": "Mana builds {manaGain}% faster",
     "vampireFang": "Heals for {lifesteal}% of attack damage and {spellLifesteal}% of ability damage",
     "thornMail": "Returns {thorns}% of attack damage to the attacker",
-    "aegis": "Once per round prevents death and restores {revive}% health"
+    "aegis": "Once per round prevents death and restores {revive}% health",
+    "soulJar": "Every hero kill adds a soul, up to {soulMax}. Each soul gives +{soulDamage}% attack damage, and the hero keeps them from round to round.",
+    "soulbond": "Works in pairs: with a second Soulbond on the same lane, {bond}% of the damage either hero takes goes to the other, softened by that hero's own armor, while they stay within {bondRange} of each other.",
+    "echoShard": "The ability goes off again {echoDelay} s later at {echo}% power, with stuns {echo}% as long. Mana builds {manaGain}% slower.",
+    "townPortal": "Once a round, when an allied tower below {portal}% health is hit and the wearer is at least {portalDistance} away, the wearer travels to it and fights on that lane.",
+    "cursedBlade": "+{damage}% damage and +{attackSpeed}% attack speed. Every time the wearer dies, your throne loses {curse} health, and it counts for the enemy this round."
   },
   "hud": {
     "round": "Round {round} of {max}",
@@ -377,6 +391,7 @@
     "autoArrange": "Auto place",
     "owned": "own {n}",
     "completes": "★★ on buy",
+    "rare": "Rare",
     "sellZone": "Drop to sell",
     "odds": "Odds by cost"
   },
@@ -392,6 +407,7 @@
     "ability": "Ability",
     "innate": "Innate",
     "rolePassive": "Role: {role}",
+    "souls": "Souls in the jar: {n} of {max}",
     "unequipHint": "Click to unequip",
     "seconds": "{n} s",
     "statsHint": "White is the hero, green comes from items and lane synergies",
@@ -516,6 +532,7 @@
   "help": {
     "title": "Help",
     "ordersGuide": "Enable lane orders in Settings → Experiments. During planning, choose Push, Defence or Together for each lane. Open the illustrated guide to see how each order works.",
+    "itemMerge": "Two copies of the same item merge into a stronger one, marked with a plus: in the stash, or when you give a hero an item it already carries. The upgrade takes one slot.",
     "how": "How to play",
     "roles": "Roles",
     "synergies": "Lane synergies",
@@ -557,6 +574,7 @@
   },
   "errors": {
     "notEnoughGold": "Not enough gold",
+    "talentUnavailable": "The talent can be picked once, when the hero reaches ★★",
     "benchFull": "The bench is full. Sell someone first",
     "boardFull": "There is already {capacity} hero on the map. Buy XP to field more | There are already {capacity} heroes on the map. Buy XP to field more",
     "slotEmpty": "That card is already sold",
@@ -573,7 +591,9 @@
   },
   "notices": {
     "promoted": "{hero} is now {stars}",
+    "promotedTalent": "{hero} is now {stars}. Pick a talent on its card",
     "itemBought": "{item} is in your stash. Click it to equip or sell",
+    "itemUpgraded": "Two copies merged: {item}",
     "timeUp": "Time's up, the battle has started",
     "arranged": "Team placed",
     "alreadyArranged": "Your team is already placed optimally"
@@ -648,7 +668,11 @@
     "effectsVolume": "Effects",
     "experiments": "Experiments",
     "laneOrders": "Lane orders",
-    "laneOrdersAbout": "How lane orders work"
+    "laneOrdersAbout": "How lane orders work",
+    "heroRotation": "Hero rotation",
+    "heroRotationHint": "Each new match against the computer draws 15 of the 21 heroes.",
+    "roundTwists": "Round twists",
+    "roundTwistsHint": "Every round of a new match against the computer comes with a rule both sides see while planning."
   },
   "menu": {
     "resume": "Resume"
@@ -1152,13 +1176,19 @@
     "noRounds": "Round lineups are kept for the last 5 matches played since 8.0."
   },
   "replay": {
-    "liveTitle": "Live match",
+    "liveTitle": "Live",
     "watchFriend": "Watch {name} play",
-    "liveDelay": "Viewing with a short delay",
-    "waitingRound": "Waiting for the next battle",
+    "waitingRound": "Next battle soon",
     "statsTeam": "Team statistics",
     "friendTeam": "Player team",
     "opponentTeam": "Opponent",
+    "liveBadge": {
+      "incompatible": "Other version",
+      "loading": "Connecting…",
+      "watching": "Live",
+      "ended": "Broadcast over",
+      "error": "Reconnecting…"
+    },
     "liveStatus": {
       "incompatible": "This match uses a different game version. Update the game to watch it.",
       "loading": "Connecting to the match…",
@@ -1234,5 +1264,132 @@
     "stop": "Exit",
     "reset": "Reset",
     "resetHint": "Clear every hero, item and dummy"
+  },
+  "talents": {
+    "charge": {
+      "0": "Enemy heroes within {splash} of the target take {splashDamage} damage too.",
+      "1": "Charges enemies up to {radius} away and hits for {damage}."
+    },
+    "volley": {
+      "0": "Fires {arrows} arrows.",
+      "1": "Each arrow deals {damage} damage."
+    },
+    "prayer": {
+      "0": "Heals {targets} wounded allies at once.",
+      "1": "Heals for {heal}."
+    },
+    "barrel": {
+      "0": "The explosion covers {radius}.",
+      "1": "Buildings take {structureBonus} times more damage."
+    },
+    "chainLightning": {
+      "0": "Jumps between {bounces} enemies.",
+      "1": "Loses only {falloff}% damage on each jump."
+    },
+    "poisonDagger": {
+      "0": "Poison deals {poison} every {tick} s.",
+      "1": "Slows by {slow}% and poisons for {duration} s."
+    },
+    "backstab": {
+      "0": "Hits for {damage}.",
+      "1": "Reaches wounded heroes within {radius}."
+    },
+    "fireball": {
+      "0": "Burns everyone within {radius} of the impact.",
+      "1": "Deals {damage} damage."
+    },
+    "roots": {
+      "0": "Roots for {duration} s.",
+      "1": "Heals nearby allies for {heal}."
+    },
+    "whirl": {
+      "0": "Spins for {duration} s.",
+      "1": "Hits everyone within {radius}."
+    },
+    "leap": {
+      "0": "Stuns for {stun} s.",
+      "1": "Deals {damage} damage."
+    },
+    "raiseDead": {
+      "0": "Raises {count} skeletons, up to {maxAlive} at a time.",
+      "1": "Skeletons have {hp} health and hit for {damage}."
+    },
+    "blizzard": {
+      "0": "Slows by {slow}%.",
+      "1": "The storm covers {radius}."
+    },
+    "quake": {
+      "0": "Goes off with just {minTargets} enemies nearby.",
+      "1": "Stuns for {stun} s."
+    },
+    "turret": {
+      "0": "The turret lasts {lifetime} s with {hp} health.",
+      "1": "Each shot deals {damage} damage."
+    },
+    "hook": {
+      "0": "Pulls heroes from up to {radius} away.",
+      "1": "Deals {damage} damage."
+    },
+    "assassinate": {
+      "0": "Deals {damage} damage.",
+      "1": "Finds wounded heroes within {radius}."
+    },
+    "shield": {
+      "0": "Shields up to {targets} allies.",
+      "1": "Each shield absorbs {absorb} damage."
+    },
+    "standard": {
+      "0": "The banner stands for {lifetime} s with {hp} health.",
+      "1": "The banner reaches allies within {radius}."
+    },
+    "mend": {
+      "0": "Repairs {repair} health per second.",
+      "1": "Repairs buildings up to {radius} away."
+    },
+    "mimic": {
+      "0": "The borrowed ability is {power}% stronger.",
+      "1": "Mimicry costs {manaCost}% less mana."
+    }
+  },
+  "talentPicker": {
+    "title": "Talents",
+    "pick": "Reached ★★: pick one talent. ★★★ brings both.",
+    "locked": "At ★★ the hero picks one of these talents; at ★★★ it gets both.",
+    "both": "At ★★★ the hero has both talents.",
+    "chosen": "Picked",
+    "later": "At ★★★",
+    "choose": "Pick",
+    "pending": "Pick a talent"
+  },
+  "twists": {
+    "bloodMoon": {
+      "name": "Blood Moon",
+      "effect": "Heroes deal {damage}% more damage."
+    },
+    "fog": {
+      "name": "Fog",
+      "effect": "Ranged heroes reach {reach}% less far."
+    },
+    "siegeTide": {
+      "name": "Siege Tide",
+      "effect": "Creeps hit buildings {siege}% harder."
+    },
+    "manaSurge": {
+      "name": "Mana Surge",
+      "effect": "Heroes gain mana {manaGain}% faster."
+    },
+    "stoneWalls": {
+      "name": "Stone Walls",
+      "effect": "Towers and thrones take {walls}% less damage."
+    },
+    "tailwind": {
+      "name": "Tailwind",
+      "effect": "Heroes move {speed}% faster."
+    }
+  },
+  "experiments": {
+    "twist": "Round twist",
+    "rotation": "Rotation",
+    "rotationHint": "Heroes in this match"
   }
 }

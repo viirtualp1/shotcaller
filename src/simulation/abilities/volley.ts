@@ -1,12 +1,12 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { byDistance, enemiesAround } from './selectors'
-
-const P = ABILITY_PARAMS.volley
+import { paramsOf } from './params'
 
 export const volley: Ability = {
   id: 'volley',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'volley')
+
     const targets = enemiesAround(ctx, caster, caster.position, caster.attack.range + P.rangeBonus)
       .sort(byDistance(caster.position))
       .slice(0, P.arrows)

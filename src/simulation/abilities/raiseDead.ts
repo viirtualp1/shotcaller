@@ -1,8 +1,7 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { enemiesAround } from './selectors'
+import { paramsOf } from './params'
 
-const P = ABILITY_PARAMS.raiseDead
 const SPREAD = 16
 
 /** Rounds away the last bits `sin` and `cos` may disagree on between browsers; 1/1024 is exact in binary. */
@@ -11,6 +10,7 @@ const snap = (value: number) => Math.round(value * 1024) / 1024
 export const raiseDead: Ability = {
   id: 'raiseDead',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'raiseDead')
     if (!enemiesAround(ctx, caster, caster.position, P.triggerRadius, { includeStructures: true }).length) {
       return false
     }

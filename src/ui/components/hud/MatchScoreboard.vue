@@ -5,6 +5,7 @@ import { useMatchStore } from '../../stores/match'
 import { useDuelStore } from '../../stores/duel'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
 import BaseStatus from './BaseStatus.vue'
+import ExperimentChips from './ExperimentChips.vue'
 import TrialObjective from './TrialObjective.vue'
 
 const URGENT_SECONDS = 10
@@ -58,6 +59,7 @@ const history = computed(() =>
 
     <div class="center">
       <TrialObjective />
+      <ExperimentChips />
 
       <span class="round">{{
         view.sandbox?.endless

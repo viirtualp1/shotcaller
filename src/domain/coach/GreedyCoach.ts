@@ -1,6 +1,6 @@
 import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, RoleId } from '@/content/ids'
-import { ITEM_SLOTS, ITEMS } from '@/content/items'
+import { isUpgraded, ITEM_SLOTS, ITEMS } from '@/content/items'
 import { COPIES_PER_STAR, ECONOMY, OPPONENT, type OpponentStyle } from '@/content/rules'
 import type { Player } from '../player/Player'
 import { arrangeStrongestLineup } from './arrange'
@@ -8,12 +8,12 @@ import type { CoachContext, CoachStrategy } from './CoachStrategy'
 import { heroPower, LaneOptimizer } from './LaneOptimizer'
 
 const ITEM_WISHLIST: Readonly<Record<RoleId, readonly ItemId[]>> = {
-  carry: ['broadsword', 'gloves', 'vampireFang'],
+  carry: ['broadsword', 'gloves', 'cursedBlade', 'vampireFang'],
   support: ['chalice', 'vitality', 'manaStone'],
-  mage: ['staff', 'manaStone', 'vitality'],
-  initiator: ['chainmail', 'vitality', 'thornMail'],
+  mage: ['staff', 'manaStone', 'echoShard', 'vitality'],
+  initiator: ['chainmail', 'vitality', 'echoShard', 'thornMail'],
   pusher: ['gloves', 'broadsword', 'boots'],
-  ganker: ['broadsword', 'vampireFang', 'boots'],
+  ganker: ['broadsword', 'soulJar', 'vampireFang', 'boots'],
 }
 
 const MAX_ACTIONS_PER_TURN = 40
@@ -59,7 +59,17 @@ export class GreedyCoach implements CoachStrategy {
     }
 
     this.trimBench(player)
+    this.pickTalents(player, context)
     arrangeStrongestLineup(player, this.optimizer, context.rng)
+  }
+
+  /** Either talent is a fair pick; the coach flips a coin for each new two-star hero. */
+  private pickTalents(player: Player, { rng }: CoachContext) {
+    for (const hero of player.roster.all()) {
+      if (hero.stars === 2 && hero.talent === undefined) {
+        player.chooseTalent(hero.uid, rng.next() < 0.5 ? 0 : 1)
+      }
+    }
   }
 
   private buyCopy(player: Player, { round }: CoachContext, goldFloor: number) {
@@ -138,13 +148,15 @@ export class GreedyCoach implements CoachStrategy {
   }
 
   /** Buys at most one item per turn, keeping the gold reserve for its next shop and level purchase. */
-  private outfit(player: Player, { round }: CoachContext) {
+  private outfit(player: Player, context: CoachContext) {
+    const { round } = context
+
     const carrier = [...player.roster.boardHeroes()]
       .filter((h) => h.items.length < ITEM_SLOTS)
       .sort((a, b) => heroPower(b) - heroPower(a))[0]
 
     if (!carrier) {
-      return false
+      return this.upgrade(player, context)
     }
 
     if (player.stash.items.length) {
@@ -167,6 +179,25 @@ export class GreedyCoach implements CoachStrategy {
       player.equip(player.stash.items.length - 1, carrier.uid)
 
       return true
+    }
+
+    return false
+  }
+
+  /** With every slot on the board taken, a second copy of an item the strongest hero carries merges into its upgrade. */
+  private upgrade(player: Player, { round }: CoachContext) {
+    if (round < this.options.itemsFromRound || player.stash.items.length) {
+      return false
+    }
+
+    const budget = player.wallet.gold - this.options.goldReserveForItems
+    for (const hero of [...player.roster.boardHeroes()].sort((a, b) => heroPower(b) - heroPower(a))) {
+      const plain = hero.items.find((item) => !isUpgraded(item) && ITEMS[item].cost <= budget)
+      if (plain && player.buyItem(plain).isOk()) {
+        player.equip(player.stash.items.length - 1, hero.uid)
+
+        return true
+      }
     }
 
     return false

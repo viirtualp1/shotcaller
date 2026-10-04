@@ -53,6 +53,8 @@ export type FeatureArt =
   | { readonly kind: 'orders' }
   /** What one order makes the heroes of a lane do. */
   | { readonly kind: 'order'; readonly order: LaneStance }
+  /** The 9.0 forge: merging items, picking talents, the new items and the new experiments. */
+  | { readonly kind: 'forge'; readonly focus: 'upgrades' | 'talents' | 'items' | 'experiments' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -68,7 +70,9 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause'
+  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge'
+  /** A wider page, for a release whose introduction needs the room. */
+  readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
   readonly general?: readonly NoteText[]
@@ -80,6 +84,235 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '9.0',
+    date: '2026-10-04',
+    title: {
+      en: 'New blood, new steel',
+      ru: 'Новая кровь, новая сталь',
+    },
+    campaign: 'forge',
+    wide: true,
+    features: [
+      {
+        art: {
+          kind: 'forge',
+          focus: 'upgrades',
+        },
+        title: {
+          en: 'Two copies. One legend.',
+          ru: 'Две копии. Одна легенда.',
+        },
+        text: {
+          en: 'Buy a second copy of an item and the pair **merges into its upgrade**, in the stash or right on your hero. Gloves of Fury climb from **+20%** to **+40%** attack speed, and Aegis brings a hero back with **100%** health. The upgrade still takes **one slot**.',
+          ru: 'Купи вторую копию предмета, и пара **сольётся в улучшение** — на складе или прямо на герое. Gloves of Fury растут с **+20%** до **+40%** скорости атаки, а Aegis возвращает героя со **100%** здоровья. Улучшение по-прежнему занимает **один слот**.',
+        },
+      },
+      {
+        art: {
+          kind: 'forge',
+          focus: 'talents',
+        },
+        title: {
+          en: 'The second star is a choice',
+          ru: 'Вторая звезда — это выбор',
+        },
+        text: {
+          en: 'At **★★** every hero picks one of **two talents**: more arrows or heavier ones, a wider fireball or a hotter one. At **★★★** it masters both. **42 talents** across all abilities.',
+          ru: 'На **★★** каждый герой выбирает один из **двух талантов**: больше стрел или тяжелее, шире огненный шар или жарче. На **★★★** он владеет обоими. **42 таланта** на все способности.',
+        },
+      },
+      {
+        art: {
+          kind: 'forge',
+          focus: 'items',
+        },
+        title: {
+          en: 'Five items that bend the rules',
+          ru: 'Пять предметов, меняющих правила',
+        },
+        text: {
+          en: 'Collect souls that last the whole match, share pain with a lane-mate, cast twice, rush to a falling tower or trade safety for raw power. Each one asks you to **plan around it**.',
+          ru: 'Копи души на весь матч, дели урон с напарником по линии, кастуй дважды, мчись к падающей башне или меняй безопасность на чистую силу. Под каждый предмет **придётся строить план**.',
+        },
+      },
+      {
+        art: {
+          kind: 'forge',
+          focus: 'experiments',
+        },
+        title: {
+          en: 'Try the game a little differently',
+          ru: 'Попробуй игру немного иначе',
+        },
+        text: {
+          en: 'Two new experiments for matches against the computer. **Hero rotation** deals **15 of 21** heroes into each match. **Round twists** give every round one of **6 rules** both sides see while planning.',
+          ru: 'Два новых эксперимента для матчей против компьютера. **Ротация героев** оставляет в матче **15 из 21** героя. **Модификаторы раундов** дают каждому раунду одно из **6 правил**, которое обе стороны видят при планировании.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'Three new heroes join the pool: **Herald**, **Stonewright** and the rare **Changeling**.',
+        ru: 'В пул вступают три новых героя: **Herald**, **Stonewright** и редкий **Changeling**.',
+      },
+      {
+        en: 'A hero picks its talent once, on its card, when it reaches **★★**. A gold mark shows heroes still waiting for their pick.',
+        ru: 'Герой выбирает талант один раз, в своей карточке, когда получает **★★**. Золотая метка показывает героев, которые ещё ждут выбора.',
+      },
+      {
+        en: 'A full stash still takes a copy of an item it holds: the two **merge**. Giving a hero an item it already carries upgrades it in place, even with both slots taken.',
+        ru: 'Полный склад всё равно принимает копию лежащего в нём предмета: две копии **сливаются**. Предмет, который у героя уже есть, улучшается прямо в его слоте, даже если оба слота заняты.',
+      },
+      {
+        en: 'Turn on **Hero rotation** and **Round twists** in Settings → Experiments. They never apply to duels, career trials or training.',
+        ru: 'Включи **Ротацию героев** и **Модификаторы раундов** в Настройках → Эксперименты. Они не действуют в дуэлях, испытаниях карьеры и на тренировке.',
+      },
+    ],
+    items: [
+      {
+        id: 'soulJar',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Every hero kill adds a soul, up to **10**. Each soul gives **+4%** attack damage, and the hero keeps them from round to round.',
+            ru: 'Каждое убийство героя добавляет душу, максимум **10**. Каждая душа даёт **+4%** урона атаками, и герой хранит их из раунда в раунд.',
+          },
+        ],
+      },
+      {
+        id: 'soulbond',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Works in pairs on one lane: **35%** of the damage either hero takes goes to the other, softened by that hero’s armor.',
+            ru: 'Работает парой на одной линии: **35%** урона, который получает любой из двух героев, уходит другому и смягчается его бронёй.',
+          },
+        ],
+      },
+      {
+        id: 'echoShard',
+        badge: 'new',
+        changes: [
+          {
+            en: 'The ability goes off again **1.5 s** later at **50%** power, with stuns half as long. Mana builds **20%** slower.',
+            ru: 'Способность срабатывает ещё раз через **1,5 с** с силой **50%**, оглушения вдвое короче. Мана копится на **20%** медленнее.',
+          },
+        ],
+      },
+      {
+        id: 'townPortal',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Once a round, the wearer travels to an allied tower under **65%** health that is being hit, and fights on its lane.',
+            ru: 'Раз за раунд переносит владельца к союзной башне ниже **65%** здоровья, которую бьют, и он сражается на её линии.',
+          },
+        ],
+      },
+      {
+        id: 'cursedBlade',
+        badge: 'new',
+        changes: [
+          {
+            en: '**+40%** damage and **+15%** attack speed. Every death of the wearer costs your throne **80** health, counted for the enemy.',
+            ru: '**+40%** урона и **+15%** скорости атаки. Каждая смерть владельца стоит вашему трону **80** здоровья, и это засчитывается врагу.',
+          },
+        ],
+      },
+    ],
+    heroes: [
+      {
+        id: 'herald',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Tier **1** initiator.',
+            ru: 'Инициатор **1** тира.',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'standard',
+            badge: 'new',
+            changes: [
+              {
+                en: 'Plants a banner for **9 s**. Push: creeps attack **20%** faster and hit buildings **35%** harder. Defence: buildings take **40%** less damage. Together: heroes deal **25%** more and enemies are stunned for **1.2 s**. No order: heroes take **10%** less damage.',
+                ru: 'Ставит знамя на **9 с**. Вперёд: крипы атакуют на **20%** быстрее и бьют строения на **35%** сильнее. Защита: строения получают на **40%** меньше урона. Вместе: герои наносят на **25%** больше, враги оглушены на **1,2 с**. Без приказа: герои получают на **10%** меньше урона.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'stonewright',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Tier **2** support. Gains **5** mana every second, even when it does not fight.',
+            ru: 'Саппорт **2** тира. Получает **5** маны в секунду, даже когда не сражается.',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'mend',
+            badge: 'new',
+            changes: [
+              {
+                en: 'Repairs the most damaged allied tower or throne within **260**: **50** health per second for **3 s**. Under Defence the repair also wins back the enemy’s building damage of the round.',
+                ru: 'Чинит самую повреждённую союзную башню или трон в радиусе **260**: **50** здоровья в секунду в течение **3 с**. Под «Защитой» починка ещё и отыгрывает урон врага по строениям за раунд.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'changeling',
+        badge: 'new',
+        changes: [
+          {
+            en: 'Tier **3**, rare: only **4** copies in the pool. Takes the role that switches on the most synergies on its lane.',
+            ru: '**3** тир, редкий: всего **4** копии в пуле. Берёт роль, которая включает больше всего синергий на его линии.',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'mimic',
+            badge: 'new',
+            changes: [
+              {
+                en: 'Casts the signature ability of the role it took: Volley, Prayer, Chain Lightning, Charge, Powder Keg or Poison Dagger.',
+                ru: 'Применяет фирменную способность взятой роли: Volley, Prayer, Chain Lightning, Charge, Powder Keg или Poison Dagger.',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'Upgraded items glow gold and carry a **+**. The shop shows a **Rare** tag on the Changeling.',
+        ru: 'Улучшенные предметы светятся золотом и помечены **+**. В магазине у Changeling есть метка **Редкий**.',
+      },
+      {
+        en: 'A friend’s live match plays smoothly at their speed, and its header fits on one line on any screen.',
+        ru: 'Живой матч друга идёт плавно, с его скоростью, а его шапка помещается в одну строку на любом экране.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Live matches no longer restart the battle every few seconds.',
+        ru: 'Живой матч больше не перезапускает бой каждые несколько секунд.',
+      },
+      {
+        en: 'Replays now keep the souls and talents heroes fought with.',
+        ru: 'Повторы теперь учитывают души и таланты, с которыми сражались герои.',
+      },
+    ],
+  },
   {
     version: '8.9',
     date: '2026-10-03',

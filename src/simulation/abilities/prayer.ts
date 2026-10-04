@@ -1,22 +1,20 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { alliedHeroesAround, coresFirst, healthRatio } from './selectors'
-
-const P = ABILITY_PARAMS.prayer
+import { paramsOf } from './params'
 
 export const prayer: Ability = {
   id: 'prayer',
   cast(caster, ctx) {
-    const [target] = coresFirst(
-      alliedHeroesAround(ctx, caster, P.radius).filter((u) => healthRatio(u) < P.hpThreshold),
-    )
+    const P = paramsOf(caster, 'prayer')
 
-    if (!target) {
-      return false
+    const targets = coresFirst(
+      alliedHeroesAround(ctx, caster, P.radius).filter((u) => healthRatio(u) < P.hpThreshold),
+    ).slice(0, P.targets)
+
+    for (const target of targets) {
+      ctx.combat.heal(target, P.heal * caster.caster.healPower, caster)
     }
 
-    ctx.combat.heal(target, P.heal * caster.caster.healPower, caster)
-
-    return true
+    return targets.length > 0
   },
 }

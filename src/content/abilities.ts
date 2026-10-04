@@ -3,6 +3,9 @@ export const ABILITY_PARAMS = {
     radius: 260,
     damage: 120,
     stun: 1.2,
+    /** Enemy heroes this close to the target take `splashDamage` too; none without the talent. */
+    splash: 0,
+    splashDamage: 0,
   },
   volley: {
     arrows: 3,
@@ -14,6 +17,7 @@ export const ABILITY_PARAMS = {
     radius: 280,
     heal: 150,
     hpThreshold: 0.8,
+    targets: 1,
   },
   barrel: {
     radius: 75,
@@ -116,6 +120,36 @@ export const ABILITY_PARAMS = {
     duration: 6,
     targets: 2,
   },
+  standard: {
+    triggerRadius: 260,
+    /** Allies within this distance of the banner get the effect of their lane's order. */
+    radius: 170,
+    hp: 300,
+    lifetime: 9,
+    /** Push: allied creeps and summons attack faster and hit buildings harder. */
+    pushAttackSpeed: 1.2,
+    pushStructureDamage: 1.35,
+    /** Hold: allied towers and the throne take less damage. */
+    holdProtection: 0.6,
+    /** Group: allied heroes deal more damage, and the banner stuns enemies where it lands. */
+    groupDamage: 1.25,
+    stun: 1.2,
+    stunRadius: 140,
+    /** No order: allied heroes take a little less damage. */
+    guard: 0.9,
+  },
+  mend: {
+    /** How far from the Stonewright a damaged tower or throne can be. */
+    radius: 260,
+    /** Buildings above this share of health are left alone. */
+    threshold: 0.97,
+    duration: 3,
+    tick: 0.5,
+    /** Health restored per second, grown by the same round scaling as the damage buildings take. */
+    repair: 50,
+  },
+  /** Multiplies the power of the borrowed ability. */
+  mimic: { power: 1 },
 } as const
 
 export type AbilityParams = typeof ABILITY_PARAMS
@@ -140,4 +174,7 @@ export const ABILITY_NAMES: Readonly<Record<keyof AbilityParams, string>> = {
   hook: 'Meat Hook',
   assassinate: 'Assassinate',
   shield: 'Arcane Shield',
+  standard: 'Battle Standard',
+  mend: 'Mend',
+  mimic: 'Mimicry',
 }

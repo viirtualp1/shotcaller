@@ -1,13 +1,12 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import { isAlive } from '../ecs/components'
 import type { Ability } from './Ability'
 import { enemiesAround, nearest } from './selectors'
-
-const P = ABILITY_PARAMS.barrel
+import { paramsOf } from './params'
 
 export const barrel: Ability = {
   id: 'barrel',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'barrel')
     const current = caster.targeting.target
 
     const target =

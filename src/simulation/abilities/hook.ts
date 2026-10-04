@@ -1,13 +1,13 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import { direction, distance, offset } from '@/core/math/vec2'
 import type { Ability } from './Ability'
 import { enemiesAround, farthest, stun } from './selectors'
-
-const P = ABILITY_PARAMS.hook
+import { paramsOf } from './params'
 
 export const hook: Ability = {
   id: 'hook',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'hook')
+
     const candidates = enemiesAround(ctx, caster, caster.position, P.radius, { heroesOnly: true }).filter(
       (u) => distance(caster.position, u.position) > P.minDistance,
     )
@@ -34,7 +34,7 @@ export const hook: Ability = {
     })
 
     ctx.combat.dealDamage(caster, target, P.damage * caster.caster.power, 'magical')
-    stun(target, P.stun)
+    stun(target, P.stun, caster)
     caster.targeting.target = target
 
     return true

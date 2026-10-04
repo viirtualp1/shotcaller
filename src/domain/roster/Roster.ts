@@ -7,6 +7,7 @@ import {
   type LaneStance,
   type StarLevel,
 } from '@/content/ids'
+import type { TalentChoice } from '@/content/talents'
 import type { LaneStances } from '../battle/contracts'
 import type { DomainError } from '../errors'
 
@@ -15,6 +16,10 @@ export interface OwnedHero {
   readonly heroId: HeroId
   stars: StarLevel
   items: ItemId[]
+  /** Kept by a hero carrying a Soul Jar: one per hero kill, from round to round. */
+  souls?: number
+  /** The talent picked at two stars; three stars bring both. Missing until the coach picks. */
+  talent?: TalentChoice
 }
 
 export type RosterSlot = 'bench' | LaneId

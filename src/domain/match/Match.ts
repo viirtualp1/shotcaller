@@ -3,6 +3,7 @@ import type { TrialId } from '@/content/career'
 import {
   opponentOf,
   TEAM_IDS,
+  type HeroId,
   type LaneId,
   type ModeId,
   type StructureSlot,
@@ -19,6 +20,7 @@ import type {
 } from '../battle/contracts'
 import { fromSide, mirrorOutcome } from '../battle/mirror'
 import { MODES } from '@/content/modes'
+import { ROTATION_PER_TIER, TWIST_IDS, type MatchRules, type TwistId } from '@/content/experiments'
 import { SANDBOX, type SandboxGoal, type SandboxSettings } from '@/content/sandbox'
 import type { CoachStrategy } from '../coach/CoachStrategy'
 import { HeroPool, type PoolState } from '../economy/HeroPool'
@@ -76,6 +78,8 @@ export interface MatchDependencies {
   readonly rival: Rival
   readonly mode: ModeId
   readonly trialId?: TrialId
+  /** Experiments the match plays with; none in duels, trials and on the training ground. */
+  readonly rules?: MatchRules
 }
 
 /** Everything needed to rebuild a match exactly, including the random stream and an unfinished battle. */
@@ -96,6 +100,11 @@ export interface MatchState {
   readonly opponentReady?: boolean
   /** Set on the training ground. */
   readonly sandbox?: SandboxSettings
+  readonly rules?: MatchRules
+  /** The twist of the round being planned or fought, when twists are on. */
+  readonly twist?: TwistId
+  /** Heroes this match's pool keeps, when rotation is on. */
+  readonly rotation?: readonly HeroId[]
 }
 
 const NO_INCOME: IncomeBreakdown = {
@@ -123,6 +132,8 @@ export class Match {
   private matchStats: MatchStats = emptyMatchStats()
   private opponentReady = false
   private sandboxSettings: SandboxSettings | null
+  private currentTwist: TwistId | null = null
+  private rotationRoster: readonly HeroId[] | null = null
 
   constructor(
     private readonly deps: MatchDependencies,
@@ -157,11 +168,31 @@ export class Match {
       return
     }
 
+    if (this.rules.rotation) {
+      this.rotationRoster = this.pool.rotate(deps.rng, ROTATION_PER_TIER)
+    }
+
+    this.rollTwist()
+
     for (const player of this.managed) {
       player.restockShop()
     }
 
     this.planOpponent()
+  }
+
+  get rules(): MatchRules {
+    return this.deps.rules ?? {}
+  }
+
+  /** Heroes left in the pool by rotation; null without that experiment. */
+  get rotation() {
+    return this.rotationRoster
+  }
+
+  /** The twist both sides plan and fight the current round under; null without that experiment. */
+  get twist() {
+    return this.currentTwist
   }
 
   /** Everything is seen from this device's player; this is the team that player fights as. */
@@ -289,6 +320,7 @@ export class Match {
       structures: fromSide(this.side, copyStructures(this.structureState)),
       stances: fromSide(this.side, [this.human.roster.stances(), this.opponent.roster.stances()]),
       ...(this.sandboxSettings ? { sandbox: this.sandboxSettings } : {}),
+      ...(this.currentTwist ? { twist: this.currentTwist } : {}),
     }
 
     return ok(this.battle)
@@ -347,6 +379,10 @@ export class Match {
 
     TEAM_IDS.forEach((team) => this.players[team].recordRound(verdictFor(team, winner), income[team].total))
 
+    if (!this.sandboxSettings) {
+      this.keepSouls(outcome.heroes)
+    }
+
     const battle = this.battle!
     const [ours, theirs] = fromSide(this.side, battle.lineups)
     const lineups = [picksOf(ours), picksOf(theirs)] as const
@@ -355,6 +391,7 @@ export class Match {
       seed: battle.seed,
       structures: fromSide(this.side, copyStructures(battle.structures)),
       stances: fromSide(this.side, battle.stances ?? [{}, {}]),
+      ...(battle.twist ? { twist: battle.twist } : {}),
     }
 
     this.battle = null
@@ -398,6 +435,7 @@ export class Match {
     }
 
     this.currentRound++
+    this.rollTwist()
 
     for (const player of this.managed) {
       player.prepareRound()
@@ -430,7 +468,20 @@ export class Match {
           }
         : {}),
       ...(this.sandboxSettings ? { sandbox: this.sandboxSettings } : {}),
+      ...(this.deps.rules ? { rules: this.deps.rules } : {}),
+      ...(this.currentTwist ? { twist: this.currentTwist } : {}),
+      ...(this.rotationRoster ? { rotation: this.rotationRoster } : {}),
     }
+  }
+
+  /** A new twist for each round, never the same one twice in a row. */
+  private rollTwist() {
+    if (!this.rules.twists) {
+      return
+    }
+
+    const options = TWIST_IDS.filter((id) => id !== this.currentTwist)
+    this.currentTwist = options[Math.floor(this.deps.rng.next() * options.length)]!
   }
 
   private restore(state: MatchState) {
@@ -445,6 +496,18 @@ export class Match {
     this.matchStats = state.stats
     this.opponentReady = state.opponentReady ?? false
     this.sandboxSettings = state.sandbox ?? this.sandboxSettings
+    this.currentTwist = state.twist ?? null
+    this.rotationRoster = state.rotation ?? null
+  }
+
+  /** Soul Jar charges outlive the round; both devices of a duel keep them for both sides the same way. */
+  private keepSouls(heroes: readonly HeroBattleReport[]) {
+    for (const report of heroes) {
+      const owned = this.players[report.team].roster.locate(report.uid)?.hero
+      if (owned && report.souls !== undefined) {
+        owned.souls = report.souls
+      }
+    }
   }
 
   /** Players whose shop and progression run on this device; a remote player's run on theirs. */

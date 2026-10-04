@@ -25,7 +25,8 @@ export function findRecruit(
   roles: readonly RoleId[],
   mode: ModeId,
 ) {
-  const fits = (hero: OwnedHero) => roles.includes(HEROES[hero.heroId].role)
+  /* An adaptive hero takes whichever role the lane is missing. */
+  const fits = (hero: OwnedHero) => HEROES[hero.heroId].adaptive || roles.includes(HEROES[hero.heroId].role)
 
   if (roster.boardCount < boardCapacity) {
     const fromBench = roster.bench.filter(fits).sort(strongestFirst)[0]

@@ -1,3 +1,4 @@
+import { opponentOf } from '@/content/ids'
 import type { PerTeam, TeamBattleStats } from '@/domain/battle/contracts'
 import { emptyStructureState } from '@/domain/match/structures'
 import type { SimulationEmitter } from './events'
@@ -19,6 +20,17 @@ export class BattleStatsRecorder {
       if (structure.structure) {
         this.perTeam[attackerTeam].structureDamage[structure.structure.slot] += amount
       }
+    })
+
+    /* A repair under Hold takes back the enemy's damage to that building this round, never more than it did. */
+    events.on('repaired', ({ structure, amount, reclaims }) => {
+      if (!reclaims || !structure.structure) {
+        return
+      }
+
+      const damage = this.perTeam[opponentOf(structure.team)].structureDamage
+      const slot = structure.structure.slot
+      damage[slot] = Math.max(0, damage[slot] - amount)
     })
   }
 

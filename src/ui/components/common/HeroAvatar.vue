@@ -1,19 +1,41 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { HEROES } from '@/content/heroes'
-import type { HeroId, StarLevel, TeamId } from '@/content/ids'
+import type { HeroId, RoleId, StarLevel, TeamId } from '@/content/ids'
 import { cssColor } from '@/rendering/theme'
 import { starsLabel } from '../../composables/useGameText'
-import { ROLE_ICONS } from '../../icons'
+import { ADAPTIVE_ICON, ROLE_ICONS } from '../../icons'
 
-/** `fill` sizes the avatar from its container's width, which must be a size container. */
+/**
+ * `fill` sizes the avatar from its container's width, which must be a size container. `role` is the one the hero
+ * took on its lane; an adaptive hero without one shows its mask.
+ */
 const props = withDefaults(
-  defineProps<{ heroId: HeroId; team?: TeamId; stars?: StarLevel; size?: number; fill?: boolean }>(),
+  defineProps<{
+    heroId: HeroId
+    team?: TeamId
+    stars?: StarLevel
+    size?: number
+    fill?: boolean
+    role?: RoleId
+    /** A talent waits to be picked: a gold mark in the corner. */
+    pending?: boolean
+  }>(),
   {
     team: 0,
     stars: undefined,
     size: 32,
+    role: undefined,
+    pending: false,
   },
+)
+
+const icon = computed(() =>
+  props.role
+    ? ROLE_ICONS[props.role]
+    : HEROES[props.heroId].adaptive
+      ? ADAPTIVE_ICON
+      : ROLE_ICONS[HEROES[props.heroId].role],
 )
 
 const style = computed(() => ({
@@ -25,10 +47,11 @@ const style = computed(() => ({
 <template>
   <span class="avatar" :class="[team === 0 ? 'ours' : 'theirs', { fill }]" :style="style" aria-hidden="true">
     <span class="disc">
-      <component :is="ROLE_ICONS[HEROES[heroId].role]" :size="Math.round(size * 0.5)" :stroke-width="2.4" />
+      <component :is="icon" :size="Math.round(size * 0.5)" :stroke-width="2.4" />
     </span>
 
     <span v-if="stars" class="stars">{{ starsLabel(stars) }}</span>
+    <span v-if="pending" class="pending" />
   </span>
 </template>
 
@@ -71,6 +94,32 @@ const style = computed(() => ({
   font-size: calc(var(--size) * 0.36);
   font-weight: 700;
   line-height: 1;
+}
+
+.pending {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: max(9px, calc(var(--size) * 0.26));
+  height: max(9px, calc(var(--size) * 0.26));
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 2px var(--ink);
+  animation: pending-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pending-pulse {
+  50% {
+    box-shadow:
+      0 0 0 2px var(--ink),
+      0 0 10px var(--gold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending {
+    animation: none;
+  }
 }
 
 .stars {

@@ -1,7 +1,15 @@
 import gsap from 'gsap'
 import { Container, Graphics } from 'pixi.js'
 import { HEROES } from '@/content/heroes'
-import { TEAM_IDS, type HeroId, type ItemId, type LaneId, type StarLevel, type TeamId } from '@/content/ids'
+import {
+  TEAM_IDS,
+  type HeroId,
+  type ItemId,
+  type LaneId,
+  type RoleId,
+  type StarLevel,
+  type TeamId,
+} from '@/content/ids'
 import { STRUCTURES } from '@/content/units'
 import type { Vec2 } from '@/core/math/vec2'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
@@ -19,6 +27,8 @@ export interface TokenModel {
   readonly heroId: HeroId
   readonly stars: StarLevel
   readonly items: readonly ItemId[]
+  /** The role the hero fights in on its lane; an adaptive hero changes it with its lane-mates. */
+  readonly role?: RoleId
 }
 
 /** Lineups and structures as the player sees them: index 0 is the player's own side. */
@@ -37,7 +47,7 @@ interface PlacedToken {
 }
 
 const LANE_HIGHLIGHT_WIDTH = 46
-const tokenKey = (t: TokenModel) => `${t.heroId}:${t.stars}:${t.items.join(',')}`
+const tokenKey = (t: TokenModel) => `${t.heroId}:${t.stars}:${t.role ?? ''}:${t.items.join(',')}`
 
 export class PlanningLayer extends Container {
   private readonly highlight = new Graphics()
@@ -193,7 +203,7 @@ export class PlanningLayer extends Container {
     const token = new HeroToken({
       color: HEROES[model.heroId].color,
       team,
-      icon: this.icons[HEROES[model.heroId].role],
+      icon: this.icons[model.role ?? HEROES[model.heroId].role],
       stars: model.stars,
       items: model.items,
     })

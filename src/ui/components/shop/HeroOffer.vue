@@ -5,7 +5,7 @@ import { HEROES } from '@/content/heroes'
 import type { HeroId } from '@/content/ids'
 import { ROLES } from '@/content/roles'
 import { cssColor } from '@/rendering/theme'
-import { ROLE_ICONS } from '../../icons'
+import { ADAPTIVE_ICON, ROLE_ICONS } from '../../icons'
 import { useGameText } from '../../composables/useGameText'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import HeroPeek from '../common/HeroPeek.vue'
@@ -24,6 +24,7 @@ defineEmits<{ buy: [slot: number] }>()
 const text = useGameText()
 const { t } = text
 const hero = computed(() => HEROES[props.offer.heroId])
+const roleIcon = computed(() => (hero.value.adaptive ? ADAPTIVE_ICON : ROLE_ICONS[hero.value.role]))
 const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
 </script>
 
@@ -44,8 +45,8 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
         <span class="name">{{ text.heroName(offer.heroId) }}</span>
 
         <span class="role">
-          <component :is="ROLE_ICONS[hero.role]" :size="12" />
-          {{ text.roleName(hero.role) }} · {{ text.abilityName(hero.ability) }}
+          <component :is="roleIcon" :size="12" />
+          {{ text.heroRoleName(offer.heroId) }} · {{ text.abilityName(hero.ability) }}
         </span>
       </span>
 
@@ -57,6 +58,8 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
         <span v-else-if="offer.ownedCopies" class="badge">{{
           t('shop.owned', { n: offer.ownedCopies })
         }}</span>
+
+        <span v-else-if="hero.copies" class="badge rare">{{ t('shop.rare') }}</span>
       </span>
     </button>
 
@@ -169,6 +172,11 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
   color: var(--chalk-dim);
   border: 1px solid var(--edge-strong);
   white-space: nowrap;
+}
+
+.badge.rare {
+  color: #d9c2ff;
+  border-color: rgba(178, 140, 224, 0.7);
 }
 
 .badge.up {

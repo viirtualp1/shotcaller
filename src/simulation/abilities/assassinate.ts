@@ -1,12 +1,11 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { enemiesAround, weakest } from './selectors'
-
-const P = ABILITY_PARAMS.assassinate
+import { paramsOf } from './params'
 
 export const assassinate: Ability = {
   id: 'assassinate',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'assassinate')
     const target = weakest(enemiesAround(ctx, caster, caster.position, P.radius, { heroesOnly: true }))
     if (!target) {
       return false

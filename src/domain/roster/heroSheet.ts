@@ -1,10 +1,11 @@
 import { HEROES } from '@/content/heroes'
-import type { HeroId, ItemId, StarLevel, SynergyId } from '@/content/ids'
-import { loadoutModifiers } from '@/content/items'
+import type { HeroId, ItemId, RoleId, StarLevel, SynergyId } from '@/content/ids'
+import { ITEMS, loadoutModifiers } from '@/content/items'
 import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
 import { SYNERGY_BY_ID } from '@/content/synergies'
+import { activeTalents, talentManaCost, type TalentChoice } from '@/content/talents'
 
 /** A hero's numbers as the battle uses them. */
 export interface HeroNumbers {
@@ -51,15 +52,20 @@ export interface HeroLoadout {
   readonly items?: readonly ItemId[]
   /** Synergies active on the hero's lane; none on the bench. */
   readonly synergies?: readonly SynergyId[]
+  /** The role the hero took on its lane, for an adaptive hero; its own role otherwise. */
+  readonly role?: RoleId
+  /** Soul Jar charges; they add attack damage while the hero carries a jar. */
+  readonly souls?: number
+  readonly talent?: TalentChoice
 }
 
-function numbersOf(heroId: HeroId, stars: StarLevel, mods: StatModifiers): HeroNumbers {
+function numbersOf(heroId: HeroId, stars: StarLevel, mods: StatModifiers, soulPower = 1): HeroNumbers {
   const { stats } = HEROES[heroId]
   const star = STAR_POWER[stars]
 
   return {
     hp: stats.hp * star * mods.maxHp,
-    damage: stats.damage * star * mods.damage,
+    damage: stats.damage * star * mods.damage * soulPower,
     attackInterval: stats.attackInterval / mods.attackSpeed,
     speed: stats.speed * mods.speed,
     protection: 1 - (1 - stats.armor) * mods.damageTaken,
@@ -70,22 +76,38 @@ function numbersOf(heroId: HeroId, stars: StarLevel, mods: StatModifiers): HeroN
   }
 }
 
-export function heroSheet({ heroId, stars, items = [], synergies = [] }: HeroLoadout): HeroSheet {
+/** What a hero's souls add to its attacks: nothing without a jar to hold them. */
+export function soulPower(items: readonly ItemId[], souls = 0) {
+  const jar = items.map((id) => ITEMS[id].effects).find((effects) => effects.soulDamage)
+  return jar ? 1 + Math.min(souls, jar.soulMax ?? souls) * (jar.soulDamage ?? 0) : 1
+}
+
+export function heroSheet({
+  heroId,
+  stars,
+  items = [],
+  synergies = [],
+  role: roleId,
+  souls = 0,
+  talent,
+}: HeroLoadout): HeroSheet {
   const hero = HEROES[heroId]
-  const role = ROLES[hero.role]
+  const playedRole = roleId ?? hero.role
+  const role = ROLES[playedRole]
 
   const synergyModifiers = synergies
     .flatMap((id) => SYNERGY_BY_ID[id].effects)
-    .filter((effect) => effect.appliesTo === 'all' || effect.appliesTo === hero.role)
+    .filter((effect) => effect.appliesTo === 'all' || effect.appliesTo === playedRole)
     .map((effect) => effect.modifiers)
 
   const total = numbersOf(
     heroId,
     stars,
-    combineModifiers(role.modifiers, ...synergyModifiers, loadoutModifiers(items, hero.role)),
+    combineModifiers(role.modifiers, ...synergyModifiers, loadoutModifiers(items, playedRole)),
+    soulPower(items, souls),
   )
 
-  const cost = hero.stats.mana
+  const cost = hero.stats.mana * talentManaCost(hero.ability, activeTalents(stars, talent))
   const perAttack = BATTLE.manaPerAttack * total.manaGain
 
   return {

@@ -38,6 +38,9 @@ export const HERO_IDS = [
   'butcher',
   'sniper',
   'oracle',
+  'herald',
+  'stonewright',
+  'changeling',
 ] as const
 
 export type HeroId = (typeof HERO_IDS)[number]
@@ -61,6 +64,9 @@ export const ABILITY_IDS = [
   'hook',
   'assassinate',
   'shield',
+  'standard',
+  'mend',
+  'mimic',
 ] as const
 
 export type AbilityId = (typeof ABILITY_IDS)[number]
@@ -78,7 +84,8 @@ export const SYNERGY_IDS = [
 
 export type SynergyId = (typeof SYNERGY_IDS)[number]
 
-export const ITEM_IDS = [
+/** Items the shop sells. Two of the same merge into its upgraded version, whose id ends in `+`. */
+export const SHOP_ITEM_IDS = [
   'broadsword',
   'gloves',
   'chainmail',
@@ -90,9 +97,22 @@ export const ITEM_IDS = [
   'vampireFang',
   'thornMail',
   'aegis',
+  'soulJar',
+  'soulbond',
+  'echoShard',
+  'townPortal',
+  'cursedBlade',
 ] as const
 
-export type ItemId = (typeof ITEM_IDS)[number]
+export type ShopItemId = (typeof SHOP_ITEM_IDS)[number]
+export type UpgradedItemId = `${ShopItemId}+`
+export type ItemId = ShopItemId | UpgradedItemId
+
+/** Every item a hero can carry: the shop's, then their upgrades in the same order. */
+export const ITEM_IDS = [
+  ...SHOP_ITEM_IDS,
+  ...SHOP_ITEM_IDS.map((id): UpgradedItemId => `${id}+`),
+] as unknown as readonly [ItemId, ...ItemId[]]
 
 export type Tier = 1 | 2 | 3
 export type StarLevel = 1 | 2 | 3

@@ -13,6 +13,8 @@ import { TOKEN_RADIUS } from '../views/HeroToken'
 /** Skipping a battle replays hundreds of events in one frame; only a handful are worth drawing. */
 const EFFECTS_PER_FRAME = 24
 const BIG_BURST = 120
+const ECHO_COLOR = 0x9fd8ff
+const CURSE_COLOR = 0xc084fc
 
 type Handler<K extends keyof SimulationEvents> = (payload: SimulationEvents[K]) => void
 
@@ -35,9 +37,37 @@ export class EffectsLayer extends Container {
   attach(events: SimulationEmitter) {
     this.detach()
 
-    this.listen(events, 'abilityCast', ({ caster, ability }) =>
-      this.floatText(ABILITY_NAMES[ability], caster.position, PALETTE.chalk, 18, FONTS.hand, -28),
+    this.listen(events, 'abilityCast', ({ caster, ability, echo }) =>
+      this.floatText(
+        echo ? `${ABILITY_NAMES[ability]} ↻` : ABILITY_NAMES[ability],
+        caster.position,
+        echo ? ECHO_COLOR : PALETTE.chalk,
+        18,
+        FONTS.hand,
+        -28,
+      ),
     )
+
+    this.listen(events, 'bannerPlanted', ({ banner }) =>
+      this.ring(banner.position, banner.banner?.radius ?? 0, banner.color ?? PALETTE.gold, 0.45),
+    )
+
+    this.listen(events, 'repaired', ({ structure, healer, amount }) => {
+      this.tracer(healer.position, structure.position, PALETTE.heal)
+      this.floatText(`+${Math.round(amount)}`, jitter(structure.position), PALETTE.heal, 14, FONTS.ui, -18)
+    })
+
+    this.listen(events, 'teleported', ({ from, to }) => {
+      this.ring(from, 30, PALETTE.gold, 0.6)
+      this.ring(to, 40, PALETTE.gold, 0.8)
+      this.floatText(ITEMS.townPortal.name, to, PALETTE.gold, 16, FONTS.hand, -28)
+    })
+
+    this.listen(events, 'cursed', ({ hero, throne, amount }) => {
+      this.ring(throne.position, 46, CURSE_COLOR, 0.8)
+      this.floatText(`−${Math.round(amount)}`, throne.position, CURSE_COLOR, 18, FONTS.ui, -30)
+      this.floatText(ITEMS.cursedBlade.name, hero.position, CURSE_COLOR, 15, FONTS.hand, -40)
+    })
 
     this.listen(events, 'heroKilled', ({ victim, killer }) => {
       this.floatText('✕', victim.position, this.teamColor(killer.team), 26, FONTS.ui)

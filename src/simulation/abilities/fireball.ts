@@ -1,12 +1,11 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { densest } from './selectors'
-
-const P = ABILITY_PARAMS.fireball
+import { paramsOf } from './params'
 
 export const fireball: Ability = {
   id: 'fireball',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'fireball')
     const target = densest(ctx, caster, caster.attack.range + P.rangeBonus, P.radius)
     if (!target) {
       return false

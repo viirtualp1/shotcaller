@@ -2,20 +2,23 @@ import { HEROES } from '@/content/heroes'
 import type { TrialId } from '@/content/career'
 import {
   HERO_IDS,
-  ITEM_IDS,
+  SHOP_ITEM_IDS,
   opponentOf,
   type HeroId,
   type ItemId,
   type LaneId,
   type LaneStance,
   type ModeId,
+  type RoleId,
   type StarLevel,
   type TeamId,
 } from '@/content/ids'
 import { ITEMS, ITEM_SLOTS, STASH_SIZE } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, MERGE_COUNT } from '@/content/rules'
+import type { TwistId } from '@/content/experiments'
 import type { SandboxSettings } from '@/content/sandbox'
+import type { TalentChoice } from '@/content/talents'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { fromSide, seenFrom } from '@/domain/battle/mirror'
 import { findRecruit } from '@/domain/coach/recruit'
@@ -36,6 +39,13 @@ export interface HeroCardView {
   readonly sellValue: number
   readonly items: readonly ItemId[]
   readonly freeItemSlots: number
+  /** The role the hero fights in on its lane; missing on the bench, where an adaptive hero has none yet. */
+  readonly role?: RoleId
+  /** Soul Jar charges the hero has kept. */
+  readonly souls: number
+  readonly talent?: TalentChoice
+  /** Reached two stars and waits for the coach to pick a talent. */
+  readonly pendingTalent: boolean
 }
 
 export interface ShopOfferView {
@@ -133,6 +143,10 @@ export interface MatchView {
   readonly report: MatchReportView | null
   /** The training ground's dummies and creeps; null in a real match. */
   readonly sandbox: SandboxSettings | null
+  /** The round's twist when the match plays with twists. */
+  readonly twist: TwistId | null
+  /** Heroes in this match's pool when it plays with rotation. */
+  readonly rotation: readonly HeroId[] | null
 }
 
 export interface LiveBattleView {
@@ -142,13 +156,17 @@ export interface LiveBattleView {
   readonly heroes: ReadonlyMap<string, HeroStatus>
 }
 
-const toCard = (hero: OwnedHero) => ({
+const toCard = (hero: OwnedHero, role?: RoleId): HeroCardView => ({
   uid: hero.uid,
   heroId: hero.heroId,
   stars: hero.stars,
   sellValue: sellValue(hero),
   items: [...hero.items],
   freeItemSlots: ITEM_SLOTS - hero.items.length,
+  ...(role ? { role } : {}),
+  souls: hero.souls ?? 0,
+  ...(hero.talent !== undefined ? { talent: hero.talent } : {}),
+  pendingTalent: hero.stars === 2 && hero.talent === undefined,
 })
 
 const perLane = <T>(build: (lane: LaneId) => T) => ({
@@ -169,7 +187,7 @@ function toLaneView(player: Player, lane: LaneId) {
   return {
     lane,
     stance: player.roster.stances()[lane] ?? null,
-    heroes: heroes.map(toCard),
+    heroes: heroes.map((hero, i) => toCard(hero, report.roles[i])),
     report: {
       synergies: report.synergies,
       suggestions: report.suggestions.map((suggestion) => {
@@ -207,7 +225,7 @@ function toPlayerView(player: Player) {
     boardCapacity: player.boardCapacity,
     benchSize: player.roster.benchSize,
     streak: player.streak,
-    bench: player.roster.bench.map(toCard),
+    bench: player.roster.bench.map((hero) => toCard(hero)),
     lanes: perLane((lane) => toLaneView(player, lane)),
     shop: player.shop.slots.map((heroId, slot) => ({
       slot,
@@ -232,11 +250,12 @@ function toPlayerView(player: Player) {
       sellValue: itemSellValue(itemId),
     })),
     stashSize: STASH_SIZE,
-    itemShop: ITEM_IDS.map((itemId) => ({
+    itemShop: SHOP_ITEM_IDS.map((itemId) => ({
       itemId,
       cost: ITEMS[itemId].cost,
       affordable: ITEMS[itemId].cost <= gold,
-      fits: !player.stash.isFull,
+      /* A full stash still takes a copy of an item it holds: the two merge. */
+      fits: player.stash.accepts(itemId),
     })),
   }
 }
@@ -277,6 +296,8 @@ export function toMatchView(match: Match): MatchView {
     result: match.result,
     report: match.phase === 'finished' ? toMatchReport(match) : null,
     sandbox: match.sandbox,
+    twist: match.twist,
+    rotation: match.rotation,
   }
 }
 

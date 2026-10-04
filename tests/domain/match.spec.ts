@@ -5,7 +5,8 @@ import { GreedyCoach } from '@/domain/coach/GreedyCoach'
 import { createRng } from '@/core/random/rng'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
-const FULL_MATCH_TIMEOUT = 15_000
+/* Whole matches run alongside the rest of the suite; 9.0's larger pool and talents made them longer on CI. */
+const FULL_MATCH_TIMEOUT = 30_000
 
 describe('Match', () => {
   it('refuses to start a battle with an empty board', () => {

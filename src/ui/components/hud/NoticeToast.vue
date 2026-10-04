@@ -33,7 +33,11 @@ const message = computed(() => {
     return text.t('notices.itemBought', { item: text.itemName(notice.itemId) })
   }
 
-  return text.t('notices.promoted', {
+  if (notice.kind === 'itemUpgraded') {
+    return text.t('notices.itemUpgraded', { item: text.itemName(notice.itemId) })
+  }
+
+  return text.t(notice.stars === 2 ? 'notices.promotedTalent' : 'notices.promoted', {
     hero: text.heroName(notice.heroId),
     stars: starsLabel(notice.stars),
   })
@@ -89,7 +93,8 @@ watch(
 }
 
 .toast.promoted,
-.toast.itemBought {
+.toast.itemBought,
+.toast.itemUpgraded {
   border-color: var(--gold);
   color: var(--gold);
 }

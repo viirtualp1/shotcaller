@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { TRIAL_IDS } from '@/content/career'
+import { TWIST_IDS } from '@/content/experiments'
 import { HERO_IDS, ITEM_IDS, LANE_IDS, LANE_STANCES, MODE_IDS, type ModeId } from '@/content/ids'
-import { ITEM_SLOTS, STASH_SIZE } from '@/content/items'
+import { ITEM_SLOTS, ITEMS, STASH_SIZE } from '@/content/items'
 import { DEFAULT_MODE, levelRules, MODES } from '@/content/modes'
 import { ROSTER } from '@/content/rules'
 import { MATCH_END_REASONS } from '@/domain/match/judge'
@@ -11,6 +12,10 @@ import { emptyLedger } from '@/domain/player/ledger'
 
 /** 2 numbered coach levels from 1; saves of version 1 started at 2. */
 const SNAPSHOT_VERSION = 2
+
+const SOUL_LIMIT = ITEMS.soulJar.effects.soulMax ?? 0
+
+const talent = z.union([z.literal(0), z.literal(1)])
 
 const team = z.union([z.literal(0), z.literal(1)])
 const pair = <T extends z.ZodType>(schema: T) => z.tuple([schema, schema]).readonly()
@@ -27,6 +32,8 @@ const ownedHero = z.object({
   heroId,
   stars,
   items: z.array(itemId).max(ITEM_SLOTS),
+  souls: z.int().min(0).max(SOUL_LIMIT).optional(),
+  talent: talent.optional(),
 })
 
 const lineup = z.object({
@@ -146,15 +153,29 @@ const heroStats = z.object({
   deaths: amount,
 })
 
-/** A hero as it fought one round: id, stars, lane and items. */
+/** A hero as it fought one round: id, stars, lane, items, then souls and talent when it had any. */
 const roundPick = z
-  .tuple([heroId, stars, z.enum(LANE_IDS), z.array(itemId).max(ITEM_SLOTS).readonly()])
+  .tuple([
+    heroId,
+    stars,
+    z.enum(LANE_IDS),
+    z.array(itemId).max(ITEM_SLOTS).readonly(),
+    z
+      .object({
+        souls: z.int().min(0).max(SOUL_LIMIT).optional(),
+        talent: talent.optional(),
+      })
+      .optional(),
+  ])
   .readonly()
+
+const twist = z.enum(TWIST_IDS)
 
 const roundReplay = z.object({
   seed: z.string().min(1).max(80),
   structures: pair(structures),
   stances: pair(stances).optional(),
+  twist: twist.optional(),
 })
 
 const matchStats = z.object({
@@ -186,7 +207,8 @@ const matchState = z.object({
     j: z.number(),
     S: z.array(z.number()),
   }),
-  pool: z.record(heroId, z.int().nonnegative()),
+  /** Heroes released after the match was saved are missing; they join the pool with every copy. */
+  pool: z.partialRecord(heroId, z.int().nonnegative()),
   structures: pair(structures),
   players: pair(player),
   summary: scoredSummary.nullable(),
@@ -204,11 +226,20 @@ const matchState = z.object({
       lineups: pair(lineup),
       structures: pair(structures),
       stances: pair(stances).optional(),
+      twist: twist.optional(),
     })
     .nullable(),
   stats: matchStats.default(emptyMatchStats),
   link: remoteLink.optional(),
   opponentReady: z.boolean().optional(),
+  rules: z
+    .object({
+      rotation: z.boolean().optional(),
+      twists: z.boolean().optional(),
+    })
+    .optional(),
+  twist: twist.optional(),
+  rotation: z.array(heroId).max(HERO_IDS.length).optional(),
 })
 
 const envelope = z.object({
@@ -273,6 +304,8 @@ export function parseRemoteBoard(json: unknown, mode: ModeId) {
     board.stash.length <= STASH_SIZE &&
     board.gold <= REMOTE_GOLD_LIMIT &&
     heroes.every((hero) => hero.uid.length <= REMOTE_UID_LENGTH) &&
+    /* A talent comes with the second star. */
+    heroes.every((hero) => hero.talent === undefined || hero.stars >= 2) &&
     new Set(heroes.map((hero) => hero.uid)).size === heroes.length
 
   return allowed ? board : null

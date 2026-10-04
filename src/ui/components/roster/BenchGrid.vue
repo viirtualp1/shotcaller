@@ -83,7 +83,7 @@ function onPanelClick() {
           @pointerdown="press(hero, $event)"
           @keydown.enter="store.select(hero.uid)"
         >
-          <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" fill />
+          <HeroAvatar :hero-id="hero.heroId" :stars="hero.stars" :pending="hero.pendingTalent" fill />
 
           <span v-if="hero.items.length" class="pips">
             <i v-for="(item, i) in hero.items" :key="`${item}-${i}`" />
@@ -91,7 +91,7 @@ function onPanelClick() {
         </button>
 
         <template #content>
-          <HeroPeek :hero-id="hero.heroId" :stars="hero.stars" :items="hero.items" />
+          <HeroPeek :hero-id="hero.heroId" :stars="hero.stars" :items="hero.items" :souls="hero.souls" />
         </template>
       </InfoTooltip>
 

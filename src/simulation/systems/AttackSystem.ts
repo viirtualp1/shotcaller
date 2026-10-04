@@ -13,6 +13,8 @@ function farmMultiplier(unit: Unit) {
   return farm ? 1 + Math.min(farm.max, unit.hero.farmStacks * farm.perLastHit) : 1
 }
 
+const soulMultiplier = (unit: Unit) => 1 + (unit.hero?.souls ?? 0) * (unit.itemEffects?.soulDamage ?? 0)
+
 export const attackReach = (unit: Unit) => (unit.attack?.ranged ? unit.attack.range : BATTLE.meleeReach)
 
 export const inReach = (unit: Unit, target: Unit) =>
@@ -24,7 +26,7 @@ export class AttackSystem implements System {
   update() {
     for (const unit of this.ctx.queries.fighters) {
       const target = unit.targeting.target
-      if (!target || !isAlive(unit) || !isAlive(target) || isDisabled(unit)) {
+      if (!target || !isAlive(unit) || !isAlive(target) || isDisabled(unit) || unit.channel) {
         continue
       }
 
@@ -42,14 +44,14 @@ export class AttackSystem implements System {
       return
     }
 
-    attack.cooldown = attack.interval
+    attack.cooldown = attack.interval / (unit.rally?.attackSpeed ?? 1)
 
     this.ctx.events.emit('attacked', {
       attacker: unit,
       target,
     })
 
-    const damage = attack.damage * farmMultiplier(unit)
+    const damage = attack.damage * farmMultiplier(unit) * soulMultiplier(unit) * (unit.rally?.damage ?? 1)
     if (unit.mana && unit.hero) {
       unit.mana.current = Math.min(unit.mana.max, unit.mana.current + BATTLE.manaPerAttack * unit.mana.gain)
     }

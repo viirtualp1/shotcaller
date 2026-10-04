@@ -90,6 +90,7 @@ export function contactPoint(caster: HeroUnit, target: Unit, from: Vec2) {
   return offset(target.position, direction(target.position, from), caster.radius + target.radius + 2)
 }
 
-export function stun(target: Unit, seconds: number) {
-  target.status.stun = Math.max(target.status.stun, seconds)
+/** An Echo Shard repeat stuns for less: the caster's stun scale shortens it. */
+export function stun(target: Unit, seconds: number, caster: HeroUnit) {
+  target.status.stun = Math.max(target.status.stun, seconds * caster.caster.stunScale)
 }

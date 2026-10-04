@@ -28,6 +28,9 @@ export const STORAGE_KEYS = {
   accountPhoto: `${PREFIX}/account-photo`,
   /** Whether lane orders, still an experiment, are offered during planning. */
   laneOrders: `${PREFIX}/lane-orders`,
+  /** Experiments for matches against the computer: a rotating hero pool and round twists. */
+  heroRotation: `${PREFIX}/hero-rotation`,
+  roundTwists: `${PREFIX}/round-twists`,
   cloudSync: `${PREFIX}/cloud-sync`,
   cloudSavedAt: `${PREFIX}/cloud-saved-at`,
 } as const

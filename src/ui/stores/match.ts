@@ -27,6 +27,7 @@ import {
 } from '@/content/ids'
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
 import { DEFAULT_SANDBOX, type SandboxGoal, type SandboxSettings } from '@/content/sandbox'
+import type { TalentChoice } from '@/content/talents'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
 import { LaneOptimizer } from '@/domain/coach/LaneOptimizer'
@@ -48,6 +49,7 @@ type NoticeInput =
   | { readonly kind: 'error'; readonly error: DomainError }
   | { readonly kind: 'promoted'; readonly heroId: HeroId; readonly stars: StarLevel }
   | { readonly kind: 'itemBought'; readonly itemId: ItemId }
+  | { readonly kind: 'itemUpgraded'; readonly itemId: ItemId }
   | { readonly kind: 'timeUp' }
   | { readonly kind: 'arranged'; readonly changed: boolean }
 
@@ -126,6 +128,9 @@ export function loadoutOf(player: PlayerView, { hero, slot }: LocatedHero): Hero
     stars: hero.stars,
     items: hero.items,
     synergies: slot === 'bench' ? [] : player.lanes[slot].report.synergies,
+    ...(hero.role ? { role: hero.role } : {}),
+    souls: hero.souls,
+    ...(hero.talent !== undefined ? { talent: hero.talent } : {}),
   }
 }
 
@@ -286,6 +291,10 @@ export const useMatchStore = defineStore('match', () => {
       difficulty: settings.difficulty,
       mode,
       trialId,
+      rules: {
+        rotation: settings.heroRotation,
+        twists: settings.roundTwists,
+      },
     })
 
     clearSelection()
@@ -513,7 +522,13 @@ export const useMatchStore = defineStore('match', () => {
       return
     }
 
-    if (apply(match.human.buyItem(itemId)) !== undefined) {
+    const upgrade = apply(match.human.buyItem(itemId))
+    if (upgrade) {
+      notify({
+        kind: 'itemUpgraded',
+        itemId: upgrade,
+      })
+    } else if (upgrade === null) {
       notify({
         kind: 'itemBought',
         itemId,
@@ -548,7 +563,19 @@ export const useMatchStore = defineStore('match', () => {
     }
 
     selectedItem.value = null
-    apply(match.human.equip(index, uid))
+    const upgrade = apply(match.human.equip(index, uid))
+    if (upgrade) {
+      notify({
+        kind: 'itemUpgraded',
+        itemId: upgrade,
+      })
+    }
+  }
+
+  function chooseTalent(uid: string, talent: TalentChoice) {
+    if (match && isPlanning.value) {
+      apply(match.human.chooseTalent(uid, talent))
+    }
   }
 
   function unequip(uid: string, itemIndex: number) {
@@ -997,6 +1024,7 @@ export const useMatchStore = defineStore('match', () => {
     setSandboxGoal,
     buy,
     buyItem,
+    chooseTalent,
     sell,
     sellItem,
     equip,

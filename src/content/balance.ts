@@ -7,13 +7,15 @@ import { MODES } from './modes'
 import { ROLES } from './roles'
 import { BATTLE, RELIC, STAR_POWER } from './rules'
 import { SYNERGIES } from './synergies'
+import { TALENTS } from './talents'
+import { TWIST_IDS, TWISTS } from './experiments'
 import { CREEPS, STRUCTURES } from './units'
 
 /**
  * Bump when a fight can play out differently without any of the numbers below changing,
  * for example a new targeting rule or a synergy that turns on in a different lineup.
  */
-const LOGIC_REVISION = 3
+const LOGIC_REVISION = 4
 
 /** FNV-1a, 32 bits, so a match can remember which balance it was played on. */
 function fnv1a(text: string) {
@@ -47,6 +49,8 @@ function balanceData() {
     creeps: CREEPS,
     structures: STRUCTURES,
     abilities: ABILITY_PARAMS,
+    talents: TALENTS,
+    twists: TWIST_IDS.map((id) => withoutColor(TWISTS[id])),
     heroes: HERO_IDS.map((id) => {
       const hero = HEROES[id]
       return {
@@ -55,6 +59,8 @@ function balanceData() {
         ability: hero.ability,
         stats: hero.stats,
         bash: hero.bash ?? null,
+        adaptive: hero.adaptive ?? false,
+        manaRegen: hero.manaRegen ?? 0,
       }
     }),
     items: ITEM_IDS.map((id) => {

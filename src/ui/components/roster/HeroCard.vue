@@ -14,6 +14,7 @@ import HeroDetails from '../common/HeroDetails.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ItemDetails from '../common/ItemDetails.vue'
 import ItemIcon from '../common/ItemIcon.vue'
+import TalentPicker from './TalentPicker.vue'
 
 /** Presses that keep the card open: the card itself and everything that acts on the selected hero. */
 const KEEP_OPEN = '.hero-card, [data-drop^="lane:"], [data-drop^="hero:"], [data-drop="bench"]'
@@ -115,6 +116,14 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
         :vitals="vitals"
         :heading="false"
         :item-icons="false"
+      />
+
+      <TalentPicker
+        :hero-id="located.hero.heroId"
+        :stars="located.hero.stars"
+        :talent="located.hero.talent"
+        :can-choose="canManage"
+        @choose="store.chooseTalent(located.hero.uid, $event)"
       />
 
       <footer class="bottom">

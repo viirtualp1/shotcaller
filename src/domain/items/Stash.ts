@@ -1,7 +1,10 @@
 import { err, ok, type Result } from 'neverthrow'
 import type { ItemId } from '@/content/ids'
-import { STASH_SIZE } from '@/content/items'
+import { isUpgraded, STASH_SIZE, upgradeOf } from '@/content/items'
 import type { DomainError } from '../errors'
+
+/** A shop item that a second copy turns into its upgrade; upgrades merge no further. */
+export const mergesWith = (item: ItemId, other: ItemId) => item === other && !isUpgraded(item)
 
 export class Stash {
   private stored: ItemId[] = []
@@ -16,14 +19,28 @@ export class Stash {
     return this.stored.length >= this.size
   }
 
-  put(item: ItemId): Result<void, DomainError> {
-    if (this.isFull) {
+  /** A full stash still takes a copy of an item it holds: the two merge into one. */
+  accepts(item: ItemId) {
+    return !this.isFull || this.stored.some((stored) => mergesWith(item, stored))
+  }
+
+  /** Returns the upgrade when the item merged with a copy already here. */
+  put(item: ItemId): Result<ItemId | null, DomainError> {
+    if (!this.accepts(item)) {
       return err({ code: 'stashFull' })
+    }
+
+    const copy = this.stored.findIndex((stored) => mergesWith(item, stored))
+    if (copy >= 0 && !isUpgraded(item)) {
+      const upgrade = upgradeOf(item)
+      this.stored[copy] = upgrade
+
+      return ok(upgrade)
     }
 
     this.stored.push(item)
 
-    return ok(undefined)
+    return ok(null)
   }
 
   take(index: number): Result<ItemId, DomainError> {

@@ -1,4 +1,5 @@
 import {
+  Amphora,
   Castle,
   Crosshair,
   Crown,
@@ -9,18 +10,24 @@ import {
   Heart,
   HeartHandshake,
   HeartPulse,
+  Link2,
+  Repeat2,
+  ScrollText,
   Shield,
   ShieldAlert,
+  Skull,
   Sparkles,
   Sword,
   Swords,
+  VenetianMask,
   WandSparkles,
   Zap,
 } from '@lucide/vue'
 import type { Component } from 'vue'
-import type { ItemId, RoleId } from '@/content/ids'
+import type { RoleId, ShopItemId } from '@/content/ids'
 
-export const ITEM_ICONS: Readonly<Record<ItemId, Component>> = {
+/** An upgraded item keeps the icon of the item it was made from. */
+export const ITEM_ICONS: Readonly<Record<ShopItemId, Component>> = {
   broadsword: Sword,
   gloves: HandMetal,
   chainmail: Shield,
@@ -32,6 +39,11 @@ export const ITEM_ICONS: Readonly<Record<ItemId, Component>> = {
   vampireFang: Droplets,
   thornMail: ShieldAlert,
   aegis: Crown,
+  soulJar: Amphora,
+  soulbond: Link2,
+  echoShard: Repeat2,
+  townPortal: ScrollText,
+  cursedBlade: Skull,
 }
 
 export const ROLE_ICONS: Readonly<Record<RoleId, Component>> = {
@@ -42,3 +54,6 @@ export const ROLE_ICONS: Readonly<Record<RoleId, Component>> = {
   pusher: Castle,
   ganker: Crosshair,
 }
+
+/** Shown for an adaptive hero wherever no lane has given it a role yet. */
+export const ADAPTIVE_ICON: Component = VenetianMask

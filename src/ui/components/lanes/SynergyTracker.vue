@@ -50,7 +50,14 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 
         <div class="matchup">
           <TransitionGroup name="pop" tag="span" class="heroes ours">
-            <HeroAvatar v-for="hero in entry.ours.heroes" :key="hero.uid" :hero-id="hero.heroId" :size="34" />
+            <HeroAvatar
+              v-for="hero in entry.ours.heroes"
+              :key="hero.uid"
+              :hero-id="hero.heroId"
+              :role="hero.role"
+              :pending="hero.pendingTalent"
+              :size="34"
+            />
           </TransitionGroup>
 
           <span class="vs">{{ t('tracker.vs') }}</span>
@@ -60,6 +67,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
               v-for="hero in entry.theirs.heroes"
               :key="hero.uid"
               :hero-id="hero.heroId"
+              :role="hero.role"
               :team="1"
               :size="34"
             />

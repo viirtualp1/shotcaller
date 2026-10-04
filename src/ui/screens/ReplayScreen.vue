@@ -11,7 +11,7 @@ import { Pause, Play, RotateCcw, X } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import { MODES } from '@/content/modes'
-import { LIVE_MATCH_INTERVAL } from '@/application/social/liveMatch'
+import { LIVE_MATCH_INTERVAL, type LiveMatch } from '@/application/social/liveMatch'
 import { BATTLE } from '@/content/rules'
 import type { PerTeam, StructureState } from '@/domain/battle/contracts'
 import { fromSide, seenFrom } from '@/domain/battle/mirror'
@@ -40,6 +40,12 @@ const SPEEDS = [1, 2, 4] as const
 type Speed = (typeof SPEEDS)[number]
 
 const LIVE_REFRESH_SECONDS = 0.15
+/** A snapshot is half a polling interval old on average by the time it arrives. */
+const LIVE_LEAD = LIVE_MATCH_INTERVAL / 2000
+/** Further behind the player than this, a live battle jumps ahead instead of speeding up. */
+const LIVE_SEEK_SECONDS = 4
+/** How fast the rest of a battle plays once the player's round has already ended. */
+const LIVE_FINISH_SPEED = 4
 const avatarSize = 36
 let session: BattleSession | null = null
 let sinceRefresh = 0
@@ -201,18 +207,7 @@ function tick(seconds: number) {
       return
     }
 
-    /*
-     * Snapshots come every few seconds; in between, the battle runs on at the player's speed, so it plays smoothly
-     * instead of jumping from one snapshot to the next. It never runs more than two snapshots ahead.
-     */
-    const ahead = Math.min((Date.now() - replay.liveReceivedAt) / 1000, (LIVE_MATCH_INTERVAL * 2) / 1000)
-
-    const target =
-      snapshot.phase === 'battle'
-        ? Math.min(BATTLE.duration, snapshot.elapsed + ahead * (snapshot.speed ?? 1))
-        : BATTLE.duration
-
-    session.catchUp(target, 32)
+    session.advance(seconds, livePace(snapshot))
   } else if (playing.value) {
     session.advance(seconds, speed.value)
   } else {
@@ -233,6 +228,30 @@ function tick(seconds: number) {
   if (sinceRefresh >= LIVE_REFRESH_SECONDS) {
     refreshLive()
   }
+}
+
+/**
+ * A live battle plays like a replay, at the player's speed. Snapshots only steer it: a little faster when it falls
+ * behind where the player probably is, slower when it gets ahead, and a jump only when it is far behind.
+ */
+function livePace(snapshot: LiveMatch) {
+  const simulation = session!.simulation
+  const rate = snapshot.speed ?? 1
+  if (snapshot.phase !== 'battle') {
+    return LIVE_FINISH_SPEED
+  }
+
+  const age = Math.min((Date.now() - replay.liveReceivedAt) / 1000, (LIVE_MATCH_INTERVAL * 2) / 1000)
+  const estimate = Math.min(BATTLE.duration, snapshot.elapsed + (age + LIVE_LEAD) * rate)
+  const drift = estimate - simulation.elapsed
+
+  if (drift > LIVE_SEEK_SECONDS) {
+    session!.catchUp(estimate - LIVE_LEAD, 90)
+
+    return rate
+  }
+
+  return Math.max(0, Math.min(rate * 2 + 0.5, rate + drift * 0.5))
 }
 
 function toggle() {
@@ -287,15 +306,21 @@ function onPointerDown(event: PointerEvent) {
   }
 }
 
+/*
+ * A live match brings a fresh record every few seconds. Watched directly next to the shallow renderer ref, each one
+ * restarted the battle; this key only changes when the round or its tape really does.
+ */
+const tapeKey = computed(() => `${replay.round}:${props.match.replays[replay.round - 1]?.seed ?? ''}`)
+
 watch(
-  [renderer, () => replay.round, () => props.match.replays[replay.round - 1]?.seed],
-  ([board, round], previous) => {
-    if (previous && previous[1] !== round) {
+  [renderer, tapeKey],
+  ([board], previous) => {
+    if (previous?.[1] && !previous[1].startsWith(`${replay.round}:`)) {
       selectedUid.value = null
     }
 
     if (board) {
-      loadRound(round)
+      loadRound(replay.round)
     }
   },
   { immediate: true },
@@ -353,21 +378,24 @@ onBeforeUnmount(() => {
         <BaseStatus :team="0" :structures="structures[0]" :mode="match.mode" />
 
         <div class="center">
-          <span class="eyebrow">{{ t(replay.liveFriend ? 'replay.liveTitle' : 'replay.title') }}</span>
+          <span class="eyebrow" :class="{ live: replay.liveFriend }">{{
+            t(replay.liveFriend ? 'replay.liveTitle' : 'replay.title')
+          }}</span>
 
           <span class="round">{{
             t('hud.round', { round: replay.live?.round ?? replay.round, max: maxRounds })
           }}</span>
 
-          <span class="phase">{{
-            replay.liveFriend && replay.liveStatus !== 'watching'
-              ? t(`replay.liveStatus.${replay.liveStatus}`)
-              : replay.liveFriend && replay.live?.phase === 'planning'
-                ? t('replay.waitingRound')
-                : t('battle.timeLeft', { s: secondsLeft })
+          <!-- Status words stay short here: the header has to fit one line on a phone. -->
+          <span v-if="replay.liveFriend && replay.liveStatus !== 'watching'" class="phase note">{{
+            t(`replay.liveBadge.${replay.liveStatus}`)
           }}</span>
 
-          <span v-if="replay.liveFriend" class="round">{{ t('replay.liveDelay') }}</span>
+          <span v-else-if="replay.liveFriend && replay.live?.phase !== 'battle' && over" class="phase note">{{
+            t('replay.waitingRound')
+          }}</span>
+
+          <span v-else class="phase">{{ t('battle.timeLeft', { s: secondsLeft }) }}</span>
         </div>
 
         <BaseStatus :team="1" :structures="structures[1]" :mode="match.mode" :name="opponentName" />
@@ -599,6 +627,36 @@ onBeforeUnmount(() => {
   gap: 2px;
 }
 
+/* A fixed cap, not a percentage: the header sizes itself to its content, so a share of it would resolve to nothing. */
+.center > * {
+  max-width: 260px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.eyebrow.live {
+  color: var(--theirs);
+}
+
+.eyebrow.live::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 1px;
+  background: currentColor;
+  animation: live-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes live-dot {
+  50% {
+    opacity: 0.3;
+  }
+}
+
 .round {
   font-size: 11px;
   font-weight: 700;
@@ -614,6 +672,11 @@ onBeforeUnmount(() => {
   line-height: 1;
   color: var(--theirs);
   font-variant-numeric: tabular-nums;
+}
+
+.phase.note {
+  font-size: 18px;
+  color: var(--chalk-dim);
 }
 
 .side {
@@ -834,6 +897,13 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1099px) {
+  /* Pinned at the middle the header could only use half of a phone's width, and its text wrapped. */
+  .top {
+    left: 8px;
+    right: 8px;
+    translate: none;
+  }
+
   .side {
     top: auto;
     left: 12px;
@@ -855,8 +925,16 @@ onBeforeUnmount(() => {
     min-width: 0;
   }
 
+  .center > * {
+    max-width: 44vw;
+  }
+
   .phase {
     font-size: 20px;
+  }
+
+  .phase.note {
+    font-size: 15px;
   }
 }
 </style>

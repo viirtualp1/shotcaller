@@ -16,6 +16,9 @@ export function createQueries(world: World<Entity>) {
     expiring: units.with('lifetime').without('dead'),
     poisoned: units.with('dot').without('dead'),
     shielded: units.with('shield').without('dead'),
+    banners: units.with('banner').without('dead'),
+    channelers: units.with('channel'),
+    echoes: units.with('echo'),
     projectiles: world.with('projectile'),
     zones: world.with('zone'),
   }

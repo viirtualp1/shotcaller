@@ -20,13 +20,13 @@ export interface HeroVitals {
 export function previewHeroVitals(loadout: HeroLoadout): HeroVitals {
   const sheet = heroSheet(loadout)
   const hero = HEROES[loadout.heroId]
-  const role = ROLES[hero.role]
+  const role = ROLES[loadout.role ?? hero.role]
 
   return {
     health: sheet.total.hp,
     maxHealth: sheet.total.hp,
-    mana: hero.stats.mana * (role.startingManaRatio ?? 0),
-    maxMana: hero.stats.mana,
+    mana: sheet.mana.cost * (role.startingManaRatio ?? 0),
+    maxMana: sheet.mana.cost,
     healthRegen:
       (sheet.total.hp * (role.healAura?.hpPercentPerSecond ?? 0) * sheet.total.healPower) /
       STAR_POWER[loadout.stars],
@@ -41,6 +41,7 @@ export function previewHeroVitals(loadout: HeroLoadout): HeroVitals {
 export function heroVitals(hero: HeroUnit, auras: readonly Unit[]): HeroVitals {
   const farm = ROLES[hero.hero.role].farm
   const farmPower = farm ? 1 + Math.min(farm.max, hero.hero.farmStacks * farm.perLastHit) : 1
+  const soulPower = 1 + hero.hero.souls * (hero.itemEffects?.soulDamage ?? 0)
 
   const healthRegen = !isAlive(hero)
     ? 0
@@ -61,8 +62,8 @@ export function heroVitals(hero: HeroUnit, auras: readonly Unit[]): HeroVitals {
     maxMana: hero.mana.max,
     healthRegen,
     manaPerAttack: BATTLE.manaPerAttack * hero.mana.gain,
-    damage: hero.attack.damage * farmPower,
-    attackInterval: hero.attack.interval,
+    damage: hero.attack.damage * farmPower * soulPower * (hero.rally?.damage ?? 1),
+    attackInterval: hero.attack.interval / (hero.rally?.attackSpeed ?? 1),
     protection: 1 - (1 - hero.armor) * (hero.damageTaken ?? 1),
   }
 }

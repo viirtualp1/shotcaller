@@ -1,12 +1,11 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { densest } from './selectors'
-
-const P = ABILITY_PARAMS.blizzard
+import { paramsOf } from './params'
 
 export const blizzard: Ability = {
   id: 'blizzard',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'blizzard')
     const center = densest(ctx, caster, caster.attack.range + P.rangeBonus, P.radius)
     if (!center) {
       return false

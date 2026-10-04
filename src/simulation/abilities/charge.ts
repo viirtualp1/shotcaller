@@ -1,12 +1,11 @@
-import { ABILITY_PARAMS } from '@/content/abilities'
 import type { Ability } from './Ability'
 import { contactPoint, enemiesAround, farthest, heroesFirst, stun } from './selectors'
-
-const P = ABILITY_PARAMS.charge
+import { paramsOf } from './params'
 
 export const charge: Ability = {
   id: 'charge',
   cast(caster, ctx) {
+    const P = paramsOf(caster, 'charge')
     const candidates = enemiesAround(ctx, caster, caster.position, P.radius, { excludeProtected: true })
     const target = farthest(caster.position, heroesFirst(candidates))
     if (!target) {
@@ -23,8 +22,23 @@ export const charge: Ability = {
     })
 
     ctx.combat.dealDamage(caster, target, P.damage * caster.caster.power, 'magical')
-    stun(target, P.stun)
+    stun(target, P.stun, caster)
     caster.targeting.target = target
+
+    /* Trample: the charge carries on into the enemy heroes around the target, without stunning them. */
+    if (P.splash > 0) {
+      for (const enemy of enemiesAround(ctx, caster, target.position, P.splash, { heroesOnly: true })) {
+        if (enemy !== target) {
+          ctx.combat.dealDamage(caster, enemy, P.splashDamage * caster.caster.power, 'magical')
+        }
+      }
+
+      ctx.events.emit('burst', {
+        at: { ...target.position },
+        radius: P.splash,
+        color: caster.color ?? 0xffffff,
+      })
+    }
 
     return true
   },

@@ -1,6 +1,8 @@
 import { World } from 'miniplex'
 import mitt from 'mitt'
 import { TEAM_IDS, type HeroId, type ItemId, type LaneId, type StarLevel, type TeamId } from '@/content/ids'
+import { TWISTS } from '@/content/experiments'
+import { ITEMS } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { BATTLE } from '@/content/rules'
 import { SANDBOX, sandboxGoal, type SandboxGoal } from '@/content/sandbox'
@@ -10,7 +12,7 @@ import { emptyStructureState } from '@/domain/match/structures'
 import { resolveLane } from '@/domain/synergy/resolveLane'
 import { ABILITIES, type AbilityRegistry } from './abilities/registry'
 import { BattleStatsRecorder } from './BattleStatsRecorder'
-import type { Entity } from './ecs/components'
+import type { Entity, HeroUnit } from './ecs/components'
 import { createQueries, type Queries } from './ecs/queries'
 import type { SimulationEmitter, SimulationEvents } from './events'
 import { laneMapFor, type LaneMap } from './map/LaneMap'
@@ -21,11 +23,14 @@ import { TowerSafety } from './services/TowerSafety'
 import type { SimulationClock, SimulationContext, System } from './SimulationContext'
 import { AbilitySystem } from './systems/AbilitySystem'
 import { AttackSystem } from './systems/AttackSystem'
+import { BannerSystem } from './systems/BannerSystem'
+import { ChannelSystem } from './systems/ChannelSystem'
 import { CollisionSystem } from './systems/CollisionSystem'
 import { DeathSystem } from './systems/DeathSystem'
 import { DefenseSystem } from './systems/DefenseSystem'
 import { HealAuraSystem } from './systems/HealAuraSystem'
 import { MovementSystem } from './systems/MovementSystem'
+import { PortalSystem } from './systems/PortalSystem'
 import { ProjectileSystem } from './systems/ProjectileSystem'
 import { RelicSystem } from './systems/RelicSystem'
 import { RespawnSystem } from './systems/RespawnSystem'
@@ -99,7 +104,7 @@ export class BattleSimulation {
       index,
       safety,
       combat: new CombatService(this.world, this.events, index, structureScale, safety),
-      factory: new EntityFactory(this.world, this.map, rng),
+      factory: new EntityFactory(this.world, this.map, rng, setup.twist ? TWISTS[setup.twist] : null),
     }
 
     this.recorder = new BattleStatsRecorder(this.events)
@@ -123,12 +128,15 @@ export class BattleSimulation {
       new RespawnSystem(ctx),
       new StatusSystem(ctx),
       new HealAuraSystem(ctx),
+      new BannerSystem(ctx),
+      new ChannelSystem(ctx),
       new SpinSystem(ctx),
       new ZoneSystem(ctx),
       new DotSystem(ctx),
       new AbilitySystem(ctx, options.abilities ?? ABILITIES),
       new RoamSystem(ctx),
       new DefenseSystem(ctx),
+      new PortalSystem(ctx),
       new TargetingSystem(ctx),
       new AttackSystem(ctx),
       new MovementSystem(ctx),
@@ -190,8 +198,9 @@ export class BattleSimulation {
         team: h.team,
         heroId: h.hero.heroId,
         stars: h.hero.stars,
-        lane: h.hero.lane,
+        lane: h.hero.startLane,
         items: [...h.hero.items],
+        ...(h.hero.souls > 0 ? { souls: h.hero.souls } : {}),
         damageDealt: Math.round(h.hero.damageDealt),
         damageReceived: Math.round(h.hero.damageReceived),
         structureDamage: Math.round(h.hero.structureDamage),
@@ -263,6 +272,32 @@ export class BattleSimulation {
     this.world.clear()
   }
 
+  /**
+   * The first two heroes of a lane carrying a Soulbond are bound to each other; a third one has no partner. Each passes
+   * on the share its own Soulbond sets, so an upgraded one protects its wearer better.
+   */
+  private bond(heroes: readonly HeroUnit[]) {
+    const bondOf = (hero: HeroUnit) =>
+      hero.hero.items.map((id) => ITEMS[id].effects).find((effects) => (effects.bond ?? 0) > 0)
+
+    const [first, second] = heroes.filter((h) => bondOf(h))
+    if (!first || !second) {
+      return
+    }
+
+    for (const [hero, partner] of [
+      [first, second],
+      [second, first],
+    ] as const) {
+      const { bond = 0, bondRange = 0 } = bondOf(hero)!
+      this.world.addComponent(hero, 'bond', {
+        partner,
+        share: bond,
+        range: bondRange,
+      })
+    }
+  }
+
   private spawnStartingUnits() {
     const { factory } = this.ctx
     for (const team of TEAM_IDS) {
@@ -285,7 +320,8 @@ export class BattleSimulation {
         )
 
         const stance = this.setup.stances?.[team][lane]
-        lineup.forEach((owned, slot) => {
+
+        const heroes = lineup.map((owned, slot) => {
           const hero = factory.hero(owned, team, lane, report, slot, stance)
           if (this.setup.sandbox) {
             hero.targeting.ignoresStructures = false
@@ -298,7 +334,11 @@ export class BattleSimulation {
 
             this.world.removeComponent(hero, 'roamer')
           }
+
+          return hero
         })
+
+        this.bond(heroes)
       }
     }
 
