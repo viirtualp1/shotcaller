@@ -137,7 +137,11 @@ async function submit() {
 
     scrollToEnd()
     await nextTick()
-    field.value?.focus({ preventScroll: true })
+
+    /* Only if something else took it: focusing again would close and reopen the keyboard on some phones. */
+    if (document.activeElement !== field.value) {
+      field.value?.focus({ preventScroll: true })
+    }
   }
 }
 
@@ -343,7 +347,15 @@ onMounted(focusComposer)
         @keydown="onKeydown"
       />
 
-      <button type="submit" class="icon-btn send" :disabled="!canSend" :aria-label="t('chat.send')">
+      <!-- Pressing it never takes focus from the field, so a phone keeps its keyboard open between messages. -->
+      <button
+        type="submit"
+        class="icon-btn send"
+        :disabled="!canSend"
+        :aria-label="t('chat.send')"
+        @pointerdown.prevent
+        @mousedown.prevent
+      >
         <SendHorizontal :size="17" />
       </button>
     </form>

@@ -162,4 +162,33 @@ describe('chat scrolling on a phone', () => {
     expect(el.scrollTop).toBe(2000)
     expect(document.querySelector('.catch-up')).toBeNull()
   })
+
+  it('keeps the field focused when the send button is pressed, so the keyboard stays open', async () => {
+    chat.send.mockImplementation(async () => {
+      arrive('me')
+
+      return true
+    })
+
+    const field = document.querySelector<HTMLTextAreaElement>('textarea')!
+    const send = document.querySelector<HTMLButtonElement>('button.send')!
+    field.focus()
+    field.value = 'hello'
+    field.dispatchEvent(new Event('input'))
+    await settle()
+
+    const press = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+    })
+
+    send.dispatchEvent(press)
+    expect(press.defaultPrevented).toBe(true)
+
+    send.click()
+    await settle()
+
+    expect(chat.send).toHaveBeenCalledWith('hello')
+    expect(document.activeElement).toBe(field)
+  })
 })
