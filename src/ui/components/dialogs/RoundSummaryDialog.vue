@@ -19,6 +19,7 @@ import { MATCH } from '@/content/rules'
 import { STRUCTURES } from '@/content/units'
 import { useFighterLabels } from '../../composables/useFighterLabels'
 import { useGameText } from '../../composables/useGameText'
+import { useGameUiZoom } from '../../composables/useGameUiZoom'
 import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
 import { usePlanningTimerStore } from '../../stores/planningTimer'
@@ -36,6 +37,7 @@ const roundReport = useRoundReportStore()
 const tab = ref('overview')
 const text = useGameText()
 const { t } = text
+const uiZoom = useGameUiZoom()
 
 const summary = computed(() => store.view?.summary ?? null)
 
@@ -148,7 +150,7 @@ const incomeRows = computed(() => {
     <DialogPortal>
       <DialogOverlay class="overlay" />
 
-      <DialogContent v-if="summary && income" class="sheet summary">
+      <DialogContent v-if="summary && income" class="sheet summary" :style="{ '--game-zoom': uiZoom }">
         <header class="head">
           <DialogTitle class="title hand" :data-verdict="verdict">
             {{ t(`summary.${verdict}`, { round: summary.round }) }}
@@ -357,11 +359,14 @@ const incomeRows = computed(() => {
 
 <style scoped>
 .summary {
+  left: calc(50vw / var(--game-zoom));
+  top: calc(50dvh / var(--game-zoom));
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: min(660px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
+  width: min(660px, calc((100vw - 32px) / var(--game-zoom)));
+  max-height: calc((100dvh - 32px) / var(--game-zoom));
+  zoom: var(--game-zoom);
   padding: 20px;
   overflow: hidden;
 }
@@ -475,7 +480,7 @@ const incomeRows = computed(() => {
   flex-direction: column;
   gap: 18px;
   min-height: 0;
-  max-height: min(420px, 50dvh);
+  max-height: min(420px, 50dvh / var(--game-zoom));
   overflow: auto;
   padding: 2px;
   overscroll-behavior: contain;

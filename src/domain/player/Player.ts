@@ -1,7 +1,7 @@
 import { err, ok, type Result } from 'neverthrow'
 import { HEROES } from '@/content/heroes'
 import type { CoachLevel, HeroId, ItemId, LaneId, LaneStance, ModeId, TeamId } from '@/content/ids'
-import { isUpgraded, ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS, upgradeOf } from '@/content/items'
+import { isUpgraded, ITEM_SELL_RATIO, ITEMS, upgradeOf } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, ECONOMY, ROSTER } from '@/content/rules'
 import { SANDBOX } from '@/content/sandbox'
@@ -12,7 +12,7 @@ import type { HeroPool } from '../economy/HeroPool'
 import { Shop, type ShopSlot } from '../economy/Shop'
 import { Wallet } from '../economy/Wallet'
 import type { DomainError } from '../errors'
-import { mergesWith, Stash } from '../items/Stash'
+import { heroCanEquip, mergesWith, Stash } from '../items/Stash'
 import { emptyLedger, type Ledger } from './ledger'
 import { CoachProgression } from '../progression/CoachProgression'
 import { promoteDuplicates, wouldPromote } from '../roster/promotion'
@@ -213,10 +213,11 @@ export class Player {
       return err({ code: 'itemNotFound' })
     }
 
-    const copy = hero.items.findIndex((carried) => mergesWith(item, carried))
-    if (copy < 0 && hero.items.length >= ITEM_SLOTS) {
+    if (!heroCanEquip(hero.items, item)) {
       return err({ code: 'itemSlotsFull' })
     }
+
+    const copy = hero.items.findIndex((carried) => mergesWith(item, carried))
 
     return this.stash.take(stashIndex).map((taken) => {
       if (copy >= 0 && !isUpgraded(taken)) {

@@ -1,49 +1,64 @@
 <script setup lang="ts">
-import { Droplet, Heart } from '@lucide/vue'
+import { computed } from 'vue'
 import type { HeroVitals } from '@/application/heroVitals'
 import { useGameText } from '../../composables/useGameText'
 
-defineProps<{ values: HeroVitals; live: boolean }>()
+const props = defineProps<{ values: HeroVitals }>()
 const text = useGameText()
 const { t } = text
+
+const healthText = computed(() => text.number(Math.ceil(props.values.health)))
+const manaText = computed(() => text.number(Math.floor(props.values.mana)))
+
+const healthRegen = computed(() =>
+  props.values.healthRegen > 0 ? t('card.peek.regen', { n: text.precise(props.values.healthRegen) }) : '',
+)
+
+const manaGain = computed(() => t('card.peek.manaGain', { n: text.precise(props.values.manaPerAttack) }))
+
+function share(current: number, max: number) {
+  if (max <= 0) {
+    return 0
+  }
+
+  return Math.min(1, Math.max(0, current / max))
+}
 </script>
 
 <template>
   <div class="resources">
-    <div class="resource health">
-      <div class="reading">
-        <span><Heart :size="13" /> {{ t('card.hp') }}</span>
+    <div
+      class="bar health"
+      role="meter"
+      :aria-label="t('card.hp')"
+      :aria-valuemin="0"
+      :aria-valuemax="Math.round(values.maxHealth)"
+      :aria-valuenow="Math.ceil(values.health)"
+    >
+      <i class="fill" :style="{ width: `${share(values.health, values.maxHealth) * 100}%` }" />
 
-        <strong
-          >{{ text.number(Math.ceil(values.health))
-          }}<template v-if="live"> / {{ text.number(Math.round(values.maxHealth)) }}</template></strong
-        >
-      </div>
+      <span v-if="healthRegen" class="gain balance" aria-hidden="true">{{ healthRegen }}</span>
 
-      <span class="track" aria-hidden="true"
-        ><i :style="{ width: `${(values.health / values.maxHealth) * 100}%` }"
-      /></span>
+      <strong>{{ healthText }}</strong>
 
-      <small v-if="values.healthRegen">{{
-        t('card.peek.regen', { n: text.precise(values.healthRegen) })
-      }}</small>
+      <span v-if="healthRegen" class="gain">{{ healthRegen }}</span>
     </div>
 
-    <div class="resource mana">
-      <div class="reading">
-        <span><Droplet :size="13" /> {{ t('card.peek.mana') }}</span>
+    <div
+      class="bar mana"
+      role="meter"
+      :aria-label="t('card.peek.mana')"
+      :aria-valuemin="0"
+      :aria-valuemax="Math.round(values.maxMana)"
+      :aria-valuenow="Math.floor(values.mana)"
+    >
+      <i class="fill" :style="{ width: `${share(values.mana, values.maxMana) * 100}%` }" />
 
-        <strong
-          ><template v-if="live">{{ text.number(Math.floor(values.mana)) }} / </template
-          >{{ text.number(values.maxMana) }}</strong
-        >
-      </div>
+      <span class="gain balance" aria-hidden="true">{{ manaGain }}</span>
 
-      <span v-if="live" class="track" aria-hidden="true"
-        ><i :style="{ width: `${(values.mana / values.maxMana) * 100}%` }"
-      /></span>
+      <strong>{{ manaText }}</strong>
 
-      <small>{{ t('card.peek.manaGain', { n: text.precise(values.manaPerAttack) }) }}</small>
+      <span class="gain">{{ manaGain }}</span>
     </div>
   </div>
 </template>
@@ -52,52 +67,67 @@ const { t } = text
 .resources {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
-.resource {
+
+.bar {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  height: 22px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 62%, transparent);
+  border-radius: 999px;
+  background: rgba(236, 232, 220, 0.16);
+  color: var(--chalk);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.75);
 }
+
 .health {
-  --color: var(--heal);
+  --color: color-mix(in srgb, var(--heal) 32%, var(--board-deep));
+  background: var(--board-deep);
 }
+
 .mana {
   --color: var(--mana);
 }
-.reading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+
+.fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color);
+  transition: width 0.2s linear;
 }
-.reading span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--chalk-dim);
+
+strong {
+  position: relative;
+  flex: 1;
+  text-align: center;
   font-size: 13px;
-}
-.reading svg {
-  color: var(--color);
-}
-.reading strong {
-  font-size: 14px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.track {
-  height: 3px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+
+.gain {
+  position: relative;
+  flex: none;
+  padding-right: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
-.track i {
-  display: block;
-  height: 100%;
-  background: var(--color);
+
+.gain.balance {
+  visibility: hidden;
+  padding-right: 0;
+  padding-left: 8px;
 }
-small {
-  color: var(--color);
-  font-size: 12px;
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
 }
 </style>

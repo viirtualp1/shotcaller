@@ -4,8 +4,9 @@ defineProps<{ title?: string; meta?: string }>()
 
 <template>
   <section class="hud-panel">
-    <header v-if="title || $slots.actions" class="head">
-      <h2 class="title">{{ title }}</h2>
+    <header v-if="title || meta || $slots.beside || $slots.actions" class="head">
+      <h2 v-if="title" class="title">{{ title }}</h2>
+      <slot name="beside" />
       <span v-if="meta" class="meta">{{ meta }}</span>
       <slot name="actions" />
     </header>

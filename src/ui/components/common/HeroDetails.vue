@@ -64,6 +64,14 @@ const soulMax = computed(
 )
 
 const range = computed(() => hero.value.stats.range)
+const attackReach = computed(() => range.value || BATTLE.meleeReach)
+
+const attackLabel = computed(() =>
+  range.value
+    ? t('card.ranged', { range: range.value })
+    : `${t('card.melee')} · ${t('card.peek.range')} ${text.number(attackReach.value)}`,
+)
+
 const innate = computed(() => text.heroPassive(props.heroId))
 
 const sheet = computed(() =>
@@ -90,120 +98,120 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
 
 <template>
   <div class="hero-details">
-    <header v-if="heading" class="heading">
-      <strong class="name">{{ text.heroName(heroId) }}</strong>
-      <span class="stars">{{ starsLabel(stars) }}</span>
-    </header>
-
-    <div class="meta">
-      <span
-        class="chip attack"
-        :title="range ? t('card.ranged', { range }) : t('card.melee')"
-        :aria-label="range ? t('card.ranged', { range }) : t('card.melee')"
-      >
-        <BowArrow v-if="range" :size="14" />
-        <Axe v-else :size="14" />
-        <span v-if="range" class="range">{{ text.number(range) }}</span>
-      </span>
-
-      <span class="chip role" :style="{ '--role': cssColor(roleRules.color) }">
-        <component :is="roleIcon" :size="13" />
-        {{ text.heroRoleName(heroId, props.role) }}
-      </span>
-    </div>
-
-    <HeroResources :values="vitals" :live="Boolean(props.vitals)" />
-
-    <dl class="stats" :title="t('card.statsHint')">
-      <div v-for="row in rows" :key="row.key" class="stat" :class="row.key" :title="row.hint">
-        <dt>
-          <component :is="row.icon" :size="13" aria-hidden="true" />
-          {{ row.label }}
-        </dt>
-
-        <dd>
-          {{ row.base }}
-          <span v-if="row.bonus" class="bonus" :class="{ worse: !row.better }">{{ row.bonus }}</span>
-        </dd>
-      </div>
-    </dl>
-
-    <section class="block ability">
-      <header class="block-head">
-        <span class="label">{{ t('card.ability') }}</span>
-
-        <span class="mana-cost" :title="t('card.mana.costHint', { n: mana.cost })">
-          <Droplet :size="12" aria-hidden="true" />
-          {{ text.number(mana.cost) }}
-        </span>
+    <div class="facts">
+      <header v-if="heading" class="heading">
+        <strong class="name">{{ text.heroName(heroId) }}</strong>
+        <span class="stars">{{ starsLabel(stars) }}</span>
       </header>
 
-      <strong class="block-title">
-        <Sparkles :size="14" />
-        {{ text.abilityName(hero.ability) }}
-      </strong>
+      <div class="meta">
+        <span class="chip attack" :title="attackLabel" :aria-label="attackLabel">
+          <BowArrow v-if="range" :size="14" />
+          <Axe v-else :size="14" />
+          <span class="range">{{ text.number(attackReach) }}</span>
+        </span>
 
-      <p>
-        {{
-          text.abilityDescription(
-            hero.ability,
-            sheet.total.spellPower,
-            sheet.total.healPower,
-            props.role,
-            activeTalents(stars, talent),
-          )
-        }}
-      </p>
+        <span class="chip role" :style="{ '--role': cssColor(roleRules.color) }">
+          <component :is="roleIcon" :size="13" />
+          {{ text.heroRoleName(heroId, props.role) }}
+        </span>
+      </div>
 
-      <dl class="mana">
-        <div :title="t('card.mana.perAttackHint')">
-          <dt>{{ t('card.mana.perAttack') }}</dt>
+      <HeroResources :values="vitals" />
+
+      <dl class="stats" :title="t('card.statsHint')">
+        <div v-for="row in rows" :key="row.key" class="stat" :class="row.key" :title="row.hint">
+          <dt>
+            <component :is="row.icon" :size="13" aria-hidden="true" />
+            {{ row.label }}
+          </dt>
 
           <dd>
-            +{{ text.number(basePerAttack) }}
-            <span v-if="bonusPerAttack" class="bonus">+{{ text.number(bonusPerAttack) }}</span>
+            {{ row.base }}
+            <span v-if="row.bonus" class="bonus" :class="{ worse: !row.better }">{{ row.bonus }}</span>
           </dd>
         </div>
-
-        <div :title="t('card.mana.perDamageHint')">
-          <dt>{{ t('card.mana.perDamage') }}</dt>
-          <dd>+{{ text.number(mana.perTenthOfHealthLost) }}</dd>
-        </div>
-
-        <div :title="t('card.mana.castHint')">
-          <dt>{{ t('card.mana.cast') }}</dt>
-          <dd>{{ stats.attacks(mana.attacksToCast) }}</dd>
-        </div>
       </dl>
+    </div>
 
-      <p v-if="startingMana" class="first-cast">
-        {{
-          t('card.mana.firstCast', {
-            percent: text.number(startingMana * 100),
-            attacks: stats.attacks(mana.attacksToFirstCast),
-          })
-        }}
+    <div class="kit">
+      <section class="block ability">
+        <header class="block-head">
+          <span class="label">{{ t('card.ability') }}</span>
+
+          <span class="mana-cost" :title="t('card.mana.costHint', { n: mana.cost })">
+            <Droplet :size="12" aria-hidden="true" />
+            {{ text.number(mana.cost) }}
+          </span>
+        </header>
+
+        <strong class="block-title">
+          <Sparkles :size="14" />
+          {{ text.abilityName(hero.ability) }}
+        </strong>
+
+        <p>
+          {{
+            text.abilityDescription(
+              hero.ability,
+              sheet.total.spellPower,
+              sheet.total.healPower,
+              props.role,
+              activeTalents(stars, talent),
+            )
+          }}
+        </p>
+
+        <dl class="mana">
+          <div :title="t('card.mana.perAttackHint')">
+            <dt>{{ t('card.mana.perAttack') }}</dt>
+
+            <dd>
+              +{{ text.number(basePerAttack) }}
+              <span v-if="bonusPerAttack" class="bonus">+{{ text.number(bonusPerAttack) }}</span>
+            </dd>
+          </div>
+
+          <div :title="t('card.mana.perDamageHint')">
+            <dt>{{ t('card.mana.perDamage') }}</dt>
+            <dd>+{{ text.number(mana.perTenthOfHealthLost) }}</dd>
+          </div>
+
+          <div :title="t('card.mana.castHint')">
+            <dt>{{ t('card.mana.cast') }}</dt>
+            <dd>{{ stats.attacks(mana.attacksToCast) }}</dd>
+          </div>
+        </dl>
+
+        <p v-if="startingMana" class="first-cast">
+          {{
+            t('card.mana.firstCast', {
+              percent: text.number(startingMana * 100),
+              attacks: stats.attacks(mana.attacksToFirstCast),
+            })
+          }}
+        </p>
+      </section>
+
+      <section v-if="innate" class="block innate">
+        <span class="label">{{ t('card.innate') }}</span>
+        <p>{{ innate }}</p>
+      </section>
+
+      <section v-if="undecided" class="block passive">
+        <span class="label">{{ t('card.rolePassive', { role: t('roles.adaptive.name') }) }}</span>
+        <p>{{ t('roles.adaptive.passive') }}</p>
+      </section>
+
+      <section v-else class="block passive" :style="{ '--role': cssColor(roleRules.color) }">
+        <span class="label">{{ t('card.rolePassive', { role: text.roleName(playedRole) }) }}</span>
+        <p>{{ text.rolePassive(playedRole) }}</p>
+      </section>
+
+      <p v-if="soulMax" class="souls">
+        {{ t('card.souls', { n: text.number(Math.min(souls, soulMax)), max: text.number(soulMax) }) }}
       </p>
-    </section>
-
-    <section v-if="innate" class="block innate">
-      <span class="label">{{ t('card.innate') }}</span>
-      <p>{{ innate }}</p>
-    </section>
-
-    <section v-if="undecided" class="block passive">
-      <span class="label">{{ t('card.rolePassive', { role: t('roles.adaptive.name') }) }}</span>
-      <p>{{ t('roles.adaptive.passive') }}</p>
-    </section>
-
-    <section v-else class="block passive" :style="{ '--role': cssColor(roleRules.color) }">
-      <span class="label">{{ t('card.rolePassive', { role: text.roleName(playedRole) }) }}</span>
-      <p>{{ text.rolePassive(playedRole) }}</p>
-    </section>
-
-    <p v-if="soulMax" class="souls">
-      {{ t('card.souls', { n: text.number(Math.min(souls, soulMax)), max: text.number(soulMax) }) }}
-    </p>
+    </div>
 
     <ul v-if="itemIcons && items.length" class="items">
       <li v-for="(item, i) in items" :key="`${item}-${i}`">
@@ -220,6 +228,15 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
   gap: 8px;
   width: 300px;
   max-width: 100%;
+}
+
+/* The match card sets these side by side. Stacked, the sheet reads as one column. */
+.facts,
+.kit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .heading {

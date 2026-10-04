@@ -1,0 +1,39 @@
+name: Announce patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/ui/patchNotes/notes.ts
+
+concurrency:
+  group: patch-discord-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    name: Post the new patch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Post to Discord
+        env:
+          DISCORD_PATCH_WEBHOOK: ${{ secrets.DISCORD_PATCH_WEBHOOK }}
+          DISCORD_PATCH_BEFORE: ${{ github.event.before }}
+        run: npx tsx --tsconfig tsconfig.node.json scripts/discordPatch.ts

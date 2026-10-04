@@ -106,11 +106,16 @@ function openOrdersPatch() {
         :aria-label="t('settings.difficulty')"
       >
         <div v-for="id in DIFFICULTY_IDS" :key="id" class="difficulty-option">
-          <ToggleGroupItem :value="id" class="segmented-option">
-            {{ t(`settings.difficulties.${id}`) }}
-          </ToggleGroupItem>
+          <ToggleGroupItem
+            :value="id"
+            class="segmented-option"
+            :aria-label="t(`settings.difficulties.${id}`)"
+          />
 
-          <ExperimentInfo :title="t(`settings.difficulties.${id}`)" :text="difficultyHint(id)" hover />
+          <span class="difficulty-face">
+            <span aria-hidden="true">{{ t(`settings.difficulties.${id}`) }}</span>
+            <ExperimentInfo :title="t(`settings.difficulties.${id}`)" :text="difficultyHint(id)" hover />
+          </span>
         </div>
       </ToggleGroupRoot>
     </section>
@@ -210,11 +215,12 @@ function openOrdersPatch() {
 }
 
 .difficulty-option {
-  display: flex;
-  align-items: center;
-  padding-right: 6px;
+  position: relative;
+  display: grid;
+  place-items: center;
   min-width: 0;
   border-radius: var(--radius);
+  color: var(--chalk-dim);
 }
 
 .difficulty-option:has([data-state='on']) {
@@ -223,9 +229,39 @@ function openOrdersPatch() {
 }
 
 .difficulty-option .segmented-option {
-  flex: 1;
-  min-width: 0;
-  padding-inline: 6px;
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: inherit;
+}
+
+.difficulty-option .segmented-option[data-state='on'] {
+  background: transparent;
+  color: inherit;
+}
+
+.difficulty-face {
+  grid-area: 1 / 1;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding-inline: 8px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.difficulty-face > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.difficulty-option :deep(.about) {
+  position: static;
+  pointer-events: auto;
 }
 
 .difficulty-option:has([data-state='on']) :deep(.about) {
@@ -290,8 +326,7 @@ function openOrdersPatch() {
 }
 
 @media (max-width: 380px) {
-  .difficulty-option .segmented-option {
-    padding-inline: 3px;
+  .difficulty-face {
     font-size: 11px;
   }
 }

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { TooltipProvider } from 'reka-ui'
 import { createApp, h, nextTick, reactive, type App } from 'vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { TwistId } from '@/content/experiments'
 import ExperimentChips from '@/ui/components/hud/ExperimentChips.vue'
 import { i18n } from '@/ui/i18n'
@@ -25,12 +25,27 @@ afterEach(() => {
 })
 
 describe('round twist announcement', () => {
+  beforeEach(() => {
+    match.view.twist = 'fog'
+    match.view.rotation = null
+  })
+
+  it('announces the twist already in play when a round opens', async () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="host"></div>'
+    app = createApp({ render: () => h(TooltipProvider, {}, () => h(ExperimentChips)) }).use(i18n)
+    app.mount('#host')
+    await nextTick()
+    expect(document.querySelector('[role="status"]')?.textContent).toContain('New round twist')
+    expect(document.querySelector('[role="status"]')?.textContent).toContain('Fog')
+  })
+
   it('announces a changed effect once and keeps the new chip after the announcement ends', async () => {
     vi.useFakeTimers()
     document.body.innerHTML = '<div id="host"></div>'
     app = createApp({ render: () => h(TooltipProvider, {}, () => h(ExperimentChips)) }).use(i18n)
     app.mount('#host')
-    expect(document.querySelector('[role="status"]')).toBeNull()
+    await nextTick()
     match.view.twist = 'bloodMoon'
     await nextTick()
     expect(document.querySelector('[role="status"]')?.textContent).toContain('New round twist')

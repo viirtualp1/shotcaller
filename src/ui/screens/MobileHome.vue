@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Play } from '@lucide/vue'
-import { defineAsyncComponent } from 'vue'
-import BoardFrame from '../components/board/BoardFrame.vue'
+import { defineAsyncComponent, ref } from 'vue'
+import DemoBoard from '../components/home/DemoBoard.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
 import CoachCard from '../components/home/CoachCard.vue'
@@ -16,18 +16,21 @@ import LanguageSwitch from '../components/settings/LanguageSwitch.vue'
 import { useGameText } from '../composables/useGameText'
 import { useNewcomer } from '../composables/useNewcomer'
 import { useDuelStore } from '../stores/duel'
+import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 
 /**
- * The start screen on a phone, in the order of the desktop one: the coach, the match to carry on, the week's goals
- * and what is new. Picking an opponent and Play stay above the navigation, under the thumb, however far it scrolls.
+ * The start screen on a phone, in the order of the desktop one: the coach, the week's goals and what is new.
+ * A saved match, or otherwise a new one, stays above the navigation, under the thumb, however far it scrolls.
  */
 const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
 const menu = useMenuStore()
+const match = useMatchStore()
 const duel = useDuelStore()
 const newcomer = useNewcomer()
 const { t } = useGameText()
+const mapPaused = ref(false)
 </script>
 
 <template>
@@ -40,14 +43,12 @@ const { t } = useGameText()
       <h1 class="hand">{{ t('app.title') }}</h1>
       <p>{{ t('start.lede') }}</p>
 
-      <BoardFrame>
-        <DemoBattle mode="twoLanes" />
-      </BoardFrame>
+      <DemoBoard v-model:paused="mapPaused">
+        <DemoBattle mode="twoLanes" :paused="mapPaused" />
+      </DemoBoard>
     </section>
 
     <DuelResumeCard />
-
-    <SavedMatchCard />
 
     <ContractsStrip />
 
@@ -64,12 +65,16 @@ const { t } = useGameText()
     </footer>
 
     <div class="launch">
-      <QuickStarts />
+      <SavedMatchCard v-if="match.saved" />
 
-      <button type="button" class="play" :disabled="duel.matchmaking" @click="menu.openNewMatch('computer')">
-        <Play :size="20" />
-        {{ t('start.home.play') }}
-      </button>
+      <template v-else>
+        <QuickStarts />
+
+        <button type="button" class="play" :disabled="duel.matchmaking" @click="menu.openNewMatch('computer')">
+          <Play :size="20" />
+          {{ t('start.home.play') }}
+        </button>
+      </template>
     </div>
   </main>
 </template>
@@ -110,23 +115,14 @@ const { t } = useGameText()
   color: var(--chalk-dim);
 }
 
-/* Language, support and the legal links fill one row like the desktop column, then the links wrap below. */
+/* Language, support and the legal buttons sit on one line, and wrap together when the row is narrow. */
 .footer {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-top: auto;
   padding-top: 8px;
-}
-
-.footer :deep(.support-button) {
-  justify-content: center;
-  width: 100%;
-}
-
-.footer :deep(.legal-links) {
-  grid-column: 1 / -1;
 }
 
 /*

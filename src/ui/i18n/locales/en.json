@@ -167,6 +167,17 @@
   "app": {
     "title": "The Shotcaller"
   },
+  "presence": {
+    "playing": "Playing",
+    "inGame": "In game",
+    "training": "Training",
+    "duel": "Duel",
+    "versus": "Versus the computer",
+    "finished": "Match over",
+    "planning": "Round {round} · planning",
+    "battle": "Round {round} · in battle",
+    "summary": "Round {round} · results"
+  },
   "start": {
     "invite": "Invite a friend",
     "inviteMessage": "Join me in The Shotcaller!",
@@ -185,12 +196,14 @@
       "action": "Open theshotcaller.online"
     },
     "home": {
-      "play": "Play",
+      "play": "New match",
       "continue": "Continue",
       "vsComputer": "vs computer",
       "next": "Next: {name} · {progress}",
       "weekDone": "Every contract this week is done",
       "fresh": "New",
+      "pause": "Pause the map",
+      "resume": "Resume the map",
       "discord": {
         "title": "Play in Discord",
         "text": "Start matches right in a voice channel with your friends."
@@ -410,6 +423,8 @@
   "card": {
     "sell": "Sell for {gold}",
     "noItems": "Drag an item from your stash onto the hero",
+    "equipZone": "Drop to equip",
+    "equipFull": "Can't equip, already full",
     "hp": "Health",
     "damage": "Damage",
     "melee": "Melee",
@@ -427,7 +442,7 @@
       "mana": "Mana",
       "range": "Range",
       "regen": "+{n} HP/s",
-      "manaGain": "+{n} mana per attack"
+      "manaGain": "+{n} per attack"
     },
     "stats": {
       "hp": "Health",
@@ -814,7 +829,6 @@
     "since": "Coaching since {date}",
     "toNextStar": "{points} to the next star",
     "toNextRank": "{points} to {rank}",
-    "topRank": "The highest rank",
     "ranks": {
       "rookie": "Rookie",
       "scout": "Scout",
@@ -1020,6 +1034,8 @@
     "inMatch": "in a match · round {round}",
     "inDuel": "in a duel · round {round}",
     "addFriend": "Add a friend",
+    "codeLine": "My friend code: {code}",
+    "sendRequest": "Send request",
     "openProfile": "Profile: {name}",
     "message": "Message",
     "blockedCount": "Blocked · {n}",

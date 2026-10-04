@@ -17,6 +17,7 @@ import LeaderboardFeatureArt from './LeaderboardFeatureArt.vue'
 import TrainingFeatureArt from './TrainingFeatureArt.vue'
 import ForgeFeatureArt from './ForgeFeatureArt.vue'
 import HomeFeatureArt from './HomeFeatureArt.vue'
+import HeroCardFeatureArt from './HeroCardFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** A made-up rank per mode, only to show that each has its own. */
@@ -75,7 +76,7 @@ onMounted(() => {
   <!-- The forge pictures take clicks, so they speak for themselves; the others are decoration. -->
   <div
     class="art"
-    :class="{ career: art.kind === 'career', forge: art.kind === 'forge' }"
+    :class="{ career: art.kind === 'career', forge: art.kind === 'forge', hero: art.kind === 'heroCard' }"
     :aria-hidden="art.kind === 'forge' ? undefined : 'true'"
   >
     <img v-if="art.kind === 'map' && picture" class="map" :src="picture" alt="" />
@@ -109,6 +110,8 @@ onMounted(() => {
     <ForgeFeatureArt v-else-if="art.kind === 'forge'" :focus="art.focus" />
 
     <HomeFeatureArt v-else-if="art.kind === 'home'" :device="art.device" :scene="art.scene" />
+
+    <HeroCardFeatureArt v-else-if="art.kind === 'heroCard'" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">
@@ -159,6 +162,11 @@ onMounted(() => {
 .art.career,
 .art.forge {
   min-height: 310px;
+}
+
+.art.hero {
+  aspect-ratio: auto;
+  height: auto;
 }
 
 .row {

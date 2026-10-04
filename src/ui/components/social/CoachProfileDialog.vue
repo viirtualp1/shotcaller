@@ -206,7 +206,37 @@ function ask(action: 'remove' | 'block') {
           </DialogClose>
         </header>
 
-        <p v-if="friends.viewLoading" class="muted">{{ t('coach.loading') }}</p>
+        <div v-if="friends.viewLoading" class="bones" role="status">
+          <p class="sr-only">{{ t('coach.loading') }}</p>
+
+          <div class="mode-bones">
+            <div v-for="mode in 3" :key="mode" class="mode-bone">
+              <span class="bone map" />
+
+              <span class="lines">
+                <span class="bone mode-name" />
+                <span class="bone mode-rating" />
+                <span class="bone mode-tier" />
+              </span>
+
+              <span class="bone round bone-medal" />
+            </div>
+          </div>
+
+          <span class="bone bone-label" />
+
+          <div v-for="match in 4" :key="match" class="match-bone">
+            <span class="bone bone-verdict" />
+            <span class="bone bone-delta" />
+
+            <span class="bone-heroes">
+              <span v-for="seat in 4" :key="seat" class="bone round bone-hero" />
+            </span>
+
+            <span class="bone bone-when" />
+          </div>
+        </div>
+
         <p v-else-if="!profile" class="muted">{{ t('coach.unavailable') }}</p>
 
         <template v-else>
@@ -405,6 +435,115 @@ function ask(action: 'remove' | 'block') {
   margin: 0;
   font-size: 13px;
   color: var(--chalk-faint);
+}
+
+.bones {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mode-bones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.mode-bone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.map {
+  flex: none;
+  width: 56px;
+  height: 56px;
+}
+
+.lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mode-name {
+  width: 46%;
+  height: 10px;
+}
+
+.mode-rating {
+  width: 62%;
+  height: 18px;
+}
+
+.mode-tier {
+  width: 38%;
+  height: 10px;
+}
+
+.bone-medal {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+
+.bone-label {
+  width: 92px;
+  height: 12px;
+}
+
+.match-bone {
+  display: grid;
+  grid-template-columns: 72px 56px minmax(0, 1fr) 120px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--edge-strong);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.bone-verdict {
+  width: 64px;
+  height: 12px;
+}
+
+.bone-delta {
+  width: 40px;
+  height: 12px;
+}
+
+.bone-heroes {
+  display: flex;
+  gap: 4px;
+}
+
+.bone-hero {
+  width: 24px;
+  height: 24px;
+}
+
+.bone-when {
+  width: 100%;
+  height: 10px;
+}
+
+@media (max-width: 600px) {
+  .match-bone {
+    grid-template-columns: 64px 40px minmax(0, 1fr);
+  }
+
+  .bone-when {
+    grid-column: 1 / -1;
+    width: 70%;
+  }
 }
 
 .history {

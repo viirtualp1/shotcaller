@@ -42,6 +42,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Discord companion
+        run: npm ci --prefix discord-companion && npm run typecheck --prefix discord-companion && npm test --prefix discord-companion
+
       # Typecheck already ran above, so only the Vite bundle is built here.
       - name: Build
         run: npx vite build

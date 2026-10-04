@@ -557,6 +557,43 @@ kbd {
   }
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.bone {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    100deg,
+    rgba(236, 232, 220, 0.06) 20%,
+    rgba(236, 232, 220, 0.16) 40%,
+    rgba(236, 232, 220, 0.06) 60%
+  );
+  background-size: 220% 100%;
+  animation: bone-shimmer 1.4s ease-in-out infinite;
+}
+
+.bone.round {
+  border-radius: 50%;
+}
+
+@keyframes bone-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
 @keyframes sheet-in {
   from {
     opacity: 0;

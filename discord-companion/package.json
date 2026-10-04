@@ -1,0 +1,23 @@
+{
+  "name": "@shotcaller/discord-companion",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/server.spec.ts",
+    "install-startup": "tsx src/index.ts --install-startup",
+    "uninstall-startup": "tsx src/index.ts --uninstall-startup"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1",
+    "ws": "^8.18.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
+  }
+}

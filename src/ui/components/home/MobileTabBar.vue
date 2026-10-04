@@ -152,8 +152,8 @@ function openFriends() {
   min-width: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--theirs);
-  color: #fff;
+  background: var(--gold);
+  color: var(--ink);
   font-size: 10px;
   line-height: 16px;
   text-align: center;

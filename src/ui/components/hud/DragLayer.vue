@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { heroCanEquip } from '@/domain/items/Stash'
 import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
 import { locateHero, useMatchStore } from '../../stores/match'
@@ -46,11 +47,33 @@ const hint = computed(() => {
     case 'hero': {
       const human = match.view?.human
       const located = human ? locateHero(human, target.uid) : null
-      return located ? text.heroName(located.hero.heroId) : ''
+      if (!located) {
+        return ''
+      }
+
+      const payload = drag.payload
+      if (payload?.kind === 'item') {
+        return heroCanEquip(located.hero.items, payload.itemId) ? t('card.equipZone') : t('card.equipFull')
+      }
+
+      return text.heroName(located.hero.heroId)
     }
   }
 
   return ''
+})
+
+const refused = computed(() => {
+  const target = drag.target
+  const payload = drag.payload
+  if (target?.kind !== 'hero' || payload?.kind !== 'item') {
+    return false
+  }
+
+  const human = match.view?.human
+  const located = human ? locateHero(human, target.uid) : null
+
+  return located ? !heroCanEquip(located.hero.items, payload.itemId) : false
 })
 </script>
 
@@ -58,7 +81,7 @@ const hint = computed(() => {
   <div
     v-if="drag.active && drag.payload"
     class="ghost"
-    :class="{ onTarget: drag.target }"
+    :class="{ onTarget: drag.target && !refused, refused }"
     :style="{ transform: `translate(${drag.pointer.x}px, ${drag.pointer.y}px)` }"
     aria-hidden="true"
   >
@@ -95,6 +118,11 @@ const hint = computed(() => {
 
 .ghost.onTarget > :first-child {
   transform: scale(1.12);
+}
+
+.ghost.refused .hint {
+  background: #2a1614;
+  color: var(--theirs);
 }
 
 .hint {

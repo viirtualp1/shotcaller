@@ -38,12 +38,16 @@ export function useBoardRenderer(
   host: Ref<HTMLElement | null>,
   side: TeamId = 0,
   mode: ModeId = DEFAULT_MODE,
+  /** While this is false the canvas keeps its last frame. Omitted, the board runs whenever the tab is visible. */
+  running?: Ref<boolean>,
 ) {
   const renderer = shallowRef<BoardRenderer | null>(null)
   const labels = useBoardLabels()
   let disposed = false
   const visibility = useDocumentVisibility()
-  watch([renderer, visibility], ([board, state]) => board?.setActive(state === 'visible'))
+  watch([renderer, visibility, () => running?.value ?? true], ([board, state, on]) => {
+    board?.setActive(state === 'visible' && on)
+  })
 
   onMounted(async () => {
     const [module] = await Promise.all([import('@/rendering/BoardRenderer'), loadFonts()])

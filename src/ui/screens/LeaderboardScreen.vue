@@ -129,22 +129,20 @@ watch(
 
       <p v-if="!cloud.enabled" class="state">{{ t('leaderboard.off') }}</p>
 
-      <div v-else-if="leaderboard.loading" class="state" role="status">
-        <LoaderCircle :size="22" class="spin" /> {{ t('leaderboard.loading') }}
-      </div>
-
       <div v-else-if="leaderboard.error" class="state" role="alert">
         <p>{{ t('leaderboard.error') }}</p>
         <button type="button" class="btn" @click="leaderboard.refresh()">{{ t('friends.retry') }}</button>
       </div>
 
-      <p v-else-if="!rows.length" class="state">{{ t('leaderboard.empty') }}</p>
+      <p v-else-if="!leaderboard.loading && !rows.length" class="state">{{ t('leaderboard.empty') }}</p>
 
       <template v-else>
-        <table class="standings">
+        <table class="standings" :aria-busy="leaderboard.loading || undefined">
           <caption class="sr-only">
             {{
-              t('leaderboard.caption', { mode: t(`modes.${leaderboard.mode}.name`) })
+              leaderboard.loading
+                ? t('leaderboard.loading')
+                : t('leaderboard.caption', { mode: t(`modes.${leaderboard.mode}.name`) })
             }}
           </caption>
 
@@ -162,7 +160,35 @@ watch(
             </tr>
           </thead>
 
-          <tbody>
+          <tbody v-if="leaderboard.loading">
+            <tr v-for="row in 8" :key="row">
+              <td><span class="bone place-bone" /></td>
+
+              <td>
+                <div class="coach">
+                  <span class="bone round face" />
+
+                  <div class="identity">
+                    <span class="bone nick" />
+                    <span class="bone action" />
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <div class="rating">
+                  <span class="bone round medal" />
+
+                  <span>
+                    <span class="bone mmr" />
+                    <span class="bone rank" />
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+
+          <tbody v-else>
             <tr
               v-for="entry in rows"
               :key="entry.id"
@@ -240,7 +266,7 @@ watch(
         </table>
 
         <button
-          v-if="shown < leaderboard.rows.length"
+          v-if="!leaderboard.loading && shown < leaderboard.rows.length"
           type="button"
           class="btn more"
           @click="shown += PAGE_SIZE"
@@ -381,6 +407,51 @@ td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--edge);
 }
+.place-bone {
+  width: 18px;
+  height: 16px;
+}
+
+.face {
+  flex: none;
+  width: 34px;
+  height: 34px;
+}
+
+.nick {
+  width: 148px;
+  height: 14px;
+}
+
+tbody tr:nth-child(3n + 1) .nick {
+  width: 196px;
+}
+
+tbody tr:nth-child(3n) .nick {
+  width: 104px;
+}
+
+.action {
+  width: 72px;
+  height: 10px;
+}
+
+.medal {
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.mmr {
+  width: 72px;
+  height: 16px;
+}
+
+.rank {
+  width: 88px;
+  height: 10px;
+}
+
 .place {
   font-size: 16px;
   font-weight: 800;

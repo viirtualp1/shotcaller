@@ -43,8 +43,9 @@ const rankShare = computed(() => {
 /** The next star, or the next medal when the next star starts one. */
 const nextStep = computed(() => {
   const { next, tier } = profile.rank
+
   if (next === null) {
-    return t('profile.topRank')
+    return
   }
 
   const points = text.mmr(next - profile.profile.rating)
@@ -170,7 +171,7 @@ function save() {
 
         <span class="bar"><span class="fill" :style="{ width: `${rankShare}%` }" /></span>
 
-        <span class="muted next-step">{{ nextStep }}</span>
+        <span v-if="nextStep" class="muted next-step">{{ nextStep }}</span>
       </div>
     </div>
   </section>

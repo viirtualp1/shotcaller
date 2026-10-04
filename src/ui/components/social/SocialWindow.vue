@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bell, BellOff, X } from '@lucide/vue'
+import { Bell, BellOff, UserPlus, X } from '@lucide/vue'
 import { useEventListener } from '@vueuse/core'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
@@ -8,6 +8,7 @@ import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
 import { useSystemNotificationsStore } from '../../stores/systemNotifications'
+import AddFriendDialog from './AddFriendDialog.vue'
 import ChatPanel from './ChatPanel.vue'
 import FriendsList from './FriendsList.vue'
 
@@ -22,6 +23,7 @@ const { t } = useGameText()
 const viewport = useVisibleViewport()
 
 const window = useTemplateRef<HTMLElement>('window')
+const adding = ref(false)
 /** Set while the window moves between the start screen's column and the corner, which happens without a fade. */
 const moving = ref(false)
 const panel = useTemplateRef<InstanceType<typeof ChatPanel>>('chatPanel')
@@ -184,6 +186,17 @@ watch(
               </button>
 
               <button
+                v-if="friends.card"
+                type="button"
+                class="icon-btn"
+                :aria-label="t('friends.addFriend')"
+                :title="t('friends.addFriend')"
+                @click="adding = true"
+              >
+                <UserPlus :size="16" />
+              </button>
+
+              <button
                 v-if="!chat.docked"
                 type="button"
                 class="icon-btn"
@@ -213,6 +226,8 @@ watch(
             <FriendsList />
           </div>
         </section>
+
+        <AddFriendDialog v-model:open="adding" />
       </aside>
     </Transition>
   </Teleport>
@@ -268,7 +283,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--edge);
 }
 
@@ -281,6 +296,7 @@ watch(
 .tools {
   display: flex;
   gap: 6px;
+  margin-left: auto;
 }
 
 .bell {

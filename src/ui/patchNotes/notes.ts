@@ -60,6 +60,8 @@ export type FeatureArt =
       readonly device: 'desktop' | 'phone'
       readonly scene: 'home' | 'chat' | 'career'
     }
+  /** The in-match hero card: live health and mana bars beside the ability. */
+  | { readonly kind: 'heroCard' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -80,6 +82,8 @@ export interface PatchNote {
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
+  /** One line for the start-screen card. The full notes stay on the patch page. */
+  readonly card?: NoteText
   readonly general?: readonly NoteText[]
   readonly items?: readonly ItemNote[]
   readonly roles?: readonly RoleNote[]
@@ -91,13 +95,30 @@ export interface PatchNote {
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
     version: '9.1',
-    date: '2026-10-04',
+    date: '2026-10-05',
     title: {
       en: 'Front and centre',
       ru: 'Всё под рукой',
     },
     campaign: 'home',
     wide: true,
+    features: [
+      {
+        art: { kind: 'heroCard' },
+        title: {
+          en: 'The fight, on the card',
+          ru: 'Бой на карточке',
+        },
+        text: {
+          en: 'New desktop and mobile layouts. Open a hero and **health** and **mana** sit on thick bars. The number in the middle is what they have **right now**, the empty stretch is what is missing, and both keep up when the hero is hit or casts. Regeneration and mana per attack stay on the right edge, with the ability beside the stats.',
+          ru: 'Открой героя — и **здоровье** с **маной** лежат на толстых полосах. Число по центру — сколько есть **прямо сейчас**, пустое место — чего не хватает, и оба не отстают, когда героя бьют или он кастует. Восстановление и мана за атаку остаются у правого края, а способность — рядом со статами.',
+        },
+      },
+    ],
+    card: {
+      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first, with rank and MMR beside your name. Friends, their code and live matches sit in that same layout. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up with the fight.',
+      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**, ранг и MMR рядом с именем. Друзья, их код и живые матчи стоят в том же виде. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают от боя.',
+    },
     general: [
       {
         en: 'A **new main menu** built around your next move. An unfinished match comes first, with its mode, round and towers: **one tap** and you are back in.',
@@ -112,12 +133,28 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Еженедельные контракты показывают, **какой закрыть следующим**, прямо в главном меню.',
       },
       {
-        en: 'On a phone, **Play**, **Career**, **Friends** and **Profile** sit at the bottom of **every page**, and Friends shows your **unread messages**.',
-        ru: 'На телефоне **Игра**, **Карьера**, **Друзья** и **Профиль** теперь внизу **каждой страницы**, а на Друзьях видно **непрочитанные сообщения**.',
+        en: '**Play**, **Career**, **Friends** and **Profile** stay one tap away on **every page**, and Friends shows your **unread messages**.',
+        ru: '**Игра**, **Карьера**, **Друзья** и **Профиль** остаются в одном касании на **каждой странице**, а на Друзьях видно **непрочитанные сообщения**.',
       },
       {
-        en: 'Signed in on a computer, your **friends list** sits beside the menu: see who is online and **watch their matches live** in one click.',
-        ru: 'Если ты вошёл в аккаунт на компьютере, рядом с меню появляется **список друзей**: видно, кто в сети, а их **матчи можно смотреть вживую** в один клик.',
+        en: 'Your **friends list** sits with the menu: see who is online and **watch their matches live** in one click.',
+        ru: '**Список друзей** стоит рядом с меню: видно, кто в сети, а их **матчи можно смотреть вживую** в один клик.',
+      },
+      {
+        en: 'Your rank sits with your name: the medal, your **MMR**, and how close the **next star** is.',
+        ru: 'Ранг стоит рядом с именем: медаль, твой **MMR** и насколько близко **следующая звезда**.',
+      },
+      {
+        en: 'Send a friend request with their **friend code**. Yours sits beside Friends, ready to **copy**.',
+        ru: 'Отправь заявку в друзья по **коду друга**. Твой код рядом с Друзьями — его можно **скопировать**.',
+      },
+      {
+        en: 'Discord can show that you are in the game: **Playing**, then **Training**, a **Duel** or **Versus the computer**, and where the round is — planning, the fight or the result.',
+        ru: 'Discord может показать, что ты в игре: **Играет**, затем **Тренировка**, **Дуэль** или **Против компьютера**, и где раунд — план, бой или итог.',
+      },
+      {
+        en: 'A wide pass over the look: the **hero card**, the **board** and the menus now make the fight easier to read.',
+        ru: 'Большой проход по виду: **карточка героя**, **карта** и меню теперь делают бой проще для чтения.',
       },
       {
         en: 'Duels with friends are now just for fun: **only ranked matches change MMR**, so the leaderboard shows wins against strangers.',
@@ -134,8 +171,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Настрой звук и нажми **«Сохранить»** в главном меню. Сложность и эксперименты выбирай при запуске нового матча.',
       },
       {
-        en: 'A calmer top bar: your profile on the left, the latest patch and Discord on the right.',
-        ru: 'Верхняя панель стала спокойнее: профиль слева, свежий патч и Discord справа.',
+        en: 'A calmer menu: your profile, the latest patch and Discord.',
+        ru: 'Меню стало спокойнее: профиль, свежий патч и Discord.',
       },
       {
         en: 'Difficulty and experiments have **info buttons** to help you choose how your next match plays.',
@@ -164,8 +201,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'Герои у вражеской башни больше не стоят без дела после убийства: они подходят и бьют крипов, до которых можно достать вне огня башни, а раненый герой отвечает крипам, которые его бьют.',
       },
       {
-        en: 'Opening a chat on your phone leaves the keyboard closed until you tap the message field.',
-        ru: 'При открытии чата на телефоне клавиатура остаётся закрытой, пока ты не нажмёшь на поле сообщения.',
+        en: 'Opening a chat leaves the keyboard closed until you tap the message field.',
+        ru: 'При открытии чата клавиатура остаётся закрытой, пока ты не нажмёшь на поле сообщения.',
       },
       {
         en: 'Career hints remain within reach, and opening the form to add a friend no longer shifts your scroll position.',
@@ -178,6 +215,14 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       {
         en: 'Your newest message is no longer hidden under the message field.',
         ru: 'Новое сообщение больше не прячется под полем ввода.',
+      },
+      {
+        en: 'A hero still waiting to pick a talent is marked in **gold** on the board, while you plan and during the fight.',
+        ru: 'Герой, который ещё не выбрал талант, отмечен **золотом** на карте — и при планировании, и в бою.',
+      },
+      {
+        en: 'A round with a twist announces it when the round opens, including when you **continue** a saved match.',
+        ru: 'Раунд с модификатором объявляет его, когда раунд открывается, в том числе если ты **продолжаешь** сохранённый матч.',
       },
     ],
   },

@@ -109,11 +109,12 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
     transform 0.18s ease-out;
 }
 
-.card-leave-active {
+.item-card.card-leave-active {
   position: absolute;
   bottom: 0;
   left: 50%;
-  translate: -50% 0;
+  /* `translate` is ignored under the board zoom, so the card would sit on the right edge. */
+  transform: translateX(-50%);
   transition: opacity 0.12s ease-in;
 }
 

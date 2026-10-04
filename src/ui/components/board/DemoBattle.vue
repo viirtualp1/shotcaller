@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDocumentVisibility, useMediaQuery, useRafFn } from '@vueuse/core'
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import type { ModeId } from '@/content/ids'
 import { demoBattle } from '@/domain/demo/demoBattle'
@@ -11,11 +11,12 @@ import { useBoardRenderer } from '../../composables/useBoardRenderer'
  * Two bots fighting on the mode's map, for show. When a fight ends, a new one starts.
  * The board fades in once it is drawn and says so, so the one underneath can go.
  */
-const props = defineProps<{ mode: ModeId }>()
+const props = withDefaults(defineProps<{ mode: ModeId; paused?: boolean }>(), { paused: false })
 const emit = defineEmits<{ shown: [] }>()
 
 const host = ref<HTMLElement | null>(null)
-const renderer = useBoardRenderer(host, 0, props.mode)
+const running = computed(() => !props.paused)
+const renderer = useBoardRenderer(host, 0, props.mode, running)
 /* With reduced motion the fight is only set up, never played, and the board shows at once. */
 const still = useMediaQuery('(prefers-reduced-motion: reduce)')
 const visibility = useDocumentVisibility()
@@ -43,7 +44,7 @@ watch(renderer, () => {
 })
 
 useRafFn(({ delta }) => {
-  if (!session || still.value || visibility.value !== 'visible') {
+  if (!session || still.value || props.paused || visibility.value !== 'visible') {
     return
   }
 

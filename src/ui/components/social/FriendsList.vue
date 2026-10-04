@@ -1,13 +1,6 @@
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
-import { Ban, Check, ChevronDown, ChevronUp, Copy, Info, Swords, UserPlus, X } from '@lucide/vue'
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
-import {
-  formatFriendCode,
-  isFriendCode,
-  normalizeFriendCode,
-  type FriendRequestResult,
-} from '@/application/social/friends'
+import { Ban, Check, ChevronDown, Info, Swords, X } from '@lucide/vue'
+import { computed, ref } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { rankFor } from '@/domain/profile/progression'
 import { useFriendStatus } from '../../composables/useFriendStatus'
@@ -21,7 +14,7 @@ import PresenceDot from './PresenceDot.vue'
 import WatchLiveButton from './WatchLiveButton.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
-/** Friends, requests and adding by code; shared by the profile page and the friends panel. */
+/** Friends and requests, shared by the profile page and the friends panel. */
 defineProps<{ contained?: boolean }>()
 
 const cloud = useCloudStore()
@@ -30,54 +23,14 @@ const chat = useChatStore()
 const duel = useDuelStore()
 const { t } = useGameText()
 const statusText = useFriendStatus()
-const { copy, copied, isSupported: canCopy } = useClipboard()
 
-const adding = ref(false)
 const showBlocked = ref(false)
-const code = ref('')
-const result = ref<FriendRequestResult | 'error' | null>(null)
-const sending = ref(false)
-const codeInput = useTemplateRef<HTMLInputElement>('codeInput')
-const contacts = useTemplateRef<HTMLElement>('contacts')
 
-const valid = computed(() => isFriendCode(code.value))
-const ownCode = computed(() => (friends.card ? formatFriendCode(friends.card.friendCode) : ''))
-const succeeded = computed(() => result.value === 'sent' || result.value === 'accepted')
-/** With nobody to list yet, your code and the code field are the whole point: they stay open. */
+/** With nobody to list yet, the list says so instead of a blank panel. */
 const alone = computed(() => !friends.friends.length && !friends.incoming.length)
-const showAdding = computed(() => adding.value || alone.value)
 
 const heroOf = (avatar: string | null) => HERO_IDS.find((id) => id === avatar) ?? 'spearman'
 const nameOf = (name: string) => name || t('profile.defaultName')
-
-async function startAdding() {
-  adding.value = !adding.value
-  result.value = null
-
-  if (adding.value) {
-    await nextTick()
-
-    if (contacts.value) {
-      contacts.value.scrollTop = contacts.value.scrollHeight
-    }
-
-    codeInput.value?.focus({ preventScroll: true })
-  }
-}
-
-async function submit() {
-  if (!valid.value || sending.value) {
-    return
-  }
-
-  sending.value = true
-  result.value = await friends.add(normalizeFriendCode(code.value))
-  sending.value = false
-
-  if (succeeded.value) {
-    code.value = ''
-  }
-}
 </script>
 
 <template>
@@ -89,7 +42,22 @@ async function submit() {
     </button>
   </div>
 
-  <p v-else-if="!friends.card && friends.status !== 'error'" class="muted">{{ t('friends.loading') }}</p>
+  <div v-else-if="!friends.card && friends.status !== 'error'" class="bones" role="status">
+    <p class="sr-only">{{ t('friends.loading') }}</p>
+
+    <div v-for="row in 5" :key="row" class="bone-row">
+      <span class="bone round bone-medal" />
+      <span class="bone round bone-avatar" />
+
+      <span class="bone-lines">
+        <span class="bone bone-name" />
+        <span class="bone bone-status" />
+      </span>
+
+      <span class="bone bone-icon" />
+      <span class="bone bone-icon" />
+    </div>
+  </div>
 
   <div v-else-if="!friends.card" class="gate">
     <p>{{ t('friends.error') }}</p>
@@ -98,7 +66,7 @@ async function submit() {
   </div>
 
   <div v-else class="friends-list" :class="{ contained }">
-    <div ref="contacts" class="contacts">
+    <div class="contacts">
       <section v-if="friends.incoming.length" class="group">
         <h3 class="section">{{ t('friends.incoming') }}</h3>
 
@@ -223,51 +191,6 @@ async function submit() {
         </li>
       </ul>
 
-      <form v-if="showAdding" class="add" @submit.prevent="submit">
-        <div class="own">
-          <span class="own-label">{{ t('friends.yourCode') }}</span>
-
-          <div class="own-row">
-            <strong class="own-code">{{ ownCode }}</strong>
-
-            <button
-              type="button"
-              class="icon-btn"
-              :aria-label="t('friends.copy')"
-              :title="copied ? t('friends.copied') : t('friends.copy')"
-              :disabled="!canCopy"
-              @click="copy(ownCode)"
-            >
-              <Check v-if="copied" :size="16" class="good" />
-              <Copy v-else :size="16" />
-            </button>
-          </div>
-        </div>
-
-        <div class="add-row">
-          <input
-            ref="codeInput"
-            v-model="code"
-            class="code-input"
-            maxlength="12"
-            autocomplete="off"
-            autocapitalize="characters"
-            spellcheck="false"
-            placeholder="ABCD-2345"
-            :aria-label="t('friends.codeLabel')"
-            @input="result = null"
-          />
-
-          <button type="submit" class="btn primary" :disabled="!valid || sending">
-            {{ t('friends.add') }}
-          </button>
-        </div>
-
-        <p v-if="result" class="result" :class="{ good: succeeded }" role="status">
-          {{ t(`friends.results.${result}`) }}
-        </p>
-      </form>
-
       <template v-if="friends.blocked.length">
         <button
           type="button"
@@ -294,17 +217,6 @@ async function submit() {
         </ul>
       </template>
     </div>
-
-    <button
-      v-if="!alone"
-      type="button"
-      class="btn block add-toggle"
-      :aria-expanded="adding"
-      @click="startAdding"
-    >
-      <template v-if="adding"><ChevronUp :size="16" /> {{ t('friends.hideAdding') }}</template>
-      <template v-else><UserPlus :size="16" /> {{ t('friends.addFriend') }}</template>
-    </button>
   </div>
 </template>
 
@@ -334,10 +246,6 @@ async function submit() {
   flex-shrink: 0;
 }
 
-.add-toggle {
-  flex: none;
-}
-
 p {
   margin: 0;
   font-size: 13px;
@@ -347,6 +255,64 @@ p {
 
 .muted {
   color: var(--chalk-faint);
+}
+
+.bones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bone-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.bone-medal {
+  width: 30px;
+  height: 30px;
+}
+
+.bone-avatar {
+  width: 38px;
+  height: 38px;
+}
+
+.bone-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bone-name {
+  width: 58%;
+  height: 12px;
+}
+
+.bone-row:nth-of-type(3n + 1) .bone-name {
+  width: 72%;
+}
+
+.bone-row:nth-of-type(3n) .bone-name {
+  width: 44%;
+}
+
+.bone-status {
+  width: 34%;
+  height: 9px;
+}
+
+.bone-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
 }
 
 .gate {
@@ -488,87 +454,6 @@ p {
   font-weight: 800;
   line-height: 18px;
   text-align: center;
-}
-
-.add-toggle {
-  border-style: dashed;
-}
-
-.add {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--edge);
-}
-
-.own {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.own-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.own-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--chalk-dim);
-}
-
-.own-code {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  font-variant-numeric: tabular-nums;
-}
-
-.good {
-  color: var(--heal);
-}
-
-.add-row {
-  display: flex;
-  gap: 8px;
-}
-
-.code-input {
-  flex: 1;
-  min-width: 0;
-  padding: 9px 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--edge-strong);
-  background: #0f1614;
-  color: var(--chalk);
-  font: 700 15px/1.3 var(--font-ui);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.code-input::placeholder {
-  color: var(--chalk-faint);
-}
-
-.code-input:focus {
-  outline: none;
-  border-color: var(--gold);
-}
-
-.result {
-  font-weight: 600;
-  color: var(--theirs);
-}
-
-.result.good {
-  color: var(--heal);
 }
 
 .blocked-toggle {

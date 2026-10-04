@@ -230,6 +230,7 @@ export class BattleLayer extends Container {
         icon: this.icons[entity.hero.role],
         stars: entity.hero.stars,
         items: entity.hero.items,
+        pending: entity.hero.stars === 2 && (entity.caster?.talents.length ?? 0) === 0,
       })
 
       return [token, this.heroes]

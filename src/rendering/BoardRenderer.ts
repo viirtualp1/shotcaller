@@ -89,10 +89,7 @@ export class BoardRenderer {
     app.stage.hitArea = app.screen
     app.stage.on('pointermove', (e) => this.onPointerMove(e))
 
-    app.stage.on('pointerleave', () => {
-      this.planning.setHover(null, null)
-      this.setHovered(null)
-    })
+    app.stage.on('pointerleave', () => this.clearHover())
 
     app.stage.on('pointerdown', (e) => this.onPointerDown(e))
     app.stage.on('pointertap', (e) => this.onPointerTap(e))
@@ -345,6 +342,12 @@ export class BoardRenderer {
     this.events.emit('heroHovered', hit)
   }
 
+  private clearHover() {
+    this.planning.setHover(null, null)
+    this.setHovered(null)
+    this.app.canvas.style.cursor = 'default'
+  }
+
   private onFrame(dt: number) {
     this.clock += dt
     this.effects.nextFrame()
@@ -362,6 +365,13 @@ export class BoardRenderer {
   }
 
   private onPointerMove(e: FederatedPointerEvent) {
+    /* Pixi also receives pointer events over HTML overlays; those belong to the card, not the map. */
+    if (e.nativeEvent.target !== this.app.canvas) {
+      this.clearHover()
+
+      return
+    }
+
     const point = this.board.toLocal(e.global)
     const hit = this.heroAt(point)
     this.setHovered(hit)
@@ -381,7 +391,7 @@ export class BoardRenderer {
   private onPointerDown(e: FederatedPointerEvent) {
     this.pressedToken = false
 
-    if (this.mode !== 'planning') {
+    if (e.nativeEvent.target !== this.app.canvas || this.mode !== 'planning') {
       return
     }
 
@@ -400,7 +410,7 @@ export class BoardRenderer {
   }
 
   private onPointerTap(e: FederatedPointerEvent) {
-    if (this.pressedToken) {
+    if (e.nativeEvent.target !== this.app.canvas || this.pressedToken) {
       return
     }
 

@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { useDocumentVisibility, useElementVisibility, useIntervalFn, useMediaQuery } from '@vueuse/core'
+import {
+  useDocumentVisibility,
+  useElementVisibility,
+  useIntervalFn,
+  useMediaQuery,
+  useResizeObserver,
+} from '@vueuse/core'
 import { Play } from '@lucide/vue'
-import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue'
 import { MODE_IDS, type ModeId } from '@/content/ids'
-import BoardFrame from '../components/board/BoardFrame.vue'
+import DemoBoard from '../components/home/DemoBoard.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
 import CoachCard from '../components/home/CoachCard.vue'
@@ -20,6 +26,7 @@ import { useUiZoom } from '../composables/useUiZoom'
 import { useChatStore } from '../stores/chat'
 import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
+import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { useReplayStore } from '../stores/replay'
 import MobileHome from './MobileHome.vue'
@@ -35,18 +42,40 @@ const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBa
 
 /** Phones get their own start screen, laid out for one hand; this one is for wider screens. */
 const phone = useMediaQuery('(max-width: 860px)')
+/** The showcase stays wired up below. The menu is two columns until the map can sit between them again. */
+const showMap = false
 const menu = useMenuStore()
+const match = useMatchStore()
 const duel = useDuelStore()
 const cloud = useCloudStore()
 const chat = useChatStore()
 const replay = useReplayStore()
 const { t } = useGameText()
 const visibility = useDocumentVisibility()
-/* The side columns grow with the window; the board is not scaled and takes the room left between them. */
 const uiZoom = useUiZoom()
 
 const previewHost = ref<HTMLElement | null>(null)
 const mounted = ref(false)
+const coach = ref<HTMLElement | null>(null)
+const contracts = ref<HTMLElement | null>(null)
+const profileHeight = ref(0)
+const contractsHeight = ref(0)
+
+useResizeObserver(coach, () => {
+  profileHeight.value = coach.value?.offsetHeight ?? 0
+})
+
+useResizeObserver(contracts, () => {
+  contractsHeight.value = contracts.value?.offsetHeight ?? 0
+})
+
+const profileStyle = computed(() =>
+  profileHeight.value ? { height: `${profileHeight.value}px` } : undefined,
+)
+
+const contractsStyle = computed(() =>
+  contractsHeight.value ? { minHeight: `${contractsHeight.value}px` } : undefined,
+)
 
 /** The board on show, and for a moment the next mode's board fading in over it. */
 const demos = ref<DemoLayer[]>([
@@ -57,6 +86,7 @@ const demos = ref<DemoLayer[]>([
 ])
 
 const previewVisible = useElementVisibility(previewHost)
+const mapPaused = ref(false)
 
 /** The new board covers the old one now, so the old one can go. */
 function demoShown(id: number) {
@@ -64,7 +94,7 @@ function demoShown(id: number) {
 }
 
 useIntervalFn(() => {
-  if (!previewVisible.value || visibility.value !== 'visible') {
+  if (!previewVisible.value || visibility.value !== 'visible' || mapPaused.value) {
     return
   }
 
@@ -102,55 +132,76 @@ onBeforeUnmount(() => {
   <main v-else class="start" :style="{ '--ui-zoom': uiZoom }">
     <h1 class="sr-only">{{ t('app.title') }}</h1>
 
-    <div class="layout">
+    <div class="layout" :class="{ 'with-map': showMap }">
       <div class="column side">
-        <CoachCard />
+        <div class="scaled">
+          <div ref="coach">
+            <CoachCard />
+          </div>
 
-        <div class="menu">
-          <DuelResumeCard />
-          <SavedMatchCard />
-          <ContractsStrip />
+          <div class="menu">
+            <DuelResumeCard />
+
+            <div ref="contracts">
+              <ContractsStrip />
+            </div>
+          </div>
+
+          <div class="friends-stack" :class="{ card: cloud.enabled }">
+            <div v-if="cloud.enabled" id="home-friends" class="friends" />
+
+            <footer class="footer">
+              <LanguageSwitch compact />
+              <SupportButton />
+              <LegalLinks />
+            </footer>
+          </div>
         </div>
-
-        <div v-if="cloud.enabled" id="home-friends" class="friends" />
-
-        <footer class="footer">
-          <LanguageSwitch compact />
-          <SupportButton />
-          <LegalLinks />
-        </footer>
       </div>
 
-      <div class="column center">
+      <div v-if="showMap" class="column center">
         <section ref="previewHost" class="preview">
-          <BoardFrame>
+          <DemoBoard v-model:paused="mapPaused">
             <DemoBattle
               v-for="layer in previewVisible ? demos : []"
               :key="layer.id"
               :mode="layer.mode"
+              :paused="mapPaused"
               @shown="demoShown(layer.id)"
             />
-          </BoardFrame>
+          </DemoBoard>
         </section>
       </div>
 
       <div class="column side">
-        <MovedCard />
-        <PatchHighlight />
-        <DiscordCard />
+        <div class="scaled">
+          <MovedCard />
 
-        <div class="launch">
-          <QuickStarts />
+          <div class="tall" :style="profileStyle">
+            <PatchHighlight />
+          </div>
 
-          <button
-            type="button"
-            class="play"
-            :disabled="duel.matchmaking"
-            @click="menu.openNewMatch('computer')"
-          >
-            <Play :size="22" />
-            {{ t('start.home.play') }}
-          </button>
+          <div class="tall" :style="contractsStyle">
+            <DiscordCard />
+          </div>
+
+          <div class="launch">
+            <SavedMatchCard v-if="match.saved" />
+
+            <template v-else>
+              <QuickStarts />
+
+              <button
+                type="button"
+                class="play"
+                :disabled="duel.matchmaking"
+                @click="menu.openNewMatch('computer')"
+              >
+                <Play :size="22" />
+                {{ t('start.home.play') }}
+              </button>
+            </template>
+          </div>
         </div>
       </div>
     </div>
@@ -164,13 +215,7 @@ onBeforeUnmount(() => {
   --gap: calc(24px * var(--ui-zoom));
   --pad-y: calc(24px * var(--ui-zoom));
   --pad-x: calc(32px * var(--ui-zoom));
-  --side-min: calc(clamp(240px, 18vw, 290px) * var(--ui-zoom));
   --height: max(100dvh, 600px);
-  /* The square board takes the full height when the width allows; the side columns share what is left. */
-  --board: min(
-    var(--height) - 2 * var(--pad-y),
-    100vw - 2 * var(--pad-x) - 2 * var(--gap) - 2 * var(--side-min)
-  );
   display: flex;
   height: var(--height);
   padding: var(--pad-y) var(--pad-x);
@@ -188,9 +233,15 @@ onBeforeUnmount(() => {
 .layout {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(var(--side-min), 1fr) var(--board) minmax(var(--side-min), 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--gap);
+  width: 100%;
+  height: 100%;
   min-height: 0;
+}
+
+.layout.with-map {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr);
 }
 
 .column {
@@ -220,11 +271,56 @@ onBeforeUnmount(() => {
   animation-delay: 80ms;
 }
 
-/* The side columns run the full height of the screen and are drawn at the interface scale. */
+/* Scale draws the columns bigger without pushing the map or leaving a gap under them. */
 .side {
-  zoom: var(--ui-zoom);
-  height: 0;
-  min-height: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.scaled {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: calc(100% / var(--ui-zoom));
+  height: calc(100% / var(--ui-zoom));
+  min-width: 0;
+  min-height: 0;
+  transform: scale(var(--ui-zoom));
+  transform-origin: top left;
+}
+
+.center {
+  container-type: size;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.friends-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.friends-stack.card {
+  overflow: hidden;
+  border: 1px solid var(--edge-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.tall {
+  display: flex;
+  min-height: 0;
+}
+
+.tall > :deep(.patch),
+.tall > :deep(.discord) {
+  flex: 1;
+  min-height: 0;
 }
 
 .friends {
@@ -237,11 +333,18 @@ onBeforeUnmount(() => {
   flex: 1;
 }
 
-.preview {
-  width: var(--board);
+.friends-stack :deep(.social-window.docked) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
-/* Picking an opponent and starting the match sit together at the foot of the column. */
+.preview {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+
+/* A saved match, or otherwise a new one, sits at the foot of the column. */
 .launch {
   display: grid;
   gap: 10px;
@@ -274,21 +377,17 @@ onBeforeUnmount(() => {
   cursor: default;
 }
 
-/* Language, support and the legal links close the left column, under the friends list and as wide as it. */
+/* Language, support and the legal buttons close the friends card, so the card ends level with Play. */
 .footer {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  animation: fade-in 0.4s 0.2s ease-out both;
+  margin-top: auto;
+  padding: 8px 10px;
 }
 
-.footer :deep(.support-button) {
-  justify-content: center;
-  width: 100%;
-}
-
-.footer :deep(.legal-links) {
-  grid-column: 1 / -1;
+.card .footer {
+  border-top: 1px solid var(--edge);
 }
 </style>

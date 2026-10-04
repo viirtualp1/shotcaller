@@ -29,6 +29,8 @@ export interface TokenModel {
   readonly items: readonly ItemId[]
   /** The role the hero fights in on its lane; an adaptive hero changes it with its lane-mates. */
   readonly role?: RoleId
+  /** Waiting for a talent pick. Part of the identity, so choosing one redraws the token. */
+  readonly pendingTalent?: boolean
 }
 
 /** Lineups and structures as the player sees them: index 0 is the player's own side. */
@@ -47,7 +49,9 @@ interface PlacedToken {
 }
 
 const LANE_HIGHLIGHT_WIDTH = 46
-const tokenKey = (t: TokenModel) => `${t.heroId}:${t.stars}:${t.role ?? ''}:${t.items.join(',')}`
+
+const tokenKey = (t: TokenModel) =>
+  `${t.heroId}:${t.stars}:${t.role ?? ''}:${t.items.join(',')}:${t.pendingTalent ? 1 : 0}`
 
 export class PlanningLayer extends Container {
   private readonly highlight = new Graphics()
@@ -206,6 +210,7 @@ export class PlanningLayer extends Container {
       icon: this.icons[model.role ?? HEROES[model.heroId].role],
       stars: model.stars,
       items: model.items,
+      pending: model.pendingTalent,
     })
 
     token.position.set(position.x, position.y)

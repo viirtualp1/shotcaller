@@ -1,19 +1,46 @@
 <script setup lang="ts">
+import { UserPlus } from '@lucide/vue'
+import { computed, ref } from 'vue'
+import { formatFriendCode } from '@/application/social/friends'
 import { useGameText } from '../../composables/useGameText'
+import { useFriendsStore } from '../../stores/friends'
 import HudPanel from '../common/HudPanel.vue'
+import AddFriendDialog from './AddFriendDialog.vue'
+import FriendCodeHint from './FriendCodeHint.vue'
 import FriendsList from './FriendsList.vue'
 
 /** The friends list on the profile page. */
 defineProps<{ fill?: boolean }>()
 
+const friends = useFriendsStore()
 const { t } = useGameText()
+const adding = ref(false)
+const ownCode = computed(() => (friends.card ? formatFriendCode(friends.card.friendCode) : ''))
 </script>
 
 <template>
   <HudPanel :title="t('friends.title')" class="panel" :class="{ fill }">
+    <template v-if="ownCode" #beside>
+      <FriendCodeHint :code="ownCode" />
+    </template>
+
+    <template v-if="friends.card" #actions>
+      <button
+        type="button"
+        class="icon-btn add"
+        :aria-label="t('friends.addFriend')"
+        :title="t('friends.addFriend')"
+        @click="adding = true"
+      >
+        <UserPlus :size="16" />
+      </button>
+    </template>
+
     <div class="scroll">
       <FriendsList :contained="fill" />
     </div>
+
+    <AddFriendDialog v-model:open="adding" />
   </HudPanel>
 </template>
 
@@ -21,6 +48,14 @@ const { t } = useGameText()
 .panel {
   gap: 12px;
   padding: 16px 18px;
+}
+
+.panel :deep(.head) {
+  align-items: center;
+}
+
+.add {
+  margin-left: auto;
 }
 
 .scroll {

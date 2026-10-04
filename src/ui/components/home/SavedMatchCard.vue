@@ -5,10 +5,12 @@ import { MODES } from '@/content/modes'
 import { useGameText } from '../../composables/useGameText'
 import { useDuelStore } from '../../stores/duel'
 import { useMatchStore } from '../../stores/match'
+import { useMenuStore } from '../../stores/menu'
 import BaseStatus from '../hud/BaseStatus.vue'
 
 /** The match waiting for the coach: where it stands, and the button to carry on. */
 const store = useMatchStore()
+const menu = useMenuStore()
 const duel = useDuelStore()
 const { t } = useGameText()
 
@@ -46,6 +48,15 @@ const label = computed(() => {
       @click="store.continueMatch()"
     >
       <Play :size="18" /> {{ t('start.home.continue') }}
+    </button>
+
+    <button
+      type="button"
+      class="btn ghost block"
+      :disabled="duel.matchmaking"
+      @click="menu.openNewMatch('computer')"
+    >
+      {{ t('start.newMatch') }}
     </button>
   </section>
 </template>

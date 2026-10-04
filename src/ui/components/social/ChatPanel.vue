@@ -287,6 +287,7 @@ onMounted(focusComposer)
       </button>
 
       <button
+        v-if="!chat.docked"
         type="button"
         class="icon-btn"
         :aria-label="t('chatWindow.close')"
@@ -315,7 +316,15 @@ onMounted(focusComposer)
         </button>
       </li>
 
-      <li v-if="chat.loading && !chat.messages.length" class="note">{{ t('chat.loading') }}</li>
+      <li v-if="chat.loading && !chat.messages.length" class="thread" role="status">
+        <span class="sr-only">{{ t('chat.loading') }}</span>
+        <span class="bone bubble left tall" />
+        <span class="bone bubble right" />
+        <span class="bone bubble left" />
+        <span class="bone bubble right tall" />
+        <span class="bone bubble left" />
+      </li>
+
       <li v-else-if="!chat.messages.length" class="note">{{ t('chat.empty') }}</li>
 
       <li
@@ -516,6 +525,36 @@ onMounted(focusComposer)
   font-size: 13px;
   text-align: center;
   color: var(--chalk-faint);
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.bubble {
+  height: 36px;
+  border-radius: var(--radius);
+}
+
+.bubble.tall {
+  height: 54px;
+}
+
+.bubble.left {
+  align-self: flex-start;
+  width: 64%;
+}
+
+.bubble.right {
+  align-self: flex-end;
+  width: 46%;
+}
+
+.bubble.right.tall {
+  width: 58%;
 }
 
 .message {

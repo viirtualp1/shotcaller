@@ -25,12 +25,18 @@ const { start } = useTimeoutFn(
   { immediate: false },
 )
 
-watch(twist, (current, previous) => {
-  if (current && previous && current !== previous) {
+watch(
+  twist,
+  (current, previous) => {
+    if (!current || current === previous) {
+      return
+    }
+
     changed.value = true
     start()
-  }
-})
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

@@ -167,6 +167,17 @@
   "app": {
     "title": "The Shotcaller"
   },
+  "presence": {
+    "playing": "Играет",
+    "inGame": "В игре",
+    "training": "Тренировка",
+    "duel": "Дуэль",
+    "versus": "Против компьютера",
+    "finished": "Матч окончен",
+    "planning": "Раунд {round} · план",
+    "battle": "Раунд {round} · бой",
+    "summary": "Раунд {round} · итог"
+  },
   "start": {
     "invite": "Позвать друга",
     "inviteMessage": "Заходи сыграть в The Shotcaller!",
@@ -185,12 +196,14 @@
       "action": "Открыть theshotcaller.online"
     },
     "home": {
-      "play": "Играть",
+      "play": "Новый матч",
       "continue": "Продолжить",
       "vsComputer": "против компьютера",
       "next": "Дальше: {name} · {progress}",
       "weekDone": "Все контракты недели выполнены",
       "fresh": "Новое",
+      "pause": "Приостановить карту",
+      "resume": "Возобновить карту",
       "discord": {
         "title": "Играй в Discord",
         "text": "Запускай матчи прямо в голосовом канале вместе с друзьями."
@@ -410,6 +423,8 @@
   "card": {
     "sell": "Продать за {gold}",
     "noItems": "Перетащи предмет со склада на героя",
+    "equipZone": "Отпусти, чтобы надеть",
+    "equipFull": "Нельзя надеть, слоты заняты",
     "hp": "Здоровье",
     "damage": "Урон",
     "melee": "Ближний бой",
@@ -427,7 +442,7 @@
       "mana": "Мана",
       "range": "Радиус",
       "regen": "+{n} HP/с",
-      "manaGain": "+{n} маны за атаку"
+      "manaGain": "+{n} за атаку"
     },
     "stats": {
       "hp": "Здоровье",
@@ -814,7 +829,6 @@
     "since": "Тренирует с {date}",
     "toNextStar": "{points} до следующей звезды",
     "toNextRank": "{points} до ранга «{rank}»",
-    "topRank": "Высший ранг",
     "ranks": {
       "rookie": "Новичок",
       "scout": "Разведчик",
@@ -1020,6 +1034,7 @@
     "inMatch": "в игре · раунд {round}",
     "inDuel": "в дуэли · раунд {round}",
     "addFriend": "Добавить друга",
+    "sendRequest": "Отправить заявку",
     "openProfile": "Профиль: {name}",
     "message": "Написать",
     "blockedCount": "Заблокированные · {n}",

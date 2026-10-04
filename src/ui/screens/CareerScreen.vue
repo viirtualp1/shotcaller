@@ -13,13 +13,9 @@ const zoom = useUiZoom()
 
 <template>
   <div class="career-page" :style="{ '--ui-zoom': zoom }">
-    <header class="topbar">
-      <nav class="bar" :aria-label="t('career.title')">
-        <a href="/" class="btn ghost" @click.prevent="profile.close()">
-          <ArrowLeft :size="16" /> {{ t('profile.back') }}
-        </a>
-      </nav>
-    </header>
+    <a href="/" class="back btn ghost" @click.prevent="profile.close()">
+      <ArrowLeft :size="16" /> {{ t('profile.back') }}
+    </a>
 
     <main class="page">
       <ProfileHeader linked />
@@ -30,29 +26,16 @@ const zoom = useUiZoom()
 
 <style scoped>
 .career-page {
+  position: relative;
   min-height: calc((100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px)) / var(--ui-zoom));
   zoom: var(--ui-zoom);
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  padding-top: env(safe-area-inset-top, 0px);
-  background: rgba(19, 27, 24, 0.86);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--edge);
-}
-
-.bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 1160px;
-  min-height: 64px;
-  margin: 0 auto;
-  padding: 10px 20px;
+.back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  border-radius: var(--radius);
 }
 
 .page {
@@ -61,16 +44,23 @@ const zoom = useUiZoom()
   gap: 12px;
   max-width: 1160px;
   margin: 0 auto;
-  padding: 16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
 .page :deep(.header) {
   padding-block: 12px;
 }
 
-@media (max-width: 720px) {
-  .bar,
+@media (max-width: 860px) {
+  .back {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin: calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
+  }
+
   .page {
+    padding-top: 12px;
     padding-inline: 16px;
   }
 }

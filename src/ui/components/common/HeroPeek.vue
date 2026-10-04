@@ -67,7 +67,7 @@ const stats = computed(() => [
       <span class="role">{{ text.heroRoleName(heroId, role) }} · {{ text.abilityName(hero.ability) }}</span>
     </header>
 
-    <HeroResources :values="values" :live="Boolean(vitals)" />
+    <HeroResources :values="values" />
 
     <dl class="stats">
       <div v-for="stat in stats" :key="stat.label">

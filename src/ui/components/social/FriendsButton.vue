@@ -155,5 +155,7 @@ const label = computed(() =>
   border-color: transparent;
   background: transparent;
   box-shadow: none;
+  scale: 1.2;
+  transform-origin: bottom right;
 }
 </style>

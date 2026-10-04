@@ -26,6 +26,8 @@ export interface HeroTokenOptions {
   readonly icon: Texture
   readonly stars: StarLevel
   readonly items: readonly ItemId[]
+  /** Two stars, and the talent is still unpicked: the same gold mark as on the lane card. */
+  readonly pending?: boolean
 }
 
 export interface TokenEffects {
@@ -44,6 +46,7 @@ export class HeroToken extends EntityView {
   private readonly overlay = new Graphics()
   private readonly flashRing = new Graphics()
   private readonly bars = new Graphics()
+  private readonly pendingGlow = new Graphics()
   private wasDead = false
   private hovered = false
 
@@ -93,6 +96,37 @@ export class HeroToken extends EntityView {
     this.flashRing.circle(0, 0, r + 1).fill({ color: 0xffffff })
     this.flashRing.alpha = 0
     this.body.addChild(this.overlay, disc, icon, this.flashRing, this.bars)
+
+    if (options.pending) {
+      this.drawPending(r)
+    }
+  }
+
+  private drawPending(radius: number) {
+    const mark = Math.max(4.5, radius * 0.26)
+    const x = radius + 2 - mark
+    const y = -(radius + 2 - mark)
+    this.pendingGlow.circle(x, y, mark + 3).fill(PALETTE.gold)
+    this.pendingGlow.alpha = 0
+
+    const badge = new Graphics()
+    badge.circle(x, y, mark + 2).fill(PALETTE.ink)
+    badge.circle(x, y, mark).fill(PALETTE.gold)
+    this.body.addChild(this.pendingGlow, badge)
+
+    const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (reduce) {
+      return
+    }
+
+    gsap.to(this.pendingGlow, {
+      alpha: 0.9,
+      duration: 0.8,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+    })
   }
 
   setBars(health: number | null, mana: number | null) {
@@ -250,6 +284,7 @@ export class HeroToken extends EntityView {
 
   override destroy(options?: Parameters<EntityView['destroy']>[0]) {
     gsap.killTweensOf(this.flashRing)
+    gsap.killTweensOf(this.pendingGlow)
     super.destroy(options)
   }
 }

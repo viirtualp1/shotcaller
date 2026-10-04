@@ -42,6 +42,7 @@ import StashGrid from '../components/roster/StashGrid.vue'
 import ShopPanel from '../components/shop/ShopPanel.vue'
 import { useFightRequest } from '../composables/useFightRequest'
 import { useGameText } from '../composables/useGameText'
+import { useGameUiZoom } from '../composables/useGameUiZoom'
 import { useHotkeys } from '../composables/useHotkeys'
 import { useDragStore } from '../stores/drag'
 import { useDuelStore } from '../stores/duel'
@@ -64,6 +65,7 @@ const drag = useDragStore()
 const duel = useDuelStore()
 const { t } = useGameText()
 const tour = useTutorial()
+const uiZoom = useGameUiZoom()
 
 const top = ref<HTMLElement | null>(null)
 const left = ref<HTMLElement | null>(null)
@@ -188,6 +190,16 @@ useHotkeys({
 const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, { immediate: false })
 
 watch(
+  uiZoom,
+  () => {
+    topBox.update()
+    leftBox.update()
+    rightBox.update()
+  },
+  { flush: 'post' },
+)
+
+watch(
   () => menu.tutorialPending,
   (pending) => {
     if (!pending) {
@@ -202,7 +214,11 @@ watch(
 </script>
 
 <template>
-  <div class="game" :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait']">
+  <div
+    class="game"
+    :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait']"
+    :style="{ '--game-zoom': uiZoom }"
+  >
     <div class="board-layer">
       <BoardView
         :key="`${settings.locale}:${store.view?.side}:${store.view?.mode}`"
@@ -271,7 +287,7 @@ watch(
       </Transition>
 
       <template v-if="wide && !touch">
-        <HeroCard />
+        <HeroCard spread />
         <ItemCard />
       </template>
     </div>
@@ -311,6 +327,7 @@ watch(
   pointer-events: none;
   /* Above the side panels and the dock, so the reaction wheel and the fallen heroes can hang over them. */
   z-index: 12;
+  zoom: var(--game-zoom);
 }
 
 .hud-top > * {
@@ -357,6 +374,13 @@ watch(
   gap: 8px;
   z-index: 20;
   pointer-events: none;
+  zoom: var(--game-zoom);
+}
+
+.hud-bottom :deep(.hero-card),
+.hud-bottom :deep(.item-card) {
+  max-height: calc((100dvh - 100px) / var(--game-zoom));
+  overflow: auto;
 }
 
 .hud-bottom > * {
@@ -384,7 +408,7 @@ watch(
 
 /* Desktop: the board fills the window and the HUD sits on its edges. */
 .game.wide {
-  --side: clamp(290px, 22vw, 420px);
+  --side: clamp(290px, 22vw / var(--game-zoom), 420px);
 }
 
 .wide .hud-top {
@@ -408,6 +432,7 @@ watch(
   overflow-x: hidden;
   overflow-y: auto;
   z-index: 10;
+  zoom: var(--game-zoom);
 }
 
 /* The shop and the round meter scroll inside themselves. The column must not grow a bar while they slide away. */

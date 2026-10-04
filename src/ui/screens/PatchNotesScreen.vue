@@ -32,7 +32,6 @@ import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
 import PatchPicker from '../components/patchNotes/PatchPicker.vue'
 import { useGameText } from '../composables/useGameText'
-import { useUiZoom } from '../composables/useUiZoom'
 import { vOpticalAlign } from '../directives/opticalAlign'
 import { ADAPTIVE_ICON, ROLE_ICONS } from '../icons'
 import type { PatchNote } from '../patchNotes/notes'
@@ -42,7 +41,6 @@ import { useSettingsStore } from '../stores/settings'
 const notes = usePatchNotesStore()
 const settings = useSettingsStore()
 const text = useGameText()
-const zoom = useUiZoom()
 const { t } = text
 
 /** The screen is only mounted while a patch is open. */
@@ -64,7 +62,7 @@ watch(
 </script>
 
 <template>
-  <div class="patch-notes" :style="{ '--ui-zoom': zoom }">
+  <div class="patch-notes">
     <header class="topbar">
       <div class="bar">
         <a href="/" class="btn" @click.prevent="notes.close()">
@@ -257,8 +255,7 @@ watch(
 .patch-notes {
   --page: 880px;
   --topbar: 64px;
-  min-height: calc((100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px)) / var(--ui-zoom));
-  zoom: var(--ui-zoom);
+  min-height: 100%;
 }
 
 /* The bar itself stays out of the way of the page scrolling under it; only its buttons take clicks. */

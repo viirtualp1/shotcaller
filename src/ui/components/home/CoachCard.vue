@@ -1,22 +1,56 @@
 <script setup lang="ts">
 import { LogIn, LogOut, Settings } from '@lucide/vue'
 import { computed } from 'vue'
+import { bestMode } from '@/domain/profile/Profile'
+import { rankFor } from '@/domain/profile/progression'
 import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
 import { useMenuStore } from '../../stores/menu'
 import { useProfileStore } from '../../stores/profile'
 import CoachAvatar from '../profile/CoachAvatar.vue'
-import RankMedal from '../profile/RankMedal.vue'
+import RankDropdown from '../profile/RankDropdown.vue'
 
 /** The coach at the top of the desktop start screen: who they are, how far they got, and their account. */
 const profile = useProfileStore()
 const cloud = useCloudStore()
 const menu = useMenuStore()
 const photo = useAccountPhoto()
-const { t } = useGameText()
+const text = useGameText()
+const { t } = text
 
 const progress = computed(() => `${Math.round((profile.level.into / profile.level.needed) * 100)}%`)
+
+const rankShare = computed(() => {
+  const { floor, next } = profile.rank
+
+  if (next === null) {
+    return 100
+  }
+
+  return ((profile.profile.rating - floor) / (next - floor)) * 100
+})
+
+/** The next star, or the next medal when the next star starts one. */
+const nextStep = computed(() => {
+  const { next, tier } = profile.rank
+
+  if (next === null) {
+    return
+  }
+
+  const points = text.mmr(next - profile.profile.rating)
+  const upcoming = rankFor(next)
+
+  if (upcoming.tier === tier) {
+    return t('profile.toNextStar', { points })
+  }
+
+  return t('profile.toNextRank', {
+    points,
+    rank: t(`profile.ranks.${upcoming.tier}`),
+  })
+})
 
 function signOut() {
   if (globalThis.confirm(t('cloud.signOutConfirm'))) {
@@ -27,30 +61,46 @@ function signOut() {
 
 <template>
   <section class="coach-card">
-    <a href="/profile" class="who" :aria-label="t('profile.title')" @click.prevent="profile.open()">
-      <CoachAvatar
-        :hero-id="profile.avatar"
-        :level="profile.level.level"
-        :size="56"
-        :photo="photo.shown.value"
-      />
+    <div class="who">
+      <a href="/profile" class="identity" :aria-label="t('profile.title')" @click.prevent="profile.open()">
+        <CoachAvatar
+          :hero-id="profile.avatar"
+          :level="profile.level.level"
+          :size="56"
+          :photo="photo.shown.value"
+        />
 
-      <span class="names">
-        <strong class="name">{{ profile.profile.name || t('profile.defaultName') }}</strong>
+        <span class="names">
+          <strong class="name">{{ profile.profile.name || t('profile.defaultName') }}</strong>
+          <span class="tier">{{ t(`profile.ranks.${profile.rank.tier}`) }}</span>
+        </span>
+      </a>
 
-        <span class="rank">{{ t(`profile.ranks.${profile.rank.tier}`) }}</span>
-      </span>
+      <div class="rank">
+        <div class="rank-text">
+          <span class="rating">
+            <span class="display-number">{{ text.number(profile.profile.rating) }}</span>
+            <span class="unit">MMR</span>
+          </span>
 
-      <RankMedal :tier="profile.rank.tier" :stars="profile.rank.stars" :size="44" />
-    </a>
+          <span v-if="profile.profile.rating > 0" class="best-mode">
+            {{ t('profile.bestMode', { mode: t(`modes.${bestMode(profile.profile.ratings)}.name`) }) }}
+          </span>
+
+          <span class="bar"><span class="fill" :style="{ width: `${rankShare}%` }" /></span>
+
+          <span v-if="nextStep" class="next-step">{{ nextStep }}</span>
+        </div>
+
+        <RankDropdown :rank="profile.rank" :size="44" />
+      </div>
+    </div>
 
     <div class="level">
       <span
         >{{ t('profile.level', { level: profile.level.level }) }} ·
         <span class="xp">{{ profile.level.into }} / {{ profile.level.needed }} XP</span></span
       >
-
-      <span class="mmr">{{ profile.profile.rating }} {{ t('coach.rating') }}</span>
     </div>
 
     <span class="track"><span :style="{ width: progress }" /></span>
@@ -87,11 +137,19 @@ function signOut() {
   align-items: center;
   gap: 14px;
   min-width: 0;
+}
+
+.identity {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
   color: var(--chalk);
   text-decoration: none;
 }
 
-.who:hover .name {
+.identity:hover .name {
   color: var(--gold);
 }
 
@@ -110,13 +168,82 @@ function signOut() {
   transition: color 0.15s;
 }
 
-.rank {
+.tier {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--chalk-dim);
   font-size: 13px;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  max-width: 58%;
+}
+
+.rank-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rating {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2em;
+  color: var(--gold);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.unit {
+  font-size: 0.5em;
+  line-height: 1;
+}
+
+.best-mode {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  margin-top: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(236, 232, 220, 0.1);
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d49a2a, var(--gold));
+}
+
+.next-step {
   color: var(--chalk-dim);
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .level {
@@ -129,11 +256,6 @@ function signOut() {
 
 .xp {
   color: var(--chalk-faint);
-}
-
-.mmr {
-  color: var(--gold);
-  white-space: nowrap;
 }
 
 .track {

@@ -5,11 +5,11 @@ import { isFresh, LATEST_PATCH } from '../../patchNotes/notes'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import NoteLine from '../patchNotes/NoteLine.vue'
 
-/** The latest patch with its headline and first change, at the top of the desktop start screen. */
+/** The latest patch on the start screen: the title, then one line worth opening. */
 const notes = usePatchNotesStore()
 const { t } = useGameText()
 
-const lead = LATEST_PATCH.features?.[0]?.text ?? LATEST_PATCH.general?.[0] ?? null
+const lead = LATEST_PATCH.card ?? LATEST_PATCH.features?.[0]?.text ?? LATEST_PATCH.general?.[0] ?? null
 </script>
 
 <template>
@@ -20,6 +20,7 @@ const lead = LATEST_PATCH.features?.[0]?.text ?? LATEST_PATCH.general?.[0] ?? nu
     </span>
 
     <NoteLine :text="LATEST_PATCH.title" class="title hand" />
+
     <NoteLine v-if="lead" :text="lead" class="lead" />
   </a>
 </template>
@@ -71,6 +72,6 @@ const lead = LATEST_PATCH.features?.[0]?.text ?? LATEST_PATCH.general?.[0] ?? nu
 .lead {
   color: var(--chalk-dim);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 </style>

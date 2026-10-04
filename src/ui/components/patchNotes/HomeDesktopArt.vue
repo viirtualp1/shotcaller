@@ -3,28 +3,28 @@ import {
   BellOff,
   Bot,
   ChevronRight,
+  Copy,
   Crown,
   Eye,
+  FileText,
   LogOut,
+  MessageSquare,
   MousePointer2,
   Play,
   ScrollText,
   SendHorizontal,
   Settings,
+  ShieldCheck,
   Swords,
   Target,
   Trophy,
   User,
   UserPlus,
 } from '@lucide/vue'
-import { computed, onMounted, ref, watch } from 'vue'
-import { paintMapPicture } from '@/rendering/art/paintMapPicture'
-import { laneMapFor } from '@/simulation/map/LaneMap'
+import { computed } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
-import BoardFrame from '../board/BoardFrame.vue'
 import DiscordIcon from '../common/DiscordIcon.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
-import ModeMap from '../modes/ModeMap.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
@@ -46,50 +46,9 @@ const FRIENDS = [
 
 const QUICK_ICONS = [Bot, Swords, Target] as const
 
-const UNITS = [
-  {
-    hero: 'blademaster',
-    team: 0,
-    left: 24,
-    top: 13,
-  },
-  {
-    hero: 'oracle',
-    team: 0,
-    left: 44,
-    top: 55,
-  },
-  {
-    hero: 'herald',
-    team: 0,
-    left: 72,
-    top: 85,
-  },
-  {
-    hero: 'butcher',
-    team: 1,
-    left: 36,
-    top: 13,
-  },
-  {
-    hero: 'frostWitch',
-    team: 1,
-    left: 53,
-    top: 46,
-  },
-  {
-    hero: 'stonewright',
-    team: 1,
-    left: 86,
-    top: 72,
-  },
-] as const
-
 defineProps<{ scene: 'home' | 'chat' | 'career' }>()
 
 const settings = useSettingsStore()
-
-const picture = ref<string | null>(null)
 
 const copy = computed(() =>
   settings.locale === 'ru'
@@ -97,6 +56,9 @@ const copy = computed(() =>
         coach: 'Тренер',
         rank: 'Шотколлер',
         level: 'Уровень 6',
+        mmr: '1 240',
+        best: 'Лучший режим: Три линии',
+        code: 'Код друга: K7NP-4RWM',
         settings: 'Настройки',
         signOut: 'Выйти',
         mode: 'Три линии · против компьютера',
@@ -121,17 +83,14 @@ const copy = computed(() =>
         discordText: 'Запускай матчи прямо в голосовом канале вместе с друзьями.',
         quick: ['Компьютер', 'Онлайн', 'Тренировка'],
         play: 'Играть',
-        lanes: {
-          top: 'Верх',
-          mid: 'Мид',
-          bot: 'Низ',
-        },
-        bases: ['наша база', 'их база'],
       }
     : {
         coach: 'Coach',
         rank: 'The Shotcaller',
         level: 'Level 6',
+        mmr: '1,240',
+        best: 'Best in Three lanes',
+        code: 'Friend code: K7NP-4RWM',
         settings: 'Settings',
         signOut: 'Sign out',
         mode: 'Three lanes · vs computer',
@@ -156,209 +115,163 @@ const copy = computed(() =>
         discordText: 'Start matches right in a voice channel with your friends.',
         quick: ['Computer', 'Online', 'Training'],
         play: 'Play',
-        lanes: {
-          top: 'Top',
-          mid: 'Mid',
-          bot: 'Bot',
-        },
-        bases: ['our base', 'enemy base'],
       },
 )
-
-function drawBoard() {
-  const labels = copy.value
-  picture.value = paintMapPicture(
-    laneMapFor('threeLanes'),
-    {
-      laneName: (lane) => labels.lanes[lane],
-      baseName: (team) => labels.bases[team]!,
-      combatText: () => '',
-    },
-    700,
-  ).toDataURL('image/webp', 0.85)
-}
-
-watch(() => settings.locale, drawBoard)
-
-onMounted(drawBoard)
 </script>
 
 <template>
   <div class="desktop-home">
-    <div class="column left">
-      <section class="coach-card">
-        <div class="who">
-          <CoachAvatar hero-id="warden" :level="6" :size="26" />
+    <section class="coach-card">
+      <div class="who">
+        <CoachAvatar hero-id="warden" :level="6" :size="26" />
 
-          <span class="names"
-            ><b>{{ copy.coach }}</b>
+        <span class="names">
+          <b>{{ copy.coach }}</b>
+          <small>{{ copy.rank }}</small>
+        </span>
 
-            <small>{{ copy.rank }}</small></span
-          >
+        <span class="rank">
+          <b class="mmr">{{ copy.mmr }} <span>MMR</span></b>
+          <small class="best">{{ copy.best }}</small>
+          <span class="track rank-track" />
+        </span>
 
-          <RankMedal tier="shotcaller" :size="24" />
+        <RankMedal tier="shotcaller" :size="22" />
+      </div>
+
+      <div class="level">
+        <span>{{ copy.level }} · <span class="dim">180 / 450 XP</span></span>
+      </div>
+
+      <span class="track level-track" />
+
+      <div class="actions">
+        <span><Settings :size="9" /> {{ copy.settings }}</span>
+        <span><LogOut :size="9" /> {{ copy.signOut }}</span>
+      </div>
+    </section>
+
+    <section class="patch">
+      <span class="eyebrow">
+        <ScrollText :size="9" /> {{ copy.patch }} <b>{{ copy.fresh }}</b>
+      </span>
+
+      <h3 class="hand">{{ copy.title }}</h3>
+
+      <p>
+        <template v-for="(part, i) in copy.lead.split('**')" :key="i">
+          <strong v-if="i % 2">{{ part }}</strong>
+          <template v-else>{{ part }}</template>
+        </template>
+      </p>
+    </section>
+
+    <section class="contracts" :class="{ focused: scene === 'career' }">
+      <b><Trophy :size="10" /> {{ copy.contracts }} <em>2/3</em></b>
+      <span class="track" />
+      <small class="next">{{ copy.next }} <ChevronRight :size="9" /></small>
+      <MousePointer2 v-if="scene === 'career'" class="cursor" :size="18" />
+    </section>
+
+    <section class="discord">
+      <DiscordIcon :size="16" />
+
+      <span>
+        <b>{{ copy.discord }}</b>
+        <small>{{ copy.discordText }}</small>
+      </span>
+    </section>
+
+    <aside class="friends" :class="{ focused: scene === 'chat' }">
+      <div class="contacts">
+        <header class="friends-title">
+          <b class="hand">{{ copy.friends }}</b>
+          <span class="code">{{ copy.code }} <Copy :size="8" /></span>
+
+          <span class="head-tools">
+            <UserPlus :size="9" />
+            <BellOff :size="9" />
+          </span>
+        </header>
+
+        <div v-for="(friend, i) in FRIENDS" :key="friend.name" class="friend" :class="{ away: i === 2 }">
+          <RankMedal tier="shotcaller" :size="14" />
+
+          <span class="friend-avatar">
+            <HeroAvatar :hero-id="friend.hero" :size="18" />
+            <i v-if="i < 2" class="dot" />
+          </span>
+
+          <span class="friend-who">
+            <b>{{ friend.name }}</b>
+            <small>{{ copy.statuses[i] }}</small>
+          </span>
+
+          <span class="tools">
+            <User :size="9" />
+            <Swords :size="9" />
+            <Eye v-if="i === 0" :size="9" class="watch" />
+          </span>
         </div>
+      </div>
 
-        <div class="level">
-          <span>{{ copy.level }} · <span class="dim">180 / 450 XP</span></span>
+      <footer class="footer">
+        <span class="language">
+          <b :class="{ selected: settings.locale === 'ru' }">RU</b>
+          <b :class="{ selected: settings.locale === 'en' }">EN</b>
+        </span>
 
-          <b>1 240 MMR</b>
+        <span class="ghost"><MessageSquare :size="8" /> {{ copy.support }}</span>
+        <span class="ghost"><FileText :size="8" /> {{ copy.terms }}</span>
+        <span class="ghost"><ShieldCheck :size="8" /> {{ copy.privacy }}</span>
+      </footer>
+
+      <div class="conversation" :class="{ active: scene === 'chat' }">
+        <b class="chat-head"><HeroAvatar hero-id="pyromancer" :size="20" /> Ember <span class="dot" /></b>
+        <p class="bubble">{{ copy.messages[0] }}</p>
+        <p class="bubble mine">{{ copy.messages[1] }}</p>
+
+        <div class="composer">
+          <span>{{ copy.message }}…</span>
+          <SendHorizontal :size="10" />
         </div>
+      </div>
+    </aside>
 
-        <span class="track level-track" />
-
-        <div class="actions">
-          <span><Settings :size="9" /> {{ copy.settings }}</span>
-          <span><LogOut :size="9" /> {{ copy.signOut }}</span>
-        </div>
-      </section>
-
+    <div class="launch">
       <section class="resume" :class="{ focused: scene === 'home' }">
         <div class="meta">
           <span>{{ copy.mode }}</span>
-
           <span>{{ copy.round }}</span>
         </div>
 
         <div class="score" :aria-label="copy.towers">
-          <span class="base ours"
-            ><i /><i /><i />
-
-            <span class="throne"><Crown :size="10" /></span
-          ></span>
+          <span class="base ours">
+            <i /><i /><i />
+            <span class="throne"><Crown :size="10" /></span>
+          </span>
 
           <small>vs</small>
 
-          <span class="base theirs"
-            ><i /><i /><i class="down" />
-
-            <span class="throne"><Crown :size="10" /></span
-          ></span>
+          <span class="base theirs">
+            <i /><i /><i class="down" />
+            <span class="throne"><Crown :size="10" /></span>
+          </span>
         </div>
 
-        <span class="continue gold"
-          ><Play :size="11" /> {{ copy.continue }}
+        <span class="continue gold">
+          <Play :size="11" /> {{ copy.continue }}
           <MousePointer2 v-if="scene === 'home'" class="cursor" :size="18" />
         </span>
       </section>
 
-      <section class="contracts" :class="{ focused: scene === 'career' }">
-        <b><Trophy :size="10" /> {{ copy.contracts }} <em>2/3</em></b>
-        <span class="track" />
-        <small class="next">{{ copy.next }} <ChevronRight :size="9" /></small>
-        <MousePointer2 v-if="scene === 'career'" class="cursor" :size="18" />
-      </section>
-
-      <aside class="friends" :class="{ focused: scene === 'chat' }">
-        <div class="contacts">
-          <header class="friends-title">
-            <b class="hand">{{ copy.friends }}</b>
-
-            <BellOff :size="10" />
-          </header>
-
-          <div v-for="(friend, i) in FRIENDS" :key="friend.name" class="friend" :class="{ away: i === 2 }">
-            <RankMedal tier="shotcaller" :size="14" />
-
-            <span class="friend-avatar"
-              ><HeroAvatar :hero-id="friend.hero" :size="18" />
-
-              <i v-if="i < 2" class="dot"
-            /></span>
-
-            <span class="friend-who"
-              ><b>{{ friend.name }}</b>
-
-              <small>{{ copy.statuses[i] }}</small></span
-            >
-
-            <span class="tools"
-              ><User :size="9" /><Swords :size="9" />
-
-              <Eye v-if="i === 0" :size="9" class="watch"
-            /></span>
-          </div>
-
-          <span class="add-friend"><UserPlus :size="9" /> {{ copy.addFriend }}</span>
-        </div>
-
-        <div class="conversation" :class="{ active: scene === 'chat' }">
-          <b class="chat-head"><HeroAvatar hero-id="pyromancer" :size="20" /> Ember <span class="dot" /></b>
-          <p class="bubble">{{ copy.messages[0] }}</p>
-          <p class="bubble mine">{{ copy.messages[1] }}</p>
-
-          <div class="composer">
-            <span>{{ copy.message }}…</span><SendHorizontal :size="10" />
-          </div>
-        </div>
-      </aside>
-
-      <footer class="footer">
-        <span class="language"
-          ><b :class="{ selected: settings.locale === 'ru' }">RU</b>
-
-          <b :class="{ selected: settings.locale === 'en' }">EN</b></span
-        >
-
-        <span class="support">{{ copy.support }}</span>
-
-        <span class="legal"
-          >{{ copy.terms }} <span>{{ copy.privacy }}</span></span
-        >
-      </footer>
-    </div>
-
-    <BoardFrame class="preview">
-      <img v-if="picture" class="map" :src="picture" alt="" />
-      <ModeMap v-else mode="threeLanes" :size="350" />
-
-      <span
-        v-for="unit in UNITS"
-        :key="unit.hero"
-        class="unit"
-        :class="unit.team === 0 ? 'ours' : 'theirs'"
-        :style="{ left: `${unit.left}%`, top: `${unit.top}%` }"
-      >
-        <HeroAvatar :hero-id="unit.hero" :team="unit.team" :size="17" />
-      </span>
-    </BoardFrame>
-
-    <div class="column right">
-      <section class="patch">
-        <span class="eyebrow"
-          ><ScrollText :size="9" /> {{ copy.patch }} <b>{{ copy.fresh }}</b></span
-        >
-
-        <h3 class="hand">{{ copy.title }}</h3>
-
-        <p>
-          <template v-for="(part, i) in copy.lead.split('**')" :key="i"
-            ><strong v-if="i % 2">{{ part }}</strong>
-
-            <template v-else>{{ part }}</template></template
-          >
-        </p>
-      </section>
-
-      <section class="discord">
-        <DiscordIcon :size="16" />
-
-        <span
-          ><b>{{ copy.discord }}</b>
-
-          <small>{{ copy.discordText }}</small></span
-        >
-      </section>
-
-      <div class="launch">
-        <div class="quick">
-          <span v-for="(icon, i) in QUICK_ICONS" :key="i" class="tile"
-            ><component :is="icon" :size="13" /> {{ copy.quick[i] }}</span
-          >
-        </div>
-
-        <span class="play gold"><Play :size="15" /> {{ copy.play }}</span>
+      <div class="quick">
+        <span v-for="(icon, i) in QUICK_ICONS" :key="i" class="tile">
+          <component :is="icon" :size="13" /> {{ copy.quick[i] }}
+        </span>
       </div>
+
+      <span class="play gold"><Play :size="15" /> {{ copy.play }}</span>
     </div>
   </div>
 </template>
@@ -366,18 +279,38 @@ onMounted(drawBoard)
 <style scoped>
 .desktop-home {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 6px;
   height: 100%;
   font-size: 8px;
   line-height: 1.35;
 }
-.column {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  min-height: 0;
+.coach-card {
+  grid-column: 1;
+  grid-row: 1;
+}
+.patch {
+  grid-column: 2;
+  grid-row: 1;
+  align-content: start;
+}
+.contracts {
+  grid-column: 1;
+  grid-row: 2;
+}
+.discord {
+  grid-column: 2;
+  grid-row: 2;
+}
+.friends {
+  grid-column: 1;
+  grid-row: 3;
+}
+.launch {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: end;
 }
 .coach-card,
 .resume,
@@ -403,15 +336,44 @@ onMounted(drawBoard)
 .friends-title,
 .friend,
 .tools,
+.head-tools,
+.code,
 .chat-head,
 .composer,
 .eyebrow,
-.discord {
+.discord,
+.footer,
+.ghost {
   display: flex;
   align-items: center;
 }
 .who {
   gap: 7px;
+}
+.rank {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+.mmr {
+  color: var(--gold);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.mmr span,
+.best {
+  font-size: 6px;
+}
+.best {
+  color: var(--gold);
+  white-space: nowrap;
+}
+.rank-track {
+  width: 64px;
+  background: var(--gold);
 }
 .names,
 .friend-who {
@@ -436,7 +398,6 @@ small {
   font-size: 6.5px;
   white-space: nowrap;
 }
-.level b,
 .contracts svg,
 em,
 .watch,
@@ -456,8 +417,7 @@ em,
 .actions {
   gap: 4px;
 }
-.actions > span,
-.support {
+.actions > span {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -564,10 +524,8 @@ em {
   justify-content: space-between;
 }
 .friends {
-  flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;
   background: #202d28;
@@ -581,8 +539,22 @@ em {
   min-height: 0;
 }
 .friends-title {
-  justify-content: space-between;
+  gap: 6px;
   padding-bottom: 5px;
+  color: var(--chalk-dim);
+}
+.code {
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--chalk-faint);
+  font-size: 6px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.head-tools {
+  gap: 3px;
+  margin-left: auto;
   color: var(--chalk-dim);
 }
 .friends-title b {
@@ -625,17 +597,9 @@ em {
   right: 0;
   bottom: 0;
 }
-.add-friend {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  margin-top: auto;
-  padding-top: 4px;
-  color: var(--chalk-dim);
-}
 .conversation {
-  position: relative;
+  position: absolute;
+  inset: 0;
   background: #202d28;
   visibility: hidden;
   opacity: 0;
@@ -679,11 +643,15 @@ em {
   color: var(--chalk-faint);
 }
 .footer {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
   gap: 4px;
-  font-size: 7px;
+  padding: 5px 6px;
+  border-top: 1px solid var(--edge);
+  font-size: 6px;
+}
+.ghost {
+  gap: 3px;
+  color: var(--chalk-dim);
+  white-space: nowrap;
 }
 .language {
   display: flex;
@@ -698,43 +666,6 @@ em {
 .language .selected {
   background: var(--gold);
   color: var(--ink);
-}
-.legal {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 6px;
-  color: var(--chalk-faint);
-  font-size: 6px;
-}
-.preview {
-  align-self: start;
-}
-.preview.frame {
-  padding: 5px;
-}
-.preview :deep(.surface) {
-  border-radius: var(--radius);
-}
-.map {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.unit {
-  position: absolute;
-  display: grid;
-  translate: -50% -50%;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 1px var(--team),
-    0 0 12px color-mix(in srgb, var(--team) 35%, transparent);
-}
-.unit::before {
-  content: '';
-  position: absolute;
-  inset: -5px 0 auto;
-  height: 2px;
-  background: linear-gradient(90deg, var(--team) 75%, #ffffff18 75%);
 }
 .patch {
   display: grid;
@@ -788,7 +719,6 @@ h3 {
 .launch {
   display: grid;
   gap: 6px;
-  margin-top: auto;
 }
 .quick {
   display: grid;
