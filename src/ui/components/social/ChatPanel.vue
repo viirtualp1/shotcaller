@@ -17,7 +17,10 @@ import WatchLiveButton from './WatchLiveButton.vue'
 import EmojiPicker from './EmojiPicker.vue'
 
 const SHOW_COUNTER_FROM = MESSAGE_MAX_LENGTH - 100
+/** A scroll this soon after a touch, wheel or key is the reader's own; any other comes from the layout. */
+const USER_SCROLL_MS = 800
 let initialized = false
+let userScrolledAt = -Infinity
 
 const props = defineProps<{ friend: FriendEntry; active: boolean }>()
 const emit = defineEmits<{ back: []; close: [] }>()
@@ -65,9 +68,27 @@ function focusComposer() {
   }
 }
 
+function noteUserScroll() {
+  userScrolledAt = performance.now()
+}
+
+/*
+ * Only the reader leaves the bottom. On a phone the keyboard, the composer growing and the window following the
+ * visible screen all move the list too; taking those for the reader left the newest message under the keyboard.
+ */
 function trackScroll() {
   const el = list.value
-  following.value = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 40
+  const atBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 40
+  if (!atBottom && performance.now() - userScrolledAt > USER_SCROLL_MS) {
+    return
+  }
+
+  /* A flick keeps gliding after the finger lifts, and a dragged scrollbar keeps going: still the reader. */
+  if (!atBottom) {
+    noteUserScroll()
+  }
+
+  following.value = atBottom
   chat.atEnd = following.value
 
   if (following.value) {
@@ -75,11 +96,17 @@ function trackScroll() {
   }
 }
 
+/** Scrolls after this render, and once more on the next frame for layout that settles late, like the keyboard. */
 function scrollToEnd() {
   following.value = true
   unseen.value = 0
   chat.atEnd = true
-  void nextTick(() => list.value?.scrollTo({ top: list.value.scrollHeight }))
+
+  void nextTick(() => {
+    const toBottom = () => list.value?.scrollTo({ top: list.value.scrollHeight })
+    toBottom()
+    requestAnimationFrame(toBottom)
+  })
 }
 
 async function showOlder() {
@@ -169,7 +196,7 @@ watch(
   { flush: 'post' },
 )
 
-/* Incoming messages keep the reader's place until they choose to catch up. */
+/* Incoming messages keep the reader's place until they choose to catch up; the reader's own always come into view. */
 watch(
   () => chat.messages.at(-1)?.id,
   (id) => {
@@ -177,7 +204,8 @@ watch(
       return
     }
 
-    if (!initialized || following.value) {
+    const mine = chat.messages.at(-1)?.sender !== props.friend.id
+    if (!initialized || following.value || mine) {
       initialized = true
       scrollToEnd()
     } else {
@@ -255,6 +283,10 @@ onMounted(focusComposer)
       :aria-label="t('chat.open', { name: friend.name || t('profile.defaultName') })"
       :aria-busy="chat.loading"
       @scroll="trackScroll"
+      @touchmove.passive="noteUserScroll"
+      @pointerdown="noteUserScroll"
+      @wheel.passive="noteUserScroll"
+      @keydown="noteUserScroll"
     >
       <li v-if="chat.hasOlder" class="older">
         <button type="button" class="btn ghost" :disabled="chat.loading" @click="showOlder">
