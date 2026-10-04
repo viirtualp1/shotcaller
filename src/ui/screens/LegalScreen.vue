@@ -2,6 +2,7 @@
 import { ArrowLeft, FileText, ShieldCheck } from '@lucide/vue'
 import { computed, watch } from 'vue'
 import { useGameText } from '../composables/useGameText'
+import { useUiZoom } from '../composables/useUiZoom'
 import { LEGAL_IDS, LEGAL_UPDATED, legalPath, type LegalDocument, type LegalId } from '../legal/documents'
 import { useLegalStore } from '../stores/legal'
 import { useSettingsStore } from '../stores/settings'
@@ -14,6 +15,7 @@ const ICONS = {
 const legal = useLegalStore()
 const settings = useSettingsStore()
 const { t } = useGameText()
+const zoom = useUiZoom()
 
 /** The screen is only mounted while a document is open. */
 const document = computed(() => legal.document as LegalDocument)
@@ -32,7 +34,7 @@ watch(
 </script>
 
 <template>
-  <div class="legal">
+  <div class="legal" :style="{ '--ui-zoom': zoom }">
     <header class="topbar">
       <div class="bar">
         <a href="/" class="btn" @click.prevent="legal.close()"
@@ -90,7 +92,8 @@ watch(
 <style scoped>
 .legal {
   --topbar: 64px;
-  min-height: 100%;
+  min-height: calc((100dvh - var(--mobile-tabs, 0px) - env(safe-area-inset-bottom, 0px)) / var(--ui-zoom));
+  zoom: var(--ui-zoom);
 }
 
 /* As on the patch notes, only the buttons take clicks; the page scrolls under the bar. */
