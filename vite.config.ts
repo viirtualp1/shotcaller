@@ -57,9 +57,19 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        globIgnores: ['**/patches/**', '**/profile/**', '**/career/**', '**/leaderboard/**', '{profile,career,leaderboard}.html', '{terms,privacy}{.html,/index.html}', '**/discord-*.js'],
+        globIgnores: [
+          '**/patches/**',
+          '**/profile/**',
+          '**/career/**',
+          '**/leaderboard/**',
+          '{profile,career,leaderboard}.html',
+          '{terms,privacy}{.html,/index.html}',
+          '**/discord-*.js',
+        ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
+        /* What a tap on one of the game's notifications opens; phones only show them through the worker. */
+        importScripts: ['notification-click.js'],
         /* Supabase is never cached: saves, friends and duels have to be live. */
         runtimeCaching: [
           {
