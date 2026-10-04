@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import {
   useDocumentVisibility,
+  useMediaQuery,
   useElementSize,
   useElementVisibility,
   useIntervalFn,
-  useTimeoutFn,
 } from '@vueuse/core'
-import { Flag, Play, Swords, UserPlus } from '@lucide/vue'
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { Play, Swords, UserPlus } from '@lucide/vue'
+import { defineAsyncComponent, ref } from 'vue'
 import { IN_DISCORD, inviteToActivity } from '@/application/discord'
 import { MODE_IDS, type ModeId } from '@/content/ids'
 import BoardFrame from '../components/board/BoardFrame.vue'
+import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
 import LegalLinks from '../components/common/LegalLinks.vue'
 import SupportButton from '../components/common/SupportButton.vue'
 
@@ -26,6 +27,7 @@ import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { useSettingsStore } from '../stores/settings'
+import MobileHome from './MobileHome.vue'
 
 interface DemoLayer {
   readonly id: number
@@ -36,6 +38,8 @@ interface DemoLayer {
 const DEMO_MODE_MS = 15_000
 const DemoBattle = defineAsyncComponent(() => import('../components/board/DemoBattle.vue'))
 
+/** Phones get their own start screen, laid out for one hand; this one is for wider screens. */
+const phone = useMediaQuery('(max-width: 860px)')
 const store = useMatchStore()
 const menu = useMenuStore()
 const settings = useSettingsStore()
@@ -45,8 +49,6 @@ const visibility = useDocumentVisibility()
 
 const previewHost = ref<HTMLElement | null>(null)
 const patchCard = ref<InstanceType<typeof LatestPatchCard> | null>(null)
-/** Giving up asks once more; the question goes away on its own. */
-const confirmingForfeit = ref(false)
 
 /** The board on show, and for a moment the next mode's board fading in over it. */
 const demos = ref<DemoLayer[]>([
@@ -67,27 +69,9 @@ const patchSize = useElementSize(
   { box: 'border-box' },
 )
 
-const { start: expireForfeit } = useTimeoutFn(() => (confirmingForfeit.value = false), 3000, {
-  immediate: false,
-})
-
-const rival = computed(() => duel.resumable?.opponent.name || t('profile.defaultName'))
-
 /** The new board covers the old one now, so the old one can go. */
 function demoShown(id: number) {
   demos.value = demos.value.filter((layer) => layer.id >= id)
-}
-
-function forfeit() {
-  if (!confirmingForfeit.value) {
-    confirmingForfeit.value = true
-    expireForfeit()
-
-    return
-  }
-
-  confirmingForfeit.value = false
-  void duel.forfeit()
 }
 
 /** Inside Discord, friends join this Activity through Discord's own invite. */
@@ -113,7 +97,9 @@ useIntervalFn(() => {
 </script>
 
 <template>
-  <main class="start">
+  <MobileHome v-if="phone" />
+
+  <main v-else class="start">
     <div class="coach" :style="{ '--coach-card-height': `${patchSize.height.value || 96}px` }">
       <ProfileChip />
       <CareerChip />
@@ -125,23 +111,7 @@ useIntervalFn(() => {
       <p class="lede">{{ t('start.lede') }}</p>
 
       <nav class="menu">
-        <section v-if="duel.resumable" class="duel">
-          <strong class="duel-title"
-            ><Swords :size="16" /> {{ t('duel.resumeTitle', { name: rival }) }}</strong
-          >
-
-          <p v-if="!duel.canResume" class="duel-note">{{ t('duel.elsewhere') }}</p>
-
-          <div class="duel-actions">
-            <button v-if="duel.canResume" type="button" class="btn primary" @click="duel.resume()">
-              <Play :size="16" /> {{ t('duel.resume') }}
-            </button>
-
-            <button type="button" class="btn ghost" :class="{ danger: confirmingForfeit }" @click="forfeit">
-              <Flag :size="16" /> {{ confirmingForfeit ? t('duel.confirmForfeit') : t('duel.forfeit') }}
-            </button>
-          </div>
-        </section>
+        <DuelResumeCard />
 
         <button
           v-if="store.savedRound"
@@ -205,41 +175,6 @@ useIntervalFn(() => {
   min-height: 100%;
   margin: 0 auto;
   padding: calc(32px + env(safe-area-inset-top, 0px)) 24px 32px;
-}
-
-.duel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  border: 1px solid rgba(244, 197, 91, 0.5);
-  background: rgba(244, 197, 91, 0.08);
-}
-
-.duel-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--gold);
-  overflow-wrap: anywhere;
-}
-
-.duel-note {
-  margin: 0;
-  font-size: 13px;
-  color: var(--chalk-dim);
-}
-
-.duel-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.btn.danger {
-  border-color: rgba(255, 112, 96, 0.6);
-  color: var(--theirs);
 }
 
 .copy {

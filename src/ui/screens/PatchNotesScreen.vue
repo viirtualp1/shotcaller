@@ -26,6 +26,7 @@ import MatchmakingRelease from '../components/patchNotes/MatchmakingRelease.vue'
 import TrainingRelease from '../components/patchNotes/TrainingRelease.vue'
 import PauseRelease from '../components/patchNotes/PauseRelease.vue'
 import ForgeRelease from '../components/patchNotes/ForgeRelease.vue'
+import HomeRelease from '../components/patchNotes/HomeRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
@@ -89,6 +90,8 @@ watch(
         <PauseRelease v-else-if="patch.campaign === 'pause'" />
 
         <ForgeRelease v-else-if="patch.campaign === 'forge'" :version="patch.version" />
+
+        <HomeRelease v-else-if="patch.campaign === 'home'" />
 
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>

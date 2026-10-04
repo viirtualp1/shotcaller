@@ -190,6 +190,21 @@
       "eyebrow": "We've moved",
       "title": "This address shuts down shortly.",
       "action": "Open theshotcaller.online"
+    },
+    "home": {
+      "play": "Play",
+      "continue": "Continue",
+      "vsComputer": "vs computer",
+      "next": "Next: {name} · {progress}",
+      "weekDone": "Every contract this week is done",
+      "fresh": "New",
+      "navigation": "Main navigation",
+      "tabs": {
+        "play": "Play",
+        "career": "Career",
+        "friends": "Friends",
+        "profile": "Profile"
+      }
     }
   },
   "phase": {
@@ -669,6 +684,7 @@
     "experiments": "Experiments",
     "laneOrders": "Lane orders",
     "laneOrdersAbout": "How lane orders work",
+    "laneOrdersHint": "During planning, give each lane an order: Push, Defence or Together.",
     "heroRotation": "Hero rotation",
     "heroRotationHint": "Each new match against the computer draws 15 of the 21 heroes.",
     "roundTwists": "Round twists",

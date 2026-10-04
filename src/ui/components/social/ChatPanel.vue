@@ -153,6 +153,17 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 /** Puts the emoji where the caret is, as long as the message stays within the limit. */
+/**
+ * Presses in the emoji panel leave the focus in the message field, so a phone keeps its keyboard open while
+ * picking; only the panel's own search field may take it.
+ */
+function keepComposerFocus(event: Event) {
+  const target = event.composedPath()[0]
+  if (!(target instanceof HTMLInputElement)) {
+    event.preventDefault()
+  }
+}
+
 async function insertEmoji(emoji: string) {
   const el = field.value
   const start = el?.selectionStart ?? input.value.length
@@ -165,7 +176,12 @@ async function insertEmoji(emoji: string) {
 
   input.value = next
   await nextTick()
-  el?.focus()
+
+  /* Focusing a field that already has it would make some phones close and reopen the keyboard. */
+  if (document.activeElement !== el) {
+    el?.focus()
+  }
+
   el?.setSelectionRange(start + emoji.length, start + emoji.length)
 }
 
@@ -319,7 +335,13 @@ onMounted(focusComposer)
       <ArrowDown :size="14" /> {{ t('notifications.messages', { n: unseen }, unseen) }}
     </button>
 
-    <div v-if="picking" ref="emoji" class="emoji">
+    <div
+      v-if="picking"
+      ref="emoji"
+      class="emoji"
+      @pointerdown="keepComposerFocus"
+      @mousedown="keepComposerFocus"
+    >
       <EmojiPicker @pick="insertEmoji" />
     </div>
 
@@ -331,6 +353,8 @@ onMounted(focusComposer)
         :aria-label="t('chatWindow.emoji')"
         :aria-expanded="picking"
         :title="t('chatWindow.emoji')"
+        @pointerdown.prevent
+        @mousedown.prevent
         @click="picking = !picking"
       >
         <Smile :size="17" />

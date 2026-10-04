@@ -191,4 +191,24 @@ describe('chat scrolling on a phone', () => {
     expect(chat.send).toHaveBeenCalledWith('hello')
     expect(document.activeElement).toBe(field)
   })
+
+  it('keeps the field focused when the emoji button is pressed', async () => {
+    const field = document.querySelector<HTMLTextAreaElement>('textarea')!
+    const toggle = document.querySelector<HTMLButtonElement>('button.emoji-toggle')!
+    field.focus()
+
+    const press = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+    })
+
+    toggle.dispatchEvent(press)
+    expect(press.defaultPrevented).toBe(true)
+
+    toggle.click()
+    await settle()
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(document.activeElement).toBe(field)
+  })
 })

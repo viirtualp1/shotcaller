@@ -122,6 +122,11 @@ useDocumentHead()
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 39;
 }
+/* On a phone the start screen's tab bar has the friends button; this one would sit on top of it. */
+:global(#app:has(.mobile-home) .social-launcher) {
+  display: none;
+}
+
 .social-launcher.in-replay {
   right: auto;
   left: calc(16px + env(safe-area-inset-left, 0px));
@@ -129,7 +134,8 @@ useDocumentHead()
 
 /* On small screens the fixed search bar spans the navigation; keep its links within reach. */
 @media (max-width: 860px) {
-  :global(#app:has(.matchmaking) .start) {
+  :global(#app:has(.matchmaking) .start),
+  :global(#app:has(.matchmaking) .mobile-home) {
     padding-top: calc(108px + env(safe-area-inset-top, 0px));
   }
 

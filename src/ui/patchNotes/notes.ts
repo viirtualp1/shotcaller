@@ -70,7 +70,7 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge'
+  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
@@ -84,6 +84,53 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '9.1',
+    date: '2026-10-04',
+    title: {
+      en: 'Pocket coach',
+      ru: 'Тренер в кармане',
+    },
+    campaign: 'home',
+    general: [
+      {
+        en: 'A **new home screen on phones**. Your unfinished match waits at the top with its round and towers: **one tap** and you are back in.',
+        ru: '**Новый главный экран на телефоне**. Незаконченный матч ждёт наверху с раундом и башнями: **одно касание** — и ты снова в игре.',
+      },
+      {
+        en: '**Quick start** for **Computer**, **Online** and **Training**: each tile opens a new match already set to that mode.',
+        ru: '**Быстрый старт** для режимов **Компьютер**, **Онлайн** и **Тренировка**: каждая плитка открывает новый матч уже в нужном режиме.',
+      },
+      {
+        en: 'Weekly contracts show the **next one to finish** right on the home screen.',
+        ru: 'Еженедельные контракты показывают, **какой закрыть следующим**, прямо на главном экране.',
+      },
+      {
+        en: '**Play**, **Career**, **Friends** and **Profile** are always one tap away, and Friends shows your **unread messages**.',
+        ru: '**Игра**, **Карьера**, **Друзья** и **Профиль** всегда в одном касании, а на Друзьях видно **непрочитанные сообщения**.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Every experiment in the new match settings has an **info button** with a short description of what it changes.',
+        ru: 'У каждого эксперимента в настройках нового матча есть **кнопка с описанием**: коротко о том, что он меняет.',
+      },
+      {
+        en: 'Tapping a notification now takes you there: a message opens **that chat**, a duel challenge opens the game so you can **accept or decline**.',
+        ru: 'Нажатие на уведомление теперь ведёт куда нужно: сообщение открывает **этот чат**, вызов на дуэль — игру, где его можно **принять или отклонить**.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The keyboard stays open after you send a message or open the emoji list.',
+        ru: 'Клавиатура больше не закрывается после отправки сообщения и при открытии списка смайликов.',
+      },
+      {
+        en: 'Your newest message is no longer hidden under the message field.',
+        ru: 'Новое сообщение больше не прячется под полем ввода.',
+      },
+    ],
+  },
   {
     version: '9.0',
     date: '2026-10-04',

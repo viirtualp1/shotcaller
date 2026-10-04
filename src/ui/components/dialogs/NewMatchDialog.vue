@@ -15,7 +15,7 @@ import { rankFor } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { useMatchStore } from '../../stores/match'
-import { useMenuStore } from '../../stores/menu'
+import { useMenuStore, type MatchOpponent } from '../../stores/menu'
 import { useSettingsStore } from '../../stores/settings'
 import { useTutorial } from '../../tutorial/useTutorial'
 import { useCloudStore } from '../../stores/cloud'
@@ -36,7 +36,7 @@ const profile = useProfileStore()
 const { t } = useGameText()
 useModal(() => menu.newMatch)
 
-const opponent = ref<'computer' | 'online' | 'training'>('computer')
+const opponent = ref<MatchOpponent>('computer')
 
 const opponentChoice = computed({
   get: () => opponent.value,
@@ -109,6 +109,8 @@ watch(
   (open) => {
     if (open) {
       settings.tutorialWanted = !tour.completed.value
+      opponent.value = menu.newMatchOpponent
+      menu.newMatchOpponent = 'computer'
     }
   },
 )

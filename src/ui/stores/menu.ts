@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { usePauseStore } from './pause'
 
+export type MatchOpponent = 'computer' | 'online' | 'training'
+
 /** Which full-screen menus and dialogs are open; each one pauses the game while visible. */
 export const useMenuStore = defineStore('menu', () => {
   const pause = usePauseStore()
@@ -9,6 +11,8 @@ export const useMenuStore = defineStore('menu', () => {
   const settings = ref(false)
   const help = ref(false)
   const newMatch = ref(false)
+  /** The tab the new match dialog opens on. */
+  const newMatchOpponent = ref<MatchOpponent>('computer')
   const confirmFight = ref(false)
   /** Set when a tutorial should start as soon as the game screen is ready. */
   const tutorialPending = ref(false)
@@ -19,6 +23,12 @@ export const useMenuStore = defineStore('menu', () => {
   watch(newMatch, (open) => pause.set('newMatch', open))
   watch(confirmFight, (open) => pause.set('confirm', open))
 
+  /** Opens the new match dialog on one kind of opponent, as the start screen's quick tiles do. */
+  function openNewMatch(opponent: MatchOpponent = 'computer') {
+    newMatchOpponent.value = opponent
+    newMatch.value = true
+  }
+
   function requestTutorial() {
     tutorialPending.value = true
   }
@@ -28,6 +38,8 @@ export const useMenuStore = defineStore('menu', () => {
     settings,
     help,
     newMatch,
+    newMatchOpponent,
+    openNewMatch,
     confirmFight,
     tutorialPending,
     requestTutorial,

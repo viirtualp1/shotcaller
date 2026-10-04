@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FlaskConical, Gauge, Info, Languages, Volume2 } from '@lucide/vue'
+import { ArrowRight, FlaskConical, Gauge, Languages, Volume2 } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { DIFFICULTIES, type Difficulty } from '@/content/rules'
@@ -9,14 +9,14 @@ import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
 import { useAudioStore } from '../../stores/audio'
 import CheckField from '../common/CheckField.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
+import ExperimentInfo from './ExperimentInfo.vue'
 import LanguageSwitch from './LanguageSwitch.vue'
 
 const DIFFICULTY_IDS = Object.keys(DIFFICULTIES) as Difficulty[]
 
 const LANE_ORDERS_PATCH = '8.5'
 
-/** Experiments explained in a tooltip; lane orders link to their own illustrated guide instead. */
+/** Experiments with a short note; lane orders also link to their illustrated guide from theirs. */
 const EXPERIMENTS = [
   {
     key: 'heroRotation',
@@ -157,29 +157,17 @@ function openOrdersPatch() {
         <div class="experiment">
           <CheckField v-model="settings.laneOrders">{{ t('settings.laneOrders') }}</CheckField>
 
-          <a
-            class="about"
-            :href="`/patches/${LANE_ORDERS_PATCH}/`"
-            :aria-label="t('settings.laneOrdersAbout')"
-            @click.prevent="openOrdersPatch"
-          >
-            <Info :size="15" />
-          </a>
+          <ExperimentInfo :title="t('settings.laneOrders')" :text="t('settings.laneOrdersHint')">
+            <a class="guide" :href="`/patches/${LANE_ORDERS_PATCH}/`" @click.prevent="openOrdersPatch">
+              {{ t('settings.laneOrdersAbout') }} <ArrowRight :size="14" />
+            </a>
+          </ExperimentInfo>
         </div>
 
         <div v-for="experiment in EXPERIMENTS" :key="experiment.key" class="experiment">
           <CheckField v-model="settings[experiment.key]">{{ t(experiment.name) }}</CheckField>
 
-          <InfoTooltip side="top">
-            <button type="button" class="about" :aria-label="t(experiment.hint)">
-              <Info :size="15" />
-            </button>
-
-            <template #content>
-              <strong>{{ t(experiment.name) }}</strong>
-              <p class="about-text">{{ t(experiment.hint) }}</p>
-            </template>
-          </InfoTooltip>
+          <ExperimentInfo :title="t(experiment.name)" :text="t(experiment.hint)" />
         </div>
       </section>
     </div>
@@ -252,37 +240,18 @@ function openOrdersPatch() {
   gap: 14px;
 }
 
+.guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
 .experiment {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.about {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius);
-  color: var(--chalk-dim);
-}
-
-.about:hover,
-.about:focus-visible {
-  color: var(--gold);
-}
-
-button.about {
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: help;
-}
-
-.about-text {
-  max-width: 30ch;
-  margin: 4px 0 0;
-  color: var(--chalk-dim);
 }
 </style>
