@@ -39,6 +39,7 @@ import { useProfileStore } from './stores/profile'
 import { usePrivacyStore } from './stores/privacy'
 import { useReplayStore } from './stores/replay'
 import { useGameAudio } from './composables/useGameAudio'
+import { useSteam } from './composables/useSteam'
 import { useLeaderboardStore } from './stores/leaderboard'
 import { useLegalStore } from './stores/legal'
 
@@ -60,6 +61,9 @@ useFriendsStore()
 const chat = useChatStore()
 useDuelStore()
 useSystemNotificationsStore()
+
+/* After the cloud store: the desktop game signs in with Steam and mirrors achievements there. */
+useSteam()
 
 /**
  * Pages share the friends shortcut. The game has its own in the menu,

@@ -7,15 +7,20 @@ copyright: Copyright © The Shotcaller
 directories:
   output: release
 
-# Vite has already bundled every library into dist-desktop, so no node_modules ship with the game.
+# Vite has already bundled every library into dist-desktop. The only module the game ships is steamworks.js, the
+# native bridge to the Steam client.
 files:
   - package.json
   - vercel.json
   - dist-electron/**
   - dist-desktop/**
   - '!node_modules/**'
+  - node_modules/steamworks.js/**
 
 asar: true
+# Native code and the Steam library load from disk, not from inside app.asar.
+asarUnpack:
+  - node_modules/steamworks.js/dist/**
 npmRebuild: false
 
 # The shipped exe only runs the game: no Node mode, no inspector, and only an untouched app.asar.

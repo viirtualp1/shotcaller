@@ -153,6 +153,11 @@ export default withVueTs(
     rules: { '@typescript-eslint/no-deprecated': 'error' },
   },
   {
+    // A sandboxed Electron preload is CommonJS: `import x = require()` is how it loads modules.
+    files: ['electron/**/*.cts'],
+    rules: { '@typescript-eslint/no-require-imports': ['error', { allowAsImport: true }] },
+  },
+  {
     // Edge entry points use Deno and are outside the application's TypeScript projects.
     files: ['supabase/functions/*/index.ts'],
     languageOptions: { parserOptions: { projectService: false } },

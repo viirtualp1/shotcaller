@@ -913,6 +913,7 @@
     },
     "pitch": "Sign in to keep your progress online and play on any device.",
     "signedIn": "Signed in as {email}",
+    "signedInSteam": "Signed in with Steam",
     "signIn": "Sign in",
     "signInGoogle": "Continue with Google",
     "signOut": "Sign out",

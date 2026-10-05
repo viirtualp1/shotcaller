@@ -33,10 +33,32 @@ so matches against the computer work offline, and Steam delivers its updates.
 The build reads Supabase keys from `.env`, like `npm run build`. Packaging makes a folder for the current platform;
 Steam installs and updates it, so there is no installer. The Windows icon is `build/icon.ico`, made by `npm run icons`.
 
-## Next steps
+## Steam
 
-1. **Steamworks.** Pay the Steam Direct fee, create the app and its depots, and upload `release/win-unpacked` with
-   SteamPipe.
-2. **Steam features.** Add `steamworks.js` for the overlay, achievements and Steam friends status.
-3. **Steam sign-in.** A Supabase Edge Function checks a Steam session ticket with Steam's Web API and starts a Supabase
-   session for that player.
+`electron/steam.ts` connects to the Steam client through `steamworks.js` as the app starts. Without Steam running, or
+for a player who does not own the game, the game simply plays without it.
+
+- **Overlay:** Shift+Tab opens the Steam overlay over the game.
+- **Achievements:** `src/application/steamAchievements.ts` reads them from the profile and unlocks any the player has
+  earned, including progress from before Steam. [Steam achievements](steam-achievements.md) lists what to enter in
+  Steamworks.
+- **Sign-in:** the game asks Steam for a ticket and sends it to the `steam-auth` Edge Function. A new Steam player gets
+  an account and keeps this device's progress; a returning one signs in to theirs; a player already signed in with
+  email gets Steam linked to that account. `steam_accounts` records which account each Steam account belongs to.
+- The page reaches Steam only through the preload bridge (`electron/preload.cts`), and only the bundled game may use it.
+
+Until Steamworks issues an app ID the game runs as Spacewar (app 480), Valve's test app.
+
+### When the app ID arrives
+
+1. Set `STEAM_APP_ID` in `electron/steam.ts`.
+2. Publish the achievements from [Steam achievements](steam-achievements.md).
+3. Create a publisher Web API key in Steamworks (**Users & Permissions → Manage Groups**).
+4. Apply `supabase/migrations/20261005190000_steam_accounts.sql`, then set the function's secrets and deploy it:
+
+   ```bash
+   supabase secrets set STEAM_WEB_API_KEY=... STEAM_APP_ID=... --project-ref YOUR_SUPABASE_PROJECT_REF
+   supabase functions deploy steam-auth --project-ref YOUR_SUPABASE_PROJECT_REF --no-verify-jwt
+   ```
+
+5. Upload `release/win-unpacked` with SteamPipe and set the launch option to `The Shotcaller.exe`.

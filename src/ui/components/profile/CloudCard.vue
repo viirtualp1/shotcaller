@@ -2,6 +2,7 @@
 import { HardDrive, LogIn, LogOut, RotateCw, Trash2 } from '@lucide/vue'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed, ref } from 'vue'
+import { isSteamEmail } from '@/application/steam'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
 import { useSettingsStore } from '../../stores/settings'
@@ -41,6 +42,8 @@ const statusText = computed(() => {
 })
 
 const maskedEmail = computed(() => maskEmail(cloud.account?.email ?? ''))
+/** A Steam account's address is made up; the player only needs to know it is their Steam account. */
+const steamAccount = computed(() => isSteamEmail(cloud.account?.email))
 
 function signOut() {
   if (globalThis.confirm(t('cloud.signOutConfirm'))) {
@@ -70,6 +73,7 @@ function confirmDeletion() {
 
       <span v-if="cloud.conflict" class="note warn">{{ t('cloud.conflict.pending') }}</span>
       <span v-else-if="local" class="note">{{ t('cloud.pitch') }}</span>
+      <span v-else-if="steamAccount" class="note">{{ t('cloud.signedInSteam') }}</span>
       <span v-else class="note">{{ t('cloud.signedIn', { email: maskedEmail }) }}</span>
     </div>
 

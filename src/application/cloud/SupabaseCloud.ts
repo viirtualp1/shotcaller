@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
+import { z } from 'zod'
 import type { MatchRecord, Profile } from '@/domain/profile/Profile'
 import { IN_DESKTOP, WEB_GAME_URL } from '../desktop'
 import { feedbackSchema, type Feedback } from '../feedback'
@@ -23,6 +24,17 @@ function photoOf(user: User) {
   const url: unknown = user.user_metadata?.avatar_url ?? user.user_metadata?.picture
   return typeof url === 'string' && url.startsWith('https://') ? url : null
 }
+
+/** What the steam-auth Edge Function answers (`supabase/functions/_shared/steamAuth.ts`). */
+const steamAuthSchema = z.union([
+  z.object({ result: z.enum(['current', 'linked', 'linkedElsewhere']) }),
+  z.object({
+    result: z.literal('signIn'),
+    tokenHash: z.string().min(1),
+  }),
+])
+
+export type SteamSignIn = z.infer<typeof steamAuthSchema>['result']
 
 const toAccount = (user: User): CloudAccount => ({
   id: user.id,
@@ -127,6 +139,33 @@ export class SupabaseCloud implements CloudStore {
     if (error) {
       throw error
     }
+  }
+
+  /**
+   * Signs in with the player's Steam account, or links it to the email account already signed in. A new Steam
+   * account starts empty and the sync moves this device's progress into it, as with Google.
+   */
+  async steam(ticket: string): Promise<SteamSignIn> {
+    const { data, error } = await this.client.functions.invoke('steam-auth', { body: { ticket } })
+
+    if (error) {
+      throw error
+    }
+
+    const answer = steamAuthSchema.parse(data)
+
+    if (answer.result === 'signIn') {
+      const { error: verifyError } = await this.client.auth.verifyOtp({
+        token_hash: answer.tokenHash,
+        type: 'magiclink',
+      })
+
+      if (verifyError) {
+        throw verifyError
+      }
+    }
+
+    return answer.result
   }
 
   /** Leaves the page for Google and comes back signed in. */

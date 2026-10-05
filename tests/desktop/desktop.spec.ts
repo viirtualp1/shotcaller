@@ -2,6 +2,7 @@ import path from 'node:path'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bundleFile, contentType, securityHeaders, type HostingConfig } from '../../electron/bundle'
+import { achievementNames } from '../../electron/achievementNames'
 import { APP_ORIGIN, isAppUrl, isExternalUrl } from '../../electron/origin'
 import { isFullscreenToggle, readWindowState } from '../../electron/windowState'
 
@@ -71,5 +72,16 @@ describe('desktop window', () => {
     expect(key('F11')).toBe(true)
     expect(key('Enter', true)).toBe(true)
     expect(key('Enter')).toBe(false)
+  })
+})
+
+describe('desktop Steam bridge', () => {
+  it('passes on only Steam achievement names from the game window', () => {
+    expect(achievementNames(['FIRST_WIN', 'FIRST_WIN', 'bad name', 42, 'WINS_50'])).toEqual([
+      'FIRST_WIN',
+      'WINS_50',
+    ])
+
+    expect(achievementNames('FIRST_WIN')).toEqual([])
   })
 })

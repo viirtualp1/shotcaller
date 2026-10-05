@@ -1,9 +1,19 @@
 import { readFileSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { app, BrowserWindow, Menu, protocol, session, shell } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  protocol,
+  session,
+  shell,
+  type IpcMainInvokeEvent,
+} from 'electron'
 import { bundleFile, contentType, securityHeaders, type HostingConfig } from './bundle.js'
 import { APP_ORIGIN, APP_SCHEME, isAppUrl, isExternalUrl } from './origin.js'
+import { startSteam } from './steam.js'
 import { isFullscreenToggle, readWindowState, type WindowState } from './windowState.js'
 
 const BOARD_COLOR = '#131b18'
@@ -17,6 +27,8 @@ const SAVE_FOLDER = 'The Shotcaller'
 const root = path.join(app.getAppPath(), 'dist-desktop')
 
 app.setPath('userData', path.join(app.getPath('appData'), SAVE_FOLDER))
+
+const steam = startSteam()
 
 /* Before the app is ready: a standard, secure scheme gets storage, fetch and the same rules as an https site. */
 protocol.registerSchemesAsPrivileged([
@@ -76,6 +88,37 @@ function saveWindowState(state: WindowState) {
   void writeFile(windowStateFile(), JSON.stringify(state)).catch(() => undefined)
 }
 
+/** Only the bundled game may talk to Steam, never a page that somehow reached the window. */
+function fromGame(event: IpcMainInvokeEvent) {
+  return isAppUrl(event.senderFrame?.url ?? '')
+}
+
+function answerSteam() {
+  ipcMain.handle('steam:available', (event) => fromGame(event) && steam !== null)
+
+  ipcMain.handle('steam:unlock', (event, names: unknown) => {
+    if (!fromGame(event) || !steam) {
+      return []
+    }
+
+    return steam.unlock(names)
+  })
+
+  ipcMain.handle('steam:ticket', async (event) => {
+    if (!fromGame(event) || !steam) {
+      return null
+    }
+
+    try {
+      return await steam.ticket()
+    } catch (error) {
+      console.warn('Steam did not issue a sign-in ticket', error)
+
+      return null
+    }
+  })
+}
+
 function openExternally(url: string) {
   if (isExternalUrl(url)) {
     void shell.openExternal(url)
@@ -94,6 +137,7 @@ function createWindow() {
     backgroundColor: BOARD_COLOR,
     icon: path.join(root, 'pwa-512x512.png'),
     webPreferences: {
+      preload: path.join(app.getAppPath(), 'dist-electron', 'preload.cjs'),
       sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
@@ -167,6 +211,11 @@ if (!app.requestSingleInstanceLock()) {
     session.defaultSession.setPermissionRequestHandler((_contents, permission, callback) =>
       callback(GRANTED_PERMISSIONS.has(permission)),
     )
+
+    answerSteam()
+
+    /* The game has no text to check, so Chromium never downloads spelling dictionaries. */
+    session.defaultSession.setSpellCheckerEnabled(false)
 
     session.defaultSession.setPermissionCheckHandler((_contents, permission) =>
       GRANTED_PERMISSIONS.has(permission),
