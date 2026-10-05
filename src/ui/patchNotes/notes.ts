@@ -62,8 +62,11 @@ export type FeatureArt =
     }
   /** The in-match hero card: live health and mana bars beside the ability. */
   | { readonly kind: 'heroCard' }
-  /** The 9.2 Steam version: its achievements, one account everywhere and a window of its own. */
-  | { readonly kind: 'steam'; readonly focus: 'achievements' | 'account' | 'crossplay' | 'window' }
+  /** The 9.2 Steam and Google Play versions: achievements, one account everywhere, one queue and full screen. */
+  | {
+      readonly kind: 'crossPlatform'
+      readonly focus: 'achievements' | 'account' | 'crossplay' | 'devices'
+    }
   /** The 9.3 match redesign, illustrated with fixed example lineups and timers. */
   | { readonly kind: 'hud'; readonly focus: 'scoreboard' | 'lineup' | 'scale' | 'twist' }
 
@@ -81,7 +84,8 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'steam' | 'hud'
+  readonly campaign?:
+    'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'crossPlatform' | 'hud'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
@@ -193,14 +197,14 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     version: '9.2',
     date: '2026-10-05',
     title: {
-      en: 'Next stop: Steam',
-      ru: 'Следующая остановка — Steam',
+      en: 'Next stop: Steam and Google Play',
+      ru: 'Следующая остановка — Steam и Google Play',
     },
-    campaign: 'steam',
+    campaign: 'crossPlatform',
     features: [
       {
         art: {
-          kind: 'steam',
+          kind: 'crossPlatform',
           focus: 'achievements',
         },
         title: {
@@ -214,7 +218,7 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
       {
         art: {
-          kind: 'steam',
+          kind: 'crossPlatform',
           focus: 'account',
         },
         title: {
@@ -222,13 +226,13 @@ export const PATCH_NOTES: readonly PatchNote[] = [
           ru: 'Один тренер везде',
         },
         text: {
-          en: '**Sign in with Steam** and your level, MMR, career and friends come with you. Already playing on the web? Sign in with your **email once**, and Steam joins that account.',
-          ru: '**Войди через Steam** — и уровень, MMR, карьера и друзья будут с тобой. Уже играешь на сайте? Войди **один раз по почте**, и Steam привяжется к этому аккаунту.',
+          en: '**Sign in with Steam** and your level, MMR, career and friends come with you. On your phone, sign in with the **same email** and pick up where you left off. Already playing on the web? Sign in with your **email once**, and Steam joins that account.',
+          ru: '**Войди через Steam** — и уровень, MMR, карьера и друзья будут с тобой. В телефоне войди по **той же почте** и продолжай с того же места. Уже играешь на сайте? Войди **один раз по почте**, и Steam привяжется к этому аккаунту.',
         },
       },
       {
         art: {
-          kind: 'steam',
+          kind: 'crossPlatform',
           focus: 'crossplay',
         },
         title: {
@@ -236,28 +240,28 @@ export const PATCH_NOTES: readonly PatchNote[] = [
           ru: 'Одна очередь, одни друзья',
         },
         text: {
-          en: 'Steam players join the **same ranked queue**, duels and leaderboard as the web and Discord. Challenge a friend **wherever they play**.',
-          ru: 'Игроки из Steam попадают в **ту же рейтинговую очередь**, дуэли и таблицу лидеров, что и на сайте и в Discord. Вызывай друга, **где бы он ни играл**.',
+          en: 'Players on Steam and Android join the **same ranked queue**, duels and leaderboard as the web and Discord. Challenge a friend **wherever they play**.',
+          ru: 'Игроки из Steam и с Android попадают в **ту же рейтинговую очередь**, дуэли и таблицу лидеров, что и на сайте и в Discord. Вызывай друга, **где бы он ни играл**.',
         },
       },
       {
         art: {
-          kind: 'steam',
-          focus: 'window',
+          kind: 'crossPlatform',
+          focus: 'devices',
         },
         title: {
-          en: 'A window of its own',
-          ru: 'Своё окно',
+          en: 'Full screen, on PC and phone',
+          ru: 'На весь экран — на ПК и в телефоне',
         },
         text: {
-          en: 'The Steam version opens **full screen**, without tabs or an address bar. **F11** or **Alt+Enter** switch to a window and back, and **Shift+Tab** opens the Steam overlay.',
-          ru: 'Версия для Steam открывается **на весь экран** — без вкладок и адресной строки. **F11** или **Alt+Enter** переключают в окно и обратно, а **Shift+Tab** открывает оверлей Steam.',
+          en: 'On Steam the game opens **full screen**: **F11** or **Alt+Enter** switch to a window, **Shift+Tab** opens the overlay. From **Google Play** it sits on your home screen, runs without a browser bar and **notifies you** about messages and duel challenges.',
+          ru: 'В Steam игра открывается **на весь экран**: **F11** или **Alt+Enter** переключают в окно, **Shift+Tab** открывает оверлей. Из **Google Play** она встаёт на главный экран телефона, работает без адресной строки и **присылает уведомления** о сообщениях и вызовах на дуэль.',
         },
       },
     ],
     card: {
-      en: '**The Shotcaller comes to Steam before the end of the year**: **16 achievements**, sign-in with Steam and a full-screen window. Everything you play now counts.',
-      ru: '**The Shotcaller выходит в Steam до конца года**: **16 достижений**, вход через Steam и игра на весь экран. Всё, что ты играешь сейчас, идёт в зачёт.',
+      en: '**The Shotcaller comes to Steam before the end of the year**, with **16 achievements**, and to **Google Play** on Android. Everything you play now counts.',
+      ru: '**The Shotcaller выходит в Steam до конца года** с **16 достижениями**, а на Android — в **Google Play**. Всё, что ты играешь сейчас, идёт в зачёт.',
     },
     general: [
       {
@@ -265,8 +269,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
         ru: 'На сайте ничего не меняется: играй в браузере или в Discord, как раньше.',
       },
       {
-        en: 'Steam keeps the game up to date on its own, with nothing to install by hand.',
-        ru: 'Steam сам обновляет игру — ничего не нужно ставить вручную.',
+        en: 'Steam and Google Play keep the game up to date on their own, with nothing to install by hand.',
+        ru: 'Steam и Google Play сами обновляют игру — ничего не нужно ставить вручную.',
       },
     ],
   },

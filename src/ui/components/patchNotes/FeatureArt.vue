@@ -18,7 +18,7 @@ import TrainingFeatureArt from './TrainingFeatureArt.vue'
 import ForgeFeatureArt from './ForgeFeatureArt.vue'
 import HomeFeatureArt from './HomeFeatureArt.vue'
 import HeroCardFeatureArt from './HeroCardFeatureArt.vue'
-import SteamFeatureArt from './SteamFeatureArt.vue'
+import CrossPlatformFeatureArt from './CrossPlatformFeatureArt.vue'
 import HudFeatureArt from './HudFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
@@ -115,7 +115,7 @@ onMounted(() => {
 
     <HeroCardFeatureArt v-else-if="art.kind === 'heroCard'" />
 
-    <SteamFeatureArt v-else-if="art.kind === 'steam'" :focus="art.focus" />
+    <CrossPlatformFeatureArt v-else-if="art.kind === 'crossPlatform'" :focus="art.focus" />
 
     <HudFeatureArt v-else-if="art.kind === 'hud'" :focus="art.focus" />
 

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ArrowUpRight, BadgeCheck, CalendarDays, Globe, Maximize2, MonitorPlay, Trophy, X } from '@lucide/vue'
+import { ArrowUpRight, BadgeCheck, Globe, Maximize2, MonitorPlay, Swords, Trophy, X } from '@lucide/vue'
 import { computed } from 'vue'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
+import GooglePlayIcon from '../common/GooglePlayIcon.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import SteamIcon from '../common/SteamIcon.vue'
 import ModeMap from '../modes/ModeMap.vue'
@@ -15,14 +16,14 @@ const notes = usePatchNotesStore()
 const copy = computed(() =>
   settings.locale === 'ru'
     ? {
-        eyebrow: 'Steam · Достижения · Один аккаунт',
-        release: 'Выход в Steam',
-        month: 'До конца 2026',
-        title: 'Твой тренер.\nТвоя библиотека.',
+        eyebrow: 'Steam · Google Play · Один аккаунт',
+        steamRelease: 'До конца 2026',
+        playRelease: 'Скоро',
+        title: 'Твой тренер.\nНа любом экране.',
         intro:
-          'The Shotcaller выходит в Steam до конца года. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
+          'The Shotcaller выходит в Steam до конца года, а на Android — в Google Play. Та же игра на весь экран, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
         achievements: 'достижений Steam',
-        places: 'места для игры: сайт, Discord, Steam',
+        places: 'места для игры: сайт, Discord, Steam, Google Play',
         account: 'аккаунт для всех',
         play: 'Играть сейчас',
         sample: 'Пример',
@@ -34,16 +35,17 @@ const copy = computed(() =>
         achievement: 'Разрушитель тронов',
         fullscreen: 'Весь экран',
         overlay: 'Оверлей Steam',
+        challenge: 'Flex вызывает на дуэль',
       }
     : {
-        eyebrow: 'Steam · Achievements · One account',
-        release: 'On Steam',
-        month: 'By the end of 2026',
-        title: 'Your coach.\nYour library.',
+        eyebrow: 'Steam · Google Play · One account',
+        steamRelease: 'By the end of 2026',
+        playRelease: 'Soon',
+        title: 'Your coach.\nOn every screen.',
         intro:
-          'The Shotcaller comes to Steam before the end of the year. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
+          'The Shotcaller comes to Steam before the end of the year, and to Android through Google Play. The same game, full screen, with achievements and your account along for the ride. Every match you play now already counts.',
         achievements: 'Steam achievements',
-        places: 'places to play: web, Discord, Steam',
+        places: 'places to play: web, Discord, Steam, Google Play',
         account: 'account for all of them',
         play: 'Play now',
         sample: 'Sample',
@@ -55,22 +57,31 @@ const copy = computed(() =>
         achievement: 'Throne breaker',
         fullscreen: 'Full screen',
         overlay: 'Steam overlay',
+        challenge: 'Flex challenges you to a duel',
       },
 )
 </script>
 
 <template>
-  <section class="campaign" aria-labelledby="steam-release-title">
+  <section class="campaign" aria-labelledby="cross-platform-release-title">
     <div class="pitch">
-      <p class="eyebrow"><SteamIcon :size="14" /> {{ copy.eyebrow }}</p>
-      <h2 id="steam-release-title" class="hand">{{ copy.title }}</h2>
+      <p class="eyebrow"><SteamIcon :size="14" /><GooglePlayIcon :size="13" /> {{ copy.eyebrow }}</p>
+      <h2 id="cross-platform-release-title" class="hand">{{ copy.title }}</h2>
       <p class="intro">{{ copy.intro }}</p>
 
-      <p class="release">
-        <CalendarDays :size="16" />
-        <span>{{ copy.release }}</span>
-        <b>{{ copy.month }}</b>
-      </p>
+      <ul class="releases">
+        <li class="release">
+          <SteamIcon :size="16" />
+          <span>Steam</span>
+          <b>{{ copy.steamRelease }}</b>
+        </li>
+
+        <li class="release">
+          <GooglePlayIcon :size="15" />
+          <span>Google Play</span>
+          <b>{{ copy.playRelease }}</b>
+        </li>
+      </ul>
 
       <dl class="counts">
         <div>
@@ -79,7 +90,7 @@ const copy = computed(() =>
         </div>
 
         <div>
-          <dt><MonitorPlay :size="16" /> 3</dt>
+          <dt><MonitorPlay :size="16" /> 4</dt>
           <dd>{{ copy.places }}</dd>
         </div>
 
@@ -94,7 +105,10 @@ const copy = computed(() =>
       </a>
     </div>
 
-    <!-- A picture of the Steam version: the browser tab lifts away and the game fills the screen. -->
+    <!--
+      A picture of the new versions: the browser tab lifts away, the game fills the PC screen, and the same match waits
+      on a phone beside it.
+    -->
     <div class="stage" aria-hidden="true">
       <div class="tab">
         <span class="tab-name"><Globe :size="12" /> {{ copy.tab }}</span>
@@ -150,6 +164,13 @@ const copy = computed(() =>
         </div>
 
         <Maximize2 :size="14" class="corner" />
+      </div>
+
+      <div class="phone">
+        <span class="notch" />
+        <span class="store"><GooglePlayIcon :size="10" /> Google Play</span>
+        <ModeMap mode="oneLane" :size="76" />
+        <span class="ping"><Swords :size="11" /> {{ copy.challenge }}</span>
       </div>
     </div>
   </section>
@@ -218,11 +239,19 @@ h2 {
   color: var(--chalk-dim);
 }
 
+.releases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
 .release {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 18px 0 0;
   padding: 8px 14px;
   border: 1px solid #f4c55b66;
   border-radius: var(--radius);
@@ -500,6 +529,63 @@ kbd {
   color: var(--chalk-faint);
 }
 
+/* The Android version: a phone leaning on the PC screen, with a duel challenge on it. */
+.phone {
+  position: absolute;
+  z-index: 2;
+  right: -28px;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 116px;
+  padding: 18px 8px 12px;
+  border: 1px solid #f4c55b45;
+  border-radius: 20px;
+  background: var(--board-deep);
+  box-shadow:
+    0 0 0 5px #0b1310,
+    0 22px 40px #0009;
+  transform: rotate(5deg);
+}
+
+.notch {
+  position: absolute;
+  top: 7px;
+  width: 34px;
+  height: 5px;
+  border-radius: 999px;
+  background: #0b1310;
+}
+
+.store {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--heal);
+}
+
+.ping {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 7px;
+  border: 1px solid #f4c55b80;
+  border-radius: var(--radius);
+  background: #1f2b27;
+  color: var(--chalk);
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.ping svg {
+  flex: none;
+  color: var(--gold);
+}
+
 @keyframes arrive {
   0%,
   8% {
@@ -535,6 +621,10 @@ kbd {
   .counts {
     gap: 16px;
   }
+
+  .phone {
+    right: -10px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -544,6 +634,12 @@ kbd {
 
   .address {
     display: none;
+  }
+
+  .phone {
+    right: -6px;
+    top: 120px;
+    width: 96px;
   }
 }
 </style>

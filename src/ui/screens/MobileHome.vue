@@ -10,6 +10,7 @@ import DiscordCard from '../components/home/DiscordCard.vue'
 import HomeLeaderboard from '../components/home/HomeLeaderboard.vue'
 import PatchHighlight from '../components/home/PatchHighlight.vue'
 import SteamCard from '../components/home/SteamCard.vue'
+import GooglePlayCard from '../components/home/GooglePlayCard.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
 import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
@@ -61,6 +62,7 @@ const mapPaused = ref(false)
     <div class="offers">
       <DiscordCard />
       <SteamCard />
+      <GooglePlayCard />
     </div>
 
     <HomeLeaderboard />
@@ -208,7 +210,7 @@ const mapPaused = ref(false)
   cursor: default;
 }
 
-/* Discord and Steam side by side; either fills the row when the other is not shown. */
+/* Discord, Steam and Google Play side by side; the row shares its width among those shown. */
 .offers {
   display: grid;
   grid-auto-flow: column;
