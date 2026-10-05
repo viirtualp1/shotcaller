@@ -7,7 +7,6 @@ import {
   Flag,
   Flame,
   Footprints,
-  Gamepad2,
   Globe,
   Link2,
   Medal,
@@ -23,6 +22,7 @@ import { computed, type Component } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import DiscordIcon from '../common/DiscordIcon.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import SteamIcon from '../common/SteamIcon.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
@@ -111,7 +111,7 @@ const copy = computed(() =>
       <ul class="sources">
         <li><Globe :size="16" /> {{ copy.web }}</li>
         <li><DiscordIcon :size="16" /> Discord</li>
-        <li class="steam"><Gamepad2 :size="16" /> Steam</li>
+        <li class="steam"><SteamIcon :size="16" /> Steam</li>
       </ul>
 
       <ArrowRight :size="22" class="arrow" />
@@ -140,7 +140,7 @@ const copy = computed(() =>
         <span class="vs hand">VS</span>
 
         <article class="side steam">
-          <span class="platform"><Gamepad2 :size="13" /> Steam</span>
+          <span class="platform"><SteamIcon :size="13" /> Steam</span>
           <HeroAvatar hero-id="warden" :team="0" :size="50" />
           <span class="mmr"><RankMedal tier="strategist" :stars="3" :size="24" /> 1 240</span>
         </article>

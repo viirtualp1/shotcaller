@@ -198,6 +198,10 @@
         "title": "Play in Discord",
         "text": "Start matches right in a voice channel with your friends."
       },
+      "steam": {
+        "title": "Coming to Steam",
+        "text": "By the end of 2026"
+      },
       "navigation": "Main navigation",
       "tabs": {
         "play": "Play",

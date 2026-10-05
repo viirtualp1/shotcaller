@@ -17,6 +17,7 @@ import ContractsStrip from '../components/home/ContractsStrip.vue'
 import DiscordCard from '../components/home/DiscordCard.vue'
 import HomeLeaderboard from '../components/home/HomeLeaderboard.vue'
 import PatchHighlight from '../components/home/PatchHighlight.vue'
+import SteamCard from '../components/home/SteamCard.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
 import DuelResumeCard from '../components/hud/DuelResumeCard.vue'
@@ -182,8 +183,9 @@ onBeforeUnmount(() => {
             <PatchHighlight />
           </div>
 
-          <div class="tall" :style="contractsStyle">
+          <div class="offers" :style="contractsStyle">
             <DiscordCard />
+            <SteamCard />
           </div>
 
           <HomeLeaderboard fill />
@@ -320,9 +322,17 @@ onBeforeUnmount(() => {
   min-height: 0;
 }
 
-.tall > :deep(.patch),
-.tall > :deep(.discord) {
+.tall > :deep(.patch) {
   flex: 1;
+  min-height: 0;
+}
+
+/* Discord and Steam side by side; either fills the row when the other is not shown. */
+.offers {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 10px;
   min-height: 0;
 }
 

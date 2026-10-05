@@ -1,19 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowUpRight,
-  BadgeCheck,
-  CalendarDays,
-  Gamepad2,
-  Globe,
-  Maximize2,
-  MonitorPlay,
-  Trophy,
-  X,
-} from '@lucide/vue'
+import { ArrowUpRight, BadgeCheck, CalendarDays, Globe, Maximize2, MonitorPlay, Trophy, X } from '@lucide/vue'
 import { computed } from 'vue'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import SteamIcon from '../common/SteamIcon.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
@@ -26,10 +17,10 @@ const copy = computed(() =>
     ? {
         eyebrow: 'Steam · Достижения · Один аккаунт',
         release: 'Выход в Steam',
-        month: 'Ноябрь 2026',
+        month: 'До конца 2026',
         title: 'Твой тренер.\nТвоя библиотека.',
         intro:
-          'The Shotcaller выходит в Steam в ноябре. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
+          'The Shotcaller выходит в Steam до конца года. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
         achievements: 'достижений Steam',
         places: 'места для игры: сайт, Discord, Steam',
         account: 'аккаунт для всех',
@@ -47,10 +38,10 @@ const copy = computed(() =>
     : {
         eyebrow: 'Steam · Achievements · One account',
         release: 'On Steam',
-        month: 'November 2026',
+        month: 'By the end of 2026',
         title: 'Your coach.\nYour library.',
         intro:
-          'The Shotcaller comes to Steam in November. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
+          'The Shotcaller comes to Steam before the end of the year. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
         achievements: 'Steam achievements',
         places: 'places to play: web, Discord, Steam',
         account: 'account for all of them',
@@ -71,7 +62,7 @@ const copy = computed(() =>
 <template>
   <section class="campaign" aria-labelledby="steam-release-title">
     <div class="pitch">
-      <p class="eyebrow"><Gamepad2 :size="14" /> {{ copy.eyebrow }}</p>
+      <p class="eyebrow"><SteamIcon :size="14" /> {{ copy.eyebrow }}</p>
       <h2 id="steam-release-title" class="hand">{{ copy.title }}</h2>
       <p class="intro">{{ copy.intro }}</p>
 
