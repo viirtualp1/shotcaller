@@ -26,10 +26,10 @@ const copy = computed(() =>
     ? {
         eyebrow: 'Steam · Достижения · Один аккаунт',
         release: 'Выход в Steam',
-        month: 'Ноябрь 2026',
+        month: 'До конца 2026',
         title: 'Твой тренер.\nТвоя библиотека.',
         intro:
-          'The Shotcaller выходит в Steam в ноябре. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
+          'The Shotcaller выходит в Steam до конца года. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
         achievements: 'достижений Steam',
         places: 'места для игры: сайт, Discord, Steam',
         account: 'аккаунт для всех',
@@ -47,10 +47,10 @@ const copy = computed(() =>
     : {
         eyebrow: 'Steam · Achievements · One account',
         release: 'On Steam',
-        month: 'November 2026',
+        month: 'By the end of 2026',
         title: 'Your coach.\nYour library.',
         intro:
-          'The Shotcaller comes to Steam in November. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
+          'The Shotcaller comes to Steam before the end of the year. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
         achievements: 'Steam achievements',
         places: 'places to play: web, Discord, Steam',
         account: 'account for all of them',

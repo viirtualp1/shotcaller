@@ -162,8 +162,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
     ],
     card: {
-      en: '**The Shotcaller comes to Steam in November**: **16 achievements**, sign-in with Steam and a full-screen window. Everything you play now counts.',
-      ru: '**The Shotcaller выходит в Steam в ноябре**: **16 достижений**, вход через Steam и игра на весь экран. Всё, что ты играешь сейчас, идёт в зачёт.',
+      en: '**The Shotcaller comes to Steam before the end of the year**: **16 achievements**, sign-in with Steam and a full-screen window. Everything you play now counts.',
+      ru: '**The Shotcaller выходит в Steam до конца года**: **16 достижений**, вход через Steam и игра на весь экран. Всё, что ты играешь сейчас, идёт в зачёт.',
     },
     general: [
       {
