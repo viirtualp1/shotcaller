@@ -20,8 +20,8 @@
     "path": "./android.keystore",
     "alias": "shotcaller"
   },
-  "appVersionName": "9.3.0",
-  "appVersionCode": 90300,
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://www.theshotcaller.online/manifest.webmanifest",
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "9.3.0"
+  "appVersion": "1.0.0"
 }

@@ -3,14 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { assetLinks, readTwaManifest } from '../../scripts/assetLinks'
 
 const twa = readTwaManifest()
-const packageVersion = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version
+const gradle = readFileSync('android/app/build.gradle', 'utf8')
 
 describe('Android app', () => {
-  it('ships the same version as the game, with a code that grows with it', () => {
-    const [major = 0, minor = 0, patch = 0] = packageVersion.split('.').map(Number)
-
-    expect(twa.appVersionName).toBe(packageVersion)
-    expect(twa.appVersionCode).toBe(major * 10_000 + minor * 100 + patch)
+  it('builds the version the Bubblewrap manifest names', () => {
+    // The app shows the live site, so game updates need no new build; this version moves only with the wrapper.
+    expect(gradle).toContain(`versionCode ${twa.appVersionCode}`)
+    expect(gradle).toContain(`versionName "${twa.appVersionName}"`)
   })
 
   it('opens the host that serves the site, which the apex domain redirects to', () => {

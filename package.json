@@ -22,7 +22,9 @@
     "patch:discord": "tsx --tsconfig tsconfig.node.json scripts/discordPatch.ts",
     "desktop": "npm run desktop:build && electron .",
     "desktop:build": "vite build --mode desktop --outDir dist-desktop && tsc -p tsconfig.electron.json",
-    "desktop:package": "npm run desktop:build && electron-builder"
+    "desktop:package": "npm run desktop:build && electron-builder",
+    "android:update": "cd android && npx @bubblewrap/cli@1.25.0 update --skipVersionUpgrade",
+    "android:build": "cd android && npx @bubblewrap/cli@1.25.0 build"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.5.0",
