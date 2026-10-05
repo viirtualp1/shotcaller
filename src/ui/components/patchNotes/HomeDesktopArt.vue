@@ -46,6 +46,24 @@ const FRIENDS = [
 
 const QUICK_ICONS = [Bot, Swords, Target] as const
 
+const BOARD = [
+  {
+    name: 'Miracle',
+    hero: 'shade',
+    rating: '1 520',
+  },
+  {
+    name: 'Puppey',
+    hero: 'pyromancer',
+    rating: '1 480',
+  },
+  {
+    name: 'Dendi',
+    hero: 'warden',
+    rating: '1 440',
+  },
+] as const
+
 defineProps<{ scene: 'home' | 'chat' | 'career' }>()
 
 const settings = useSettingsStore()
@@ -81,6 +99,8 @@ const copy = computed(() =>
         lead: '**Новое главное меню**, построенное вокруг следующего хода. Незаконченный матч идёт первым, с режимом, раундом и башнями: **одно касание** — и ты снова в игре.',
         discord: 'Играй в Discord',
         discordText: 'Запускай матчи прямо в голосовом канале вместе с друзьями.',
+        board: 'Таблица лидеров',
+        modes: ['Три', 'Две', 'Одна'],
         quick: ['Компьютер', 'Онлайн', 'Тренировка'],
         play: 'Играть',
       }
@@ -113,6 +133,8 @@ const copy = computed(() =>
         lead: 'A **new main menu** built around your next move. An unfinished match comes first, with its mode, round and towers: **one tap** and you are back in.',
         discord: 'Play in Discord',
         discordText: 'Start matches right in a voice channel with your friends.',
+        board: 'Leaderboard',
+        modes: ['Three', 'Two', 'One'],
         quick: ['Computer', 'Online', 'Training'],
         play: 'Play',
       },
@@ -238,40 +260,59 @@ const copy = computed(() =>
       </div>
     </aside>
 
-    <div class="launch">
-      <section class="resume" :class="{ focused: scene === 'home' }">
-        <div class="meta">
-          <span>{{ copy.mode }}</span>
-          <span>{{ copy.round }}</span>
-        </div>
+    <div class="column">
+      <section class="board">
+        <header class="board-head">
+          <b><Trophy :size="9" /> {{ copy.board }}</b>
 
-        <div class="score" :aria-label="copy.towers">
-          <span class="base ours">
-            <i /><i /><i />
-            <span class="throne"><Crown :size="10" /></span>
+          <span class="lanes">
+            <b v-for="(mode, i) in copy.modes" :key="mode" :class="{ on: i === 0 }">{{ mode }}</b>
           </span>
+        </header>
 
-          <small>vs</small>
-
-          <span class="base theirs">
-            <i /><i /><i class="down" />
-            <span class="throne"><Crown :size="10" /></span>
-          </span>
+        <div v-for="(coach, i) in BOARD" :key="coach.name" class="standing">
+          <em>{{ i + 1 }}</em>
+          <HeroAvatar :hero-id="coach.hero" :size="14" />
+          <span>{{ coach.name }}</span>
+          <strong>{{ coach.rating }}</strong>
         </div>
-
-        <span class="continue gold">
-          <Play :size="11" /> {{ copy.continue }}
-          <MousePointer2 v-if="scene === 'home'" class="cursor" :size="18" />
-        </span>
       </section>
 
-      <div class="quick">
-        <span v-for="(icon, i) in QUICK_ICONS" :key="i" class="tile">
-          <component :is="icon" :size="13" /> {{ copy.quick[i] }}
-        </span>
-      </div>
+      <div class="launch">
+        <section class="resume" :class="{ focused: scene === 'home' }">
+          <div class="meta">
+            <span>{{ copy.mode }}</span>
+            <span>{{ copy.round }}</span>
+          </div>
 
-      <span class="play gold"><Play :size="15" /> {{ copy.play }}</span>
+          <div class="score" :aria-label="copy.towers">
+            <span class="base ours">
+              <i /><i /><i />
+              <span class="throne"><Crown :size="10" /></span>
+            </span>
+
+            <small>vs</small>
+
+            <span class="base theirs">
+              <i /><i /><i class="down" />
+              <span class="throne"><Crown :size="10" /></span>
+            </span>
+          </div>
+
+          <span class="continue gold">
+            <Play :size="11" /> {{ copy.continue }}
+            <MousePointer2 v-if="scene === 'home'" class="cursor" :size="18" />
+          </span>
+        </section>
+
+        <div class="quick">
+          <span v-for="(icon, i) in QUICK_ICONS" :key="i" class="tile">
+            <component :is="icon" :size="13" /> {{ copy.quick[i] }}
+          </span>
+        </div>
+
+        <span class="play gold"><Play :size="15" /> {{ copy.play }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -307,17 +348,21 @@ const copy = computed(() =>
   grid-column: 1;
   grid-row: 3;
 }
-.launch {
+.column {
   grid-column: 2;
   grid-row: 3;
-  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
 }
 .coach-card,
 .resume,
 .contracts,
 .friends,
 .patch,
-.discord {
+.discord,
+.board {
   position: relative;
   border: 1px solid var(--edge-strong);
   border-radius: var(--radius);
@@ -716,9 +761,72 @@ h3 {
   margin-bottom: 3px;
   font-size: 10px;
 }
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px;
+}
+.board-head,
+.standing,
+.lanes {
+  display: flex;
+  align-items: center;
+}
+.board-head {
+  justify-content: space-between;
+  gap: 6px;
+}
+.board-head b {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--gold);
+  font-size: 8px;
+}
+.lanes {
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.25);
+}
+.lanes b {
+  padding: 1px 4px;
+  border-radius: var(--radius);
+  color: var(--chalk-dim);
+  font-size: 6px;
+  font-weight: 700;
+}
+.lanes b.on {
+  background: var(--panel-raised);
+  color: var(--chalk);
+  box-shadow: inset 0 0 0 1px var(--edge-strong);
+}
+.standing {
+  gap: 4px;
+  min-width: 0;
+}
+.standing em {
+  width: 8px;
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 800;
+}
+.standing span {
+  flex: 1;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.standing strong {
+  font-size: 7px;
+  font-variant-numeric: tabular-nums;
+}
 .launch {
   display: grid;
-  gap: 6px;
+  gap: 4px;
+  margin-top: auto;
 }
 .quick {
   display: grid;
@@ -728,8 +836,8 @@ h3 {
 .tile {
   display: grid;
   justify-items: center;
-  gap: 4px;
-  padding: 6px 1px;
+  gap: 3px;
+  padding: 4px 1px;
   border: 1px solid var(--edge);
   border-radius: var(--radius);
   background: var(--panel);
@@ -737,8 +845,8 @@ h3 {
   font-weight: 700;
 }
 .play {
-  padding: 8px;
-  font-size: 14px;
+  padding: 6px;
+  font-size: 13px;
 }
 .focused {
   border-color: #f4c55ba0;

@@ -28,7 +28,10 @@ const lead = LATEST_PATCH.card ?? LATEST_PATCH.features?.[0]?.text ?? LATEST_PAT
 <style scoped>
 .patch {
   display: grid;
+  align-content: start;
   gap: 10px;
+  min-height: 0;
+  overflow: hidden;
   padding: 16px;
   border: 1px solid var(--edge-strong);
   border-radius: var(--radius);
@@ -70,6 +73,7 @@ const lead = LATEST_PATCH.card ?? LATEST_PATCH.features?.[0]?.text ?? LATEST_PAT
 }
 
 .lead {
+  overflow: hidden;
   color: var(--chalk-dim);
   font-size: 13px;
   line-height: 1.45;

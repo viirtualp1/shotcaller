@@ -29,6 +29,18 @@ describe('Match', () => {
     expect(match.phase).toBe('battle')
   })
 
+  it('puts a started round back into planning without playing it', () => {
+    const match = createMatch({
+      seed: 'hold',
+      ids: sequentialIds(),
+    })
+
+    expect(match.startBattle({ allowEmptyBoard: true }).isOk()).toBe(true)
+    expect(match.returnToPlanning().isOk()).toBe(true)
+    expect(match.phase).toBe('planning')
+    expect(match.pendingBattle).toBeNull()
+  })
+
   it('walks through planning, battle and summary', () => {
     const match = createMatch({
       seed: 'flow',

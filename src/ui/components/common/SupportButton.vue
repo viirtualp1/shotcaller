@@ -10,7 +10,8 @@ const open = ref(false)
 
 <template>
   <button class="btn ghost support-button" type="button" @click="open = true">
-    <MessageSquare :size="14" /> {{ t('support.button') }}
+    <MessageSquare :size="14" />
+    <span>{{ t('support.button') }}</span>
   </button>
 
   <SupportDialog v-model:open="open" />
@@ -22,5 +23,12 @@ const open = ref(false)
   padding: 5px 10px;
   font-size: 12px;
   color: var(--chalk-dim);
+}
+
+.support-button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

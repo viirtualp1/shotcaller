@@ -41,6 +41,24 @@ const FRIENDS = [
   },
 ] as const
 
+const BOARD = [
+  {
+    name: 'Miracle',
+    hero: 'shade',
+    rating: '1 520',
+  },
+  {
+    name: 'Puppey',
+    hero: 'pyromancer',
+    rating: '1 480',
+  },
+  {
+    name: 'Dendi',
+    hero: 'warden',
+    rating: '1 440',
+  },
+] as const
+
 const TRIALS = [
   {
     xp: 150,
@@ -90,6 +108,8 @@ const copy = computed(() =>
         lead: '**Новое главное меню**, построенное вокруг следующего хода. Незаконченный матч идёт первым.',
         discord: 'Играй в Discord',
         discordText: 'Запускай матчи прямо в голосовом канале вместе с друзьями.',
+        board: 'Таблица лидеров',
+        modes: ['Три', 'Две', 'Одна'],
         support: 'Обратная связь',
         terms: 'Условия',
         privacy: 'Приватность',
@@ -129,6 +149,8 @@ const copy = computed(() =>
         lead: 'A **new main menu** built around your next move. An unfinished match comes first.',
         discord: 'Play in Discord',
         discordText: 'Start matches right in a voice channel with your friends.',
+        board: 'Leaderboard',
+        modes: ['Three', 'Two', 'One'],
         support: 'Feedback',
         terms: 'Terms',
         privacy: 'Privacy',
@@ -244,6 +266,23 @@ const copy = computed(() =>
                   <b>{{ copy.discord }}</b>
                   <small>{{ copy.discordText }}</small>
                 </span>
+              </section>
+
+              <section class="board">
+                <header class="board-head">
+                  <b><Trophy :size="8" /> {{ copy.board }}</b>
+
+                  <span class="lanes">
+                    <b v-for="(mode, i) in copy.modes" :key="mode" :class="{ on: i === 0 }">{{ mode }}</b>
+                  </span>
+                </header>
+
+                <div v-for="(coach, i) in BOARD" :key="coach.name" class="standing">
+                  <em>{{ i + 1 }}</em>
+                  <CoachAvatar :hero-id="coach.hero" :size="12" />
+                  <span>{{ coach.name }}</span>
+                  <strong>{{ coach.rating }}</strong>
+                </div>
               </section>
 
               <footer class="footer">
@@ -417,7 +456,7 @@ const copy = computed(() =>
   grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -442,6 +481,7 @@ const copy = computed(() =>
 .contracts,
 .patch,
 .discord,
+.board,
 .career-card,
 .trial {
   border: 1px solid var(--edge-strong);
@@ -450,8 +490,8 @@ const copy = computed(() =>
 }
 .coach {
   display: grid;
-  gap: 4px;
-  padding: 6px;
+  gap: 3px;
+  padding: 4px;
   background: linear-gradient(160deg, #273631eb, #18221feb);
 }
 .who,
@@ -585,8 +625,8 @@ em,
 }
 .resume {
   display: grid;
-  gap: 4px;
-  padding: 6px;
+  gap: 3px;
+  padding: 4px;
   border-color: #f4c55b70;
   background: #f4c55b0f;
 }
@@ -664,8 +704,8 @@ em,
 .discord,
 .career-card {
   display: grid;
-  gap: 3px;
-  padding: 6px;
+  gap: 2px;
+  padding: 4px;
 }
 .contracts b,
 .eyebrow {
@@ -713,10 +753,13 @@ em {
   font-size: 7px;
   line-height: 1.35;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
 }
 .patch p strong {
   color: var(--gold);
+}
+.patch p {
+  display: none;
 }
 .discord {
   grid-template-columns: auto minmax(0, 1fr);
@@ -727,6 +770,71 @@ em {
 }
 .discord b {
   font-size: 9px;
+}
+.discord small {
+  display: none;
+}
+.board {
+  display: grid;
+  gap: 2px;
+  padding: 3px 5px;
+}
+.board-head,
+.standing,
+.lanes {
+  display: flex;
+  align-items: center;
+}
+.board-head {
+  justify-content: space-between;
+  gap: 4px;
+  min-height: 0;
+}
+.board-head > b {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--gold);
+  font-size: 8px;
+}
+.lanes {
+  gap: 2px;
+  padding: 1px;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.25);
+}
+.lanes b {
+  padding: 1px 3px;
+  border-radius: var(--radius);
+  color: var(--chalk-dim);
+  font-size: 6px;
+}
+.lanes b.on {
+  background: var(--panel-raised);
+  color: var(--chalk);
+}
+.standing {
+  gap: 3px;
+  height: 16px;
+  min-width: 0;
+}
+.standing em {
+  width: 8px;
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 800;
+}
+.standing span {
+  flex: 1;
+  overflow: hidden;
+  font-size: 8px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.standing strong {
+  font-size: 7px;
+  font-variant-numeric: tabular-nums;
 }
 .footer {
   display: grid;

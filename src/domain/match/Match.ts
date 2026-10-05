@@ -361,6 +361,18 @@ export class Match {
     return ok(undefined)
   }
 
+  /** A saved fight waits until the coach starts it, instead of playing as soon as the match opens. */
+  returnToPlanning(): Result<void, DomainError> {
+    if (this.link !== null || this.currentPhase !== 'battle') {
+      return err({ code: 'wrongPhase' })
+    }
+
+    this.battle = null
+    this.currentPhase = 'planning'
+
+    return ok(undefined)
+  }
+
   /** Takes the outcome in battle order, as the simulation reports it. */
   finishBattle(battleOutcome: BattleOutcome): Result<RoundSummary, DomainError> {
     if (this.currentPhase !== 'battle') {

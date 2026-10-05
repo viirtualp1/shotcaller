@@ -54,5 +54,5 @@ jobs:
             gh release create $tag --title "Patch $version" --notes $notesUrl
             if ($LASTEXITCODE -ne 0) { throw 'Could not create the GitHub release' }
           }
-          gh release upload $tag discord-companion/dist/TheShotcaller.exe --clobber
+          gh release upload $tag "discord-companion/dist/The Shotcaller Installer.exe" --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Could not upload the installer' }

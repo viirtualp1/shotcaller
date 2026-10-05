@@ -112,8 +112,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
           ru: 'Установи и играй',
         },
         text: {
-          en: '[**Install The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe) and Discord shows you are **playing** as soon as the game opens.',
-          ru: '[**Установи The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/TheShotcaller.exe) — и Discord покажет, что ты **играешь**, как только откроется игра.',
+          en: '[**Install The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/The%20Shotcaller%20Installer.exe) and Discord shows you are **playing** as soon as the game opens.',
+          ru: '[**Установи The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/The%20Shotcaller%20Installer.exe) — и Discord покажет, что ты **играешь**, как только откроется игра.',
         },
       },
       {
@@ -129,8 +129,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
     ],
     card: {
-      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first, with rank and MMR beside your name. Friends, their code and live matches sit in that same layout. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up with the fight. A new way to play is here: the **installer**.',
-      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**, ранг и MMR рядом с именем. Друзья, их код и живые матчи стоят в том же виде. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают от боя. Появился новый способ играть — **установщик**.',
+      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up. Play from the **installer**.',
+      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают. Играй через **установщик**.',
     },
     general: [
       {

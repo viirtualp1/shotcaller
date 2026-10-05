@@ -9,7 +9,8 @@
     "error": "Could not load the leaderboard",
     "empty": "No ranked coaches in this mode yet",
     "off": "The leaderboard is unavailable while cloud features are off",
-    "more": "Show more coaches"
+    "more": "Show more coaches",
+    "seeMore": "See more"
   },
   "support": {
     "button": "Feedback & support",
@@ -207,6 +208,10 @@
       "discord": {
         "title": "Play in Discord",
         "text": "Start matches right in a voice channel with your friends."
+      },
+      "installer": {
+        "title": "Installer",
+        "text": "Play from a single download."
       },
       "navigation": "Main navigation",
       "tabs": {

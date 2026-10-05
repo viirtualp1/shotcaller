@@ -43,7 +43,8 @@ begin
   if jsonb_array_length(result) <> 4 or result -> 0 ->> 'name' <> 'Alpha'
     or (result -> 0 ->> 'rating')::integer <> 1500
     or result -> 1 ->> 'name' <> 'Bravo' or result -> 2 ->> 'name' <> 'Charlie'
-    or result -> 1 ->> 'position' <> '2' or result -> 2 ->> 'position' <> '2'
+    or result -> 0 ->> 'position' <> '1'
+    or result -> 1 ->> 'position' <> '2' or result -> 2 ->> 'position' <> '3'
     or result -> 3 ->> 'position' <> '4'
   then
     raise exception 'Leaderboard ordering, ties or server ratings are wrong';

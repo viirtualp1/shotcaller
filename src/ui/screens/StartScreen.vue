@@ -15,6 +15,8 @@ import SupportButton from '../components/common/SupportButton.vue'
 import CoachCard from '../components/home/CoachCard.vue'
 import ContractsStrip from '../components/home/ContractsStrip.vue'
 import DiscordCard from '../components/home/DiscordCard.vue'
+import HomeLeaderboard from '../components/home/HomeLeaderboard.vue'
+import InstallerCard from '../components/home/InstallerCard.vue'
 import PatchHighlight from '../components/home/PatchHighlight.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
@@ -181,9 +183,12 @@ onBeforeUnmount(() => {
             <PatchHighlight />
           </div>
 
-          <div class="tall" :style="contractsStyle">
+          <div class="offers" :style="contractsStyle">
             <DiscordCard />
+            <InstallerCard />
           </div>
+
+          <HomeLeaderboard fill />
 
           <div class="launch">
             <SavedMatchCard v-if="match.saved" />
@@ -317,9 +322,15 @@ onBeforeUnmount(() => {
   min-height: 0;
 }
 
-.tall > :deep(.patch),
-.tall > :deep(.discord) {
+.tall > :deep(.patch) {
   flex: 1;
+  min-height: 0;
+}
+
+.offers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
   min-height: 0;
 }
 
@@ -344,11 +355,10 @@ onBeforeUnmount(() => {
   height: min(100cqw, 100cqh);
 }
 
-/* A saved match, or otherwise a new one, sits at the foot of the column. */
+/* A saved match, or otherwise a new one, sits under the leaderboard. */
 .launch {
   display: grid;
   gap: 10px;
-  margin-top: auto;
 }
 
 .play {
@@ -377,14 +387,39 @@ onBeforeUnmount(() => {
   cursor: default;
 }
 
-/* Language, support and the legal buttons close the friends card, so the card ends level with Play. */
+/* Language, support and the legal buttons close the friends card on one line. */
 .footer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  min-width: 0;
   margin-top: auto;
   padding: 8px 10px;
+}
+
+.footer :deep(.choices) {
+  flex: none;
+}
+
+.footer :deep(.legal-links) {
+  display: contents;
+}
+
+.footer :deep(.support-button),
+.footer :deep(.legal-links a) {
+  flex: 1 1 0;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.footer :deep(.choice) {
+  min-width: 40px;
+  padding-inline: 12px;
+  font-size: 12px;
 }
 
 .card .footer {

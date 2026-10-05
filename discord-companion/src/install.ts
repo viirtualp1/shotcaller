@@ -4,7 +4,7 @@ import path from 'node:path'
 import { isPackaged } from './packaged.ts'
 
 const INSTALL_DIR = 'The Shotcaller'
-const INSTALL_EXE = 'TheShotcaller.exe'
+const INSTALL_EXE = 'The Shotcaller Installer.exe'
 
 export function installedExePath() {
   const base = process.env.LOCALAPPDATA

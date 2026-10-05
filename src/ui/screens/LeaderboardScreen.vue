@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ArrowLeft, Check, ChevronDown, LoaderCircle, Trophy, UserPlus } from '@lucide/vue'
+import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
-import { HERO_IDS, MODE_IDS } from '@/content/ids'
+import { HERO_IDS, MODE_IDS, type ModeId } from '@/content/ids'
 import type { FriendRequestResult } from '@/application/social/friends'
 import { rankFor } from '@/domain/profile/progression'
 import ModeMap from '../components/modes/ModeMap.vue'
@@ -28,6 +29,16 @@ const results = ref<Record<string, FriendRequestResult | 'error'>>({})
 
 const rows = computed(() => leaderboard.rows.slice(0, shown.value))
 const ownId = computed(() => cloud.account?.id)
+
+/* A toggle group lets its pressed item be pressed off; a tab stays on until another one is picked. */
+const modeTab = computed({
+  get: () => leaderboard.mode,
+  set: (value: string | undefined) => {
+    if (value) {
+      leaderboard.select(value as ModeId)
+    }
+  },
+})
 
 const relationships = computed(
   () =>
@@ -114,18 +125,12 @@ watch(
         <h1 class="hand">{{ t('leaderboard.title') }}</h1>
       </header>
 
-      <div class="modes" role="group" :aria-label="t('modes.title')">
-        <button
-          v-for="mode in MODE_IDS"
-          :key="mode"
-          type="button"
-          :aria-pressed="leaderboard.mode === mode"
-          :class="{ selected: leaderboard.mode === mode }"
-          @click="leaderboard.select(mode)"
-        >
-          <ModeMap :mode="mode" :size="28" aria-hidden="true" /> {{ t(`modes.${mode}.name`) }}
-        </button>
-      </div>
+      <ToggleGroupRoot v-model="modeTab" type="single" class="tab-list" :aria-label="t('modes.title')">
+        <ToggleGroupItem v-for="id in MODE_IDS" :key="id" :value="id" class="tab">
+          <ModeMap :mode="id" :size="20" aria-hidden="true" />
+          {{ t(`modes.${id}.name`) }}
+        </ToggleGroupItem>
+      </ToggleGroupRoot>
 
       <p v-if="!cloud.enabled" class="state">{{ t('leaderboard.off') }}</p>
 
@@ -190,11 +195,11 @@ watch(
 
           <tbody v-else>
             <tr
-              v-for="entry in rows"
+              v-for="(entry, index) in rows"
               :key="entry.id"
-              :class="{ own: entry.id === ownId, podium: entry.position <= 3 }"
+              :class="{ own: entry.id === ownId, podium: index < 3 }"
             >
-              <td class="place">{{ entry.position }}</td>
+              <td class="place">{{ index + 1 }}</td>
 
               <td>
                 <div class="coach">
@@ -336,36 +341,6 @@ h1 {
   margin: 0;
   font-size: clamp(40px, 7vw, 68px);
   line-height: 1;
-}
-.modes {
-  display: flex;
-  gap: 8px;
-}
-.modes button {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  background: #ffffff04;
-  color: var(--chalk-dim);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.modes button.selected {
-  border-color: #f4c55b80;
-  background: #f4c55b10;
-  color: var(--gold);
-}
-.modes button:hover {
-  border-color: var(--gold);
-}
-.modes button:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
 }
 .state {
   display: flex;
@@ -544,16 +519,6 @@ tbody tr:nth-child(3n) .nick {
   }
   .bar {
     padding-inline: 12px;
-  }
-  .modes {
-    gap: 5px;
-  }
-  .modes button {
-    justify-content: center;
-    flex-direction: column;
-    gap: 6px;
-    padding: 9px 4px;
-    font-size: 11px;
   }
   .place-column {
     width: 28px;

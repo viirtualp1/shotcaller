@@ -341,11 +341,16 @@ export const useMatchStore = defineStore('match', () => {
     duel.value = null
     match = restoreMatch(state, { difficulty: settings.difficulty })
     clearSelection()
-    refresh()
 
-    if (match.phase === 'battle' && match.pendingBattle) {
-      launchBattle(match.pendingBattle)
+    if (match.phase === 'battle') {
+      const returned = match.returnToPlanning()
+
+      if (returned.isOk()) {
+        apply(returned)
+      }
     }
+
+    refresh()
   }
 
   /** Starts an online duel; the solo match stays saved and can be continued later. */

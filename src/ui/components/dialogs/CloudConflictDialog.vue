@@ -8,7 +8,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { avatarOf, type Profile } from '@/domain/profile/Profile'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useGameText } from '../../composables/useGameText'
@@ -19,17 +19,31 @@ import RankMedal from '../profile/RankMedal.vue'
 
 const cloud = useCloudStore()
 const { t } = useGameText()
+const nudging = ref(false)
 
 const open = computed({
   get: () => cloud.conflict !== null && !cloud.conflictDeferred,
-  set: (value: boolean) => {
-    if (!value) {
-      cloud.conflictDeferred = true
-    }
-  },
+  set: () => {},
 })
 
 useModal(open)
+
+function refuse(event: Event) {
+  event.preventDefault()
+  nudging.value = false
+
+  requestAnimationFrame(() => {
+    nudging.value = true
+  })
+}
+
+function settled(event: AnimationEvent) {
+  if (event.target !== event.currentTarget) {
+    return
+  }
+
+  nudging.value = false
+}
 
 const summary = (profile: Profile) => ({
   name: profile.name || t('profile.defaultName'),
@@ -69,7 +83,15 @@ const sides = computed(() => {
     <DialogPortal>
       <DialogOverlay class="overlay menu-overlay" />
 
-      <DialogContent class="sheet conflict">
+      <DialogContent
+        class="sheet conflict"
+        :class="{ insist: nudging }"
+        @pointer-down-outside="refuse"
+        @interact-outside="refuse"
+        @focus-outside="refuse"
+        @escape-key-down="refuse"
+        @animationend="settled"
+      >
         <DialogTitle class="title hand">{{ t('cloud.conflict.title') }}</DialogTitle>
         <DialogDescription class="text">{{ t('cloud.conflict.text') }}</DialogDescription>
 
@@ -103,10 +125,6 @@ const sides = computed(() => {
             </button>
           </article>
         </div>
-
-        <button type="button" class="btn ghost block" @click="open = false">
-          {{ t('cloud.conflict.later') }}
-        </button>
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -128,6 +146,28 @@ const sides = computed(() => {
 .text {
   margin: 0;
   color: var(--chalk-dim);
+}
+
+.conflict[data-state='open'] {
+  animation: none;
+}
+
+.conflict.insist[data-state='open'] {
+  animation: insist 0.42s ease;
+}
+
+@keyframes insist {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .sides {

@@ -23,7 +23,8 @@ const { t } = useGameText()
       @click.prevent="legal.open(id)"
     >
       <component :is="ICONS[id]" :size="14" />
-      {{ t(`legal.short.${id}`) }}
+
+      <span>{{ t(`legal.short.${id}`) }}</span>
     </a>
   </nav>
 </template>

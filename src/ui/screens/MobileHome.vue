@@ -7,6 +7,8 @@ import SupportButton from '../components/common/SupportButton.vue'
 import CoachCard from '../components/home/CoachCard.vue'
 import ContractsStrip from '../components/home/ContractsStrip.vue'
 import DiscordCard from '../components/home/DiscordCard.vue'
+import HomeLeaderboard from '../components/home/HomeLeaderboard.vue'
+import InstallerCard from '../components/home/InstallerCard.vue'
 import PatchHighlight from '../components/home/PatchHighlight.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
@@ -56,7 +58,12 @@ const mapPaused = ref(false)
 
     <PatchHighlight />
 
-    <DiscordCard />
+    <div class="offers">
+      <DiscordCard />
+      <InstallerCard />
+    </div>
+
+    <HomeLeaderboard />
 
     <footer class="footer">
       <LanguageSwitch compact />
@@ -120,14 +127,55 @@ const mapPaused = ref(false)
   color: var(--chalk-dim);
 }
 
-/* Language, support and the legal buttons sit on one line, and wrap together when the row is narrow. */
+/* Language, support and the legal buttons stay on one line. */
 .footer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  min-width: 0;
   margin-top: auto;
   padding-top: 8px;
+}
+
+.footer :deep(.choices) {
+  flex: none;
+}
+
+.footer :deep(.legal-links) {
+  display: contents;
+}
+
+.footer :deep(.support-button),
+.footer :deep(.legal-links a) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.footer :deep(.legal-links a span) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footer :deep(.legal-links a),
+.footer :deep(.support-button) {
+  gap: 4px;
+  padding: 4px;
+  font-size: 11px;
+}
+
+.footer :deep(.choice) {
+  min-width: 28px;
+  padding-inline: 4px;
+  font-size: 11px;
+}
+
+.offers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
 }
 
 /*

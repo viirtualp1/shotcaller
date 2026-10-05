@@ -38,7 +38,7 @@ const copy = computed(() =>
 
       <div class="body">
         <div class="file">
-          <b>TheShotcaller.exe</b>
+          <b>The Shotcaller Installer.exe</b>
           <Check :size="14" />
         </div>
 

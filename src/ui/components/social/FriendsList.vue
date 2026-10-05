@@ -37,7 +37,7 @@ const nameOf = (name: string) => name || t('profile.defaultName')
   <div v-if="!cloud.signedIn" class="gate">
     <p>{{ t('friends.signInHint') }}</p>
 
-    <button type="button" class="btn primary" @click="cloud.signInOpen = true">
+    <button v-if="!chat.docked" type="button" class="btn primary" @click="cloud.signInOpen = true">
       {{ t('friends.signIn') }}
     </button>
   </div>
@@ -317,9 +317,13 @@ p {
 
 .gate {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
+  height: 100%;
+  text-align: center;
 }
 
 .group {

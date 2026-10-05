@@ -1,32 +1,16 @@
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
 import path from 'node:path'
 
 export const GAME_URL = 'https://theshotcaller.online/'
 
-/** Edge first: it ships with Windows and opens the game as an app window. */
-export function browserCandidates(env: NodeJS.ProcessEnv = process.env) {
-  const local = env.LOCALAPPDATA ?? ''
-  const programs = env.ProgramFiles ?? env.PROGRAMFILES ?? ''
-  const programs86 = env['PROGRAMFILES(X86)'] ?? ''
-
-  return [
-    path.join(programs, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(programs86, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(local, 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(programs, 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ]
-}
-
-export function pickBrowser(candidates: readonly string[], exists: (file: string) => boolean) {
-  return candidates.find((file) => file.length > 0 && exists(file)) ?? null
-}
+/** `start` with an empty title opens the URL in the system default browser. */
+export const GAME_LAUNCH = ['/c', 'start', '', GAME_URL] as const
 
 function psQuote(value: string) {
   return `'${value.replaceAll("'", "''")}'`
 }
 
-/** Start-menu and desktop shortcuts. The console stays minimized; the game window is the browser app. */
+/** Start-menu and desktop shortcuts. The console stays minimized; the game window is the browser. */
 export function installShortcuts(exe: string) {
   const target = psQuote(exe)
   const cwd = psQuote(path.dirname(exe))
@@ -48,21 +32,13 @@ export function installShortcuts(exe: string) {
   })
 }
 
-/** Opens the game. An app window reports itself as the installed app, so Discord status can connect. */
+/** Opens the game in whichever browser the system uses for https links. */
 export function openGame() {
-  const browser = pickBrowser(browserCandidates(), existsSync)
-
-  const child = browser
-    ? spawn(browser, [`--app=${GAME_URL}`], {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true,
-      })
-    : spawn('cmd.exe', ['/c', 'start', '', GAME_URL], {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true,
-      })
+  const child = spawn('cmd.exe', [...GAME_LAUNCH], {
+    detached: true,
+    stdio: 'ignore',
+    windowsHide: true,
+  })
 
   child.unref()
 }

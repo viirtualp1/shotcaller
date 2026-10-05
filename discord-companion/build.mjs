@@ -18,7 +18,7 @@ const dist = path.join(root, 'dist')
 const bundle = path.join(dist, 'companion.cjs')
 const blob = path.join(dist, 'sea-prep.blob')
 const config = path.join(dist, 'sea-config.json')
-const exe = path.join(dist, 'TheShotcaller.exe')
+const exe = path.join(dist, 'The Shotcaller Installer.exe')
 
 mkdirSync(dist, { recursive: true })
 
@@ -77,10 +77,10 @@ for (const group of groups) {
 
 for (const info of Resource.VersionInfo.fromEntries(resources.entries)) {
   for (const language of info.getAllLanguagesForStringValues()) {
-    info.setStringValue(language, 'FileDescription', 'The Shotcaller')
+    info.setStringValue(language, 'FileDescription', 'The Shotcaller Installer')
     info.setStringValue(language, 'ProductName', 'The Shotcaller')
-    info.setStringValue(language, 'InternalName', 'TheShotcaller')
-    info.setStringValue(language, 'OriginalFilename', 'TheShotcaller.exe')
+    info.setStringValue(language, 'InternalName', 'The Shotcaller Installer')
+    info.setStringValue(language, 'OriginalFilename', 'The Shotcaller Installer.exe')
   }
 
   info.outputToResourceEntries(resources.entries)
