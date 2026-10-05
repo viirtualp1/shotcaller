@@ -18,6 +18,15 @@ files:
 asar: true
 npmRebuild: false
 
+# The shipped exe only runs the game: no Node mode, no inspector, and only an untouched app.asar.
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  onlyLoadAppFromAsar: true
+  enableEmbeddedAsarIntegrityValidation: true
+  grantFileProtocolExtraPrivileges: false
+
 # Chromium's own interface languages; the game ships its English and Russian text itself.
 electronLanguages:
   - en-US

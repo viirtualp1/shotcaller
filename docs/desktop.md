@@ -16,8 +16,11 @@ so matches against the computer work offline, and Steam delivers its updates.
   the same email opens the web game.
 - Opens web and mail links in the player's browser. Nothing but the bundled game loads in the window, and the window
   grants only clipboard writes, notifications and fullscreen.
-- One window at a time: launching the game again brings it to the front. **F11** toggles fullscreen; **F12** opens the
-  developer tools when running from source.
+- Opens fullscreen. **F11** or **Alt+Enter** switches to a window and back, and the game remembers the choice in
+  `window.json` beside the saves.
+- One window at a time: launching the game again brings it to the front.
+- Players never get the developer tools; running from source, **F12** opens them. Electron fuses lock the shipped exe:
+  it cannot run as Node or take inspector flags, and it only loads its own untouched `app.asar`.
 
 ## Commands
 

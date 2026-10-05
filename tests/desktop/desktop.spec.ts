@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bundleFile, contentType, securityHeaders, type HostingConfig } from '../../electron/bundle'
 import { APP_ORIGIN, isAppUrl, isExternalUrl } from '../../electron/origin'
+import { isFullscreenToggle, readWindowState } from '../../electron/windowState'
 
 const root = path.resolve('dist-desktop')
 
@@ -49,5 +50,26 @@ describe('desktop links', () => {
     expect(isExternalUrl('mailto:support@theshotcaller.online')).toBe(true)
     expect(isExternalUrl('file:///C:/Windows/System32/calc.exe')).toBe(false)
     expect(isExternalUrl('javascript:alert(1)')).toBe(false)
+  })
+})
+
+describe('desktop window', () => {
+  it('opens fullscreen until the player chooses a window', () => {
+    expect(readWindowState(null)).toEqual({ fullscreen: true })
+    expect(readWindowState('{"fullscreen":false}')).toEqual({ fullscreen: false })
+    expect(readWindowState('{"fullscreen":"no"}')).toEqual({ fullscreen: true })
+    expect(readWindowState('not json')).toEqual({ fullscreen: true })
+  })
+
+  it('toggles fullscreen with F11 and Alt+Enter', () => {
+    const key = (name: string, alt = false) =>
+      isFullscreenToggle({
+        key: name,
+        alt,
+      })
+
+    expect(key('F11')).toBe(true)
+    expect(key('Enter', true)).toBe(true)
+    expect(key('Enter')).toBe(false)
   })
 })

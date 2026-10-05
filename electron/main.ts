@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { app, BrowserWindow, Menu, protocol, session, shell } from 'electron'
 import { bundleFile, contentType, securityHeaders, type HostingConfig } from './bundle.js'
 import { APP_ORIGIN, APP_SCHEME, isAppUrl, isExternalUrl } from './origin.js'
+import { isFullscreenToggle, readWindowState, type WindowState } from './windowState.js'
 
 const BOARD_COLOR = '#131b18'
 
@@ -59,6 +60,22 @@ async function serve(request: Request, headers: Record<string, string>) {
   }
 }
 
+function windowStateFile() {
+  return path.join(app.getPath('userData'), 'window.json')
+}
+
+function loadWindowState() {
+  try {
+    return readWindowState(readFileSync(windowStateFile(), 'utf8'))
+  } catch {
+    return readWindowState(null)
+  }
+}
+
+function saveWindowState(state: WindowState) {
+  void writeFile(windowStateFile(), JSON.stringify(state)).catch(() => undefined)
+}
+
 function openExternally(url: string) {
   if (isExternalUrl(url)) {
     void shell.openExternal(url)
@@ -71,6 +88,7 @@ function createWindow() {
     height: 900,
     minWidth: 960,
     minHeight: 600,
+    fullscreen: loadWindowState().fullscreen,
     show: false,
     title: 'The Shotcaller',
     backgroundColor: BOARD_COLOR,
@@ -80,6 +98,8 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       spellcheck: false,
+      /* Players never get the developer tools; running from source, F12 opens them. */
+      devTools: !app.isPackaged,
     },
   })
 
@@ -103,7 +123,7 @@ function createWindow() {
       return
     }
 
-    if (input.key === 'F11') {
+    if (isFullscreenToggle(input)) {
       event.preventDefault()
       game.setFullScreen(!game.isFullScreen())
     } else if (input.key === 'F12' && !app.isPackaged) {
@@ -112,6 +132,8 @@ function createWindow() {
     }
   })
 
+  game.on('enter-full-screen', () => saveWindowState({ fullscreen: true }))
+  game.on('leave-full-screen', () => saveWindowState({ fullscreen: false }))
   game.once('ready-to-show', () => game.show())
   void game.loadURL(`${APP_ORIGIN}/`)
 }
