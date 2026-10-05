@@ -4,3 +4,6 @@
 *.jpg binary
 *.ico binary
 *.woff2 binary
+# Windows scripts need CRLF; the Gradle wrapper is a binary.
+*.bat text eol=crlf
+*.jar binary

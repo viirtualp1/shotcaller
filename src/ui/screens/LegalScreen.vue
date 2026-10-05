@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, FileText, ShieldCheck } from '@lucide/vue'
+import { ArrowLeft, FileText, ShieldCheck, UserX } from '@lucide/vue'
 import { computed, watch } from 'vue'
 import { useGameText } from '../composables/useGameText'
 import { useUiZoom } from '../composables/useUiZoom'
@@ -10,6 +10,7 @@ import { useSettingsStore } from '../stores/settings'
 const ICONS = {
   terms: FileText,
   privacy: ShieldCheck,
+  'delete-account': UserX,
 } as const
 
 const legal = useLegalStore()
@@ -20,7 +21,7 @@ const zoom = useUiZoom()
 /** The screen is only mounted while a document is open. */
 const document = computed(() => legal.document as LegalDocument)
 const locale = computed(() => settings.locale)
-const other = computed<LegalId>(() => (document.value.id === 'terms' ? 'privacy' : 'terms'))
+const other = computed<LegalId>(() => (document.value.id === 'privacy' ? 'terms' : 'privacy'))
 
 const updated = computed(() => {
   const [year = 0, month = 1, day = 1] = LEGAL_UPDATED.split('-').map(Number)

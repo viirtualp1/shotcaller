@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { FileText, ShieldCheck } from '@lucide/vue'
 import { useGameText } from '../../composables/useGameText'
-import { LEGAL_IDS, legalPath } from '../../legal/documents'
+import { legalPath } from '../../legal/documents'
 import { useLegalStore } from '../../stores/legal'
+
+/** The footer keeps to the two documents everyone needs; account deletion is linked from the privacy policy. */
+const FOOTER_DOCUMENTS = ['terms', 'privacy'] as const
 
 const ICONS = {
   terms: FileText,
@@ -16,7 +19,7 @@ const { t } = useGameText()
 <template>
   <nav class="legal-links" :aria-label="t('legal.documents')">
     <a
-      v-for="id in LEGAL_IDS"
+      v-for="id in FOOTER_DOCUMENTS"
       :key="id"
       :href="legalPath(id)"
       class="btn ghost"

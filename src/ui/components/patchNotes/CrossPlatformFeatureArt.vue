@@ -7,6 +7,7 @@ import {
   Flag,
   Flame,
   Footprints,
+  Bell,
   Globe,
   Link2,
   Medal,
@@ -22,11 +23,12 @@ import { computed, type Component } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import DiscordIcon from '../common/DiscordIcon.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import GooglePlayIcon from '../common/GooglePlayIcon.vue'
 import SteamIcon from '../common/SteamIcon.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
-defineProps<{ focus: 'achievements' | 'account' | 'crossplay' | 'window' }>()
+defineProps<{ focus: 'achievements' | 'account' | 'crossplay' | 'devices' }>()
 
 /** Pictures for the sixteen 9.2 achievements, rank medals last; a sample coach has nine of these and Strategist. */
 const ACHIEVEMENT_ICONS: readonly Component[] = [
@@ -63,6 +65,7 @@ const copy = computed(() =>
         fullscreen: 'Весь экран',
         window: 'Окно',
         overlay: 'Оверлей Steam',
+        notify: 'Друг вызывает на дуэль',
       }
     : {
         sample: 'Sample',
@@ -74,12 +77,13 @@ const copy = computed(() =>
         fullscreen: 'Full screen',
         window: 'Window',
         overlay: 'Steam overlay',
+        notify: 'A friend challenges you',
       },
 )
 </script>
 
 <template>
-  <div class="steam-art">
+  <div class="cross-art">
     <span class="sample">{{ copy.sample }}</span>
 
     <div v-if="focus === 'achievements'" class="achievements">
@@ -112,6 +116,7 @@ const copy = computed(() =>
         <li><Globe :size="16" /> {{ copy.web }}</li>
         <li><DiscordIcon :size="16" /> Discord</li>
         <li class="steam"><SteamIcon :size="16" /> Steam</li>
+        <li class="play"><GooglePlayIcon :size="15" /> Google Play</li>
       </ul>
 
       <ArrowRight :size="22" class="arrow" />
@@ -131,8 +136,8 @@ const copy = computed(() =>
 
     <div v-else-if="focus === 'crossplay'" class="crossplay">
       <div class="sides">
-        <article class="side">
-          <span class="platform"><Globe :size="13" /> {{ copy.web }}</span>
+        <article class="side play">
+          <span class="platform"><GooglePlayIcon :size="12" /> Google Play</span>
           <HeroAvatar hero-id="pyromancer" :team="1" :size="50" />
           <span class="mmr"><RankMedal tier="strategist" :stars="2" :size="24" /> 1 180</span>
         </article>
@@ -149,24 +154,31 @@ const copy = computed(() =>
       <p class="ranked"><Swords :size="13" /> {{ copy.ranked }}</p>
     </div>
 
-    <div v-else class="window">
-      <div class="monitor">
-        <ModeMap mode="threeLanes" :size="104" />
+    <div v-else class="devices">
+      <div class="desk">
+        <div class="monitor">
+          <ModeMap mode="threeLanes" :size="88" />
+        </div>
+
+        <i class="stand" />
+
+        <div class="keys">
+          <span><kbd>F11</kbd> {{ copy.fullscreen }} ⇄ {{ copy.window }}</span>
+          <span><kbd>Shift</kbd>+<kbd>Tab</kbd> {{ copy.overlay }}</span>
+        </div>
       </div>
 
-      <i class="stand" />
-
-      <div class="keys">
-        <span><kbd>F11</kbd> {{ copy.fullscreen }} ⇄ {{ copy.window }}</span>
-        <span><kbd>Alt</kbd>+<kbd>Enter</kbd></span>
-        <span><kbd>Shift</kbd>+<kbd>Tab</kbd> {{ copy.overlay }}</span>
+      <div class="handset">
+        <span class="store"><GooglePlayIcon :size="10" /> Google Play</span>
+        <ModeMap mode="oneLane" :size="58" />
+        <span class="ping"><Bell :size="10" /> {{ copy.notify }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.steam-art {
+.cross-art {
   position: relative;
   display: grid;
   place-items: center;
@@ -272,6 +284,11 @@ const copy = computed(() =>
   color: var(--ours);
 }
 
+.sources li.play {
+  border-color: #7fe0b466;
+  color: var(--heal);
+}
+
 .arrow {
   flex: none;
   color: var(--gold);
@@ -363,6 +380,10 @@ const copy = computed(() =>
   color: var(--ours);
 }
 
+.side.play .platform {
+  color: var(--heal);
+}
+
 .mmr {
   display: inline-flex;
   align-items: center;
@@ -386,7 +407,13 @@ const copy = computed(() =>
   color: var(--chalk-faint);
 }
 
-.window {
+.devices {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.desk {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -395,8 +422,8 @@ const copy = computed(() =>
 .monitor {
   display: grid;
   place-items: center;
-  width: 220px;
-  height: 136px;
+  width: 176px;
+  height: 110px;
   border: 6px solid #0b1310;
   border-radius: var(--radius);
   background: var(--board);
@@ -420,6 +447,48 @@ const copy = computed(() =>
   margin-top: 14px;
   font-size: 11px;
   color: var(--chalk-dim);
+}
+
+.handset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 84px;
+  padding: 14px 6px 10px;
+  border: 5px solid #0b1310;
+  border-radius: 16px;
+  background: var(--board);
+  box-shadow:
+    0 0 0 1px #f4c55b40,
+    0 16px 30px #0008;
+}
+
+.store {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--heal);
+}
+
+.ping {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 5px;
+  border: 1px solid #f4c55b80;
+  border-radius: var(--radius);
+  background: #1f2b27;
+  color: var(--chalk);
+  font-size: 8px;
+  line-height: 1.25;
+}
+
+.ping svg {
+  flex: none;
+  color: var(--gold);
 }
 
 kbd {

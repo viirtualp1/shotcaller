@@ -4,6 +4,7 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
+import { assetLinksPlugin } from './scripts/assetLinks.ts'
 import { seoPlugin } from './scripts/seoPlugin.ts'
 import { thirdPartyNotices } from './scripts/thirdPartyNotices.ts'
 
@@ -25,6 +26,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     seoPlugin(),
+    assetLinksPlugin(),
     thirdPartyNotices(),
     VitePWA({
       /* The desktop build (`--mode desktop`) carries its own files, and Steam delivers its updates. */
@@ -77,7 +79,7 @@ export default defineConfig(({ mode }) => ({
           '**/career/**',
           '**/leaderboard/**',
           '{profile,career,leaderboard}.html',
-          '{terms,privacy}{.html,/index.html}',
+          '{terms,privacy,delete-account}{.html,/index.html}',
           '**/discord-*.js',
         ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,

@@ -18,11 +18,11 @@ export interface LegalDocument {
   readonly sections: readonly LegalSection[]
 }
 
-export const LEGAL_IDS = ['terms', 'privacy'] as const
+export const LEGAL_IDS = ['terms', 'privacy', 'delete-account'] as const
 export type LegalId = (typeof LEGAL_IDS)[number]
 
 /** The date both documents last changed; update it with any change to their text. */
-export const LEGAL_UPDATED = '2026-10-04'
+export const LEGAL_UPDATED = '2026-10-05'
 
 /** The address for privacy and legal requests. Until it is set, requests go through the in-game form. */
 export const LEGAL_EMAIL: string | null = 'shotcaller.team@gmail.com'
@@ -321,6 +321,10 @@ const privacy: LegalDocument = {
           en: 'When you send feedback, we receive its category, subject and message, the reply email if you give one, your account or guest identifier, language and game version. Requests are stored in our database and forwarded to our support Telegram chat so they are answered quickly.',
           ru: 'Когда ты отправляешь обращение, мы получаем категорию, тему и текст, адрес для ответа, если ты его указал, идентификатор аккаунта или гостя, язык и версию игры. Обращения хранятся в нашей базе данных и пересылаются в наш Telegram-чат поддержки, чтобы мы быстрее отвечали.',
         },
+        {
+          en: 'When you report a player, we receive the reason, your note if you add one, and the accounts of both of you. Reports go to the same database and Telegram chat for moderation. The reported player is not told who sent it.',
+          ru: 'Когда ты жалуешься на игрока, мы получаем причину, твой комментарий, если ты его добавил, и аккаунты вас обоих. Жалобы попадают в ту же базу данных и Telegram-чат для модерации. Игрок не узнаёт, кто на него пожаловался.',
+        },
       ],
     },
     {
@@ -444,6 +448,10 @@ const privacy: LegalDocument = {
           ru: 'Обращения: пока они нужны для ответа, и в любом случае до удаления аккаунта.',
         },
         {
+          en: 'Player reports: until they are reviewed and no longer needed, and always when either account is deleted.',
+          ru: 'Жалобы на игроков: пока они нужны для проверки, и в любом случае до удаления любого из двух аккаунтов.',
+        },
+        {
           en: 'Gameplay statistics: while consent is active, within PostHog’s retention period. Deletion is requested when you withdraw consent or delete your account.',
           ru: 'Игровая статистика: пока действует согласие, в пределах срока хранения PostHog. Удаление запрашивается при отзыве согласия или удалении аккаунта.',
         },
@@ -464,8 +472,8 @@ const privacy: LegalDocument = {
           ru: 'Ты можешь получить доступ к своим данным, исправить или удалить их, ограничить обработку или возразить против неё, получить данные в переносимом формате и в любой момент отозвать согласие; это не затрагивает обработку до отзыва.',
         },
         {
-          en: 'Registered players can delete their account in the profile, which erases the account, progress, social data and support requests. For other requests, including removing a guest account, contact us. You can also complain to the data protection authority in your country.',
-          ru: 'Зарегистрированные игроки могут удалить аккаунт в профиле: это удалит аккаунт, прогресс, социальные данные и обращения. С другими запросами, включая удаление гостевого аккаунта, обращайся к нам. Также можно подать жалобу в орган по защите данных своей страны.',
+          en: 'Registered players can delete their account in the profile, which erases the account, progress, social data and support requests. The “Delete your account” page explains how, and how to ask by email instead. For other requests, including removing a guest account, contact us. You can also complain to the data protection authority in your country.',
+          ru: 'Зарегистрированные игроки могут удалить аккаунт в профиле: это удалит аккаунт, прогресс, социальные данные и обращения. Как это сделать и как попросить об удалении по почте, описано на странице «Удаление аккаунта». С другими запросами, включая удаление гостевого аккаунта, обращайся к нам. Также можно подать жалобу в орган по защите данных своей страны.',
         },
       ],
     },
@@ -509,9 +517,110 @@ const privacy: LegalDocument = {
   ],
 }
 
+/**
+ * How to delete an account, on a page of its own: Google Play links its store listing here, and the page must work
+ * for someone who can no longer open the game.
+ */
+const deleteAccount: LegalDocument = {
+  id: 'delete-account',
+  title: {
+    en: 'Delete your account',
+    ru: 'Удаление аккаунта',
+  },
+  summary: {
+    en: 'How to delete your The Shotcaller account and its data: in the game, or by email if you cannot open it.',
+    ru: 'Как удалить аккаунт The Shotcaller и его данные: в игре или по почте, если открыть игру не получается.',
+  },
+  sections: [
+    {
+      title: {
+        en: 'In the game',
+        ru: 'В игре',
+      },
+      items: [
+        {
+          en: 'Open Profile.',
+          ru: 'Открой «Профиль».',
+        },
+        {
+          en: 'In the Cloud save card, choose “Delete account”.',
+          ru: 'В карточке «Облачное сохранение» нажми «Удалить аккаунт».',
+        },
+        {
+          en: 'Confirm with “Permanently delete”. The account is deleted at once.',
+          ru: 'Подтверди кнопкой «Удалить навсегда». Аккаунт удаляется сразу.',
+        },
+      ],
+    },
+    {
+      title: {
+        en: 'By email',
+        ru: 'По почте',
+      },
+      paragraphs: [
+        LEGAL_EMAIL
+          ? {
+              en: `If you cannot open the game, write to ${LEGAL_EMAIL} from the address you sign in with, with the subject “Delete my account”. If you sign in another way, include your nickname and friend code. We confirm the request and delete the account and its data within 30 days.`,
+              ru: `Если открыть игру не получается, напиши на ${LEGAL_EMAIL} с почты, через которую входишь, с темой «Удалить мой аккаунт». Если входишь иначе, укажи никнейм и код друга. Мы подтвердим запрос и удалим аккаунт и его данные в течение 30 дней.`,
+            }
+          : {
+              en: 'If you cannot delete the account yourself, ask through “Feedback & support” on the main screen of the game. We confirm the request and delete the account and its data within 30 days.',
+              ru: 'Если удалить аккаунт самостоятельно не получается, напиши через «Обратная связь» на главном экране игры. Мы подтвердим запрос и удалим аккаунт и его данные в течение 30 дней.',
+            },
+      ],
+    },
+    {
+      title: {
+        en: 'What is deleted',
+        ru: 'Что удаляется',
+      },
+      items: [
+        {
+          en: 'Sign-in account, nickname, avatar or profile photo and friend code.',
+          ru: 'Учётная запись для входа, никнейм, аватар или фото профиля и код друга.',
+        },
+        {
+          en: 'MMR in every mode, rank, XP, level, trial records, contracts and achievements.',
+          ru: 'MMR во всех режимах, ранг, опыт, уровень, рекорды испытаний, контракты и достижения.',
+        },
+        {
+          en: 'Saved progress, match history, replays and online duel data.',
+          ru: 'Сохранённый прогресс, история матчей, повторы и данные онлайн-дуэлей.',
+        },
+        {
+          en: 'Friends, requests, blocks and all your conversations, including messages received.',
+          ru: 'Друзья, заявки, блокировки и все переписки, включая полученные сообщения.',
+        },
+        {
+          en: 'Reports you sent about other players, feedback and support requests.',
+          ru: 'Твои жалобы на других игроков, отзывы и обращения в поддержку.',
+        },
+        {
+          en: 'Telemetry consent and its history. Gameplay statistics sent under a random identifier are queued for deletion.',
+          ru: 'Согласие на телеметрию и его история. Игровая статистика, отправленная под случайным идентификатором, ставится в очередь на удаление.',
+        },
+      ],
+    },
+    {
+      title: {
+        en: 'Guest progress',
+        ru: 'Гостевой прогресс',
+      },
+      paragraphs: [
+        {
+          en: 'Without an account, progress is kept on your device. Clearing the game’s data in the browser or the app’s storage removes it. To remove a guest backup from our servers, contact us.',
+          ru: 'Без аккаунта прогресс хранится на устройстве. Очистка данных игры в браузере или в хранилище приложения удаляет его. Чтобы удалить гостевую копию с наших серверов, напиши нам.',
+        },
+      ],
+    },
+    contact,
+  ],
+}
+
 export const LEGAL_DOCUMENTS: Readonly<Record<LegalId, LegalDocument>> = {
   terms,
   privacy,
+  'delete-account': deleteAccount,
 }
 
 export const legalFromPath = (path: string) =>

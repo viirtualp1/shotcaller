@@ -202,6 +202,10 @@
         "title": "Coming to Steam",
         "text": "By the end of 2026"
       },
+      "googlePlay": {
+        "title": "Coming to Google Play",
+        "text": "By the end of 2026"
+      },
       "navigation": "Main navigation",
       "tabs": {
         "play": "Play",
@@ -804,7 +808,8 @@
     "also": "Also read",
     "short": {
       "terms": "Terms",
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "delete-account": "Delete account"
     }
   },
   "profile": {
@@ -1136,6 +1141,24 @@
     "block": "Block",
     "confirmBlock": "Block for sure?",
     "close": "Close"
+  },
+  "playerReport": {
+    "open": "Report",
+    "title": "Report {name}",
+    "reason": "Reason",
+    "reasons": {
+      "abuse": "Abuse in chat",
+      "cheating": "Cheating",
+      "name": "Offensive name or picture",
+      "other": "Something else"
+    },
+    "details": "What happened? (optional)",
+    "send": "Send report",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "sent": "Thanks. Moderators will review the report; the player is not told who sent it.",
+    "failed": "Could not send the report. Check your connection and try again in a while."
   },
   "chatWindow": {
     "open": "Open chat",

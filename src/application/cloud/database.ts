@@ -221,6 +221,15 @@ export interface Database {
         Args: { other: string }
         Returns: undefined
       }
+      report_player: {
+        Args: {
+          report_id: string
+          player: string
+          reason: string
+          details: string
+        }
+        Returns: undefined
+      }
       list_blocked: {
         Args: Record<PropertyKey, never>
         Returns: {

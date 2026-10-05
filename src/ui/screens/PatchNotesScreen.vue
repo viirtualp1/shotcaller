@@ -27,7 +27,7 @@ import TrainingRelease from '../components/patchNotes/TrainingRelease.vue'
 import PauseRelease from '../components/patchNotes/PauseRelease.vue'
 import ForgeRelease from '../components/patchNotes/ForgeRelease.vue'
 import HomeRelease from '../components/patchNotes/HomeRelease.vue'
-import SteamRelease from '../components/patchNotes/SteamRelease.vue'
+import CrossPlatformRelease from '../components/patchNotes/CrossPlatformRelease.vue'
 import HudRelease from '../components/patchNotes/HudRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
@@ -95,7 +95,7 @@ watch(
 
         <HomeRelease v-else-if="patch.campaign === 'home'" />
 
-        <SteamRelease v-else-if="patch.campaign === 'steam'" />
+        <CrossPlatformRelease v-else-if="patch.campaign === 'crossPlatform'" />
 
         <HudRelease v-else-if="patch.campaign === 'hud'" />
 

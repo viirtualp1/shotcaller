@@ -4,6 +4,17 @@ dist-ssr
 dist-desktop
 dist-electron
 release
+
+# Android (Trusted Web Activity). The signing key never enters the repository.
+android/*.keystore
+android/*.jks
+android/*.apk
+android/*.aab
+android/*.idsig
+android/.gradle
+android/build
+android/app/build
+android/local.properties
 coverage
 *.tsbuildinfo
 *.log

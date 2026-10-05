@@ -5,10 +5,12 @@ import { DEFAULT_MODE } from '@/content/modes'
 import { matchRecordSchema } from '../persistence/profileSnapshot'
 import {
   coachPhoto,
+  REPORT_DETAILS_MAX,
   type FriendRequestResult,
   type FriendStatus,
   type FriendsService,
   type PresenceStatus,
+  type ReportReason,
 } from '../social/friends'
 import type { Database } from './database'
 import { liveMatchSchema, type LiveMatch } from '../social/liveMatch'
@@ -200,6 +202,19 @@ export class SupabaseFriends implements FriendsService {
 
   async block(coachId: string) {
     const { error } = await this.client.rpc('block_coach', { other: coachId })
+    if (error) {
+      throw error
+    }
+  }
+
+  async report(coachId: string, reason: ReportReason, details: string) {
+    const { error } = await this.client.rpc('report_player', {
+      report_id: crypto.randomUUID(),
+      player: coachId,
+      reason,
+      details: details.trim().slice(0, REPORT_DETAILS_MAX),
+    })
+
     if (error) {
       throw error
     }

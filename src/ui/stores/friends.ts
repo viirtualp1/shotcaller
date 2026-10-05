@@ -11,6 +11,7 @@ import type {
   OwnCard,
   Presence,
   PresenceStatus,
+  ReportReason,
 } from '@/application/social/friends'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { useAccountPhoto } from '../composables/useAccountPhoto'
@@ -421,6 +422,23 @@ export const useFriendsStore = defineStore('friends', () => {
   const block = (id: string) => act((friends) => friends.block(id))
   const unblock = (id: string) => act((friends) => friends.unblock(id))
 
+  /** True once the report is on its way; the dialog says so, or offers to try again. */
+  async function report(id: string, reason: ReportReason, details: string) {
+    if (!service) {
+      return false
+    }
+
+    try {
+      await service.report(id, reason, details)
+
+      return true
+    } catch (error) {
+      console.warn('Could not send the report', error)
+
+      return false
+    }
+  }
+
   /* Friends see "in a match, round 5" and the like; only a real change is sent. */
   watch(
     () => `${ownStatus.value.activity}:${ownStatus.value.round}`,
@@ -488,5 +506,6 @@ export const useFriendsStore = defineStore('friends', () => {
     remove,
     block,
     unblock,
+    report,
   }
 })
