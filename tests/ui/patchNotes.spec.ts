@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { LATEST_PATCH, PATCH_NOTES, findPatch, type NoteText } from '@/ui/patchNotes/notes'
+import { LATEST_PATCH, PATCH_NOTES, findPatch, isNewerVersion, type NoteText } from '@/ui/patchNotes/notes'
+import { versionFromPath } from '@/ui/stores/patchNotes'
 import { patchSnippet } from '@/ui/patchNotes/seo'
 import pkg from '../../package.json'
 
@@ -33,6 +34,22 @@ describe('patch notes', () => {
     expect(versions).toEqual(sorted)
     expect(new Set(versions).size).toBe(versions.length)
     expect([LATEST_PATCH.version, `${LATEST_PATCH.version}.0`]).toContain(pkg.version)
+  })
+
+  it('keeps a link to a patch newer than this client instead of opening the previous one', () => {
+    const [major = 0, minor = 0] = LATEST_PATCH.version.split('.').map(Number)
+    const newer = `${major}.${minor + 1}`
+
+    expect(isNewerVersion(newer, LATEST_PATCH.version)).toBe(true)
+    expect(isNewerVersion(LATEST_PATCH.version, newer)).toBe(false)
+    expect(isNewerVersion(LATEST_PATCH.version, LATEST_PATCH.version)).toBe(false)
+    expect(isNewerVersion('nope', LATEST_PATCH.version)).toBe(false)
+
+    expect(versionFromPath(`/patches/${newer}`)).toBe(newer)
+    expect(versionFromPath(`/patches/${newer}/`)).toBe(newer)
+    expect(versionFromPath('/patches/0.1')).toBe(LATEST_PATCH.version)
+    expect(versionFromPath('/patches/')).toBe(LATEST_PATCH.version)
+    expect(versionFromPath('/')).toBeNull()
   })
 
   it('uses real calendar dates', () => {

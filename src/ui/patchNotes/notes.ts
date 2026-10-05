@@ -3325,3 +3325,31 @@ export const releaseOf = (patch: PatchNote) =>
 
 export const findPatch = (version: string | null | undefined) =>
   PATCH_NOTES.find((patch) => patch.version === version)
+
+const versionParts = (version: string) => {
+  const parts = version.split('.')
+  if (parts.some((part) => !/^\d+$/.test(part))) {
+    return null
+  }
+
+  return parts.map(Number)
+}
+
+/** True when `version` sorts after `baseline`, so a stale client can tell a link is newer than anything it has. */
+export function isNewerVersion(version: string, baseline: string) {
+  const next = versionParts(version)
+  const current = versionParts(baseline)
+  if (!next || !current) {
+    return false
+  }
+
+  const length = Math.max(next.length, current.length)
+  for (let index = 0; index < length; index += 1) {
+    const delta = (next[index] ?? 0) - (current[index] ?? 0)
+    if (delta !== 0) {
+      return delta > 0
+    }
+  }
+
+  return false
+}

@@ -81,7 +81,12 @@ const showFriendsLauncher = computed(
 
 /** The board of a match in progress is on screen, with no page covering it. */
 const onBoard = computed(
-  () => store.view !== null && patchNotes.patch === null && legal.document === null && !leaderboard.isOpen,
+  () =>
+    store.view !== null &&
+    patchNotes.patch === null &&
+    !patchNotes.awaitingUpdate &&
+    legal.document === null &&
+    !leaderboard.isOpen,
 )
 
 /** Phones navigate between pages with a tab bar; a match and a replay keep the whole screen. */
@@ -102,6 +107,7 @@ useDocumentHead()
     <Transition name="screen" mode="out-in" @after-leave="scrollToTop">
       <LegalScreen v-if="legal.document" />
       <PatchNotesScreen v-else-if="patchNotes.patch" />
+      <div v-else-if="patchNotes.awaitingUpdate" class="patch-pending" />
       <LeaderboardScreen v-else-if="leaderboard.isOpen" />
       <GameScreen v-else-if="store.view" />
       <CareerScreen v-else-if="profile.isCareer" />
@@ -140,6 +146,10 @@ useDocumentHead()
 </template>
 
 <style scoped>
+.patch-pending {
+  min-height: 100%;
+}
+
 .social-launcher {
   position: fixed;
   right: calc(16px + env(safe-area-inset-right, 0px));

@@ -2,7 +2,7 @@
 import { useEventListener } from '@vueuse/core'
 import { RefreshCw } from '@lucide/vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
-import { computed, onScopeDispose } from 'vue'
+import { computed, onScopeDispose, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { usePwaUpdate } from '../../composables/usePwaUpdate'
 import { useLeaderboardStore } from '../../stores/leaderboard'
@@ -23,7 +23,12 @@ const { t } = useGameText()
 
 /* The game screen is up, as App picks it: the offer waits for the menu instead of covering the match. */
 const inGame = computed(
-  () => match.view !== null && !legal.document && !patchNotes.patch && !leaderboard.isOpen,
+  () =>
+    match.view !== null &&
+    !legal.document &&
+    !patchNotes.patch &&
+    !patchNotes.awaitingUpdate &&
+    !leaderboard.isOpen,
 )
 
 const { updating, failed, applyUpdate, reloadIfUpdating } = usePwaUpdate({
@@ -35,6 +40,62 @@ const { updating, failed, applyUpdate, reloadIfUpdating } = usePwaUpdate({
   },
 })
 
+function applyWaitingUpdate() {
+  if (!patchNotes.awaitingUpdate || !registration || match.isDuel) {
+    return
+  }
+
+  void applyUpdate()
+}
+
+/** A link named a patch this build does not have yet. Install the current build instead of opening an older one. */
+async function catchUp(registered: ServiceWorkerRegistration) {
+  if (!patchNotes.awaitingUpdate) {
+    return
+  }
+
+  let found = false
+
+  const onFound = () => {
+    found = true
+
+    const installing = registered.installing
+    installing?.addEventListener('statechange', () => {
+      if (installing.state === 'installed' || installing.state === 'activated') {
+        applyWaitingUpdate()
+      }
+    })
+  }
+
+  registered.addEventListener('updatefound', onFound)
+
+  try {
+    await registered.update()
+  } catch {
+    if (patchNotes.awaitingUpdate) {
+      failed.value = true
+    }
+
+    return
+  } finally {
+    registered.removeEventListener('updatefound', onFound)
+  }
+
+  if (!patchNotes.awaitingUpdate) {
+    return
+  }
+
+  if (found || registered.installing || registered.waiting || needRefresh.value) {
+    if (registered.waiting || needRefresh.value) {
+      applyWaitingUpdate()
+    }
+
+    return
+  }
+
+  patchNotes.releaseUnknown()
+}
+
 const { needRefresh } = useRegisterSW({
   onNeedReload: reloadIfUpdating,
   onRegisteredSW(_url, registered) {
@@ -42,7 +103,13 @@ const { needRefresh } = useRegisterSW({
     registration = registered
 
     if (!registered) {
+      patchNotes.releaseUnknown()
+
       return
+    }
+
+    if (patchNotes.awaitingUpdate) {
+      void catchUp(registered)
     }
 
     /* A hidden tab waits: coming back checks at once, so nothing is missed. */
@@ -77,6 +144,15 @@ useEventListener(
   { capture: true },
 )
 
+watch(
+  () => patchNotes.awaitingUpdate && !match.isDuel && (needRefresh.value || registration?.waiting != null),
+  (ready) => {
+    if (ready) {
+      applyWaitingUpdate()
+    }
+  },
+)
+
 onScopeDispose(() => {
   stopChecking?.()
 })
@@ -88,18 +164,36 @@ onScopeDispose(() => {
   </Transition>
 
   <Transition name="toast">
-    <div v-if="needRefresh && (!inGame || updating)" class="toast" role="status" :aria-busy="updating">
-      <RefreshCw :size="16" class="icon" :class="{ spinning: updating }" />
+    <div
+      v-if="(needRefresh || patchNotes.awaitingUpdate) && (!inGame || updating)"
+      class="toast"
+      role="status"
+      :aria-busy="updating || (patchNotes.awaitingUpdate && !failed && !match.isDuel)"
+    >
+      <RefreshCw
+        :size="16"
+        class="icon"
+        :class="{ spinning: updating || (patchNotes.awaitingUpdate && !failed && !match.isDuel) }"
+      />
 
       <span class="text">
         <strong>{{
-          updating ? t('pwa.updating') : failed ? t('pwa.updateFailed') : t('pwa.updateTitle')
+          updating || (patchNotes.awaitingUpdate && !failed && !match.isDuel)
+            ? t('pwa.updating')
+            : failed
+              ? t('pwa.updateFailed')
+              : t('pwa.updateTitle')
         }}</strong>
 
         <span v-if="match.isDuel && !updating" class="hint">{{ t('pwa.duelHint') }}</span>
       </span>
 
-      <button v-if="!updating" type="button" class="btn primary small" @click="applyUpdate">
+      <button
+        v-if="!updating && (!patchNotes.awaitingUpdate || failed || match.isDuel)"
+        type="button"
+        class="btn primary small"
+        @click="applyUpdate"
+      >
         {{ t('pwa.update') }}
       </button>
     </div>
