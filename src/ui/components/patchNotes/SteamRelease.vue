@@ -1,19 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowUpRight,
-  BadgeCheck,
-  CalendarDays,
-  Gamepad2,
-  Globe,
-  Maximize2,
-  MonitorPlay,
-  Trophy,
-  X,
-} from '@lucide/vue'
+import { ArrowUpRight, BadgeCheck, CalendarDays, Globe, Maximize2, MonitorPlay, Trophy, X } from '@lucide/vue'
 import { computed } from 'vue'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import SteamIcon from '../common/SteamIcon.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
@@ -71,7 +62,7 @@ const copy = computed(() =>
 <template>
   <section class="campaign" aria-labelledby="steam-release-title">
     <div class="pitch">
-      <p class="eyebrow"><Gamepad2 :size="14" /> {{ copy.eyebrow }}</p>
+      <p class="eyebrow"><SteamIcon :size="14" /> {{ copy.eyebrow }}</p>
       <h2 id="steam-release-title" class="hand">{{ copy.title }}</h2>
       <p class="intro">{{ copy.intro }}</p>
 

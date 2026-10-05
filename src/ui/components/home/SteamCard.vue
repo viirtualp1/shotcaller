@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Gamepad2 } from '@lucide/vue'
 import { IN_DESKTOP } from '@/application/desktop'
 import { useGameText } from '../../composables/useGameText'
 import { usePatchNotesStore } from '../../stores/patchNotes'
+import SteamIcon from '../common/SteamIcon.vue'
 
 /** The patch that announces the Steam version; the card opens it until the store page exists. */
 const STEAM_PATCH = '9.2'
@@ -19,7 +19,7 @@ const { t } = useGameText()
     class="steam"
     @click.prevent="notes.open(STEAM_PATCH)"
   >
-    <Gamepad2 :size="26" />
+    <SteamIcon :size="26" />
 
     <span>
       <b>{{ t('start.home.steam.title') }}</b>
