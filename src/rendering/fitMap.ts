@@ -22,7 +22,7 @@ export const WHOLE_BOARD: Rect = {
   height: BATTLE.worldSize,
 }
 
-const MAP_MARGIN = 12
+export const MAP_MARGIN = 12
 const MIN_MAP_SIZE = 200
 
 /**

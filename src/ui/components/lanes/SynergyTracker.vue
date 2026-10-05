@@ -46,8 +46,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
         :data-drop="`lane:${entry.lane}`"
         @click="store.placeSelected(entry.lane)"
       >
-        <span class="name hand">{{ text.slotName(entry.lane) }}</span>
-
+        <!-- The lane's name stands between the two sides, so a lane spends no line on its title. -->
         <div class="matchup">
           <TransitionGroup name="pop" tag="span" class="heroes ours">
             <HeroAvatar
@@ -60,7 +59,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
             />
           </TransitionGroup>
 
-          <span class="vs">{{ t('tracker.vs') }}</span>
+          <span class="name hand">{{ text.slotName(entry.lane) }}</span>
 
           <TransitionGroup name="pop" tag="span" class="heroes theirs">
             <HeroAvatar
@@ -137,8 +136,8 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 .lane {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 14px 14px;
+  gap: 8px;
+  padding: 10px 12px;
   border-radius: var(--radius);
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.03);
@@ -159,8 +158,9 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 }
 
 .name {
-  font-size: 22px;
-  line-height: 1;
+  font-size: 20px;
+  line-height: 34px;
+  white-space: nowrap;
 }
 
 .orders {
@@ -204,14 +204,14 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 .matchup {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 16px;
+  align-items: start;
+  gap: 10px;
 }
 
 .heroes {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 10px;
   min-height: 34px;
 }
 
@@ -219,7 +219,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
   justify-content: flex-end;
 }
 
-/* Two columns under the heroes, ours left and theirs right: never more than two synergies in a row. */
+/* Two columns under the heroes, ours left and theirs right. Each wraps its chips, so a busy lane grows wide first. */
 .chip-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -232,21 +232,22 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 
 .chips {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
   min-width: 0;
 }
 
 .chips.theirs {
-  align-items: flex-end;
+  justify-content: flex-end;
 }
 
-.vs {
-  line-height: 34px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--chalk-faint);
+/* With nothing on their side, ours take the whole width. */
+.chips.theirs:empty {
+  display: none;
+}
+
+.chip-row:has(.chips.theirs:empty) .chips.ours {
+  grid-column: 1 / -1;
 }
 </style>

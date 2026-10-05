@@ -68,28 +68,31 @@ function toggleDummies() {
       </button>
     </template>
 
-    <ToggleGroupRoot
-      v-model="clock"
-      type="single"
-      class="segmented-control"
-      :aria-label="t('sandbox.clock')"
-      :disabled="locked"
-    >
-      <ToggleGroupItem value="endless" class="segmented-option">{{ t('sandbox.endless') }}</ToggleGroupItem>
+    <!-- The clock and the dummies share a row, and wrap onto two when the panel is narrow. -->
+    <div class="row">
+      <ToggleGroupRoot
+        v-model="clock"
+        type="single"
+        class="segmented-control"
+        :aria-label="t('sandbox.clock')"
+        :disabled="locked"
+      >
+        <ToggleGroupItem value="endless" class="segmented-option">{{ t('sandbox.endless') }}</ToggleGroupItem>
 
-      <ToggleGroupItem value="rounds" class="segmented-option">{{ t('sandbox.rounds') }}</ToggleGroupItem>
-    </ToggleGroupRoot>
+        <ToggleGroupItem value="rounds" class="segmented-option">{{ t('sandbox.rounds') }}</ToggleGroupItem>
+      </ToggleGroupRoot>
 
-    <button
-      type="button"
-      class="dummies"
-      :aria-pressed="dummiesOn"
-      :title="t('sandbox.dummies')"
-      :disabled="locked"
-      @click="toggleDummies"
-    >
-      <Target :size="14" /> {{ t('sandbox.practice') }}
-    </button>
+      <button
+        type="button"
+        class="dummies"
+        :aria-pressed="dummiesOn"
+        :title="t('sandbox.dummies')"
+        :disabled="locked"
+        @click="toggleDummies"
+      >
+        <Target :size="14" /> {{ t('sandbox.practice') }}
+      </button>
+    </div>
 
     <TrainingOrders />
 
@@ -109,7 +112,18 @@ function toggleDummies() {
   font-size: 12px;
 }
 
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row > .segmented-control {
+  flex: 1 1 auto;
+}
+
 .dummies {
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -2,6 +2,7 @@
 import {
   useDocumentVisibility,
   useElementBounding,
+  useEventListener,
   useIntervalFn,
   useMediaQuery,
   useRafFn,
@@ -11,7 +12,7 @@ import {
 import { MousePointerClick } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
-import { fitMap, WHOLE_BOARD } from '@/rendering/fitMap'
+import { fitMap, MAP_MARGIN, WHOLE_BOARD } from '@/rendering/fitMap'
 import { laneMapFor } from '@/simulation/map/LaneMap'
 import BattlePanel from '../components/battle/BattlePanel.vue'
 import LastRoundMeter from '../components/battle/LastRoundMeter.vue'
@@ -29,6 +30,7 @@ import NoticeToast from '../components/hud/NoticeToast.vue'
 import PhaseBanner from '../components/hud/PhaseBanner.vue'
 import DuelPauseBanner from '../components/hud/DuelPauseBanner.vue'
 import DuelPauseButton from '../components/hud/DuelPauseButton.vue'
+import { TWIST_NOTICE_MS } from '../components/hud/twistNotice'
 import MatchScoreboard from '../components/hud/MatchScoreboard.vue'
 import ReactionStickers from '../components/hud/ReactionStickers.vue'
 import ReactionWheel from '../components/hud/ReactionWheel.vue'
@@ -49,11 +51,13 @@ import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { usePauseStore } from '../stores/pause'
-import { usePlanningTimerStore } from '../stores/planningTimer'
+import { URGENT_SECONDS, usePlanningTimerStore } from '../stores/planningTimer'
 import { useSettingsStore } from '../stores/settings'
 import { useTutorial } from '../tutorial/useTutorial'
 
 const TUTORIAL_DELAY_MS = 900
+/** How long the scoreboard stays out when a round, a phase or a twist begins. */
+const ANNOUNCE_MS = 3500
 const BACKGROUND_TICK_MS = 1000
 
 const store = useMatchStore()
@@ -67,6 +71,7 @@ const { t } = useGameText()
 const tour = useTutorial()
 const uiZoom = useGameUiZoom()
 
+const game = ref<HTMLElement | null>(null)
 const top = ref<HTMLElement | null>(null)
 const left = ref<HTMLElement | null>(null)
 const right = ref<HTMLElement | null>(null)
@@ -84,12 +89,41 @@ const dockBox = useElementBounding(dock)
 /** During a battle the planning tools slide away and the map takes their space. */
 const battling = computed(() => store.phase === 'battle')
 
+/**
+ * The bench and the stash stay in view while the lanes panel scrolls. A short window in training keeps one scroll
+ * for the whole column, since the training settings leave the lanes too little room to scroll on their own.
+ */
+const pinned = computed(() => !store.view?.sandbox || viewportHeight.value >= 1000)
+
+/**
+ * With a mouse the scoreboard hides above the window behind a handle, and the map lines up with the side panels.
+ * It slides out on hover, when a round, a phase or a twist begins, and for the last seconds of planning.
+ */
+const peek = computed(() => wide.value && !touch.value)
+const announcing = ref(false)
+const announceFor = ref(ANNOUNCE_MS)
+
+const urgent = computed(
+  () => store.isPlanning && timer.remaining !== null && Math.ceil(timer.remaining) <= URGENT_SECONDS,
+)
+
+const scoreboardOut = computed(() => announcing.value || urgent.value)
+
 /** Equal side insets keep the map centred under the scoreboard. */
 const sideInset = computed(() =>
   Math.max(battling.value ? 0 : leftBox.right.value, viewportWidth.value - rightBox.left.value),
 )
 
 const insets = computed<Insets>(() => {
+  if (peek.value) {
+    return {
+      top: Math.max(0, leftBox.top.value - MAP_MARGIN),
+      left: sideInset.value,
+      right: sideInset.value,
+      bottom: Math.max(0, viewportHeight.value - leftBox.bottom.value - MAP_MARGIN),
+    }
+  }
+
   if (wide.value) {
     return {
       top: topBox.bottom.value,
@@ -162,6 +196,13 @@ function escape() {
   }
 }
 
+/** The map follows the panels' edges; slides and fades move them without resizing them, so measure again after. */
+function measureHud() {
+  topBox.update()
+  leftBox.update()
+  rightBox.update()
+}
+
 useHotkeys({
   reroll: store.reroll,
   buyXp: store.buyXp,
@@ -189,14 +230,21 @@ useHotkeys({
 
 const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, { immediate: false })
 
+const announcement = useTimeoutFn(() => (announcing.value = false), announceFor, { immediate: false })
+
+useEventListener(game, ['transitionend', 'animationend'], measureHud)
+
+watch(uiZoom, measureHud, { flush: 'post' })
+
+/* A new twist keeps the scoreboard out for as long as the card about it hangs underneath. */
 watch(
-  uiZoom,
-  () => {
-    topBox.update()
-    leftBox.update()
-    rightBox.update()
+  () => [store.view?.round, store.phase, store.view?.twist] as const,
+  (next, previous) => {
+    announceFor.value = next[2] && next[2] !== previous?.[2] ? TWIST_NOTICE_MS : ANNOUNCE_MS
+    announcing.value = true
+    announcement.start()
   },
-  { flush: 'post' },
+  { immediate: true },
 )
 
 watch(
@@ -215,8 +263,9 @@ watch(
 
 <template>
   <div
+    ref="game"
     class="game"
-    :class="wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait']"
+    :class="[wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait'], { peek }]"
     :style="{ '--game-zoom': uiZoom }"
   >
     <div class="board-layer">
@@ -230,9 +279,13 @@ watch(
     <div v-if="mapAnchor" class="map-anchor" :style="mapAnchor" data-tour="board" aria-hidden="true" />
 
     <header ref="top" class="hud-top">
-      <GameMenu class="corner" />
+      <!-- With a keyboard, Esc opens the menu, so the corner is left to the side panels. -->
+      <div class="corner">
+        <GameMenu v-if="touch" />
+      </div>
 
-      <div class="top-center">
+      <div class="top-center" :class="{ out: scoreboardOut }">
+        <span v-if="peek" class="handle" aria-hidden="true" />
         <MatchScoreboard />
         <TavernStrip class="tavern" />
         <ReactionStickers v-if="store.isDuel" />
@@ -247,14 +300,23 @@ watch(
     </header>
 
     <template v-if="wide">
-      <aside ref="left" class="hud-left" :class="{ collapsed: battling }" :inert="battling">
+      <aside
+        ref="left"
+        class="hud-left"
+        :class="{ collapsed: battling, raised: !touch, pinned }"
+        :inert="battling"
+      >
         <SandboxPanel />
         <SynergyTracker />
         <BenchGrid :dense="touch" />
         <StashGrid :dense="touch" />
       </aside>
 
-      <aside ref="right" class="hud-right" :class="{ 'card-open': touch && store.showsCard }">
+      <aside
+        ref="right"
+        class="hud-right"
+        :class="{ 'card-open': touch && store.showsCard, raised: !touch && !store.isDuel }"
+      >
         <FightButton class="fight-dock" />
 
         <Transition name="swap" mode="out-in">
@@ -334,6 +396,11 @@ watch(
   pointer-events: auto;
 }
 
+/* An empty corner must not catch clicks meant for the side panel under it. */
+.hud-top > .corner:empty {
+  pointer-events: none;
+}
+
 .top-center {
   position: relative;
 }
@@ -345,6 +412,72 @@ watch(
   translate: -50% 0;
   width: max-content;
   min-width: 100%;
+}
+
+/*
+ * Mouse play: the scoreboard waits above the window, and a gold handle at the top edge marks where it is. Hovering the
+ * handle slides it out; it slides back a moment after the pointer leaves.
+ */
+.peek .top-center {
+  pointer-events: none;
+}
+
+.peek .top-center > * {
+  pointer-events: auto;
+}
+
+.peek .top-center > .scoreboard {
+  position: relative;
+  z-index: 1;
+  translate: 0 calc(-100% - 16px);
+  transition: translate 0.25s ease-in 0.4s;
+}
+
+.peek .top-center:hover > .scoreboard,
+.peek .top-center:focus-within > .scoreboard,
+.peek .top-center.out > .scoreboard {
+  translate: 0 0;
+  transition: translate 0.25s ease-out;
+}
+
+/* A wide strip catches the pointer; the pill inside it is what shows. */
+.handle {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  justify-content: center;
+  width: 200px;
+  height: 24px;
+}
+
+.handle::before {
+  content: '';
+  width: 120px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 0 12px rgba(244, 197, 91, 0.45);
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.top-center:hover .handle::before {
+  opacity: 1;
+}
+
+/* The fallen heroes stay in view under the handle while the scoreboard is away. */
+.peek .tavern {
+  top: 28px;
+  transition: top 0.25s ease-in 0.4s;
+}
+
+.peek .top-center:hover .tavern,
+.peek .top-center:focus-within .tavern,
+.peek .top-center.out .tavern {
+  top: calc(100% + 10px);
+  transition: top 0.25s ease-out;
 }
 
 .hud-top .corner {
@@ -408,7 +541,8 @@ watch(
 
 /* Desktop: the board fills the window and the HUD sits on its edges. */
 .game.wide {
-  --side: clamp(290px, 22vw / var(--game-zoom), 420px);
+  /* As wide as leaves the map the full height of the window, so it lines up with the panels on a 16:9 screen. */
+  --side: clamp(290px, (100vw - 100dvh - 24px) / 2 / var(--game-zoom), 420px);
 }
 
 .wide .hud-top {
@@ -435,6 +569,12 @@ watch(
   zoom: var(--game-zoom);
 }
 
+/* Beside an empty corner a panel rises to the top of the window and gains its height. */
+.wide .hud-left.raised,
+.wide .hud-right.raised {
+  top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
+}
+
 /* The shop and the round meter scroll inside themselves. The column must not grow a bar while they slide away. */
 .wide .hud-right {
   overflow: hidden;
@@ -451,6 +591,25 @@ watch(
   transition:
     translate 0.35s ease-in-out,
     opacity 0.35s ease-in-out;
+}
+
+/*
+ * The bench and the stash stay in view as drop targets: a busy lanes panel scrolls on its own instead. Only a window
+ * too short for even one lane falls back to scrolling the whole column.
+ */
+.wide .hud-left {
+  gap: 8px;
+}
+
+.wide .hud-left.pinned > * {
+  flex: none;
+}
+
+.wide .hud-left.pinned > [data-tour='tracker'] {
+  flex: 0 1 auto;
+  min-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .wide .hud-left.collapsed {

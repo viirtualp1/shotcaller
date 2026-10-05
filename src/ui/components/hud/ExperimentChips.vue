@@ -8,6 +8,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useMatchStore } from '../../stores/match'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import { TWIST_NOTICE_MS } from './twistNotice'
 
 /** The experiments a match plays with: the round's twist, and the heroes rotation left in the pool. */
 const match = useMatchStore()
@@ -21,7 +22,7 @@ const { start } = useTimeoutFn(
   () => {
     changed.value = false
   },
-  7000,
+  TWIST_NOTICE_MS,
   { immediate: false },
 )
 
@@ -84,7 +85,6 @@ watch(
 
 <style scoped>
 .chips {
-  position: relative;
   display: flex;
   justify-content: center;
   gap: 6px;
@@ -134,19 +134,20 @@ p {
   font-size: 10px;
 }
 
+/* Hangs from the bottom of the scoreboard, as wide as it, like a page pulled out of the panel. */
 .twist-change {
   position: absolute;
   z-index: 20;
-  top: calc(100% + 12px);
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  width: min(360px, calc(100vw - 24px));
+  width: max(100%, min(360px, calc(100vw - 24px)));
   padding: 14px;
   border: 1px solid var(--gold);
-  border-radius: var(--radius);
+  border-radius: 0 0 var(--radius) var(--radius);
   background: var(--panel);
   box-shadow: 0 10px 32px #0008;
   color: var(--gold);

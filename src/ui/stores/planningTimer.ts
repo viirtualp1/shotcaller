@@ -9,6 +9,9 @@ import { useSettingsStore } from './settings'
  * Planning countdown on standard difficulty and in duels. Real time, so it lives in the UI layer rather than
  * the domain. A duel's clock runs to a deadline both devices share and stops only for the shared duel pause.
  */
+/** The last seconds of planning: the countdown turns red and the scoreboard stays in view. */
+export const URGENT_SECONDS = 10
+
 export const usePlanningTimerStore = defineStore('planningTimer', () => {
   const match = useMatchStore()
   const settings = useSettingsStore()

@@ -57,16 +57,20 @@ function onPanelClick() {
     :meta="t('bench.onBoard', { count: human.boardCount, capacity: human.boardCapacity })"
     data-tour="bench"
   >
-    <!-- Dense panels keep the button in the header, so the whole dock fits a phone without scrolling. -->
-    <template v-if="dense" #actions>
+    <!-- The button sits in the header, so the bench spends no row on it. A phone's dock keeps its label. -->
+    <template #actions>
       <button
         type="button"
         class="btn small auto"
+        :class="{ icon: !dense }"
         :disabled="!canArrange"
+        :aria-label="t('shop.autoArrange')"
+        :title="t('shop.autoArrange')"
         data-tour="auto-place"
         @click="store.autoArrange()"
       >
-        <Wand2 :size="14" /> {{ t('shop.autoArrange') }}
+        <Wand2 :size="14" />
+        <template v-if="dense">{{ t('shop.autoArrange') }}</template>
       </button>
     </template>
 
@@ -103,25 +107,16 @@ function onPanelClick() {
 
       <span v-for="n in empties" :key="`empty-${n}`" class="slot empty" aria-hidden="true" />
     </div>
-
-    <button
-      v-if="!dense"
-      type="button"
-      class="btn block auto"
-      :disabled="!canArrange"
-      data-tour="auto-place"
-      @click="store.autoArrange()"
-    >
-      <Wand2 :size="15" /> {{ t('shop.autoArrange') }}
-    </button>
   </HudPanel>
 </template>
 
 <style scoped>
+/* Slots stop growing at 68px, so a wide panel does not make the bench taller. */
 .grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 68px));
+  justify-content: start;
   gap: 8px;
   padding: 4px;
   border-radius: var(--radius);
@@ -142,6 +137,12 @@ function onPanelClick() {
   min-height: 30px;
   padding: 0 10px;
   font-size: 12px;
+}
+
+.small.icon {
+  width: 30px;
+  min-height: 26px;
+  padding: 0;
 }
 
 .grid.dropping {
