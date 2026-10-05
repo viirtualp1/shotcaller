@@ -321,6 +321,10 @@ const privacy: LegalDocument = {
           en: 'When you send feedback, we receive its category, subject and message, the reply email if you give one, your account or guest identifier, language and game version. Requests are stored in our database and forwarded to our support Telegram chat so they are answered quickly.',
           ru: 'Когда ты отправляешь обращение, мы получаем категорию, тему и текст, адрес для ответа, если ты его указал, идентификатор аккаунта или гостя, язык и версию игры. Обращения хранятся в нашей базе данных и пересылаются в наш Telegram-чат поддержки, чтобы мы быстрее отвечали.',
         },
+        {
+          en: 'When you report a player, we receive the reason, your note if you add one, and the accounts of both of you. Reports go to the same database and Telegram chat for moderation. The reported player is not told who sent it.',
+          ru: 'Когда ты жалуешься на игрока, мы получаем причину, твой комментарий, если ты его добавил, и аккаунты вас обоих. Жалобы попадают в ту же базу данных и Telegram-чат для модерации. Игрок не узнаёт, кто на него пожаловался.',
+        },
       ],
     },
     {
@@ -442,6 +446,10 @@ const privacy: LegalDocument = {
         {
           en: 'Support requests: until they are handled and no longer needed, and always when the account is deleted.',
           ru: 'Обращения: пока они нужны для ответа, и в любом случае до удаления аккаунта.',
+        },
+        {
+          en: 'Player reports: until they are reviewed and no longer needed, and always when either account is deleted.',
+          ru: 'Жалобы на игроков: пока они нужны для проверки, и в любом случае до удаления любого из двух аккаунтов.',
         },
         {
           en: 'Gameplay statistics: while consent is active, within PostHog’s retention period. Deletion is requested when you withdraw consent or delete your account.',

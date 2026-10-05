@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core'
-import { Ban, ChevronDown, Crown, MessageCircle, Swords, UserMinus, X } from '@lucide/vue'
+import { Ban, ChevronDown, Crown, Flag, MessageCircle, Swords, UserMinus, X } from '@lucide/vue'
 import {
   AccordionContent,
   AccordionHeader,
@@ -33,6 +33,7 @@ import WatchLiveButton from './WatchLiveButton.vue'
 import { relativeTime } from '../profile/format'
 import RankDropdown from '../profile/RankDropdown.vue'
 import FriendMatchDetails from './FriendMatchDetails.vue'
+import ReportCoach from './ReportCoach.vue'
 
 /** Removing and blocking ask once more; the question goes away on its own. */
 const CONFIRM_MS = 3000
@@ -47,6 +48,7 @@ const text = useGameText()
 const { t } = text
 const statusText = useFriendStatus()
 const confirming = ref<'remove' | 'block' | null>(null)
+const reporting = ref(false)
 
 const { start: expireConfirm } = useTimeoutFn(() => (confirming.value = null), CONFIRM_MS, {
   immediate: false,
@@ -349,7 +351,13 @@ function ask(action: 'remove' | 'block') {
           >
             <Ban :size="16" /> {{ confirming === 'block' ? t('coach.confirmBlock') : t('coach.block') }}
           </button>
+
+          <button type="button" class="btn ghost" :aria-expanded="reporting" @click="reporting = !reporting">
+            <Flag :size="16" /> {{ t('playerReport.open') }}
+          </button>
         </footer>
+
+        <ReportCoach v-if="entry && reporting" :coach-id="entry.id" :name="name" @close="reporting = false" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>

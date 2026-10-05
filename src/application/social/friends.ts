@@ -82,6 +82,11 @@ export interface FriendEntry extends CoachCard {
 /** `cooldown`: they declined a request from us less than a week ago. */
 export type FriendRequestResult = 'sent' | 'accepted' | 'friends' | 'notFound' | 'self' | 'limit' | 'cooldown'
 
+/** Why a coach is reported; moderators see the reason with the optional note. */
+export const REPORT_REASONS = ['abuse', 'cheating', 'name', 'other'] as const
+export type ReportReason = (typeof REPORT_REASONS)[number]
+export const REPORT_DETAILS_MAX = 500
+
 /** Friends of the signed-in coach. Needs an email or Google account; guests have none. */
 export interface FriendsService {
   card(): Promise<OwnCard>
@@ -96,6 +101,8 @@ export interface FriendsService {
   block(coachId: string): Promise<void>
   unblock(coachId: string): Promise<void>
   blocked(): Promise<CoachCard[]>
+  /** Sends a coach's conduct to the moderators; the coach is not told who reported them. */
+  report(coachId: string, reason: ReportReason, details: string): Promise<void>
   /** Publishes the Google picture for friends, or clears it when a hero is shown instead. */
   setPhoto(url: string | null): Promise<void>
   /** A friend's rank, totals and latest matches; null when they are not a friend (any more). */
