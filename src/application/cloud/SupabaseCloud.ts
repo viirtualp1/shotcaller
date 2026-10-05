@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { MatchRecord, Profile } from '@/domain/profile/Profile'
+import { IN_DESKTOP, WEB_GAME_URL } from '../desktop'
 import { feedbackSchema, type Feedback } from '../feedback'
 import { fromProfileEnvelope, toProfileEnvelope } from '../persistence/profileSnapshot'
 import type { AccountMode, CloudAccount, CloudStore } from './CloudStore'
@@ -337,6 +338,10 @@ export class SupabaseCloud implements CloudStore {
 
   /** Where email links and Google send the player back: the game itself, without any page hash. */
   private redirectTo() {
+    if (IN_DESKTOP) {
+      return WEB_GAME_URL
+    }
+
     return globalThis.location.origin + globalThis.location.pathname
   }
 }

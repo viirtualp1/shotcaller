@@ -54,4 +54,20 @@ describe('cloud config', () => {
       google: false,
     })
   })
+
+  it('signs the desktop app in by email code, since Google returns to a web page', () => {
+    const env = {
+      VITE_SUPABASE_URL: 'https://x.supabase.co',
+      VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_abc',
+      VITE_SUPABASE_GOOGLE: 'true',
+    }
+
+    const desktop = {
+      ...env,
+      MODE: 'desktop',
+    }
+
+    expect(cloudConfig(env)?.google).toBe(true)
+    expect(cloudConfig(desktop)?.google).toBe(false)
+  })
 })

@@ -1,0 +1,39 @@
+# The desktop game for Steam. Steam installs and updates the folder itself, so the build is a plain
+# directory per platform rather than an installer.
+appId: online.theshotcaller.game
+productName: The Shotcaller
+copyright: Copyright © The Shotcaller
+
+directories:
+  output: release
+
+# Vite has already bundled every library into dist-desktop, so no node_modules ship with the game.
+files:
+  - package.json
+  - vercel.json
+  - dist-electron/**
+  - dist-desktop/**
+  - '!node_modules/**'
+
+asar: true
+npmRebuild: false
+
+# Chromium's own interface languages; the game ships its English and Russian text itself.
+electronLanguages:
+  - en-US
+  - ru
+
+win:
+  target: dir
+  # Made by `npm run icons`, so packaging does not have to convert the PNG.
+  icon: build/icon.ico
+
+linux:
+  target: dir
+  icon: public/pwa-512x512.png
+  category: Game
+
+mac:
+  target: dir
+  icon: public/pwa-512x512.png
+  category: public.app-category.strategy-games

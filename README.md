@@ -71,6 +71,8 @@ to `.env`, add a Supabase project and apply `supabase/migrations` in order.
 | `npm test` | Unit, simulation and component tests |
 | `npm run lint` · `npm run format:check` · `npm run typecheck` | The checks CI runs |
 | `npm run balance` | Headless matches for hero and item balance |
+| `npm run desktop` | Build the desktop game and open it in Electron |
+| `npm run desktop:package` | Package the desktop game into `release/` for Steam |
 
 ### Project layout
 
@@ -82,6 +84,7 @@ src/
   rendering/    Pixi.js board, layers and views
   application/  sessions, persistence, cloud and social services
   ui/           Vue screens, components, stores and translations
+electron/       the desktop (Steam) app: window, bundled files and link rules
 supabase/       migrations, SQL tests and Edge Functions
 tests/          Vitest suites for every layer
 scripts/        balance, A/B and performance tools
@@ -89,6 +92,7 @@ scripts/        balance, A/B and performance tools
 
 ## Documentation
 
+- [Desktop game](docs/desktop.md): the Electron build for Steam
 - [Gameplay telemetry](docs/telemetry.md): consent-based PostHog analytics
 - [Discord Activity](docs/discord-activity.md)
 - [Performance and connection audit](docs/performance-audit.md)

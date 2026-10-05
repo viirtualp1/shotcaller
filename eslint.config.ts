@@ -138,7 +138,7 @@ const codeStyle: Linter.Config = {
 }
 
 export default withVueTs(
-  { ignores: ['dist/**', 'node_modules/**'] },
+  { ignores: ['dist/**', 'dist-desktop/**', 'dist-electron/**', 'release/**', 'node_modules/**'] },
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
   {
@@ -146,6 +146,7 @@ export default withVueTs(
       'src/**/*.{ts,vue}',
       'tests/**/*.ts',
       'scripts/**/*.ts',
+      'electron/**/*.ts',
       'supabase/functions/_shared/**/*.ts',
       '*.config.ts',
     ],

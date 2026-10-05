@@ -21,12 +21,14 @@ const SECURITY_HEADERS = Object.fromEntries(
   VERCEL.headers.flatMap((rule) => rule.headers.map((h) => [h.key, h.value])),
 )
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     seoPlugin(),
     thirdPartyNotices(),
     VitePWA({
+      /* The desktop build (`--mode desktop`) carries its own files, and Steam delivers its updates. */
+      disable: mode === 'desktop',
       /* A new version waits for the player's go-ahead: reloading on its own could cut into a duel. */
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon-180x180.png'],
@@ -166,4 +168,4 @@ export default defineConfig({
     include: ['tests/**/*.spec.ts'],
     environment: 'node',
   },
-})
+}))
