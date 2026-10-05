@@ -168,17 +168,6 @@
   "app": {
     "title": "The Shotcaller"
   },
-  "presence": {
-    "playing": "Играет",
-    "inGame": "В игре",
-    "training": "Тренировка",
-    "duel": "Дуэль",
-    "versus": "Против компьютера",
-    "finished": "Матч окончен",
-    "planning": "Раунд {round} · план",
-    "battle": "Раунд {round} · бой",
-    "summary": "Раунд {round} · итог"
-  },
   "start": {
     "invite": "Позвать друга",
     "inviteMessage": "Заходи сыграть в The Shotcaller!",
@@ -208,10 +197,6 @@
       "discord": {
         "title": "Играй в Discord",
         "text": "Запускай матчи прямо в голосовом канале вместе с друзьями."
-      },
-      "installer": {
-        "title": "Установщик",
-        "text": "Игра с одного файла."
       },
       "navigation": "Главная навигация",
       "tabs": {

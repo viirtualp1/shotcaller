@@ -16,7 +16,6 @@ import CoachCard from '../components/home/CoachCard.vue'
 import ContractsStrip from '../components/home/ContractsStrip.vue'
 import DiscordCard from '../components/home/DiscordCard.vue'
 import HomeLeaderboard from '../components/home/HomeLeaderboard.vue'
-import InstallerCard from '../components/home/InstallerCard.vue'
 import PatchHighlight from '../components/home/PatchHighlight.vue'
 import QuickStarts from '../components/home/QuickStarts.vue'
 import SavedMatchCard from '../components/home/SavedMatchCard.vue'
@@ -183,9 +182,8 @@ onBeforeUnmount(() => {
             <PatchHighlight />
           </div>
 
-          <div class="offers" :style="contractsStyle">
+          <div class="tall" :style="contractsStyle">
             <DiscordCard />
-            <InstallerCard />
           </div>
 
           <HomeLeaderboard fill />
@@ -322,15 +320,9 @@ onBeforeUnmount(() => {
   min-height: 0;
 }
 
-.tall > :deep(.patch) {
+.tall > :deep(.patch),
+.tall > :deep(.discord) {
   flex: 1;
-  min-height: 0;
-}
-
-.offers {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
   min-height: 0;
 }
 

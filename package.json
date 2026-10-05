@@ -12,16 +12,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write src tests scripts discord-companion/src",
-    "format:check": "prettier --check src tests scripts discord-companion/src",
+    "format": "prettier --write src tests scripts",
+    "format:check": "prettier --check src tests scripts",
     "balance": "tsx --tsconfig tsconfig.node.json scripts/balance.ts",
     "balance:ab": "tsx --tsconfig tsconfig.node.json scripts/abTest.ts",
     "balance:items": "tsx --tsconfig tsconfig.node.json scripts/itemBalance.ts",
     "icons": "pwa-assets-generator",
-    "companion": "npm --prefix discord-companion start",
-    "companion:build": "npm --prefix discord-companion run build:windows",
-    "companion:install": "npm install --prefix discord-companion && npm --prefix discord-companion run install-startup",
-    "companion:remove": "npm --prefix discord-companion run uninstall-startup",
     "patch:discord": "tsx --tsconfig tsconfig.node.json scripts/discordPatch.ts"
   },
   "dependencies": {

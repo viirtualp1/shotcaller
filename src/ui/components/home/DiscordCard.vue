@@ -36,8 +36,6 @@ function invite() {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  min-width: 0;
-  height: 100%;
   padding: 16px;
   border: 1px solid rgba(88, 101, 242, 0.55);
   border-radius: var(--radius);
@@ -73,15 +71,5 @@ small {
   color: var(--chalk-dim);
   font-size: 12px;
   line-height: 1.4;
-}
-
-@media (max-width: 860px) {
-  .discord {
-    align-items: center;
-  }
-
-  small {
-    display: none;
-  }
 }
 </style>

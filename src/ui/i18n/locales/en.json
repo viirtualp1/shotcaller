@@ -168,17 +168,6 @@
   "app": {
     "title": "The Shotcaller"
   },
-  "presence": {
-    "playing": "Playing",
-    "inGame": "In game",
-    "training": "Training",
-    "duel": "Duel",
-    "versus": "Versus the computer",
-    "finished": "Match over",
-    "planning": "Round {round} · planning",
-    "battle": "Round {round} · in battle",
-    "summary": "Round {round} · results"
-  },
   "start": {
     "invite": "Invite a friend",
     "inviteMessage": "Join me in The Shotcaller!",
@@ -208,10 +197,6 @@
       "discord": {
         "title": "Play in Discord",
         "text": "Start matches right in a voice channel with your friends."
-      },
-      "installer": {
-        "title": "Installer",
-        "text": "Play from a single download."
       },
       "navigation": "Main navigation",
       "tabs": {

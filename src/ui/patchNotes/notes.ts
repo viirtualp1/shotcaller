@@ -62,8 +62,6 @@ export type FeatureArt =
     }
   /** The in-match hero card: live health and mana bars beside the ability. */
   | { readonly kind: 'heroCard' }
-  /** The desktop installer: the game window and Discord status open together. */
-  | { readonly kind: 'install' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -106,17 +104,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     wide: true,
     features: [
       {
-        art: { kind: 'install' },
-        title: {
-          en: 'Install and play',
-          ru: 'Установи и играй',
-        },
-        text: {
-          en: '[**Install The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/The%20Shotcaller%20Installer.exe) and Discord shows you are **playing** as soon as the game opens.',
-          ru: '[**Установи The Shotcaller**](https://github.com/viirtualp1/shotcaller/releases/latest/download/The%20Shotcaller%20Installer.exe) — и Discord покажет, что ты **играешь**, как только откроется игра.',
-        },
-      },
-      {
         art: { kind: 'heroCard' },
         title: {
           en: 'The fight, on the card',
@@ -129,8 +116,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
     ],
     card: {
-      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up. Play from the **installer**.',
-      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают. Играй через **установщик**.',
+      en: 'The **menu is redesigned**: a saved match, **Computer**, **Online** and **Training** come first. The **hero card** and the **board** are easier to read, and **health** and **mana** keep up.',
+      ru: '**Меню перерисовано**: сначала сохранённый матч, **Компьютер**, **Онлайн** и **Тренировка**. **Карточка героя** и **карта** читаются легче, а **здоровье** и **мана** не отстают.',
     },
     general: [
       {
@@ -160,10 +147,6 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       {
         en: 'Send a friend request with their **friend code**. Yours sits beside Friends, ready to **copy**.',
         ru: 'Отправь заявку в друзья по **коду друга**. Твой код рядом с Друзьями — его можно **скопировать**.',
-      },
-      {
-        en: 'Discord can show that you are in the game: **Playing**, then **Training**, a **Duel** or **Versus the computer**, and where the round is — planning, the fight or the result.',
-        ru: 'Discord может показать, что ты в игре: **Играет**, затем **Тренировка**, **Дуэль** или **Против компьютера**, и где раунд — план, бой или итог.',
       },
       {
         en: 'A wide pass over the look: the **hero card**, the **board** and the menus now make the fight easier to read.',

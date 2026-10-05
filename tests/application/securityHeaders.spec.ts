@@ -76,8 +76,4 @@ describe('content security policy', () => {
     expect(directive('object-src')).toEqual(["'none'"])
     expect(directive('frame-ancestors')).toContain("'self'")
   })
-
-  it('lets the installed desktop app reach the local Discord companion', () => {
-    expect(directive('connect-src')).toContain('ws://127.0.0.1:38471')
-  })
 })
