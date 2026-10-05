@@ -14,7 +14,7 @@ import { useLeaderboardStore } from '../../stores/leaderboard'
 import { useSettingsStore } from '../../stores/settings'
 
 const PREVIEW = 5
-const SKELETON_ROWS = PREVIEW
+const SKELETON_ROWS = 3
 
 const props = withDefaults(defineProps<{ fill?: boolean }>(), { fill: false })
 

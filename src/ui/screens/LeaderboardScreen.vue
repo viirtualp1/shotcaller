@@ -15,6 +15,7 @@ import { useLeaderboardStore } from '../stores/leaderboard'
 import { useFriendsStore } from '../stores/friends'
 
 const PAGE_SIZE = 25
+const SKELETON_ROWS = 3
 
 const leaderboard = useLeaderboardStore()
 const cloud = useCloudStore()
@@ -166,7 +167,7 @@ watch(
           </thead>
 
           <tbody v-if="leaderboard.loading">
-            <tr v-for="row in 8" :key="row">
+            <tr v-for="row in SKELETON_ROWS" :key="row">
               <td><span class="bone place-bone" /></td>
 
               <td>
