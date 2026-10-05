@@ -22,6 +22,7 @@ import {
 import { computed } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import DiscordIcon from '../common/DiscordIcon.vue'
+import HeroAvatar from '../common/HeroAvatar.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import RankMedal from '../profile/RankMedal.vue'
 import HomeDesktopArt from './HomeDesktopArt.vue'
@@ -279,8 +280,8 @@ const copy = computed(() =>
 
                 <div v-for="(coach, i) in BOARD" :key="coach.name" class="standing">
                   <em>{{ i + 1 }}</em>
-                  <CoachAvatar :hero-id="coach.hero" :size="12" />
-                  <span>{{ coach.name }}</span>
+                  <HeroAvatar :hero-id="coach.hero" :size="12" />
+                  <span class="name">{{ coach.name }}</span>
                   <strong>{{ coach.rating }}</strong>
                 </div>
               </section>
@@ -815,7 +816,6 @@ em {
 }
 .standing {
   gap: 3px;
-  height: 16px;
   min-width: 0;
 }
 .standing em {
@@ -824,7 +824,7 @@ em {
   font-style: normal;
   font-weight: 800;
 }
-.standing span {
+.standing .name {
   flex: 1;
   overflow: hidden;
   font-size: 8px;

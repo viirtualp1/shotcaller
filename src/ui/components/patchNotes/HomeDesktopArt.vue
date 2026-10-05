@@ -273,7 +273,7 @@ const copy = computed(() =>
         <div v-for="(coach, i) in BOARD" :key="coach.name" class="standing">
           <em>{{ i + 1 }}</em>
           <HeroAvatar :hero-id="coach.hero" :size="14" />
-          <span>{{ coach.name }}</span>
+          <span class="name">{{ coach.name }}</span>
           <strong>{{ coach.rating }}</strong>
         </div>
       </section>
@@ -812,7 +812,7 @@ h3 {
   font-style: normal;
   font-weight: 800;
 }
-.standing span {
+.standing .name {
   flex: 1;
   overflow: hidden;
   font-weight: 700;
