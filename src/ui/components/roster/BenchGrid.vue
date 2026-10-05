@@ -111,26 +111,19 @@ function onPanelClick() {
 </template>
 
 <style scoped>
-/* Slots stop growing at 68px, so a wide panel does not make the bench taller. */
+/* Same cell size, gap and inset as the stash, so the two grids line up. */
 .grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 68px));
-  justify-content: start;
-  gap: 8px;
-  padding: 4px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
   border-radius: var(--radius);
-  border: 1px dashed transparent;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
+  transition: background 0.15s;
 }
 
 .grid.dense {
-  grid-template-columns: repeat(auto-fill, 52px);
-  justify-content: start;
-  gap: 6px;
-  padding: 2px;
+  grid-template-columns: repeat(auto-fill, 44px);
+  justify-content: center;
 }
 
 .small {
@@ -146,11 +139,11 @@ function onPanelClick() {
 }
 
 .grid.dropping {
-  border-color: rgba(244, 197, 91, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(244, 197, 91, 0.4);
 }
 
 .grid.hovered {
-  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
   background: rgba(244, 197, 91, 0.08);
 }
 
@@ -169,11 +162,11 @@ function onPanelClick() {
 }
 
 .slot.filled {
-  border: 1px solid var(--edge);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--edge);
+  background: transparent;
   cursor: grab;
   touch-action: none;
-  padding: 0 0 6px;
+  padding: 0;
   transition:
     transform 0.12s,
     border-color 0.15s;
@@ -185,11 +178,13 @@ function onPanelClick() {
 }
 
 .slot.selected {
+  border-style: solid;
   border-color: var(--gold);
   box-shadow: 0 0 0 1px var(--gold);
 }
 
 .slot.itemTarget {
+  border-style: solid;
   border-color: var(--gold);
   background: rgba(244, 197, 91, 0.15);
   transform: scale(1.06);

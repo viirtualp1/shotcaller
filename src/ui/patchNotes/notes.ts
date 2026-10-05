@@ -64,6 +64,8 @@ export type FeatureArt =
   | { readonly kind: 'heroCard' }
   /** The 9.2 Steam version: its achievements, one account everywhere and a window of its own. */
   | { readonly kind: 'steam'; readonly focus: 'achievements' | 'account' | 'crossplay' | 'window' }
+  /** The 9.3 match redesign, illustrated with fixed example lineups and timers. */
+  | { readonly kind: 'hud'; readonly focus: 'scoreboard' | 'lineup' | 'scale' | 'twist' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -79,7 +81,7 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'steam'
+  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'steam' | 'hud'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
@@ -95,6 +97,98 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '9.3',
+    date: '2026-10-05',
+    title: {
+      en: 'Eyes on the fight',
+      ru: 'В центре — бой',
+    },
+    campaign: 'hud',
+    wide: true,
+    card: {
+      en: '**A new match HUD**: more room for the battlefield, a scoreboard that appears when it matters, and a clearer view of your lineup.',
+      ru: '**Новый HUD матча**: больше места для поля боя, табло в нужный момент и наглядная расстановка отряда.',
+    },
+    features: [
+      {
+        art: {
+          kind: 'hud',
+          focus: 'scoreboard',
+        },
+        title: {
+          en: 'The right moment to look up',
+          ru: 'Важное — в нужный момент',
+        },
+        text: {
+          en: 'The scoreboard **slides out of the way** to open up the battlefield. Bring it back with a hover over the gold handle. It reveals itself when you enter or resume a match, and at the **start and end of a round**, so you can focus on your next move.',
+          ru: 'Табло **убирается из поля зрения**, освобождая обзор. Наведи на золотую полоску, чтобы вернуть его. Оно раскрывается при входе или возвращении в матч, а также в **начале и конце раунда** — можно сосредоточиться на следующем ходе.',
+        },
+      },
+      {
+        art: {
+          kind: 'hud',
+          focus: 'lineup',
+        },
+        title: {
+          en: 'Read the matchup. Make your move.',
+          ru: 'Оцени расстановку. Сделай ход.',
+        },
+        text: {
+          en: '**Lineups and synergies** are easier to compare before the fight. The more compact layout keeps **your reserves and items within reach** while you look through the lanes. Spot a weak flank, move a hero and finish your build.',
+          ru: '**Составы и синергии** проще сравнивать перед боем. Более компактная расстановка помогает держать **запасных героев и предметы под рукой**, пока ты изучаешь линии. Найди слабый фланг, переставь героя и доведи сборку до конца.',
+        },
+      },
+      {
+        art: {
+          kind: 'hud',
+          focus: 'scale',
+        },
+        title: {
+          en: 'A battlefield with breathing room',
+          ru: 'Больше простора для боя',
+        },
+        text: {
+          en: 'The match has a **new, roomier layout**. The map makes better use of the space around your tools, and the HUD **scales with the game window** so heroes, text and controls stay comfortable to read.',
+          ru: 'У матча **новая, более просторная компоновка**. Карта лучше использует место вокруг инструментов тренера, а HUD **масштабируется вместе с окном игры**, чтобы героев, текст и кнопки было удобно различать.',
+        },
+      },
+      {
+        art: {
+          kind: 'hud',
+          focus: 'twist',
+        },
+        title: {
+          en: 'New twist? You will see it.',
+          ru: 'Новый поворот не пройдёт мимо',
+        },
+        text: {
+          en: 'Playing with round twists? When a new one arrives, **the scoreboard stays open with its announcement**. Read the effect and rethink your lineup before committing to the fight.',
+          ru: 'Играешь с поворотами раунда? Когда приходит новый, **табло остаётся открытым вместе с объявлением**. Прочитай эффект и скорректируй состав перед боем.',
+        },
+      },
+    ],
+    interface: [
+      {
+        en: '**Auto-arrange** now uses a compact wand button beside your reserves, leaving more space for the heroes themselves.',
+        ru: '**Авторасстановка** теперь доступна по компактной кнопке с волшебной палочкой рядом с запасом — больше места остаётся самим героям.',
+      },
+      {
+        en: '**Training controls** take up less room, making it easier to work on your practice lineup.',
+        ru: '**Управление тренировкой** занимает меньше места, чтобы было удобнее работать с тренировочным составом.',
+      },
+      {
+        en: 'Press **Esc** to open the match menu once you have finished placing or selecting a hero.',
+        ru: 'Нажми **Esc**, чтобы открыть меню матча, когда закончишь перетаскивание или снимешь выбор героя.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Placing heroes and changing lane orders no longer **reopen the scoreboard** or keep it on screen longer.',
+        ru: 'Расстановка героев и смена приказов линиям больше **не раскрывают табло** и не задерживают его на экране.',
+      },
+    ],
+  },
   {
     version: '9.2',
     date: '2026-10-05',

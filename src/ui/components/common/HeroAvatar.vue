@@ -70,9 +70,13 @@ const style = computed(() => ({
   --team: var(--theirs);
 }
 
-/* Leaves room under the disc for the stars. */
+/* Smaller than the dashed cell, so the frame and the stars stay clear of the portrait. */
 .avatar.fill {
-  --size: 62cqi;
+  --size: 64cqi;
+}
+
+.avatar.fill .stars {
+  bottom: calc(var(--size) * -0.3);
 }
 
 .avatar.fill svg {

@@ -30,7 +30,6 @@ import NoticeToast from '../components/hud/NoticeToast.vue'
 import PhaseBanner from '../components/hud/PhaseBanner.vue'
 import DuelPauseBanner from '../components/hud/DuelPauseBanner.vue'
 import DuelPauseButton from '../components/hud/DuelPauseButton.vue'
-import { TWIST_NOTICE_MS } from '../components/hud/twistNotice'
 import MatchScoreboard from '../components/hud/MatchScoreboard.vue'
 import ReactionStickers from '../components/hud/ReactionStickers.vue'
 import ReactionWheel from '../components/hud/ReactionWheel.vue'
@@ -46,18 +45,17 @@ import { useFightRequest } from '../composables/useFightRequest'
 import { useGameText } from '../composables/useGameText'
 import { useGameUiZoom } from '../composables/useGameUiZoom'
 import { useHotkeys } from '../composables/useHotkeys'
+import { useScoreboardAnnouncement } from '../composables/useScoreboardAnnouncement'
 import { useDragStore } from '../stores/drag'
 import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { usePauseStore } from '../stores/pause'
-import { URGENT_SECONDS, usePlanningTimerStore } from '../stores/planningTimer'
+import { usePlanningTimerStore } from '../stores/planningTimer'
 import { useSettingsStore } from '../stores/settings'
 import { useTutorial } from '../tutorial/useTutorial'
 
 const TUTORIAL_DELAY_MS = 900
-/** How long the scoreboard stays out when a round, a phase or a twist begins. */
-const ANNOUNCE_MS = 3500
 const BACKGROUND_TICK_MS = 1000
 
 const store = useMatchStore()
@@ -70,6 +68,7 @@ const duel = useDuelStore()
 const { t } = useGameText()
 const tour = useTutorial()
 const uiZoom = useGameUiZoom()
+const scoreboardOut = useScoreboardAnnouncement(() => store.view)
 
 const game = ref<HTMLElement | null>(null)
 const top = ref<HTMLElement | null>(null)
@@ -97,17 +96,9 @@ const pinned = computed(() => !store.view?.sandbox || viewportHeight.value >= 10
 
 /**
  * With a mouse the scoreboard hides above the window behind a handle, and the map lines up with the side panels.
- * It slides out on hover, when a round, a phase or a twist begins, and for the last seconds of planning.
+ * It slides out on hover, on entering the match, and at the start and end of rounds.
  */
 const peek = computed(() => wide.value && !touch.value)
-const announcing = ref(false)
-const announceFor = ref(ANNOUNCE_MS)
-
-const urgent = computed(
-  () => store.isPlanning && timer.remaining !== null && Math.ceil(timer.remaining) <= URGENT_SECONDS,
-)
-
-const scoreboardOut = computed(() => announcing.value || urgent.value)
 
 /** Equal side insets keep the map centred under the scoreboard. */
 const sideInset = computed(() =>
@@ -230,22 +221,9 @@ useHotkeys({
 
 const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, { immediate: false })
 
-const announcement = useTimeoutFn(() => (announcing.value = false), announceFor, { immediate: false })
-
 useEventListener(game, ['transitionend', 'animationend'], measureHud)
 
 watch(uiZoom, measureHud, { flush: 'post' })
-
-/* A new twist keeps the scoreboard out for as long as the card about it hangs underneath. */
-watch(
-  () => [store.view?.round, store.phase, store.view?.twist] as const,
-  (next, previous) => {
-    announceFor.value = next[2] && next[2] !== previous?.[2] ? TWIST_NOTICE_MS : ANNOUNCE_MS
-    announcing.value = true
-    announcement.start()
-  },
-  { immediate: true },
-)
 
 watch(
   () => menu.tutorialPending,
