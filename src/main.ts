@@ -8,6 +8,7 @@ import { inject } from '@vercel/analytics'
 import { injectSpeedInsights } from '@vercel/speed-insights'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
+import { IN_DESKTOP } from './application/desktop'
 import { IN_DISCORD, startDiscordActivity } from './application/discord'
 import { migrateLegacyStorage } from './application/persistence/storageKeys'
 import App from './ui/App.vue'
@@ -20,8 +21,11 @@ const app = createApp(App).use(createPinia()).use(i18n)
 useSettingsStore()
 app.mount('#app')
 
-inject({ framework: 'vue' })
-injectSpeedInsights({ framework: 'vue' })
+/* Vercel serves these scripts; the desktop build carries its own files and has no such host. */
+if (!IN_DESKTOP) {
+  inject({ framework: 'vue' })
+  injectSpeedInsights({ framework: 'vue' })
+}
 
 if (IN_DISCORD) {
   startDiscordActivity(import.meta.env.VITE_DISCORD_CLIENT_ID).catch((error: unknown) =>

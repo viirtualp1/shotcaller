@@ -7,6 +7,7 @@ import { sendEmailCode } from '@/application/cloud/emailSignIn'
 import { isBlank, ProfileSync } from '@/application/cloud/ProfileSync'
 import { IN_DISCORD } from '@/application/discord'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
+import type { SteamBridge } from '@/application/steam'
 import type { SupabaseCloud } from '@/application/cloud/SupabaseCloud'
 import type { Profile } from '@/domain/profile/Profile'
 import { useProfileStore } from './profile'
@@ -187,6 +188,26 @@ export const useCloudStore = defineStore('cloud', () => {
     await cloud.google()
   }
 
+  /** The desktop game signs in with Steam on its own; a signed-in email account gets Steam linked to it. */
+  async function signInWithSteam(steam: SteamBridge) {
+    if (!config) {
+      return
+    }
+
+    const ticket = await steam.ticket()
+
+    if (!ticket) {
+      return
+    }
+
+    const cloud = await connect()
+
+    if ((await cloud.steam(ticket)) === 'signIn') {
+      account.value = await cloud.account()
+      void syncNow()
+    }
+  }
+
   /** The profile belongs to the account, so it leaves with it; the next save starts a new guest. */
   async function signOut() {
     await syncNow()
@@ -292,6 +313,7 @@ export const useCloudStore = defineStore('cloud', () => {
     sendCode,
     verifyCode,
     signInWithGoogle,
+    signInWithSteam,
     signOut,
     deleting,
     deleteError,

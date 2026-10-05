@@ -2,6 +2,7 @@
 import { useMediaQuery } from '@vueuse/core'
 import { TooltipProvider } from 'reka-ui'
 import { computed } from 'vue'
+import { IN_DESKTOP } from '@/application/desktop'
 import { IN_DISCORD } from '@/application/discord'
 import UpdateToast from './components/common/UpdateToast.vue'
 import MobileTabBar from './components/home/MobileTabBar.vue'
@@ -38,6 +39,7 @@ import { useProfileStore } from './stores/profile'
 import { usePrivacyStore } from './stores/privacy'
 import { useReplayStore } from './stores/replay'
 import { useGameAudio } from './composables/useGameAudio'
+import { useSteam } from './composables/useSteam'
 import { useLeaderboardStore } from './stores/leaderboard'
 import { useLegalStore } from './stores/legal'
 
@@ -59,6 +61,9 @@ useFriendsStore()
 const chat = useChatStore()
 useDuelStore()
 useSystemNotificationsStore()
+
+/* After the cloud store: the desktop game signs in with Steam and mirrors achievements there. */
+useSteam()
 
 /**
  * Pages share the friends shortcut. The game has its own in the menu,
@@ -114,7 +119,7 @@ useDocumentHead()
 
     <NewMatchDialog />
     <!-- Discord serves the Activity through its own proxy, and every launch already loads the latest version. -->
-    <UpdateToast v-if="!IN_DISCORD" />
+    <UpdateToast v-if="!IN_DISCORD && !IN_DESKTOP" />
 
     <template v-if="cloud.enabled">
       <SignInDialog />

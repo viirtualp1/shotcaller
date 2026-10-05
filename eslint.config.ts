@@ -138,7 +138,7 @@ const codeStyle: Linter.Config = {
 }
 
 export default withVueTs(
-  { ignores: ['dist/**', 'node_modules/**'] },
+  { ignores: ['dist/**', 'dist-desktop/**', 'dist-electron/**', 'release/**', 'node_modules/**'] },
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
   {
@@ -146,10 +146,16 @@ export default withVueTs(
       'src/**/*.{ts,vue}',
       'tests/**/*.ts',
       'scripts/**/*.ts',
+      'electron/**/*.ts',
       'supabase/functions/_shared/**/*.ts',
       '*.config.ts',
     ],
     rules: { '@typescript-eslint/no-deprecated': 'error' },
+  },
+  {
+    // A sandboxed Electron preload is CommonJS: `import x = require()` is how it loads modules.
+    files: ['electron/**/*.cts'],
+    rules: { '@typescript-eslint/no-require-imports': ['error', { allowAsImport: true }] },
   },
   {
     // Edge entry points use Deno and are outside the application's TypeScript projects.

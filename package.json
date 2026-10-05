@@ -1,24 +1,28 @@
 {
   "name": "shotcaller",
   "private": true,
-  "version": "9.1.0",
+  "version": "9.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "vue-tsc -b",
+    "typecheck": "vue-tsc -b && tsc -p tsconfig.electron.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write src tests scripts",
-    "format:check": "prettier --check src tests scripts",
+    "format": "prettier --write src tests scripts electron",
+    "format:check": "prettier --check src tests scripts electron",
     "balance": "tsx --tsconfig tsconfig.node.json scripts/balance.ts",
     "balance:ab": "tsx --tsconfig tsconfig.node.json scripts/abTest.ts",
     "balance:items": "tsx --tsconfig tsconfig.node.json scripts/itemBalance.ts",
-    "icons": "pwa-assets-generator",
-    "patch:discord": "tsx --tsconfig tsconfig.node.json scripts/discordPatch.ts"
+    "icons": "pwa-assets-generator && tsx --tsconfig tsconfig.node.json scripts/desktopIcon.ts",
+    "patch:discord": "tsx --tsconfig tsconfig.node.json scripts/discordPatch.ts",
+    "desktop": "npm run desktop:build && electron .",
+    "desktop:build": "vite build --mode desktop --outDir dist-desktop && tsc -p tsconfig.electron.json",
+    "desktop:package": "npm run desktop:build && electron-builder"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.5.0",
@@ -43,6 +47,7 @@
     "pixi.js": "^8.22.0",
     "reka-ui": "^2.10.5",
     "seedrandom": "^3.0.5",
+    "steamworks.js": "^0.4.0",
     "vue": "^3.5.43",
     "vue-i18n": "^11.4.13",
     "zod": "^4.6.5"
@@ -56,12 +61,16 @@
     "@vitejs/plugin-vue": "^6.0.9",
     "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/tsconfig": "^0.9.1",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.11.1",
     "happy-dom": "^20.14.5",
     "jiti": "^2.7.0",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
+    "sharp-ico": "^0.1.5",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
@@ -83,6 +92,7 @@
     }
   },
   "allowScripts": {
+    "electron-winstaller": false,
     "esbuild": true,
     "fsevents": false,
     "vue-demi": true

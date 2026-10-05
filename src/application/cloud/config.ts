@@ -1,3 +1,4 @@
+import { DESKTOP_MODE } from '../desktop'
 import { discordCloudUrl } from '../discord'
 
 export interface CloudConfig {
@@ -12,6 +13,7 @@ export interface CloudEnv {
   readonly VITE_SUPABASE_URL?: string
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string
   readonly VITE_SUPABASE_GOOGLE?: string
+  readonly MODE?: string
 }
 
 function jwtRole(token: string) {
@@ -38,7 +40,8 @@ export const isSecretKey = (key: string) => key.startsWith('sb_secret_') || jwtR
 
 /**
  * Cloud saves are optional: without a URL and a key the game simply stays local. A Discord Activity passes its
- * origin, and Supabase is then reached through the Activity's URL mapping.
+ * origin, and Supabase is then reached through the Activity's URL mapping. Google sign-in returns to a web page,
+ * which neither the Activity nor the desktop app can receive, so both sign in with the email code.
  */
 export function cloudConfig(env: CloudEnv, discordOrigin: string | null = null): CloudConfig | null {
   const url = env.VITE_SUPABASE_URL?.trim()
@@ -66,6 +69,6 @@ export function cloudConfig(env: CloudEnv, discordOrigin: string | null = null):
   return {
     url,
     key,
-    google: env.VITE_SUPABASE_GOOGLE === 'true',
+    google: env.MODE !== DESKTOP_MODE && env.VITE_SUPABASE_GOOGLE === 'true',
   }
 }

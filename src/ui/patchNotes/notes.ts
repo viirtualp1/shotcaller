@@ -62,6 +62,8 @@ export type FeatureArt =
     }
   /** The in-match hero card: live health and mana bars beside the ability. */
   | { readonly kind: 'heroCard' }
+  /** The 9.2 Steam version: its achievements, one account everywhere and a window of its own. */
+  | { readonly kind: 'steam'; readonly focus: 'achievements' | 'account' | 'crossplay' | 'window' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -77,7 +79,7 @@ export interface PatchNote {
   readonly date: string
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
-  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home'
+  readonly campaign?: 'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'steam'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
@@ -93,6 +95,87 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '9.2',
+    date: '2026-10-05',
+    title: {
+      en: 'Next stop: Steam',
+      ru: 'Следующая остановка — Steam',
+    },
+    campaign: 'steam',
+    features: [
+      {
+        art: {
+          kind: 'steam',
+          focus: 'achievements',
+        },
+        title: {
+          en: 'Sixteen achievements, and your past counts',
+          ru: 'Шестнадцать достижений — и прошлое в зачёт',
+        },
+        text: {
+          en: 'Win, clear the **four trials**, climb to **Strategist** and beyond: **16 Steam achievements** to collect. Everything you have already done on the web counts, and they unlock the **first time** you start the Steam version.',
+          ru: 'Побеждай, проходи **четыре испытания**, поднимайся до **Стратега** и выше: **16 достижений Steam**. Всё, что ты уже сделал на сайте, засчитается: достижения откроются при **первом запуске** версии для Steam.',
+        },
+      },
+      {
+        art: {
+          kind: 'steam',
+          focus: 'account',
+        },
+        title: {
+          en: 'One coach, everywhere',
+          ru: 'Один тренер везде',
+        },
+        text: {
+          en: '**Sign in with Steam** and your level, MMR, career and friends come with you. Already playing on the web? Sign in with your **email once**, and Steam joins that account.',
+          ru: '**Войди через Steam** — и уровень, MMR, карьера и друзья будут с тобой. Уже играешь на сайте? Войди **один раз по почте**, и Steam привяжется к этому аккаунту.',
+        },
+      },
+      {
+        art: {
+          kind: 'steam',
+          focus: 'crossplay',
+        },
+        title: {
+          en: 'Same queue, same friends',
+          ru: 'Одна очередь, одни друзья',
+        },
+        text: {
+          en: 'Steam players join the **same ranked queue**, duels and leaderboard as the web and Discord. Challenge a friend **wherever they play**.',
+          ru: 'Игроки из Steam попадают в **ту же рейтинговую очередь**, дуэли и таблицу лидеров, что и на сайте и в Discord. Вызывай друга, **где бы он ни играл**.',
+        },
+      },
+      {
+        art: {
+          kind: 'steam',
+          focus: 'window',
+        },
+        title: {
+          en: 'A window of its own',
+          ru: 'Своё окно',
+        },
+        text: {
+          en: 'The Steam version opens **full screen**, without tabs or an address bar. **F11** or **Alt+Enter** switch to a window and back, and **Shift+Tab** opens the Steam overlay.',
+          ru: 'Версия для Steam открывается **на весь экран** — без вкладок и адресной строки. **F11** или **Alt+Enter** переключают в окно и обратно, а **Shift+Tab** открывает оверлей Steam.',
+        },
+      },
+    ],
+    card: {
+      en: '**The Shotcaller comes to Steam in November**: **16 achievements**, sign-in with Steam and a full-screen window. Everything you play now counts.',
+      ru: '**The Shotcaller выходит в Steam в ноябре**: **16 достижений**, вход через Steam и игра на весь экран. Всё, что ты играешь сейчас, идёт в зачёт.',
+    },
+    general: [
+      {
+        en: 'Nothing changes on the web: keep playing in the browser or in Discord.',
+        ru: 'На сайте ничего не меняется: играй в браузере или в Discord, как раньше.',
+      },
+      {
+        en: 'Steam keeps the game up to date on its own, with nothing to install by hand.',
+        ru: 'Steam сам обновляет игру — ничего не нужно ставить вручную.',
+      },
+    ],
+  },
   {
     version: '9.1',
     date: '2026-10-05',
