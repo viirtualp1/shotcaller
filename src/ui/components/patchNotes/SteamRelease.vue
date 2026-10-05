@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { ArrowUpRight, BadgeCheck, Gamepad2, Globe, Maximize2, MonitorPlay, Trophy, X } from '@lucide/vue'
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  CalendarDays,
+  Gamepad2,
+  Globe,
+  Maximize2,
+  MonitorPlay,
+  Trophy,
+  X,
+} from '@lucide/vue'
 import { computed } from 'vue'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
@@ -15,9 +25,11 @@ const copy = computed(() =>
   settings.locale === 'ru'
     ? {
         eyebrow: 'Steam · Достижения · Один аккаунт',
+        release: 'Выход в Steam',
+        month: 'Ноябрь 2026',
         title: 'Твой тренер.\nТвоя библиотека.',
         intro:
-          'The Shotcaller готовится к выходу в Steam. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
+          'The Shotcaller выходит в Steam в ноябре. Та же игра — в собственном окне, с достижениями и твоим аккаунтом. Каждый матч, сыгранный сейчас, уже идёт в зачёт.',
         achievements: 'достижений Steam',
         places: 'места для игры: сайт, Discord, Steam',
         account: 'аккаунт для всех',
@@ -34,9 +46,11 @@ const copy = computed(() =>
       }
     : {
         eyebrow: 'Steam · Achievements · One account',
+        release: 'On Steam',
+        month: 'November 2026',
         title: 'Your coach.\nYour library.',
         intro:
-          'The Shotcaller is getting ready for Steam. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
+          'The Shotcaller comes to Steam in November. The same game, in a window of its own, with achievements and your account along for the ride. Every match you play now already counts.',
         achievements: 'Steam achievements',
         places: 'places to play: web, Discord, Steam',
         account: 'account for all of them',
@@ -60,6 +74,12 @@ const copy = computed(() =>
       <p class="eyebrow"><Gamepad2 :size="14" /> {{ copy.eyebrow }}</p>
       <h2 id="steam-release-title" class="hand">{{ copy.title }}</h2>
       <p class="intro">{{ copy.intro }}</p>
+
+      <p class="release">
+        <CalendarDays :size="16" />
+        <span>{{ copy.release }}</span>
+        <b>{{ copy.month }}</b>
+      </p>
 
       <dl class="counts">
         <div>
@@ -205,6 +225,29 @@ h2 {
   font-size: 14px;
   line-height: 1.65;
   color: var(--chalk-dim);
+}
+
+.release {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 8px 14px;
+  border: 1px solid #f4c55b66;
+  border-radius: var(--radius);
+  background: var(--gold-soft);
+  color: var(--gold);
+  font-size: 12px;
+}
+
+.release span {
+  color: var(--chalk-dim);
+  font-weight: 700;
+}
+
+.release b {
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .counts {
