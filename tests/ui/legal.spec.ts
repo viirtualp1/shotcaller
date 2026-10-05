@@ -38,4 +38,14 @@ describe('legal documents', () => {
     expect(html).toContain('Optional gameplay statistics')
     expect(html).toContain('<a href="/terms">Terms of Service</a>')
   })
+
+  it('explain account deletion on a page of its own, readable without the game', () => {
+    expect(legalFromPath('/delete-account')).toBe('delete-account')
+
+    const html = legalArticle(LEGAL_DOCUMENTS['delete-account'])
+
+    expect(html).toContain('<h1>Delete your account</h1>')
+    expect(html).toContain('shotcaller.team@gmail.com')
+    expect(html).toContain('<a href="/privacy">Privacy Policy</a>')
+  })
 })

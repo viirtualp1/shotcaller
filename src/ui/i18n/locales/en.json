@@ -804,7 +804,8 @@
     "also": "Also read",
     "short": {
       "terms": "Terms",
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "delete-account": "Delete account"
     }
   },
   "profile": {
