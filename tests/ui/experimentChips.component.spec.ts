@@ -24,6 +24,13 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+async function mount() {
+  document.body.innerHTML = '<div id="host"></div>'
+  app = createApp({ render: () => h(TooltipProvider, {}, () => h(ExperimentChips)) }).use(i18n)
+  app.mount('#host')
+  await nextTick()
+}
+
 describe('round twist announcement', () => {
   beforeEach(() => {
     match.view.twist = 'fog'
@@ -32,20 +39,14 @@ describe('round twist announcement', () => {
 
   it('announces the twist already in play when a round opens', async () => {
     vi.useFakeTimers()
-    document.body.innerHTML = '<div id="host"></div>'
-    app = createApp({ render: () => h(TooltipProvider, {}, () => h(ExperimentChips)) }).use(i18n)
-    app.mount('#host')
-    await nextTick()
+    await mount()
     expect(document.querySelector('[role="status"]')?.textContent).toContain('New round twist')
     expect(document.querySelector('[role="status"]')?.textContent).toContain('Fog')
   })
 
   it('announces a changed effect once and keeps the new chip after the announcement ends', async () => {
     vi.useFakeTimers()
-    document.body.innerHTML = '<div id="host"></div>'
-    app = createApp({ render: () => h(TooltipProvider, {}, () => h(ExperimentChips)) }).use(i18n)
-    app.mount('#host')
-    await nextTick()
+    await mount()
     match.view.twist = 'bloodMoon'
     await nextTick()
     expect(document.querySelector('[role="status"]')?.textContent).toContain('New round twist')
