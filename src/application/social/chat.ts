@@ -10,7 +10,8 @@ export interface ChatMessage {
   readonly readAt: string | null
 }
 
-export type ChatFailure = 'rateLimited' | 'invalid' | 'forbidden' | 'failed'
+/** `muted`: a moderator restricted this coach's chat. */
+export type ChatFailure = 'rateLimited' | 'invalid' | 'forbidden' | 'muted' | 'failed'
 
 export class ChatError extends Error {
   constructor(readonly reason: ChatFailure) {

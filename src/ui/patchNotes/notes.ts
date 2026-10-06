@@ -114,6 +114,56 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '9.5.1',
+    date: '2026-10-07',
+    title: {
+      en: 'Fair play',
+      ru: 'Честная игра',
+    },
+    general: [
+      {
+        en: '**Reporting a coach** now opens its own window: pick a reason, describe what happened, and the report reaches a moderator with the chat and name as they were at that moment.',
+        ru: '**Жалоба на тренера** теперь открывается отдельным окном: выбери причину, опиши, что случилось, — модератор увидит чат и имя такими, какими они были в момент жалобы.',
+      },
+      {
+        en: 'Moderators can now **mute a coach’s chat**, hide an offensive **name or picture**, or take a coach off the **leaderboard**. When several coaches report the same abuse, the chat or name is paused until a moderator decides.',
+        ru: 'Модераторы теперь могут **отключить тренеру чат**, скрыть оскорбительное **имя или фото** или убрать тренера из **таблицы лидеров**. Если на одно и то же жалуются несколько тренеров, чат или имя скрываются до решения модератора.',
+      },
+      {
+        en: 'Reports are checked by hand. Coaches whose reports keep turning out **false** lose the right to report for a while.',
+        ru: 'Жалобы проверяют вручную. Тренер, чьи жалобы раз за разом оказываются **ложными**, на время теряет право жаловаться.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Your own matches now open **round by round** too, with the turning round marked and ready to replay.',
+        ru: 'Твои матчи теперь тоже открываются **по раундам**: переломный раунд отмечен, его можно сразу пересмотреть.',
+      },
+      {
+        en: 'The **Open profile** switch is easier to read at a glance and tells you if your choice could not be saved.',
+        ru: 'Переключатель **«Открытый профиль»** стал понятнее с первого взгляда и сообщает, если выбор не сохранился.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Profiles are **private** until their coach turns on Open profile, as promised in 9.5. Some were open by mistake.',
+        ru: 'Профили **закрыты**, пока тренер сам не включит «Открытый профиль», как и обещал патч 9.5. Некоторые были открыты по ошибке.',
+      },
+      {
+        en: 'A window opened from another one now closes **on its own**, leaving the first one open, including a profile opened from the chat.',
+        ru: 'Окно, открытое из другого окна, теперь закрывается **само по себе** и оставляет первое открытым — в том числе профиль, открытый из чата.',
+      },
+      {
+        en: 'The **Update** button works even while a window is open.',
+        ru: 'Кнопка **«Обновить»** нажимается, даже когда открыто какое-то окно.',
+      },
+      {
+        en: 'The heroes table of a match scrolls inside its window instead of stretching it.',
+        ru: 'Таблица героев в матче прокручивается внутри окна, а не растягивает его.',
+      },
+    ],
+  },
+  {
     version: '9.5',
     date: '2026-10-07',
     title: {

@@ -45,7 +45,7 @@ import WatchLiveButton from './WatchLiveButton.vue'
 import { relativeTime } from '../profile/format'
 import RankDropdown from '../profile/RankDropdown.vue'
 import FriendMatchDetails from './FriendMatchDetails.vue'
-import ReportCoach from './ReportCoach.vue'
+import ReportCoachDialog from './ReportCoachDialog.vue'
 import CoachDossier from './CoachDossier.vue'
 import { useCloudStore } from '../../stores/cloud'
 
@@ -392,11 +392,11 @@ watch(
             </section>
           </template>
 
-          <ReportCoach
-            v-if="canReport && friends.viewedId && reporting"
+          <ReportCoachDialog
+            v-if="canReport && friends.viewedId"
+            v-model:open="reporting"
             :coach-id="friends.viewedId"
             :name="name"
-            @close="reporting = false"
           />
         </div>
 
@@ -463,8 +463,8 @@ watch(
             v-if="canReport"
             type="button"
             class="btn ghost"
-            :aria-expanded="reporting"
-            @click="reporting = !reporting"
+            aria-haspopup="dialog"
+            @click="reporting = true"
           >
             <Flag :size="16" /> {{ t('playerReport.open') }}
           </button>

@@ -12,6 +12,7 @@ import type {
   Presence,
   PresenceStatus,
   ReportReason,
+  ReportResult,
 } from '@/application/social/friends'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { useAccountPhoto } from '../composables/useAccountPhoto'
@@ -505,19 +506,17 @@ export const useFriendsStore = defineStore('friends', () => {
   const unblock = (id: string) => act((friends) => friends.unblock(id))
 
   /** True once the report is on its way; the dialog says so, or offers to try again. */
-  async function report(id: string, reason: ReportReason, details: string) {
+  async function report(id: string, reason: ReportReason, details: string): Promise<ReportResult> {
     if (!service) {
-      return false
+      return 'failed'
     }
 
     try {
-      await service.report(id, reason, details)
-
-      return true
+      return await service.report(id, reason, details)
     } catch (error) {
       console.warn('Could not send the report', error)
 
-      return false
+      return 'failed'
     }
   }
 

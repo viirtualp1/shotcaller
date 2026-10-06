@@ -7,6 +7,7 @@ import { useVisibleViewport } from '../../composables/useVisibleViewport'
 import { useChatStore } from '../../stores/chat'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
+import { useModalsStore } from '../../stores/modals'
 import { useSystemNotificationsStore } from '../../stores/systemNotifications'
 import AddFriendDialog from './AddFriendDialog.vue'
 import ChatPanel from './ChatPanel.vue'
@@ -18,6 +19,7 @@ import FriendsList from './FriendsList.vue'
 const friends = useFriendsStore()
 const chat = useChatStore()
 const duel = useDuelStore()
+const modals = useModalsStore()
 const system = useSystemNotificationsStore()
 const { t } = useGameText()
 const viewport = useVisibleViewport()
@@ -73,6 +75,7 @@ function close() {
   )
 }
 
+/* A dialog over the window, such as a friend's profile opened from the chat, takes Esc and closes alone. */
 useEventListener(
   document,
   'keydown',
@@ -80,6 +83,7 @@ useEventListener(
     if (
       event.key !== 'Escape' ||
       event.defaultPrevented ||
+      modals.anyOpen ||
       !chat.windowOpen ||
       (chat.docked && !chatting.value)
     ) {

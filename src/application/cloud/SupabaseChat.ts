@@ -8,6 +8,7 @@ const FAILURES: Readonly<Record<string, ChatFailure>> = {
   P0429: 'rateLimited',
   '22023': 'invalid',
   '42501': 'forbidden',
+  P0403: 'muted',
 }
 
 /** Realtime payloads are checked like any other input before they reach the screen. */

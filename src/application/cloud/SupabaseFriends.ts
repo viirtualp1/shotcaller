@@ -14,6 +14,9 @@ import { coachDossierSchema, dossierMatchSchema } from './dossierSchema'
 import { liveMatchSchema, type LiveMatch } from '../social/liveMatch'
 import { asJson } from './json'
 
+/** Raised by `report_player` for a coach who lost the right to report after false reports. */
+const REPORTS_RESTRICTED = 'P0403'
+
 const FRIEND_STATUSES: ReadonlySet<string> = new Set<FriendStatus>(['friend', 'incoming', 'outgoing'])
 
 const REQUEST_RESULTS: ReadonlySet<string> = new Set<FriendRequestResult>([
@@ -136,9 +139,15 @@ export class SupabaseFriends implements FriendsService {
       details: details.trim().slice(0, REPORT_DETAILS_MAX),
     })
 
+    if (error?.code === REPORTS_RESTRICTED) {
+      return 'restricted'
+    }
+
     if (error) {
       throw error
     }
+
+    return 'sent'
   }
 
   async unblock(coachId: string) {

@@ -1068,6 +1068,7 @@
       "rateLimited": "Too fast. Wait a moment",
       "invalid": "The message is empty or longer than 500 characters",
       "forbidden": "You can only message friends",
+      "muted": "A moderator restricted your chat after reports. Try again later",
       "failed": "That did not work. Try again"
     },
     "toFriends": "Back to friends"
@@ -1157,7 +1158,9 @@
   "playerReport": {
     "open": "Report",
     "title": "Report {name}",
+    "intro": "Moderators will look into it. {name} won’t know who reported them.",
     "reason": "Reason",
+    "choose": "Choose a reason",
     "reasons": {
       "abuse": "Abuse in chat",
       "cheating": "Cheating",
@@ -1165,12 +1168,15 @@
       "other": "Something else"
     },
     "details": "What happened? (optional)",
+    "detailsHint": "When and where it happened, what they wrote or did",
+    "falseWarning": "Every report is checked by hand. Reporting players falsely or to get back at them can get your own account restricted.",
     "send": "Send report",
     "sending": "Sending…",
     "cancel": "Cancel",
     "close": "Close",
     "sent": "Thanks. Moderators will review the report; the player is not told who sent it.",
-    "failed": "Could not send the report. Check your connection and try again in a while."
+    "failed": "Could not send the report. Check your connection and try again in a while.",
+    "restricted": "You can’t send reports for now: several of your earlier reports turned out to be false."
   },
   "chatWindow": {
     "open": "Open chat",

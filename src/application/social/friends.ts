@@ -52,6 +52,8 @@ export type FriendRequestResult = 'sent' | 'accepted' | 'friends' | 'notFound' |
 export const REPORT_REASONS = ['abuse', 'cheating', 'name', 'other'] as const
 export type ReportReason = (typeof REPORT_REASONS)[number]
 export const REPORT_DETAILS_MAX = 500
+/** `restricted`: moderators took the right to report away after false reports. */
+export type ReportResult = 'sent' | 'restricted' | 'failed'
 
 /** Friends of the signed-in coach. Needs an email or Google account; guests have none. */
 export interface FriendsService {
@@ -67,8 +69,8 @@ export interface FriendsService {
   block(coachId: string): Promise<void>
   unblock(coachId: string): Promise<void>
   blocked(): Promise<CoachCard[]>
-  /** Sends a coach's conduct to the moderators; the coach is not told who reported them. */
-  report(coachId: string, reason: ReportReason, details: string): Promise<void>
+  /** Sends a coach's conduct to the moderators; the coach is not told who reported them. Rejects when it fails. */
+  report(coachId: string, reason: ReportReason, details: string): Promise<'sent' | 'restricted'>
   /** Whether coaches who are not friends can open this coach's dossier from the leaderboard. */
   publicProfile(): Promise<boolean>
   setPublicProfile(visible: boolean): Promise<void>
