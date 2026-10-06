@@ -201,7 +201,10 @@ onScopeDispose(() => {
 </template>
 
 <style scoped>
-/* Centred between the screen's edges: pinned at left: 50% instead, it could only grow to half the screen. */
+/*
+ * Centred between the screen's edges: pinned at left: 50% instead, it could only grow to half the screen. Above every
+ * dialog, and clickable under one: an open modal turns pointer events off on the body, and the toast inherits that.
+ */
 .toast {
   position: fixed;
   inset-inline: 16px;
@@ -217,7 +220,8 @@ onScopeDispose(() => {
   border: 1px solid rgba(244, 197, 91, 0.5);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   font-size: 13.5px;
-  z-index: 70;
+  pointer-events: auto;
+  z-index: 80;
 }
 
 .icon {
@@ -245,7 +249,8 @@ onScopeDispose(() => {
 .veil {
   position: fixed;
   inset: 0;
-  z-index: 69;
+  z-index: 79;
+  pointer-events: auto;
   background: rgba(8, 12, 11, 0.6);
   backdrop-filter: blur(2px);
   cursor: progress;

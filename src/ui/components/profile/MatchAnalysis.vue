@@ -167,8 +167,10 @@ function watchRound() {
 </template>
 
 <style scoped>
+/* One column no wider than the dialog, so the hero tables scroll inside instead of stretching it. */
 .analysis {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
 }
 
