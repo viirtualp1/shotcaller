@@ -76,7 +76,6 @@ function share(current: number, max: number) {
   align-items: center;
   height: 22px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--gold) 62%, transparent);
   border-radius: 999px;
   background: rgba(236, 232, 220, 0.16);
   color: var(--chalk);
