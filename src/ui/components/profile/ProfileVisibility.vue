@@ -39,7 +39,9 @@ const open = computed({
 
     <ExperimentInfo :title="t('dossier.openProfile')" :text="t('dossier.privacyHint')" hover />
 
-    <small v-if="friends.publicProfileFailed" class="failed" role="alert">{{ t('dossier.privacyFailed') }}</small>
+    <small v-if="friends.publicProfileFailed" class="failed" role="alert">{{
+      t('dossier.privacyFailed')
+    }}</small>
   </div>
 </template>
 
