@@ -17,26 +17,27 @@ const { t } = useGameText()
   <a
     v-if="!IN_ANDROID_APP && !IN_DESKTOP"
     :href="`/patches/${ANNOUNCEMENT_PATCH}/`"
+    :aria-label="t('start.home.googlePlay.title')"
     class="google-play"
     @click.prevent="notes.open(ANNOUNCEMENT_PATCH)"
   >
     <GooglePlayIcon :size="24" />
 
-    <span>
-      <b>{{ t('start.home.googlePlay.title') }}</b>
-      <small>{{ t('start.home.googlePlay.text') }}</small>
-    </span>
+    <b class="mobile-label" aria-hidden="true">Soon</b>
+
+    <b class="desktop-copy">{{ t('start.home.googlePlay.title') }}</b>
   </a>
 </template>
 
 <style scoped>
 .google-play {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-width: 0;
   height: 100%;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid rgba(127, 224, 180, 0.5);
   border-radius: var(--radius);
   background: linear-gradient(135deg, rgba(127, 224, 180, 0.14), rgba(23, 44, 36, 0.4));
@@ -60,23 +61,33 @@ const { t } = useGameText()
 b {
   display: block;
   font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
 }
 
-small {
-  display: block;
-  margin-top: 2px;
-  color: var(--chalk-dim);
-  font-size: 12px;
-  line-height: 1.4;
+.mobile-label {
+  display: none;
 }
 
 @media (max-width: 860px) {
   .google-play {
-    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
   }
 
-  small {
+  .google-play svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .desktop-copy {
     display: none;
+  }
+
+  .mobile-label {
+    display: block;
+    font-size: 14px;
+    white-space: nowrap;
   }
 }
 </style>

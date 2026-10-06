@@ -16,26 +16,27 @@ const { t } = useGameText()
   <a
     v-if="!IN_DESKTOP"
     :href="`/patches/${STEAM_PATCH}/`"
+    :aria-label="t('start.home.steam.title')"
     class="steam"
     @click.prevent="notes.open(STEAM_PATCH)"
   >
     <SteamIcon :size="26" />
 
-    <span>
-      <b>{{ t('start.home.steam.title') }}</b>
-      <small>{{ t('start.home.steam.text') }}</small>
-    </span>
+    <b class="mobile-label" aria-hidden="true">Soon</b>
+
+    <b class="desktop-copy">{{ t('start.home.steam.title') }}</b>
   </a>
 </template>
 
 <style scoped>
 .steam {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-width: 0;
   height: 100%;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid rgba(108, 196, 255, 0.5);
   border-radius: var(--radius);
   background: linear-gradient(135deg, rgba(108, 196, 255, 0.16), rgba(23, 39, 52, 0.4));
@@ -59,23 +60,33 @@ const { t } = useGameText()
 b {
   display: block;
   font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
 }
 
-small {
-  display: block;
-  margin-top: 2px;
-  color: var(--chalk-dim);
-  font-size: 12px;
-  line-height: 1.4;
+.mobile-label {
+  display: none;
 }
 
 @media (max-width: 860px) {
   .steam {
-    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
   }
 
-  small {
+  .steam svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .desktop-copy {
     display: none;
+  }
+
+  .mobile-label {
+    display: block;
+    font-size: 14px;
+    white-space: nowrap;
   }
 }
 </style>

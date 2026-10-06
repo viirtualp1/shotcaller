@@ -5,9 +5,9 @@ import { useGameText } from '../../composables/useGameText'
 import DiscordIcon from '../common/DiscordIcon.vue'
 
 /** Outside Discord it offers the Activity; inside an Activity it invites friends to this one. */
-const { t } = useGameText()
-
 const href = IN_DISCORD ? null : discordInstallUrl(import.meta.env)
+
+const { t } = useGameText()
 
 function invite() {
   void inviteToActivity(t('start.inviteMessage'))
@@ -20,25 +20,31 @@ function invite() {
     <b>{{ t('start.invite') }}</b>
   </button>
 
-  <a v-else-if="href" :href="href" class="discord" target="_blank" rel="noopener">
+  <a
+    v-else-if="href"
+    :href="href"
+    :aria-label="t('start.home.discord.title')"
+    class="discord"
+    target="_blank"
+    rel="noopener"
+  >
     <DiscordIcon :size="26" />
 
-    <span
-      ><b>{{ t('start.home.discord.title') }}</b>
+    <b class="mobile-label" aria-hidden="true">Play</b>
 
-      <small>{{ t('start.home.discord.text') }}</small></span
-    >
+    <b class="desktop-copy">{{ t('start.home.discord.title') }}</b>
   </a>
 </template>
 
 <style scoped>
 .discord {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-width: 0;
   height: 100%;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid rgba(88, 101, 242, 0.55);
   border-radius: var(--radius);
   background: rgba(88, 101, 242, 0.16);
@@ -65,23 +71,33 @@ function invite() {
 b {
   display: block;
   font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
 }
 
-small {
-  display: block;
-  margin-top: 2px;
-  color: var(--chalk-dim);
-  font-size: 12px;
-  line-height: 1.4;
+.mobile-label {
+  display: none;
 }
 
 @media (max-width: 860px) {
   .discord {
-    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
   }
 
-  small {
+  .discord svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .desktop-copy {
     display: none;
+  }
+
+  .mobile-label {
+    display: block;
+    font-size: 14px;
+    white-space: nowrap;
   }
 }
 </style>

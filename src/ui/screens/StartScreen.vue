@@ -77,7 +77,12 @@ const profileStyle = computed(() =>
 )
 
 const contractsStyle = computed(() =>
-  contractsHeight.value ? { minHeight: `${contractsHeight.value}px` } : undefined,
+  contractsHeight.value
+    ? {
+        height: `${contractsHeight.value}px`,
+        minHeight: `${contractsHeight.value}px`,
+      }
+    : undefined,
 )
 
 /** The board on show, and for a moment the next mode's board fading in over it. */
@@ -332,6 +337,8 @@ onBeforeUnmount(() => {
 /* Discord, Steam and Google Play side by side; the row shares its width among those shown. */
 .offers {
   display: grid;
+  flex: none;
+  grid-template-rows: minmax(0, 1fr);
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
   gap: 10px;
