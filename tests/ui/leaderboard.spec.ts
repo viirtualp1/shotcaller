@@ -32,6 +32,7 @@ const row: LeaderboardEntry = {
   avatar: null,
   photo: null,
   rating: 1200,
+  open: true,
 }
 
 async function flush() {

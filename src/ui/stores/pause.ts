@@ -4,6 +4,7 @@ import { computed, reactive } from 'vue'
 export type PauseReason =
   | 'menu'
   | 'tutorial'
+  | 'zoomHint'
   | 'help'
   | 'settings'
   | 'newMatch'

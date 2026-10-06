@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core'
-import { Ban, ChevronDown, Crown, Flag, MessageCircle, Swords, UserMinus, X } from '@lucide/vue'
+import {
+  Ban,
+  Check,
+  ChevronDown,
+  Crown,
+  Flag,
+  MessageCircle,
+  Swords,
+  UserMinus,
+  UserPlus,
+  X,
+} from '@lucide/vue'
 import {
   AccordionContent,
   AccordionHeader,
@@ -15,6 +26,7 @@ import {
   DialogTitle,
 } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
+import type { FriendRequestResult } from '@/application/social/friends'
 import { HERO_IDS } from '@/content/ids'
 import { levelFor, rankFor } from '@/domain/profile/progression'
 import { useFriendStatus } from '../../composables/useFriendStatus'
@@ -34,12 +46,15 @@ import { relativeTime } from '../profile/format'
 import RankDropdown from '../profile/RankDropdown.vue'
 import FriendMatchDetails from './FriendMatchDetails.vue'
 import ReportCoach from './ReportCoach.vue'
+import CoachDossier from './CoachDossier.vue'
+import { useCloudStore } from '../../stores/cloud'
 
 /** Removing and blocking ask once more; the question goes away on its own. */
 const CONFIRM_MS = 3000
 
 /** A friend's profile: rank, totals and latest matches, with everything that can be done with them. */
 const friends = useFriendsStore()
+const cloud = useCloudStore()
 const replay = useReplayStore()
 const chat = useChatStore()
 const duel = useDuelStore()
@@ -49,6 +64,8 @@ const { t } = text
 const statusText = useFriendStatus()
 const confirming = ref<'remove' | 'block' | null>(null)
 const reporting = ref(false)
+const requesting = ref(false)
+const requestResult = ref<FriendRequestResult | 'error' | null>(null)
 
 const { start: expireConfirm } = useTimeoutFn(() => (confirming.value = null), CONFIRM_MS, {
   immediate: false,
@@ -56,11 +73,6 @@ const { start: expireConfirm } = useTimeoutFn(() => (confirming.value = null), C
 
 /** The opened match stays open while its replay plays and the profile steps aside. */
 const expanded = ref<string>()
-
-watch(
-  () => friends.viewedId,
-  () => (expanded.value = undefined),
-)
 
 /* Hidden under a replay: a modal left open underneath traps focus and closes on the first press. */
 const open = computed({
@@ -72,10 +84,34 @@ const open = computed({
   },
 })
 
-useModal(open)
-
 const entry = computed(() => friends.friends.find((f) => f.id === friends.viewedId) ?? null)
 const profile = computed(() => friends.viewed)
+
+const canReport = computed(
+  () => cloud.signedIn && profile.value !== null && friends.viewedId !== cloud.account?.id,
+)
+
+/** A coach opened from the leaderboard: a request goes out without their friend code. */
+const canAddFriend = computed(
+  () => !entry.value && canReport.value && friends.status === 'ready' && friends.viewedId !== null,
+)
+
+const incoming = computed(() => friends.incoming.some((f) => f.id === friends.viewedId))
+
+const requestSent = computed(
+  () =>
+    friends.outgoing.some((f) => f.id === friends.viewedId) ||
+    requestResult.value === 'sent' ||
+    requestResult.value === 'accepted',
+)
+
+/** Why a request did not go through, worded by the friends panel's own messages. */
+const requestProblem = computed(() =>
+  requestResult.value && !['sent', 'accepted', 'friends'].includes(requestResult.value)
+    ? requestResult.value
+    : null,
+)
+
 const rating = computed(() => profile.value?.rating ?? entry.value?.rating ?? 0)
 const rank = computed(() => rankFor(rating.value))
 const name = computed(() => entry.value?.name || profile.value?.name || t('profile.defaultName'))
@@ -152,6 +188,21 @@ function challenge() {
   }
 }
 
+async function addFriend() {
+  const id = friends.viewedId
+  if (!id || requesting.value) {
+    return
+  }
+
+  requesting.value = true
+
+  requestResult.value = incoming.value
+    ? await friends.accept(id).then(() => 'accepted' as const)
+    : await friends.addLeaderboard(id)
+
+  requesting.value = false
+}
+
 function ask(action: 'remove' | 'block') {
   const id = friends.viewedId
   if (!id) {
@@ -169,6 +220,17 @@ function ask(action: 'remove' | 'block') {
   friends.closeProfile()
   void (action === 'remove' ? friends.remove(id) : friends.block(id))
 }
+
+useModal(open)
+
+watch(
+  () => friends.viewedId,
+  () => {
+    expanded.value = undefined
+    confirming.value = null
+    reporting.value = false
+  },
+)
 </script>
 
 <template>
@@ -208,156 +270,205 @@ function ask(action: 'remove' | 'block') {
           </DialogClose>
         </header>
 
-        <div v-if="friends.viewLoading" class="bones" role="status">
-          <p class="sr-only">{{ t('coach.loading') }}</p>
+        <div class="body">
+          <div v-if="friends.viewLoading" class="bones" role="status">
+            <p class="sr-only">{{ t('coach.loading') }}</p>
 
-          <div class="mode-bones">
-            <div v-for="mode in 3" :key="mode" class="mode-bone">
-              <span class="bone map" />
+            <div class="mode-bones">
+              <div v-for="mode in 3" :key="mode" class="mode-bone">
+                <span class="bone map" />
 
-              <span class="lines">
-                <span class="bone mode-name" />
-                <span class="bone mode-rating" />
-                <span class="bone mode-tier" />
+                <span class="lines">
+                  <span class="bone mode-name" />
+                  <span class="bone mode-rating" />
+                  <span class="bone mode-tier" />
+                </span>
+
+                <span class="bone round bone-medal" />
+              </div>
+            </div>
+
+            <span class="bone bone-label" />
+
+            <div v-for="match in 4" :key="match" class="match-bone">
+              <span class="bone bone-verdict" />
+              <span class="bone bone-delta" />
+
+              <span class="bone-heroes">
+                <span v-for="seat in 4" :key="seat" class="bone round bone-hero" />
               </span>
 
-              <span class="bone round bone-medal" />
+              <span class="bone bone-when" />
             </div>
           </div>
 
-          <span class="bone bone-label" />
+          <div v-else-if="!profile" class="muted" role="status">
+            <p>{{ t(friends.viewProblem === 'failed' ? 'dossier.failed' : 'dossier.hidden') }}</p>
 
-          <div v-for="match in 4" :key="match" class="match-bone">
-            <span class="bone bone-verdict" />
-            <span class="bone bone-delta" />
-
-            <span class="bone-heroes">
-              <span v-for="seat in 4" :key="seat" class="bone round bone-hero" />
-            </span>
-
-            <span class="bone bone-when" />
+            <button
+              v-if="friends.viewProblem === 'failed' && friends.viewedId"
+              class="btn"
+              @click="friends.openProfile(friends.viewedId)"
+            >
+              {{ t('friends.retry') }}
+            </button>
           </div>
+
+          <template v-else>
+            <ModeRatings :ratings="profile.ratings" compact />
+
+            <CoachDossier :key="profile.id" :dossier="profile" />
+
+            <section class="history">
+              <h3 class="section-title">{{ t('coach.history') }}</h3>
+
+              <AccordionRoot
+                v-if="profile.recent.length"
+                v-model="expanded"
+                as="ol"
+                type="single"
+                collapsible
+                class="matches"
+              >
+                <AccordionItem
+                  v-for="match in profile.recent"
+                  :key="match.id"
+                  as="li"
+                  :value="match.id"
+                  class="match"
+                  :class="match.verdict"
+                >
+                  <AccordionHeader as="h4" class="match-head">
+                    <AccordionTrigger class="match-row" :title="t('matchDetails.open')">
+                      <strong class="verdict">{{ t(`result.${match.verdict}`) }}</strong>
+
+                      <span
+                        class="delta"
+                        :class="{
+                          up: match.ratingAfter > match.ratingBefore,
+                          down: match.ratingAfter < match.ratingBefore,
+                        }"
+                      >
+                        <!-- Only duels move the rating; the column stays for the row to line up. -->
+                        <template v-if="match.ratingAfter !== match.ratingBefore">
+                          {{ text.mmr(match.ratingAfter - match.ratingBefore, true) }}
+                        </template>
+                      </span>
+
+                      <!-- Spans, not a list: a button holds only phrasing content. -->
+                      <span class="lineup">
+                        <span v-for="(pick, i) in match.lineup" :key="i" class="hero">
+                          <Crown v-if="pick.heroId === match.mvp" :size="10" class="crown" />
+                          <HeroAvatar :hero-id="pick.heroId" :stars="pick.stars" :size="24" />
+                        </span>
+                      </span>
+
+                      <span class="meta">
+                        <span class="mode">
+                          <Swords v-if="match.duel" :size="11" :aria-label="t('matchDetails.duel')" />
+                          {{ t(`modes.${match.mode}.name`) }}
+                        </span>
+                        ·
+                        {{ t('profile.history.rounds', { won: match.roundsWon, lost: match.roundsLost }) }}
+                        ·
+                        <time :datetime="match.playedAt">{{
+                          relativeTime(match.playedAt, settings.locale)
+                        }}</time>
+                      </span>
+
+                      <ChevronDown :size="16" class="chevron" aria-hidden="true" />
+                    </AccordionTrigger>
+                  </AccordionHeader>
+
+                  <AccordionContent class="details">
+                    <div class="details-inner">
+                      <FriendMatchDetails :key="`${profile.id}:${match.id}`" :match-id="match.id" />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </AccordionRoot>
+
+              <p v-else class="muted">{{ t('coach.noMatches') }}</p>
+            </section>
+          </template>
+
+          <ReportCoach
+            v-if="canReport && friends.viewedId && reporting"
+            :coach-id="friends.viewedId"
+            :name="name"
+            @close="reporting = false"
+          />
         </div>
 
-        <p v-else-if="!profile" class="muted">{{ t('coach.unavailable') }}</p>
+        <footer v-if="entry || canReport || canAddFriend" class="actions">
+          <template v-if="entry">
+            <button type="button" class="btn primary" @click="message">
+              <MessageCircle :size="16" /> {{ t('friends.message') }}
+            </button>
 
-        <template v-else>
-          <ModeRatings :ratings="profile.ratings" />
+            <button v-if="canDuel" type="button" class="btn" @click="challenge">
+              <Swords :size="16" /> {{ t('duel.challenge') }}
+            </button>
 
-          <section class="history">
-            <h3 class="section-title">{{ t('coach.history') }}</h3>
+            <WatchLiveButton :friend-id="entry.id" :name="name" />
+          </template>
 
-            <AccordionRoot
-              v-if="profile.recent.length"
-              v-model="expanded"
-              as="ol"
-              type="single"
-              collapsible
-              class="matches"
-            >
-              <AccordionItem
-                v-for="match in profile.recent"
-                :key="match.id"
-                as="li"
-                :value="match.id"
-                class="match"
-                :class="match.verdict"
-              >
-                <AccordionHeader as="h4" class="match-head">
-                  <AccordionTrigger class="match-row" :title="t('matchDetails.open')">
-                    <strong class="verdict">{{ t(`result.${match.verdict}`) }}</strong>
-
-                    <span
-                      class="delta"
-                      :class="{
-                        up: match.ratingAfter > match.ratingBefore,
-                        down: match.ratingAfter < match.ratingBefore,
-                      }"
-                    >
-                      <!-- Only duels move the rating; the column stays for the row to line up. -->
-                      <template v-if="match.ratingAfter !== match.ratingBefore">
-                        {{ text.mmr(match.ratingAfter - match.ratingBefore, true) }}
-                      </template>
-                    </span>
-
-                    <!-- Spans, not a list: a button holds only phrasing content. -->
-                    <span class="lineup">
-                      <span v-for="(pick, i) in match.lineup" :key="i" class="hero">
-                        <Crown v-if="pick.heroId === match.mvp" :size="10" class="crown" />
-                        <HeroAvatar :hero-id="pick.heroId" :stars="pick.stars" :size="24" />
-                      </span>
-                    </span>
-
-                    <span class="meta">
-                      <span class="mode">
-                        <Swords v-if="match.duel" :size="11" :aria-label="t('matchDetails.duel')" />
-                        {{ t(`modes.${match.mode}.name`) }}
-                      </span>
-                      ·
-                      {{ t('profile.history.rounds', { won: match.roundsWon, lost: match.roundsLost }) }}
-                      ·
-                      <time :datetime="match.playedAt">{{
-                        relativeTime(match.playedAt, settings.locale)
-                      }}</time>
-                    </span>
-
-                    <ChevronDown :size="16" class="chevron" aria-hidden="true" />
-                  </AccordionTrigger>
-                </AccordionHeader>
-
-                <AccordionContent class="details">
-                  <div class="details-inner">
-                    <FriendMatchDetails :match-id="match.id" />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </AccordionRoot>
-
-            <p v-else class="muted">{{ t('coach.noMatches') }}</p>
-          </section>
-        </template>
-
-        <hr v-if="entry" class="divider" />
-
-        <footer v-if="entry" class="actions">
-          <button type="button" class="btn primary" @click="message">
-            <MessageCircle :size="16" /> {{ t('friends.message') }}
+          <button
+            v-else-if="canAddFriend"
+            type="button"
+            class="btn primary"
+            :disabled="requesting || requestSent"
+            @click="addFriend"
+          >
+            <Check v-if="requestSent" :size="16" />
+            <UserPlus v-else :size="16" />
+            {{
+              requestSent
+                ? t('friends.results.sent')
+                : incoming
+                  ? t('friends.accept')
+                  : t('friends.addFriend')
+            }}
           </button>
 
-          <button v-if="canDuel" type="button" class="btn" @click="challenge">
-            <Swords :size="16" /> {{ t('duel.challenge') }}
-          </button>
-
-          <WatchLiveButton :friend-id="entry.id" :name="name" />
+          <small v-if="requestProblem" class="request-problem" role="status">{{
+            t(`friends.results.${requestProblem}`)
+          }}</small>
 
           <span class="spacer" />
 
-          <button
-            type="button"
-            class="btn ghost"
-            :class="{ danger: confirming === 'remove' }"
-            @click="ask('remove')"
-          >
-            <UserMinus :size="16" />
-            {{ confirming === 'remove' ? t('coach.confirmRemove') : t('coach.remove') }}
-          </button>
+          <template v-if="entry">
+            <button
+              type="button"
+              class="btn ghost"
+              :class="{ danger: confirming === 'remove' }"
+              @click="ask('remove')"
+            >
+              <UserMinus :size="16" />
+              {{ confirming === 'remove' ? t('coach.confirmRemove') : t('coach.remove') }}
+            </button>
+
+            <button
+              type="button"
+              class="btn ghost"
+              :class="{ danger: confirming === 'block' }"
+              :title="t('chat.blockHint')"
+              @click="ask('block')"
+            >
+              <Ban :size="16" /> {{ confirming === 'block' ? t('coach.confirmBlock') : t('coach.block') }}
+            </button>
+          </template>
 
           <button
+            v-if="canReport"
             type="button"
             class="btn ghost"
-            :class="{ danger: confirming === 'block' }"
-            :title="t('chat.blockHint')"
-            @click="ask('block')"
+            :aria-expanded="reporting"
+            @click="reporting = !reporting"
           >
-            <Ban :size="16" /> {{ confirming === 'block' ? t('coach.confirmBlock') : t('coach.block') }}
-          </button>
-
-          <button type="button" class="btn ghost" :aria-expanded="reporting" @click="reporting = !reporting">
             <Flag :size="16" /> {{ t('playerReport.open') }}
           </button>
         </footer>
-
-        <ReportCoach v-if="entry && reporting" :coach-id="entry.id" :name="name" @close="reporting = false" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -376,12 +487,30 @@ function ask(action: 'remove' | 'block') {
   gap: 3px;
 }
 
-/* Not `.coach`: that is the avatar's own class, and scoped styles reach a child component's root. */
+/*
+ * Not `.coach`: that is the avatar's own class, and scoped styles reach a child component's root. Wide on a desktop,
+ * so the dossier can lay its panels side by side; a phone shows it as a full-height sheet.
+ */
 .coach-profile {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  width: min(860px, calc(100vw - 32px));
+  gap: 16px;
+  width: min(1240px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+}
+
+/* Only the middle scrolls: the coach's name above and the actions below stay in reach. */
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  margin-inline: -24px;
+  padding: 2px 24px 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .head {
@@ -404,13 +533,6 @@ function ask(action: 'remove' | 'block') {
   letter-spacing: 0.04em;
   color: var(--chalk-dim);
   white-space: nowrap;
-}
-
-.divider {
-  width: 100%;
-  margin: 0;
-  border: 0;
-  border-top: 1px solid var(--edge);
 }
 
 .who {
@@ -810,9 +932,33 @@ function ask(action: 'remove' | 'block') {
 
 .actions {
   display: flex;
+  flex: none;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--edge);
+}
+
+.request-problem {
+  font-size: 12px;
+  color: var(--theirs);
+}
+
+/* On a phone the actions share the width evenly, two to a row. */
+@media (max-width: 600px) {
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actions .spacer {
+    display: none;
+  }
+
+  .actions .request-problem {
+    grid-column: 1 / -1;
+  }
 }
 
 .spacer {

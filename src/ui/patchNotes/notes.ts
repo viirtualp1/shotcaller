@@ -71,6 +71,7 @@ export type FeatureArt =
   | { readonly kind: 'hud'; readonly focus: 'scoreboard' | 'lineup' | 'scale' | 'twist' }
   /** The 9.4 phone release: the camera, the folding battle panel, placing heroes and a cool, awake phone. */
   | { readonly kind: 'pocket'; readonly focus: 'camera' | 'sheet' | 'placement' | 'comfort' }
+  | { readonly kind: 'dossier'; readonly focus: 'scout' | 'build' | 'rounds' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -87,7 +88,16 @@ export interface PatchNote {
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
   readonly campaign?:
-    'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'crossPlatform' | 'hud' | 'pocket'
+    | 'career'
+    | 'matchmaking'
+    | 'training'
+    | 'pause'
+    | 'forge'
+    | 'home'
+    | 'crossPlatform'
+    | 'hud'
+    | 'pocket'
+    | 'dossier'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
@@ -103,6 +113,80 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '9.5',
+    date: '2026-10-07',
+    title: {
+      en: 'Read the coach. Find your move.',
+      ru: 'Разгадай тренера. Найди свой ход.',
+    },
+    campaign: 'dossier',
+    wide: true,
+    card: {
+      en: '**Study top coaches’ profiles**, borrow their builds and replay the round that **decided their game**.',
+      ru: '**Изучай профили топ-тренеров**, забирай их билды и пересматривай раунд, который **решил игру**.',
+    },
+    features: [
+      {
+        art: {
+          kind: 'dossier',
+          focus: 'scout',
+        },
+        title: {
+          en: 'Study the best',
+          ru: 'Учись у лучших',
+        },
+        text: {
+          en: 'Tap a coach on the **leaderboard** who shares their profile to see the lineup they keep coming back to and the heroes they win with. Turn on **Compare with me** to spot where your game falls behind.',
+          ru: 'Нажми на тренера с открытым профилем в **таблице лидеров** — увидишь расстановку, к которой он возвращается, и героев, на которых он побеждает. Включи **«Сравнить со мной»**, чтобы найти, где твоя игра проседает.',
+        },
+      },
+      {
+        art: {
+          kind: 'dossier',
+          focus: 'build',
+        },
+        title: {
+          en: 'Spot a build. Try it.',
+          ru: 'Подсмотрел билд — проверь',
+        },
+        text: {
+          en: 'Pick a hero to see what they carry. **Try in training** gives you that hero with the same stars and items, **for free**, so you can test it before your next match.',
+          ru: 'Выбери героя и посмотри, что он собирает. **«Попробовать в тренировке»** даст тебе этого героя с теми же звёздами и предметами **бесплатно** — проверь до следующего матча.',
+        },
+      },
+      {
+        art: {
+          kind: 'dossier',
+          focus: 'rounds',
+        },
+        title: {
+          en: 'Find the turning point',
+          ru: 'Найди переломный момент',
+        },
+        text: {
+          en: 'Open one of their **latest matches** and step through it round by round, theirs and their opponent’s lineups side by side. The round that **swung the game** is marked, ready to replay.',
+          ru: 'Открой один из **последних матчей** и пройди его по раундам, сравнивая составы обеих сторон. Раунд, который **перевернул игру**, отмечен — его можно сразу пересмотреть.',
+        },
+      },
+    ],
+    interface: [
+      {
+        en: 'Your profile starts **private**. To let other coaches learn from your game, turn on **Open profile** under your name in your profile. Friends always see it.',
+        ru: 'Твой профиль по умолчанию **закрыт**. Чтобы другие тренеры могли учиться на твоей игре, включи **«Открытый профиль»** под именем в профиле. Друзьям он виден всегда.',
+      },
+      {
+        en: 'The first time you play on a phone, the game shows how to **zoom with two fingers**.',
+        ru: 'При первой игре на телефоне игра покажет, как **приближать карту двумя пальцами**.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Phones that vibrate now **buzz** when you buy a hero, and switching vibration on gives a test buzz.',
+        ru: 'Телефоны с вибрацией теперь **откликаются** на покупку героя, а включение вибрации сразу даёт пробный отклик.',
+      },
+    ],
+  },
   {
     version: '9.4',
     date: '2026-10-06',

@@ -13,6 +13,7 @@ const row = {
   avatar: 'archer',
   photo: 'https://lh3.googleusercontent.com/a/photo',
   rating: 1500,
+  open: true,
 }
 
 function connection(data: unknown, error: unknown = null) {
@@ -62,6 +63,24 @@ describe('public MMR leaderboard', () => {
 
     expect(rpc).toHaveBeenCalledWith('mmr_leaderboard', { game_mode: 'oneLane' })
     expect(result).toEqual([row])
+  })
+
+  it('keeps a private profile closed, and reads a server without the flag as open', async () => {
+    const { open, ...older } = row
+    void open
+
+    const { client } = connection([
+      {
+        ...row,
+        open: false,
+      },
+      older,
+    ])
+
+    const [closed, legacy] = await new SupabaseLeaderboard(client).read('threeLanes')
+
+    expect(closed!.open).toBe(false)
+    expect(legacy!.open).toBe(true)
   })
 
   it('keeps a missing or unsafe picture from being displayed', async () => {

@@ -22,7 +22,7 @@ export const LEGAL_IDS = ['terms', 'privacy', 'delete-account'] as const
 export type LegalId = (typeof LEGAL_IDS)[number]
 
 /** The date both documents last changed; update it with any change to their text. */
-export const LEGAL_UPDATED = '2026-10-05'
+export const LEGAL_UPDATED = '2026-10-06'
 
 /** The address for privacy and legal requests. Until it is set, requests go through the in-game form. */
 export const LEGAL_EMAIL: string | null = 'shotcaller.team@gmail.com'
@@ -308,6 +308,10 @@ const privacy: LegalDocument = {
         {
           en: 'Your nickname, avatar or photo and rating are shown on the public leaderboard and to players you meet or add as friends.',
           ru: 'Ник, аватар или фото и рейтинг видны в публичной таблице лидеров и игрокам, с которыми ты играешь или дружишь.',
+        },
+        {
+          en: 'Ranked accounts have an open coach dossier by default: other visitors can view hero and synergy statistics, usual lineups and builds, and the ten latest matches with round lineups and available replays. Duel opponents are not named. Turn off “Open profile on the leaderboard” in your profile to limit dossier access to yourself and friends. Private chat, online status, friend codes and account photos are not included in public dossiers.',
+          ru: 'У рейтинговых аккаунтов досье тренера открыто по умолчанию: посетители могут изучать статистику героев и связок, привычные расстановки и билды, а также десять последних матчей с составами по раундам и доступными реплеями. Имена соперников в дуэлях скрыты. Отключи «Открытый профиль в таблице лидеров» в профиле, чтобы оставить досье доступным только себе и друзьям. Личная переписка, онлайн-статус, коды друзей и фото аккаунта не входят в публичное досье.',
         },
       ],
     },

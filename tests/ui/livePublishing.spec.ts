@@ -94,6 +94,7 @@ beforeEach(() => {
       leave: vi.fn(),
     })),
     publishLiveMatch: vi.fn(async () => false),
+    publicProfile: vi.fn(async () => true),
     keepLiveMatch: vi.fn(async () => false),
   } as unknown as FriendsService
 

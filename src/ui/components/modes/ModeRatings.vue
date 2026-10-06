@@ -6,15 +6,18 @@ import { useGameText } from '../../composables/useGameText'
 import RankMedal from '../profile/RankMedal.vue'
 import ModeMap from './ModeMap.vue'
 
-/** The rank in every mode, shown from the first day: an untouched mode reads as the starting rank. */
-defineProps<{ ratings: ModeRatings }>()
+/**
+ * The rank in every mode, shown from the first day: an untouched mode reads as the starting rank. `compact` keeps the
+ * three modes in one row, dropping the pictures when the row gets narrow, for a coach's dossier on a phone.
+ */
+withDefaults(defineProps<{ ratings: ModeRatings; compact?: boolean }>(), { compact: false })
 
 const text = useGameText()
 const { t } = text
 </script>
 
 <template>
-  <section class="mode-ratings" :aria-label="t('modes.ratings')">
+  <section class="mode-ratings" :class="{ compact }" :aria-label="t('modes.ratings')">
     <article v-for="id in MODE_IDS" :key="id" class="mode">
       <span class="mode-content">
         <ModeMap :mode="id" :size="56" />
@@ -107,5 +110,44 @@ const { t } = text
   line-height: 1;
   font-weight: 700;
   color: var(--chalk-faint);
+}
+.mode-ratings.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  container-type: inline-size;
+}
+
+.compact .mode {
+  padding: 12px 14px;
+}
+
+@container (max-width: 640px) {
+  .compact .mode {
+    justify-content: center;
+    padding: 10px 6px;
+    text-align: center;
+  }
+
+  .compact .mode-content :deep(.mode-map),
+  .compact .mode > :deep(.medal) {
+    display: none;
+  }
+
+  .compact .about {
+    align-items: center;
+  }
+
+  .compact .name {
+    font-size: 10px;
+    letter-spacing: 0.03em;
+  }
+
+  .compact .rating {
+    font-size: 18px;
+  }
+
+  .compact .tier {
+    font-size: 11px;
+  }
 }
 </style>

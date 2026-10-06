@@ -27,6 +27,9 @@ import {
 } from '@/content/ids'
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
 import { DEFAULT_SANDBOX, type SandboxGoal, type SandboxSettings } from '@/content/sandbox'
+import { MODES } from '@/content/modes'
+import { baseItemOf, isUpgraded } from '@/content/items'
+import type { HeroBuild } from '@/domain/profile/dossier'
 import type { TalentChoice } from '@/content/talents'
 import type { BattleSetup } from '@/domain/battle/contracts'
 import { arrangeStrongestLineup } from '@/domain/coach/arrange'
@@ -319,6 +322,49 @@ export const useMatchStore = defineStore('match', () => {
     clearSelection()
     shopTab.value = 'heroes'
     refresh()
+  }
+
+  /** Copies a scouted build onto the free training ground without replacing an active match. */
+  function tryBuild(mode: ModeId, build: HeroBuild) {
+    if (view.value && !view.value.sandbox) {
+      return false
+    }
+
+    startSandbox(mode)
+
+    if (!match) {
+      return false
+    }
+
+    for (let copy = 0; copy < 3 ** (build.stars - 1); copy++) {
+      match.human.recruit(build.heroId)
+    }
+
+    const hero = match.human.roster.all().find((owned) => owned.heroId === build.heroId)
+    if (!hero) {
+      return false
+    }
+
+    for (const item of build.loadout) {
+      const base = baseItemOf(item)
+      match.human.buyItem(base)
+
+      if (isUpgraded(item)) {
+        match.human.buyItem(base)
+      }
+
+      match.human.equip(0, hero.uid)
+    }
+
+    const lane = MODES[mode].lanes.includes(build.lane ?? 'mid')
+      ? (build.lane ?? 'mid')
+      : MODES[mode].lanes[0]!
+
+    match.human.move(hero.uid, lane)
+    clearSelection()
+    refresh()
+
+    return true
   }
 
   function startTrial(trialId: TrialId) {
@@ -1039,6 +1085,7 @@ export const useMatchStore = defineStore('match', () => {
     settleDuel,
     leaveToMenu,
     startSandbox,
+    tryBuild,
     resetSandbox,
     recruit,
     setSandbox,

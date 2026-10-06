@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, Check, ChevronDown, LoaderCircle, Trophy, UserPlus } from '@lucide/vue'
+import { ArrowLeft, Check, ChevronDown, LoaderCircle, Lock, Trophy, UserPlus } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 import { HERO_IDS, MODE_IDS, type ModeId } from '@/content/ids'
@@ -207,9 +207,20 @@ watch(
                   <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="34" />
 
                   <div class="identity">
-                    <span class="nickname" :title="entry.name || t('profile.defaultName')">{{
-                      entry.name || t('profile.defaultName')
-                    }}</span>
+                    <button
+                      v-if="friends.canOpenProfile(entry)"
+                      type="button"
+                      class="nickname profile-link"
+                      :aria-label="t('dossier.open', { name: entry.name || t('profile.defaultName') })"
+                      @click="friends.openProfile(entry.id)"
+                    >
+                      {{ entry.name || t('profile.defaultName') }}
+                    </button>
+
+                    <span v-else class="nickname private" :title="t('dossier.private')">
+                      {{ entry.name || t('profile.defaultName') }}
+                      <Lock :size="11" :aria-label="t('dossier.private')" />
+                    </span>
 
                     <button
                       v-if="canAdd(entry.id)"
@@ -285,6 +296,35 @@ watch(
 </template>
 
 <style scoped>
+.profile-link {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+.profile-link:hover {
+  color: var(--gold);
+}
+.profile-link:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+/* A private profile keeps its name but opens nothing; the lock says why. */
+.private {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 0;
+  color: var(--chalk-dim);
+}
+.private svg {
+  flex: none;
+  color: var(--chalk-faint);
+}
 .sr-only {
   position: absolute;
   width: 1px;

@@ -4,8 +4,8 @@ import { LIVE_MATCH_INTERVAL } from '@/application/social/liveMatch'
 import { computed, ref, shallowRef, watch } from 'vue'
 import type {
   CoachCard,
+  CoachDossier,
   FriendEntry,
-  FriendProfile,
   FriendRequestResult,
   FriendsService,
   OwnCard,
@@ -47,6 +47,9 @@ export const useFriendsStore = defineStore('friends', () => {
   /** Friends in a match at the last presence update; null until the first one after signing in. */
   let playing: ReadonlySet<string> | null = null
   let publishedLiveKey: string | null = null
+  let profileRequest = 0
+  let publicChoiceRequest = 0
+  let viewedWasFriend = false
 
   const cloud = useCloudStore()
   const match = useMatchStore()
@@ -63,10 +66,16 @@ export const useFriendsStore = defineStore('friends', () => {
   const online = shallowRef<ReadonlyMap<string, PresenceStatus>>(new Map())
   /** The friends panel shared by every screen. */
   const open = ref(false)
-  /** The friend whose profile is open, and the profile once it has loaded. */
+  /** The coach whose dossier is open, a friend or a ranked coach from the leaderboard, and the dossier once loaded. */
   const viewedId = ref<string | null>(null)
-  const viewed = shallowRef<FriendProfile | null>(null)
+  const viewed = shallowRef<CoachDossier | null>(null)
   const viewLoading = ref(false)
+  /** Why no dossier came: the coach keeps it private (or left the leaderboard), or the request failed. */
+  const viewProblem = ref<'hidden' | 'failed' | null>(null)
+  /** Whether coaches who are not friends can open this coach's dossier; null until known or without an account. */
+  const publicProfile = ref<boolean | null>(null)
+  /** The last change of it did not reach the server and was rolled back. */
+  const publicProfileFailed = ref(false)
 
   /** What this coach is doing, as their friends see it. Training is nothing to watch, so it reads as the menu. */
   const ownStatus = computed<PresenceStatus>(() => ({
@@ -97,6 +106,13 @@ export const useFriendsStore = defineStore('friends', () => {
         ].filter((id): id is string => !!id),
       ),
   )
+
+  /** A leaderboard coach's dossier opens when they share it, and always for friends and for oneself. */
+  function canOpenProfile(coach: { readonly id: string; readonly open: boolean }) {
+    return (
+      coach.open || coach.id === cloud.account?.id || friends.value.some((friend) => friend.id === coach.id)
+    )
+  }
 
   function isOnline(id: string) {
     return online.value.has(id)
@@ -149,30 +165,83 @@ export const useFriendsStore = defineStore('friends', () => {
     return activity === 'match' || activity === 'duel'
   }
 
+  /**
+   * The public lookup serves open profiles and friends alike, and works without an account. A server from before
+   * dossiers has no such lookup; a friend's profile then still comes the old way.
+   */
+  async function loadDossier(id: string): Promise<CoachDossier | null | undefined> {
+    try {
+      return await (await cloud.connect()).leaderboard().profile(id)
+    } catch {
+      return service && friends.value.some((friend) => friend.id === id)
+        ? await service.profile(id).catch(() => undefined)
+        : undefined
+    }
+  }
+
   async function openProfile(id: string) {
+    const request = ++profileRequest
+    viewedWasFriend = friends.value.some((friend) => friend.id === id)
     viewedId.value = id
     viewed.value = null
+    viewProblem.value = null
     viewLoading.value = true
     viewedMatches = new Map()
 
-    const loaded = await service?.profile(id).catch(() => null)
-    if (viewedId.value === id) {
+    const loaded = await loadDossier(id)
+    if (viewedId.value === id && request === profileRequest) {
       viewed.value = loaded ?? null
+      viewProblem.value = loaded === undefined ? 'failed' : loaded === null ? 'hidden' : null
       viewLoading.value = false
     }
   }
 
   function closeProfile() {
+    profileRequest++
     viewedId.value = null
     viewed.value = null
+    viewProblem.value = null
     viewLoading.value = false
     viewedMatches = new Map()
+  }
+
+  async function loadMatch(id: string, matchId: string) {
+    try {
+      return await (await cloud.connect()).leaderboard().match(id, matchId)
+    } catch {
+      if (service && friends.value.some((friend) => friend.id === id)) {
+        return await service.match(id, matchId)
+      }
+
+      throw new Error('Could not load the public match')
+    }
+  }
+
+  async function setPublicProfile(visible: boolean) {
+    if (!service) {
+      return
+    }
+
+    const current = service
+    const request = ++publicChoiceRequest
+    const previous = publicProfile.value
+    publicProfile.value = visible
+    publicProfileFailed.value = false
+
+    try {
+      await current.setPublicProfile(visible)
+    } catch {
+      if (current === service && request === publicChoiceRequest) {
+        publicProfile.value = previous
+        publicProfileFailed.value = true
+      }
+    }
   }
 
   /** A match of the open profile in full. Played matches do not change, so each is fetched once. */
   function viewedMatch(matchId: string) {
     const id = viewedId.value
-    if (!id || !service) {
+    if (!id) {
       return Promise.resolve(null)
     }
 
@@ -180,7 +249,7 @@ export const useFriendsStore = defineStore('friends', () => {
     let loading = matches.get(matchId)
 
     if (!loading) {
-      loading = service.match(id, matchId).catch(() => {
+      loading = loadMatch(id, matchId).catch(() => {
         matches.delete(matchId)
 
         return null
@@ -206,6 +275,8 @@ export const useFriendsStore = defineStore('friends', () => {
     playing = null
     notifications.clear()
     card.value = null
+    publicProfile.value = null
+    publicProfileFailed.value = false
     entries.value = []
     blocked.value = []
     online.value = new Map()
@@ -381,6 +452,17 @@ export const useFriendsStore = defineStore('friends', () => {
     presence = joined
     stops = [service.watch(() => void refresh()), () => joined.leave()]
 
+    const current = service
+    const choiceRequest = publicChoiceRequest
+    void current
+      .publicProfile()
+      .then((visible) => {
+        if (service === current && choiceRequest === publicChoiceRequest) {
+          publicProfile.value = visible
+        }
+      })
+      .catch(() => undefined)
+
     await refresh()
   }
 
@@ -447,7 +529,7 @@ export const useFriendsStore = defineStore('friends', () => {
 
   /* A friend removed or blocked takes their open profile with them. */
   watch(friends, (list) => {
-    if (viewedId.value && !list.some((f) => f.id === viewedId.value)) {
+    if (viewedWasFriend && viewedId.value && !list.some((f) => f.id === viewedId.value)) {
       closeProfile()
     }
 
@@ -491,6 +573,11 @@ export const useFriendsStore = defineStore('friends', () => {
     viewedId,
     viewed,
     viewLoading,
+    viewProblem,
+    publicProfile,
+    publicProfileFailed,
+    setPublicProfile,
+    canOpenProfile,
     isOnline,
     statusOf,
     isPlaying,

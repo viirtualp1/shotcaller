@@ -134,6 +134,7 @@ export interface Database {
           avatar: string | null
           photo: string | null
           rating: number
+          open: boolean
         }[]
       }
       find_match: {
@@ -323,6 +324,22 @@ export interface Database {
       coach_match: {
         Args: { friend: string; match_id: string }
         Returns: Json
+      }
+      public_coach_profile: {
+        Args: { coach: string }
+        Returns: Json
+      }
+      public_coach_match: {
+        Args: { coach: string; match_id: string }
+        Returns: Json
+      }
+      my_public_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      set_public_profile: {
+        Args: { visible: boolean }
+        Returns: undefined
       }
       publish_live_match: {
         Args: { payload: Json }

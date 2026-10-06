@@ -10,13 +10,14 @@ import {
   useWindowSize,
 } from '@vueuse/core'
 import { MousePointerClick, Pointer, Shrink } from '@lucide/vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onScopeDispose, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
 import { fitMap, MAP_MARGIN, WHOLE_BOARD } from '@/rendering/fitMap'
 import { laneMapFor } from '@/simulation/map/LaneMap'
 import BattlePanel from '../components/battle/BattlePanel.vue'
 import LastRoundMeter from '../components/battle/LastRoundMeter.vue'
 import BoardView from '../components/board/BoardView.vue'
+import ZoomHint from '../components/board/ZoomHint.vue'
 import ConfirmFightDialog from '../components/dialogs/ConfirmFightDialog.vue'
 import GameMenuDialog from '../components/dialogs/GameMenuDialog.vue'
 import HelpDrawer from '../components/dialogs/HelpDrawer.vue'
@@ -44,6 +45,7 @@ import ShopPanel from '../components/shop/ShopPanel.vue'
 import { useFightRequest } from '../composables/useFightRequest'
 import { useGameText } from '../composables/useGameText'
 import { useGameUiZoom } from '../composables/useGameUiZoom'
+import { useZoomHint } from '../composables/useZoomHint'
 import { useHotkeys } from '../composables/useHotkeys'
 import { useMatchHaptics } from '../composables/useMatchHaptics'
 import { useScoreboardAnnouncement } from '../composables/useScoreboardAnnouncement'
@@ -58,8 +60,9 @@ import { usePlanningTimerStore } from '../stores/planningTimer'
 import { useSettingsStore } from '../stores/settings'
 import { useTutorial } from '../tutorial/useTutorial'
 
-const TUTORIAL_DELAY_MS = 900
+const TUTORIAL_DELAY_MS = 2400
 const BACKGROUND_TICK_MS = 1000
+let tutorialAfterHint = false
 
 const store = useMatchStore()
 const settings = useSettingsStore()
@@ -71,6 +74,7 @@ const duel = useDuelStore()
 const board = useBoardStore()
 const { t } = useGameText()
 const tour = useTutorial()
+const zoomHint = useZoomHint()
 const uiZoom = useGameUiZoom()
 const scoreboardOut = useScoreboardAnnouncement(() => store.view)
 
@@ -240,7 +244,27 @@ useHotkeys({
   },
 })
 
-const { start: startTutorialSoon } = useTimeoutFn(() => tour.start(), TUTORIAL_DELAY_MS, { immediate: false })
+const { start: startTutorialSoon } = useTimeoutFn(
+  () => {
+    tutorialAfterHint = zoomHint.show()
+
+    if (!tutorialAfterHint) {
+      tour.start()
+    }
+  },
+  TUTORIAL_DELAY_MS,
+  { immediate: false },
+)
+
+watch(
+  () => zoomHint.open,
+  (open) => {
+    if (!open && tutorialAfterHint) {
+      tutorialAfterHint = false
+      tour.start()
+    }
+  },
+)
 
 useEventListener(game, ['transitionend', 'animationend'], measureHud)
 
@@ -258,6 +282,13 @@ watch(
   },
   { immediate: true },
 )
+
+onScopeDispose(() => {
+  tutorialAfterHint = false
+  zoomHint.setActive(false)
+})
+
+onMounted(() => zoomHint.setActive(true))
 </script>
 
 <template>
@@ -379,6 +410,7 @@ watch(
     <MatchReportDialog />
     <HelpDrawer v-model:open="menu.help" />
     <GameMenuDialog />
+    <ZoomHint />
   </div>
 </template>
 

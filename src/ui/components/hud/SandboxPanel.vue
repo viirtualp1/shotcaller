@@ -91,6 +91,7 @@ function toggleDummies() {
         @click="toggleDummies"
       >
         <Target :size="14" /> {{ t('sandbox.practice') }}
+        <span class="state">{{ t(dummiesOn ? 'sandbox.on' : 'sandbox.off') }}</span>
       </button>
     </div>
 
@@ -118,8 +119,14 @@ function toggleDummies() {
   gap: 8px;
 }
 
+/* The clock and the dummies are one height, side by side or wrapped onto two rows. */
 .row > .segmented-control {
   flex: 1 1 auto;
+  height: 40px;
+}
+
+.row .segmented-option {
+  padding: 0 9px;
 }
 
 .dummies {
@@ -128,7 +135,8 @@ function toggleDummies() {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 9px;
+  height: 40px;
+  padding: 0 12px;
   border: 1px solid var(--edge-strong);
   border-radius: var(--radius);
   background: transparent;
@@ -136,6 +144,18 @@ function toggleDummies() {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.state {
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.dummies[aria-pressed='true'] .state {
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .dummies[aria-pressed='true'] {

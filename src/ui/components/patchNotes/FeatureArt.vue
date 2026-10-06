@@ -21,6 +21,7 @@ import HeroCardFeatureArt from './HeroCardFeatureArt.vue'
 import CrossPlatformFeatureArt from './CrossPlatformFeatureArt.vue'
 import HudFeatureArt from './HudFeatureArt.vue'
 import PocketFeatureArt from './PocketFeatureArt.vue'
+import DossierFeatureArt from './DossierFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** A made-up rank per mode, only to show that each has its own. */
@@ -121,6 +122,8 @@ onMounted(() => {
     <HudFeatureArt v-else-if="art.kind === 'hud'" :focus="art.focus" />
 
     <PocketFeatureArt v-else-if="art.kind === 'pocket'" :focus="art.focus" />
+
+    <DossierFeatureArt v-else-if="art.kind === 'dossier'" :focus="art.focus" />
 
     <div v-else-if="art.kind === 'rounds'" class="rounds">
       <div class="pips">

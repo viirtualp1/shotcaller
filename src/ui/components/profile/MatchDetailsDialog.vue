@@ -10,7 +10,7 @@ import { vOpticalAlign } from '../../directives/opticalAlign'
 import { useReplayStore } from '../../stores/replay'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
-import MatchDetails from './MatchDetails.vue'
+import MatchAnalysis from './MatchAnalysis.vue'
 
 const match = defineModel<MatchRecord | null>({ required: true })
 
@@ -115,7 +115,7 @@ function watchReplay() {
           </DialogClose>
         </header>
 
-        <MatchDetails :key="match.id" hide-watch :match="match" />
+        <MatchAnalysis :key="match.id" hide-watch :match="match" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -126,7 +126,7 @@ function watchReplay() {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: min(860px, calc(100vw - 32px));
+  width: min(960px, calc(100vw - 32px));
 }
 
 .head {

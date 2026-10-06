@@ -201,6 +201,7 @@ const profile = z.object({
   name: z.string().max(PROFILE.nameMaxLength),
   avatar: heroId.nullable(),
   createdAt: z.iso.datetime(),
+  zoomHintSeen: z.boolean().optional(),
   ratings: modeRatings.optional(),
   peakRatings: modeRatings.optional(),
   rating: amount,
@@ -257,6 +258,8 @@ export function fromProfileEnvelope(json: unknown): Profile | null {
 }
 
 export const matchRecordSchema = matchRecord
+export const heroRecordSchema = heroRecord
+export const synergyRecordSchema = synergyRecord
 
 export const serializeProfile = (value: Profile) => JSON.stringify(toProfileEnvelope(value))
 

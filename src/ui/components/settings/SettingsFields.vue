@@ -4,7 +4,7 @@ import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { DIFFICULTIES, type Difficulty } from '@/content/rules'
 import { useGameText } from '../../composables/useGameText'
-import { canVibrate } from '../../haptics'
+import { canVibrate, vibrate } from '../../haptics'
 import { useMenuStore } from '../../stores/menu'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
@@ -53,7 +53,7 @@ const audio = useAudioStore()
 const menu = useMenuStore()
 const notes = usePatchNotesStore()
 const { t } = useGameText()
-/** iPhones and desktops have no web vibration; the switch would do nothing there. */
+/** Desktops have no vibration; the switch would do nothing there. */
 const vibrates = canVibrate()
 
 const difficulty = computed({
@@ -73,6 +73,18 @@ const musicVolumePercent = computed({
 const effectsVolumePercent = computed({
   get: () => Math.round(audio.effectsVolume * 100),
   set: (value: number) => (audio.effectsVolume = value / 100),
+})
+
+/** Turning vibration on buzzes at once, inside the tap, so the coach feels what it does. */
+const vibration = computed({
+  get: () => settings.vibration,
+  set: (on: boolean) => {
+    settings.vibration = on
+
+    if (on) {
+      vibrate('tap')
+    }
+  },
 })
 
 function setVolume(target: 'music' | 'effects', event: Event) {
@@ -170,7 +182,7 @@ function openOrdersPatch() {
     <section v-if="device" class="field">
       <h3 class="label"><Smartphone :size="16" /> {{ t('settings.device') }}</h3>
 
-      <CheckField v-if="vibrates" v-model="settings.vibration">{{ t('settings.vibration') }}</CheckField>
+      <CheckField v-if="vibrates" v-model="vibration">{{ t('settings.vibration') }}</CheckField>
 
       <div class="experiment">
         <CheckField v-model="settings.batterySaver">{{ t('settings.batterySaver') }}</CheckField>

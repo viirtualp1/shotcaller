@@ -4,6 +4,7 @@ import type { ModeId } from '@/content/ids'
 import { coachPhoto } from '../social/friends'
 import type { LeaderboardService } from '../social/leaderboard'
 import type { Database } from './database'
+import { coachDossierSchema, dossierMatchSchema } from './dossierSchema'
 
 const entry = z.object({
   id: z.uuid(),
@@ -12,9 +13,11 @@ const entry = z.object({
   avatar: z.string().max(32).nullable(),
   photo: z.string().max(2048).nullable().catch(null).transform(coachPhoto),
   rating: z.int().nonnegative(),
+  /** Missing from servers before dossiers; their lookup then answers for itself. */
+  open: z.boolean().catch(true).default(true),
 })
 
-/** A bounded public RPC, independent of friends' private profiles. */
+/** Bounded public RPCs: standings, and the dossiers of open ranked profiles. */
 export class SupabaseLeaderboard implements LeaderboardService {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
@@ -25,5 +28,31 @@ export class SupabaseLeaderboard implements LeaderboardService {
     }
 
     return z.array(entry).max(100).parse(data)
+  }
+
+  async profile(coachId: string) {
+    const { data, error } = await this.client.rpc('public_coach_profile', { coach: coachId })
+    if (error) {
+      throw error
+    }
+
+    const parsed = coachDossierSchema.safeParse(data)
+
+    return parsed.success ? parsed.data : null
+  }
+
+  async match(coachId: string, matchId: string) {
+    const { data, error } = await this.client.rpc('public_coach_match', {
+      coach: coachId,
+      match_id: matchId,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    const parsed = dossierMatchSchema.safeParse(data)
+
+    return parsed.success ? parsed.data : null
   }
 }

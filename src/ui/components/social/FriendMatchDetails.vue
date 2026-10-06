@@ -2,9 +2,9 @@
 import { useAsyncState } from '@vueuse/core'
 import { useGameText } from '../../composables/useGameText'
 import { useFriendsStore } from '../../stores/friends'
-import MatchDetails from '../profile/MatchDetails.vue'
+import MatchAnalysis from '../profile/MatchAnalysis.vue'
 
-/** A friend's match in full, fetched when its row is opened. */
+/** A coach's match in full, fetched when its row is opened. */
 const props = defineProps<{
   matchId: string
 }>()
@@ -16,7 +16,9 @@ const { state: match, isLoading } = useAsyncState(() => friends.viewedMatch(prop
 
 <template>
   <p v-if="isLoading" class="muted">{{ t('coach.matchLoading') }}</p>
-  <MatchDetails v-else-if="match" :match="match" />
+
+  <MatchAnalysis v-else-if="match" :match="match" />
+
   <p v-else class="muted">{{ t('coach.matchUnavailable') }}</p>
 </template>
 

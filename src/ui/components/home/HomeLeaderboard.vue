@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExternalLink, Trophy } from '@lucide/vue'
+import { ExternalLink, Lock, Trophy } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { HERO_IDS, MODE_IDS, type ModeId } from '@/content/ids'
@@ -10,6 +10,7 @@ import CoachAvatar from '../profile/CoachAvatar.vue'
 import RankMedal from '../profile/RankMedal.vue'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
+import { useFriendsStore } from '../../stores/friends'
 import { useLeaderboardStore } from '../../stores/leaderboard'
 import { useSettingsStore } from '../../stores/settings'
 
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{ fill?: boolean }>(), { fill: false })
 
 const cloud = useCloudStore()
 const leaderboard = useLeaderboardStore()
+const friends = useFriendsStore()
 const settings = useSettingsStore()
 const text = useGameText()
 const { t } = text
@@ -143,12 +145,24 @@ watch([mode, () => cloud.enabled, () => cloud.account?.id, () => cloud.signedIn]
           >
             <span class="place">{{ index + 1 }}</span>
 
-            <span class="who">
+            <button
+              v-if="friends.canOpenProfile(entry)"
+              type="button"
+              class="who open-profile"
+              :aria-label="t('dossier.open', { name: entry.name || t('profile.defaultName') })"
+              @click="friends.openProfile(entry.id)"
+            >
               <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="28" />
 
-              <span class="name" :title="entry.name || t('profile.defaultName')">{{
-                entry.name || t('profile.defaultName')
-              }}</span>
+              <span class="name">{{ entry.name || t('profile.defaultName') }}</span>
+            </button>
+
+            <span v-else class="who" :title="t('dossier.private')">
+              <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="28" />
+
+              <span class="name">{{ entry.name || t('profile.defaultName') }}</span>
+
+              <Lock :size="11" class="lock" :aria-label="t('dossier.private')" />
             </span>
 
             <span class="rating" :title="t(`profile.ranks.${rankFor(entry.rating).tier}`)">
@@ -321,6 +335,32 @@ watch([mode, () => cloud.enabled, () => cloud.account?.id, () => cloud.signedIn]
   align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+/* A shared profile opens from its row; a private one shows a lock instead. */
+.open-profile {
+  padding: 2px 4px 2px 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.open-profile:hover .name {
+  color: var(--gold);
+}
+
+.open-profile:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.lock {
+  flex: none;
+  color: var(--chalk-faint);
 }
 
 .name {

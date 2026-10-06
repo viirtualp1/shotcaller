@@ -1,7 +1,8 @@
-import type { HeroId, ModeId, StarLevel } from '@/content/ids'
-import type { Difficulty } from '@/content/rules'
-import type { MatchRecord, ModeRatings } from '@/domain/profile/Profile'
+import type { MatchRecord } from '@/domain/profile/Profile'
+import type { CoachDossier } from '@/domain/profile/dossier'
 import type { LiveMatch } from './liveMatch'
+
+export type { CoachDossier, MatchSummary, SummaryHero } from '@/domain/profile/dossier'
 
 /** What other players see of a coach. */
 export interface CoachCard {
@@ -27,41 +28,6 @@ export interface PresenceStatus {
   readonly activity: Activity
   /** The round being played, in a match or a duel. */
   readonly round: number | null
-}
-
-/** A finished match as a friend's profile shows it. */
-export interface MatchSummary {
-  readonly id: string
-  readonly playedAt: string
-  readonly mode: ModeId
-  /** Against another coach rather than the computer; who it was stays private. */
-  readonly duel: boolean
-  readonly difficulty: Difficulty
-  readonly verdict: 'win' | 'loss' | 'draw'
-  readonly rounds: number
-  readonly roundsWon: number
-  readonly roundsLost: number
-  readonly lineup: readonly { readonly heroId: HeroId; readonly stars: StarLevel }[]
-  readonly mvp: HeroId | null
-  readonly ratingBefore: number
-  readonly ratingAfter: number
-  readonly xp: number
-}
-
-export interface FriendProfile extends CoachCard {
-  readonly ratings: ModeRatings
-  readonly peakRating: number
-  readonly xp: number
-  /** Null for a coach who has not saved a profile yet. */
-  readonly totals: {
-    readonly matches: number
-    readonly wins: number
-    readonly losses: number
-    readonly draws: number
-    readonly bestWinStreak: number
-  } | null
-  /** Newest first. */
-  readonly recent: readonly MatchSummary[]
 }
 
 /** Online status as friends see it. */
@@ -103,10 +69,13 @@ export interface FriendsService {
   blocked(): Promise<CoachCard[]>
   /** Sends a coach's conduct to the moderators; the coach is not told who reported them. */
   report(coachId: string, reason: ReportReason, details: string): Promise<void>
+  /** Whether coaches who are not friends can open this coach's dossier from the leaderboard. */
+  publicProfile(): Promise<boolean>
+  setPublicProfile(visible: boolean): Promise<void>
   /** Publishes the Google picture for friends, or clears it when a hero is shown instead. */
   setPhoto(url: string | null): Promise<void>
-  /** A friend's rank, totals and latest matches; null when they are not a friend (any more). */
-  profile(coachId: string): Promise<FriendProfile | null>
+  /** A friend's dossier; null when they are not a friend (any more). Servers before dossiers send less. */
+  profile(coachId: string): Promise<CoachDossier | null>
   /** One of those matches in full, without the duel opponent's name; null when it is not there any more. */
   match(coachId: string, matchId: string): Promise<MatchRecord | null>
   /** Returns whether a friend is currently watching. */

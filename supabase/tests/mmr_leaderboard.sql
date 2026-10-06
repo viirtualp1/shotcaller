@@ -51,7 +51,7 @@ begin
   end if;
 
   select array_agg(key order by key) into keys from jsonb_object_keys(result -> 0) key;
-  if keys <> array['avatar', 'id', 'name', 'photo', 'position', 'rating'] then
+  if keys <> array['avatar', 'id', 'name', 'open', 'photo', 'position', 'rating'] then
     raise exception 'Leaderboard exposed extra data';
   end if;
 

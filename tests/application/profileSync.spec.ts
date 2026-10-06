@@ -105,6 +105,66 @@ class Device {
 }
 
 describe('ProfileSync', () => {
+  it.each(['cloud', 'device'] as const)(
+    'keeps a seen zoom hint when resolving with %s progress',
+    async (keep) => {
+      const cloud = new MemoryCloud()
+      const phone = new Device()
+      await phone.push(cloud)
+
+      if (keep === 'cloud') {
+        phone.profile = {
+          ...phone.profile,
+          zoomHintSeen: true,
+        }
+
+        phone.sync.noteIdentity({
+          name: '',
+          avatar: null,
+          zoomHintSeen: true,
+        })
+      } else {
+        cloud.row = {
+          ...cloud.row!,
+          profile: {
+            ...cloud.row!.profile,
+            zoomHintSeen: true,
+          },
+        }
+      }
+
+      phone.profile = await phone.sync.resolve(cloud, 'coach', keep, () => phone.profile)
+      expect(phone.profile.zoomHintSeen).toBe(true)
+      expect(cloud.row?.profile.zoomHintSeen).toBe(true)
+    },
+  )
+
+  it('keeps the camera hint seen across devices and a stale identity update', async () => {
+    const cloud = new MemoryCloud()
+    const phone = new Device()
+    await phone.push(cloud)
+    const tablet = new Device()
+    await tablet.push(cloud)
+
+    phone.profile = {
+      ...phone.profile,
+      zoomHintSeen: true,
+    }
+
+    phone.sync.noteIdentity({
+      name: '',
+      avatar: null,
+      zoomHintSeen: true,
+    })
+
+    await phone.push(cloud)
+    tablet.rename('Tablet')
+    await tablet.push(cloud)
+    expect(cloud.row?.profile.zoomHintSeen).toBe(true)
+    await phone.push(cloud)
+    expect(phone.profile.zoomHintSeen).toBe(true)
+  })
+
   it('settles a milestone and contract crossed on two devices only once', async () => {
     const cloud = new MemoryCloud()
     const phone = new Device()

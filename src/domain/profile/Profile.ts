@@ -130,6 +130,8 @@ export interface Profile {
   /** `null` falls back to the most played hero. */
   readonly avatar: HeroId | null
   readonly createdAt: string
+  /** The touch camera demonstration has already been shown on this account. */
+  readonly zoomHintSeen?: boolean
   /** One rating per game mode; only duels move them. */
   readonly ratings: ModeRatings
   readonly peakRatings: ModeRatings

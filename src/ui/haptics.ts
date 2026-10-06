@@ -1,28 +1,37 @@
-/** Short buzzes for the moments a phone should feel; durations in milliseconds, as `navigator.vibrate` takes them. */
+/**
+ * Buzzes for the moments a phone should feel, in milliseconds as `navigator.vibrate` takes them. Most Android motors
+ * need about 20 ms to spin up, so anything shorter is never felt.
+ */
 export const HAPTICS = {
+  /** A tap that changes the board: a hero bought, the setting turned on. */
+  tap: 20,
   /** A hero or item lifts off under the finger. */
-  pickUp: 8,
+  pickUp: 25,
   /** It lands on a lane, a hero or the bench. */
-  drop: 16,
-  promoted: [18, 60, 28],
-  roundWon: [24, 70, 40],
-  roundLost: 70,
+  drop: 40,
+  promoted: [40, 60, 70],
+  roundWon: [50, 70, 90],
+  roundLost: 150,
 } as const satisfies Record<string, number | readonly number[]>
 
 export type Haptic = keyof typeof HAPTICS
 
-/** Phones with a vibration motor: Android browsers and the Google Play app. iPhones have no web vibration. */
-export function canVibrate() {
+/** Android browsers and the Google Play app vibrate on request. */
+function hasVibration() {
   return typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'
 }
 
-export function vibrate(haptic: Haptic) {
-  if (!canVibrate()) {
-    return
-  }
+/** Phones that can feel a buzz from the page. */
+export function canVibrate() {
+  // Native iOS switches require a trusted user event; a hidden switch clicked by script cannot provide game haptics.
+  return hasVibration()
+}
 
+export function vibrate(haptic: Haptic) {
   try {
-    navigator.vibrate(HAPTICS[haptic] as number | number[])
+    if (hasVibration()) {
+      navigator.vibrate(HAPTICS[haptic] as number | number[])
+    }
   } catch {
     /* A browser that blocks vibration before the first tap throws in some versions; the buzz is only a nicety. */
   }

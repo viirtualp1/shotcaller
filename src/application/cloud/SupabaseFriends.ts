@@ -1,8 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { HERO_IDS, MODE_IDS } from '@/content/ids'
-import { DEFAULT_MODE } from '@/content/modes'
-import { matchRecordSchema } from '../persistence/profileSnapshot'
 import {
   coachPhoto,
   REPORT_DETAILS_MAX,
@@ -13,9 +10,9 @@ import {
   type ReportReason,
 } from '../social/friends'
 import type { Database } from './database'
+import { coachDossierSchema, dossierMatchSchema } from './dossierSchema'
 import { liveMatchSchema, type LiveMatch } from '../social/liveMatch'
 import { asJson } from './json'
-import { modeRatingsSchema } from './ratingsSchema'
 
 const FRIEND_STATUSES: ReadonlySet<string> = new Set<FriendStatus>(['friend', 'incoming', 'outgoing'])
 
@@ -32,87 +29,11 @@ const REQUEST_RESULTS: ReadonlySet<string> = new Set<FriendRequestResult>([
 /** A small heartbeat returns only this coach's online friends. */
 const PRESENCE_INTERVAL = 30_000
 
-const count = z.int().nonnegative()
-const heroId = z.enum(HERO_IDS)
-
 /** Other coaches' presence and profiles come from their devices, so they are checked before use. */
 const presenceStatus = z.object({
   activity: z.enum(['menu', 'match', 'duel']),
   round: z.int().min(1).max(40).nullable(),
 })
-
-const friendProfile = z
-  .object({
-    id: z.uuid(),
-    name: z.string().max(40),
-    avatar: z.string().max(32).nullable(),
-    photo: z
-      .string()
-      .max(2048)
-      .nullable()
-      .catch(null)
-      .transform((url) => coachPhoto(url)),
-    rating: count,
-    /** Missing before game modes, or before the coach saved a profile with them. */
-    ratings: modeRatingsSchema.nullable().catch(null),
-    peakRating: count.catch(0),
-    xp: count.catch(0),
-    totals: z
-      .object({
-        matches: count,
-        wins: count,
-        losses: count,
-        draws: count,
-        bestWinStreak: count.catch(0),
-      })
-      .nullable()
-      .catch(null),
-    recent: z
-      .array(
-        z.object({
-          id: z.string().max(64),
-          playedAt: z.string(),
-          mode: z.enum(MODE_IDS).catch(DEFAULT_MODE),
-          duel: z.boolean().catch(false),
-          difficulty: z.enum(['relaxed', 'standard']).catch('standard'),
-          verdict: z.enum(['win', 'loss', 'draw']),
-          rounds: count,
-          roundsWon: count,
-          roundsLost: count,
-          lineup: z
-            .array(
-              z.object({
-                heroId,
-                stars: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-              }),
-            )
-            .max(10),
-          mvp: heroId.nullable().catch(null),
-          ratingBefore: count,
-          ratingAfter: count,
-          xp: count.catch(0),
-        }),
-      )
-      .max(10)
-      .catch([]),
-  })
-  /* Before game modes there was one rating, earned on three lanes. */
-  .transform(({ ratings, ...rest }) => ({
-    ...rest,
-    ratings: ratings ?? {
-      threeLanes: rest.rating,
-      twoLanes: 0,
-      oneLane: 0,
-    },
-  }))
-
-/** The server tells only whether it was a duel; the opponent's name stays with the friend. */
-const friendMatch = matchRecordSchema
-  .extend({ duel: z.boolean().catch(false) })
-  .transform(({ duel, ...rest }) => ({
-    ...rest,
-    duel: duel ? { opponentName: null } : null,
-  }))
 
 /** Friends through the functions in `supabase/migrations`; the tables themselves are not readable directly. */
 export class SupabaseFriends implements FriendsService {
@@ -242,6 +163,22 @@ export class SupabaseFriends implements FriendsService {
     }))
   }
 
+  async publicProfile() {
+    const { data, error } = await this.client.rpc('my_public_profile')
+    if (error) {
+      throw error
+    }
+
+    return data === true
+  }
+
+  async setPublicProfile(visible: boolean) {
+    const { error } = await this.client.rpc('set_public_profile', { visible })
+    if (error) {
+      throw error
+    }
+  }
+
   async setPhoto(url: string | null) {
     const { error } = await this.client.rpc('set_coach_photo', { url })
     if (error) {
@@ -255,7 +192,7 @@ export class SupabaseFriends implements FriendsService {
       throw error
     }
 
-    const parsed = friendProfile.safeParse(data)
+    const parsed = coachDossierSchema.safeParse(data)
 
     return parsed.success ? parsed.data : null
   }
@@ -270,7 +207,7 @@ export class SupabaseFriends implements FriendsService {
       throw error
     }
 
-    const parsed = friendMatch.safeParse(data)
+    const parsed = dossierMatchSchema.safeParse(data)
 
     return parsed.success ? parsed.data : null
   }

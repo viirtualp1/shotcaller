@@ -271,10 +271,11 @@ export const useCloudStore = defineStore('cloud', () => {
       after((result) => {
         if (name === 'record' && result) {
           sync.noteMatch(result)
-        } else if (name === 'rename' || name === 'setAvatar') {
+        } else if (name === 'rename' || name === 'setAvatar' || name === 'markZoomHintSeen') {
           sync.noteIdentity({
             name: profile.profile.name,
             avatar: profile.profile.avatar,
+            zoomHintSeen: profile.profile.zoomHintSeen,
           })
         } else {
           return

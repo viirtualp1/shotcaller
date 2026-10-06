@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { ShopOfferView } from '@/application/views'
 import { HERO_IDS, type HeroId } from '@/content/ids'
 import { useGameText } from '../../composables/useGameText'
+import { useHaptics } from '../../composables/useHaptics'
 import { useDragStore } from '../../stores/drag'
 import { useMatchStore, type ShopTab } from '../../stores/match'
 import HudPanel from '../common/HudPanel.vue'
@@ -15,6 +16,7 @@ import ItemOffer from './ItemOffer.vue'
 const store = useMatchStore()
 const drag = useDragStore()
 const { t } = useGameText()
+const haptics = useHaptics()
 const human = computed(() => store.view!.human)
 const locked = computed(() => !store.isPlanning)
 const selling = computed(() => drag.active)
@@ -39,7 +41,12 @@ const catalog = computed(() =>
 )
 
 function recruit(slot: number) {
-  store.recruit(HERO_IDS[slot]!)
+  haptics.buzzIfAccepted('tap', () => store.recruit(HERO_IDS[slot]!))
+}
+
+/** A hero bought is felt as well as seen. */
+function buy(slot: number) {
+  haptics.buzzIfAccepted('tap', () => store.buy(slot))
 }
 </script>
 
@@ -78,7 +85,7 @@ function recruit(slot: number) {
             :offer="offer"
             :index="i"
             :disabled="locked"
-            @buy="store.buy"
+            @buy="buy"
           />
 
           <div v-for="n in soldCount" :key="`sold-${n}`" class="sold" aria-hidden="true" />

@@ -11,6 +11,7 @@ import { useSettingsStore } from '../../stores/settings'
 import { useAccountPhoto } from '../../composables/useAccountPhoto'
 import CoachAvatar from './CoachAvatar.vue'
 import RankDropdown from './RankDropdown.vue'
+import ProfileVisibility from './ProfileVisibility.vue'
 
 withDefaults(defineProps<{ linked?: boolean }>(), { linked: false })
 
@@ -151,6 +152,8 @@ function save() {
         </div>
 
         <p class="muted since">{{ t('profile.since', { date: since }) }}</p>
+
+        <ProfileVisibility v-if="!linked" />
       </div>
     </div>
 

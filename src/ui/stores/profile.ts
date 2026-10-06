@@ -132,6 +132,17 @@ export const useProfileStore = defineStore('profile', () => {
     })
   }
 
+  function markZoomHintSeen() {
+    if (profile.value.zoomHintSeen) {
+      return
+    }
+
+    update({
+      ...profile.value,
+      zoomHintSeen: true,
+    })
+  }
+
   return {
     profile,
     lastRecord,
@@ -153,5 +164,6 @@ export const useProfileStore = defineStore('profile', () => {
     reset,
     rename,
     setAvatar,
+    markZoomHintSeen,
   }
 })

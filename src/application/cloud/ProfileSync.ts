@@ -10,6 +10,7 @@ type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 export interface Identity {
   readonly name: string
   readonly avatar: HeroId | null
+  readonly zoomHintSeen?: boolean
 }
 
 /** What this device knows about its profile's place in the cloud. */
@@ -44,6 +45,7 @@ const stateSchema = z.object({
     .object({
       name: z.string(),
       avatar: z.enum(HERO_IDS).nullable(),
+      zoomHintSeen: z.boolean().optional(),
     })
     .nullable(),
 })
@@ -164,10 +166,28 @@ export class ProfileSync {
       const rated = await this.settledRatings(store)
 
       if (keep === 'cloud' && cloud) {
-        return this.settle(userId, cloud.revision, rated(cloud.profile), sent).profile
+        const kept = rated({
+          ...cloud.profile,
+          zoomHintSeen: cloud.profile.zoomHintSeen || (sent.userId === userId && local.zoomHintSeen) || false,
+        })
+
+        if (kept.zoomHintSeen && !cloud.profile.zoomHintSeen) {
+          const saved = await store.save(kept, cloud.revision)
+          if (saved === 'conflict') {
+            continue
+          }
+
+          return this.settle(userId, saved.revision, kept, sent).profile
+        }
+
+        return this.settle(userId, cloud.revision, kept, sent).profile
       }
 
-      const kept = rated(local)
+      const kept = rated({
+        ...local,
+        zoomHintSeen: local.zoomHintSeen || (sent.userId === userId && cloud?.profile.zoomHintSeen) || false,
+      })
+
       const saved = cloud ? await store.save(kept, cloud.revision) : await store.create(kept)
       if (saved === 'conflict') {
         continue
@@ -213,6 +233,7 @@ export class ProfileSync {
       ? {
           ...played,
           ...state.identity,
+          zoomHintSeen: played.zoomHintSeen || state.identity.zoomHintSeen || false,
         }
       : played
   }

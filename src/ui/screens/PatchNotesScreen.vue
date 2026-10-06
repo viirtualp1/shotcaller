@@ -30,6 +30,7 @@ import HomeRelease from '../components/patchNotes/HomeRelease.vue'
 import CrossPlatformRelease from '../components/patchNotes/CrossPlatformRelease.vue'
 import HudRelease from '../components/patchNotes/HudRelease.vue'
 import PocketRelease from '../components/patchNotes/PocketRelease.vue'
+import DossierRelease from '../components/patchNotes/DossierRelease.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
@@ -101,6 +102,8 @@ watch(
         <HudRelease v-else-if="patch.campaign === 'hud'" />
 
         <PocketRelease v-else-if="patch.campaign === 'pocket'" />
+
+        <DossierRelease v-else-if="patch.campaign === 'dossier'" />
 
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>

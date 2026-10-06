@@ -19,6 +19,9 @@ const friends = reactive({
   blocked: [] as FriendEntry[],
   addLeaderboard: vi.fn<(id: string) => Promise<FriendRequestResult | 'error'>>(),
   accept: vi.fn<(id: string) => Promise<void>>(),
+  openProfile: vi.fn<(id: string) => Promise<void>>(),
+  canOpenProfile: (coach: { id: string; open: boolean }) =>
+    coach.open || coach.id === 'me' || friends.friends.some((friend) => friend.id === coach.id),
 })
 
 const rows = ['me', 'friend', 'pending', 'incoming', 'new'].map((id, i) => ({
@@ -28,6 +31,7 @@ const rows = ['me', 'friend', 'pending', 'incoming', 'new'].map((id, i) => ({
   avatar: null,
   photo: null,
   rating: 1500 - i * 100,
+  open: id !== 'new',
 }))
 
 const leaderboard = reactive({
