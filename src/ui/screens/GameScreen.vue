@@ -9,7 +9,7 @@ import {
   useTimeoutFn,
   useWindowSize,
 } from '@vueuse/core'
-import { MousePointerClick } from '@lucide/vue'
+import { MousePointerClick, Pointer, Shrink } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import type { Insets } from '@/rendering/BoardRenderer'
 import { fitMap, MAP_MARGIN, WHOLE_BOARD } from '@/rendering/fitMap'
@@ -45,7 +45,10 @@ import { useFightRequest } from '../composables/useFightRequest'
 import { useGameText } from '../composables/useGameText'
 import { useGameUiZoom } from '../composables/useGameUiZoom'
 import { useHotkeys } from '../composables/useHotkeys'
+import { useMatchHaptics } from '../composables/useMatchHaptics'
 import { useScoreboardAnnouncement } from '../composables/useScoreboardAnnouncement'
+import { useScreenAwake } from '../composables/useScreenAwake'
+import { useBoardStore } from '../stores/board'
 import { useDragStore } from '../stores/drag'
 import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
@@ -65,16 +68,22 @@ const menu = useMenuStore()
 const pause = usePauseStore()
 const drag = useDragStore()
 const duel = useDuelStore()
+const board = useBoardStore()
 const { t } = useGameText()
 const tour = useTutorial()
 const uiZoom = useGameUiZoom()
 const scoreboardOut = useScoreboardAnnouncement(() => store.view)
 
+useScreenAwake(() => store.phase !== null && store.phase !== 'finished')
+useMatchHaptics()
+
 const game = ref<HTMLElement | null>(null)
 const top = ref<HTMLElement | null>(null)
+const scoreboard = ref<HTMLElement | null>(null)
 const left = ref<HTMLElement | null>(null)
 const right = ref<HTMLElement | null>(null)
 const dock = ref<InstanceType<typeof CompactDock> | null>(null)
+const sheetPeek = ref<HTMLElement | null>(null)
 const wide = useMediaQuery('(min-width: 1100px)')
 /** Phones and tablets; a desktop with a mouse keeps its layout as it is. */
 const touch = useMediaQuery('(pointer: coarse)')
@@ -82,9 +91,11 @@ const touch = useMediaQuery('(pointer: coarse)')
 const landscape = useMediaQuery('(orientation: landscape)')
 const { width: viewportWidth, height: viewportHeight } = useWindowSize()
 const topBox = useElementBounding(top)
+const scoreboardBox = useElementBounding(scoreboard)
 const leftBox = useElementBounding(left)
 const rightBox = useElementBounding(right)
 const dockBox = useElementBounding(dock)
+const peekBox = useElementBounding(sheetPeek)
 /** During a battle the planning tools slide away and the map takes their space. */
 const battling = computed(() => store.phase === 'battle')
 
@@ -99,6 +110,9 @@ const pinned = computed(() => !store.view?.sandbox || viewportHeight.value >= 10
  * It slides out on hover, on entering the match, and at the start and end of rounds.
  */
 const peek = computed(() => wide.value && !touch.value)
+
+/** During a battle on a phone held upright the dock folds into a sheet over the map. */
+const sheet = computed(() => battling.value && !wide.value && !landscape.value)
 
 /** Equal side insets keep the map centred under the scoreboard. */
 const sideInset = computed(() =>
@@ -124,11 +138,17 @@ const insets = computed<Insets>(() => {
     }
   }
 
+  /* On a phone on its side the corner buttons sit beside the map, so only the scoreboard takes height from it. */
   return {
-    top: topBox.bottom.value,
+    top: landscape.value ? scoreboardBox.bottom.value : topBox.bottom.value,
     left: 0,
     right: landscape.value ? Math.max(0, viewportWidth.value - dockBox.left.value) : 0,
-    bottom: landscape.value ? 0 : Math.max(0, viewportHeight.value - dockBox.top.value),
+    /* A sheet lies over the map, so opening it never moves the map: only its folded strip is kept clear. */
+    bottom: landscape.value
+      ? 0
+      : sheet.value
+        ? peekBox.height.value
+        : Math.max(0, viewportHeight.value - dockBox.top.value),
   }
 })
 
@@ -190,6 +210,7 @@ function escape() {
 /** The map follows the panels' edges; slides and fades move them without resizing them, so measure again after. */
 function measureHud() {
   topBox.update()
+  scoreboardBox.update()
   leftBox.update()
   rightBox.update()
 }
@@ -243,8 +264,10 @@ watch(
   <div
     ref="game"
     class="game"
-    :class="[wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait'], { peek }]"
-    :style="{ '--game-zoom': uiZoom }"
+    :class="[wide ? 'wide' : ['compact', landscape ? 'landscape' : 'portrait'], { peek, battling }]"
+    :style="{
+      '--game-zoom': uiZoom,
+    }"
   >
     <div class="board-layer">
       <BoardView
@@ -262,7 +285,7 @@ watch(
         <GameMenu v-if="touch" />
       </div>
 
-      <div class="top-center" :class="{ out: scoreboardOut }">
+      <div ref="scoreboard" class="top-center" :class="{ out: scoreboardOut }">
         <span v-if="peek" class="handle" aria-hidden="true" />
         <MatchScoreboard />
         <TavernStrip class="tavern" />
@@ -274,6 +297,17 @@ watch(
           <DuelPauseButton />
           <ReactionWheel />
         </template>
+
+        <button
+          v-if="touch && board.zoomed && board.follow === null"
+          type="button"
+          class="icon-btn"
+          :aria-label="t('camera.wholeMap')"
+          :title="t('camera.wholeMap')"
+          @click="board.resetView()"
+        >
+          <Shrink :size="18" />
+        </button>
       </div>
     </header>
 
@@ -314,7 +348,10 @@ watch(
       </aside>
     </template>
 
-    <CompactDock v-else ref="dock" class="dock" />
+    <template v-else>
+      <CompactDock ref="dock" class="dock" :sheet="sheet" />
+      <div ref="sheetPeek" class="sheet-peek" aria-hidden="true" />
+    </template>
 
     <!-- Over the map, clear of the dock: notices, the placement hint and, on desktop, the open card. -->
     <div class="hud-bottom">
@@ -322,7 +359,9 @@ watch(
 
       <Transition name="fade">
         <p v-if="placementHint" class="placement-hint">
-          <MousePointerClick :size="15" /> {{ placementHint }}
+          <Pointer v-if="touch" :size="15" />
+          <MousePointerClick v-else :size="15" />
+          {{ placementHint }}
         </p>
       </Transition>
 
@@ -649,6 +688,17 @@ watch(
 .compact {
   --dock-height: clamp(240px, 44dvh, 480px);
   --dock-width: clamp(290px, 40vw, 400px);
+  /* What a folded battle sheet leaves over the map: the button that opens it, above the home indicator. */
+  --sheet-peek: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Measures the folded sheet for the map's insets. */
+.sheet-peek {
+  position: fixed;
+  inset: auto 0 0;
+  height: var(--sheet-peek);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .compact .hud-top {
@@ -700,6 +750,10 @@ watch(
 /* The placement hint sits on the map, clear of the dock. */
 .portrait .hud-bottom {
   bottom: calc(var(--dock-height) + 10px);
+}
+
+.portrait.battling .hud-bottom {
+  bottom: calc(var(--sheet-peek) + 10px);
 }
 
 .landscape .hud-bottom {

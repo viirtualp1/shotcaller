@@ -306,6 +306,39 @@ const history = computed(() =>
   }
 }
 
+/* A phone on its side has height to spare for nothing: the scoreboard keeps to one slim strip over the map. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .scoreboard {
+    padding-block: 3px 4px;
+  }
+
+  .center {
+    gap: 1px;
+  }
+
+  .round {
+    font-size: 10px;
+  }
+
+  .phase {
+    font-size: 19px;
+  }
+
+  .phase.awaiting {
+    font-size: 17px;
+  }
+
+  .history {
+    max-width: 240px;
+    margin-top: 2px;
+  }
+
+  .pip {
+    width: 6px;
+    height: 6px;
+  }
+}
+
 @media (max-width: 480px) {
   .scoreboard {
     gap: 8px;

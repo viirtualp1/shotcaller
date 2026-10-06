@@ -69,6 +69,8 @@ export type FeatureArt =
     }
   /** The 9.3 match redesign, illustrated with fixed example lineups and timers. */
   | { readonly kind: 'hud'; readonly focus: 'scoreboard' | 'lineup' | 'scale' | 'twist' }
+  /** The 9.4 phone release: the camera, the folding battle panel, placing heroes and a cool, awake phone. */
+  | { readonly kind: 'pocket'; readonly focus: 'camera' | 'sheet' | 'placement' | 'comfort' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
 export interface FeatureNote {
@@ -85,7 +87,7 @@ export interface PatchNote {
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
   readonly campaign?:
-    'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'crossPlatform' | 'hud'
+    'career' | 'matchmaking' | 'training' | 'pause' | 'forge' | 'home' | 'crossPlatform' | 'hud' | 'pocket'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
@@ -101,6 +103,123 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '9.4',
+    date: '2026-10-06',
+    title: {
+      en: 'The fight in your pocket',
+      ru: 'Бой в кармане',
+    },
+    campaign: 'pocket',
+    wide: true,
+    card: {
+      en: '**Pinch to zoom**, a camera that **follows a lane**, a battle panel that folds away and a **Changeling** worth its price.',
+      ru: '**Приближение щипком**, камера, которая **следит за линией**, складная панель боя и **Changeling**, который стоит своих денег.',
+    },
+    features: [
+      {
+        art: {
+          kind: 'pocket',
+          focus: 'camera',
+        },
+        title: {
+          en: 'Get close to the fight',
+          ru: 'Ближе к бою',
+        },
+        text: {
+          en: 'Pinch to zoom in up to **3×** and drag to look around. During a battle, pick a lane and the camera **follows its heroes**, closing in up to **2.4×** as they meet. Every planning phase opens on the whole map again.',
+          ru: 'Сведи пальцы, чтобы приблизить карту до **3×**, и веди, чтобы осмотреться. В бою выбери линию — камера **следит за её героями** и подходит до **2,4×**, когда они сходятся. Каждая подготовка снова начинается со всей карты.',
+        },
+      },
+      {
+        art: {
+          kind: 'pocket',
+          focus: 'sheet',
+        },
+        title: {
+          en: 'The battlefield, uncovered',
+          ru: 'Поле боя без помех',
+        },
+        text: {
+          en: 'Once the battle starts, the panel **folds away** and the map takes the screen. Tap **Battle panel** or pull it up for speed, camera and damage, then swipe it back down. Menus and windows rise from the bottom too and **close with a swipe**.',
+          ru: 'Как только начинается бой, панель **сворачивается**, и карта занимает экран. Нажми **«Панель боя»** или потяни её вверх — там скорость, камера и урон, — а потом смахни вниз. Меню и окна тоже выезжают снизу и **закрываются свайпом**.',
+        },
+      },
+      {
+        art: {
+          kind: 'pocket',
+          focus: 'placement',
+        },
+        title: {
+          en: 'Buy it, place it',
+          ru: 'Купил — поставил',
+        },
+        text: {
+          en: 'Heroes you buy wait **right above the shop**: drag one to a lane, or tap it and then the lane, without leaving the shop. Your phone **buzzes** when a hero lands, gains a star or a round is decided.',
+          ru: 'Купленные герои ждут **прямо над магазином**: перетащи героя на линию или нажми на него, а потом на линию — не выходя из магазина. Телефон **вибрирует**, когда герой встаёт на линию, получает звезду или решается раунд.',
+        },
+      },
+      {
+        art: {
+          kind: 'pocket',
+          focus: 'comfort',
+        },
+        title: {
+          en: 'Long matches, cool phone',
+          ru: 'Долгий матч, холодный телефон',
+        },
+        text: {
+          en: 'The screen **stays on** for the whole match, so a battle never dims halfway through. Turn on **Battery saver** in Settings and the map draws **30 frames a second instead of 60**, keeping your phone cool on long sessions.',
+          ru: 'Экран **не гаснет** весь матч, и бой не затемняется на середине. Включи **«Экономию заряда»** в настройках — карта будет рисовать **30 кадров в секунду вместо 60**, и телефон не перегреется за долгую игру.',
+        },
+      },
+    ],
+    heroes: [
+      {
+        id: 'changeling',
+        badge: 'buffed',
+        changes: [
+          {
+            en: 'Health: **560** → **720**',
+            ru: 'Здоровье: **560** → **720**',
+          },
+          {
+            en: 'Damage: **40** → **50**',
+            ru: 'Урон: **40** → **50**',
+          },
+        ],
+        abilities: [
+          {
+            kind: 'ability',
+            id: 'mimic',
+            badge: 'buffed',
+            changes: [
+              {
+                en: 'The borrowed ability is cast **60%** stronger than its tier-one owner casts it. Perfect Copy adds its **30%** on top.',
+                ru: 'Заимствованная способность на **60%** сильнее, чем у её владельца первого тира. Perfect Copy добавляет свои **30%** сверху.',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    interface: [
+      {
+        en: 'The difficulty switch is as tall as the other buttons, so it is easier to hit.',
+        ru: 'Переключатель сложности стал такой же высоты, как другие кнопки, — по нему проще попасть.',
+      },
+      {
+        en: 'Hints and the tutorial read naturally whether you tap or click.',
+        ru: 'Подсказки и обучение одинаково понятны, нажимаешь ли ты пальцем или мышью.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'The **Fight** button no longer breaks its label over two lines.',
+        ru: 'Надпись на кнопке **«В бой»** больше не переносится на две строки.',
+      },
+    ],
+  },
   {
     version: '9.3',
     date: '2026-10-05',

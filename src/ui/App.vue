@@ -39,6 +39,7 @@ import { useProfileStore } from './stores/profile'
 import { usePrivacyStore } from './stores/privacy'
 import { useReplayStore } from './stores/replay'
 import { useGameAudio } from './composables/useGameAudio'
+import { useSheetSwipe } from './composables/useSheetSwipe'
 import { useSteam } from './composables/useSteam'
 import { useLeaderboardStore } from './stores/leaderboard'
 import { useLegalStore } from './stores/legal'
@@ -51,6 +52,7 @@ const leaderboard = useLeaderboardStore()
 const legal = useLegalStore()
 const phone = useMediaQuery('(max-width: 860px)')
 useGameAudio()
+useSheetSwipe()
 
 /* Started with the app: it picks up a sign-in link and pulls progress saved on other devices. */
 const cloud = useCloudStore()

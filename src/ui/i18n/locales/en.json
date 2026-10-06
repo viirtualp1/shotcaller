@@ -371,26 +371,34 @@
     "shop": "Shop",
     "heroes": "Heroes",
     "lanes": "Lanes",
-    "stats": "Stats"
+    "stats": "Stats",
+    "expand": "Show the battle panel",
+    "collapse": "Hide the battle panel",
+    "panel": "Battle panel"
+  },
+  "camera": {
+    "label": "Camera",
+    "wholeMap": "Whole map",
+    "follow": "Follow the {lane} lane"
   },
   "tracker": {
     "anyHero": "any hero",
     "vs": "VS",
-    "recruit": "Click to send in {hero}"
+    "recruit": "Send in {hero}"
   },
   "orders": {
     "label": "Lane order",
     "push": {
       "name": "Push",
-      "hint": "Push: the heroes never back off, even when caught alone. Click again to take the order back."
+      "hint": "Push: the heroes never back off, even when caught alone. Pick it again to take the order back."
     },
     "hold": {
       "name": "Defence",
-      "hint": "Defence: the heroes stay by their own outer tower and fight whoever comes. Click again to take the order back."
+      "hint": "Defence: the heroes stay by their own outer tower and fight whoever comes. Pick it again to take the order back."
     },
     "group": {
       "name": "Together",
-      "hint": "Together: nobody walks ahead of the lane-mate furthest behind. Click again to take the order back."
+      "hint": "Together: nobody walks ahead of the lane-mate furthest behind. Pick it again to take the order back."
     }
   },
   "bench": {
@@ -400,7 +408,7 @@
   },
   "stash": {
     "title": "Items",
-    "hint": "Click to equip or sell"
+    "hint": "Pick one to equip or sell"
   },
   "shop": {
     "heroes": "Heroes",
@@ -433,7 +441,7 @@
     "innate": "Innate",
     "rolePassive": "Role: {role}",
     "souls": "Souls in the jar: {n} of {max}",
-    "unequipHint": "Click to unequip",
+    "unequipHint": "Pick to unequip",
     "seconds": "{n} s",
     "statsHint": "White is the hero, green comes from items and lane synergies",
     "peek": {
@@ -480,8 +488,8 @@
     "damageReceived": "Taken",
     "noHealing": "Nobody has healed yet",
     "duelSpeed": "In a duel the battle runs at the same speed for both players",
-    "placeHint": "Click a lane to place the hero",
-    "itemHint": "Click a hero to give the item",
+    "placeHint": "Pick a lane for the hero",
+    "itemHint": "Pick a hero to give the item",
     "miss": "miss",
     "bash": "bash"
   },
@@ -617,7 +625,7 @@
   "notices": {
     "promoted": "{hero} is now {stars}",
     "promotedTalent": "{hero} is now {stars}. Pick a talent on its card",
-    "itemBought": "{item} is in your stash. Click it to equip or sell",
+    "itemBought": "{item} is in your stash. Pick it to equip or sell",
     "itemUpgraded": "Two copies merged: {item}",
     "timeUp": "Time's up, the battle has started",
     "arranged": "Team placed",
@@ -640,7 +648,7 @@
     },
     "shop": {
       "title": "Hero shop",
-      "text": "Click a card to buy the hero. The price is in the top right corner. When a card shows “★★ on buy”, buying it upgrades your hero right away."
+      "text": "Pick a card to buy the hero. The price is in the top right corner. When a card shows “★★ on buy”, buying it upgrades your hero right away."
     },
     "economy": {
       "title": "Gold and level",
@@ -652,7 +660,7 @@
     },
     "place": {
       "title": "Placing heroes",
-      "text": "Drag a hero onto a lane, or click the hero and then the lane. Heroes on the same lane give each other synergies."
+      "text": "Drag a hero onto a lane, or pick the hero and then the lane. Heroes on the same lane give each other synergies."
     },
     "tracker": {
       "title": "Lanes",
@@ -660,7 +668,7 @@
     },
     "items": {
       "title": "Items",
-      "text": "The Items tab sells upgrades. Click a bought item in the stash, then a hero, or just drag it: every hero has two slots. The item card also lets you sell it."
+      "text": "The Items tab sells upgrades. Pick a bought item in the stash, then a hero, or just drag it: every hero has two slots. The item card also lets you sell it."
     },
     "scoreboard": {
       "title": "Score",
@@ -698,7 +706,11 @@
     "heroRotation": "Hero rotation",
     "heroRotationHint": "Each new match against the computer draws 15 of the 21 heroes.",
     "roundTwists": "Round twists",
-    "roundTwistsHint": "Every round of a new match against the computer comes with a rule both sides see while planning."
+    "roundTwistsHint": "Every round of a new match against the computer comes with a rule both sides see while planning.",
+    "device": "Device",
+    "vibration": "Vibration",
+    "batterySaver": "Battery saver",
+    "batterySaverHint": "The map draws 30 frames a second instead of 60, so the phone stays cooler and the battery lasts longer."
   },
   "menu": {
     "resume": "Resume"

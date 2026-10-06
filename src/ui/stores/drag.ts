@@ -2,6 +2,7 @@ import { useEventListener } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { reactive, ref, shallowRef } from 'vue'
 import type { HeroId, ItemId, LaneId, StarLevel } from '@/content/ids'
+import { useHaptics } from '../composables/useHaptics'
 import { useBoardStore } from './board'
 import { useMatchStore } from './match'
 
@@ -61,6 +62,7 @@ function accepts(payload: DragPayload, target: DropTarget) {
 export const useDragStore = defineStore('drag', () => {
   const match = useMatchStore()
   const board = useBoardStore()
+  const haptics = useHaptics()
   const payload = shallowRef<DragPayload | null>(null)
   const target = shallowRef<DropTarget | null>(null)
   const active = ref(false)
@@ -111,6 +113,10 @@ export const useDragStore = defineStore('drag', () => {
 
     if (!active.value && Math.hypot(e.clientX - origin.x, e.clientY - origin.y) < DRAG_THRESHOLD) {
       return
+    }
+
+    if (!active.value) {
+      haptics.buzz('pickUp')
     }
 
     active.value = true
@@ -185,10 +191,12 @@ export const useDragStore = defineStore('drag', () => {
   }
 
   function drop(current: DragPayload, where: DropTarget | null) {
-    if (!where) {
-      return
+    if (where) {
+      haptics.buzzIfAccepted('drop', () => place(current, where))
     }
+  }
 
+  function place(current: DragPayload, where: DropTarget) {
     if (current.kind === 'hero') {
       if (where.kind === 'lane') {
         match.move(current.uid, where.lane)

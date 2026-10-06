@@ -25,8 +25,8 @@ export const mimic: Ability = {
     const P = paramsOf(caster, 'mimic')
     const spell = caster.caster
     const { power, healPower } = spell
-    spell.power *= P.power
-    spell.healPower *= P.power
+    spell.power *= P.power * P.borrowed
+    spell.healPower *= P.power * P.borrowed
 
     const cast = SIGNATURES[ROLE_SIGNATURES[caster.hero.role]]?.cast(caster, ctx) ?? false
 

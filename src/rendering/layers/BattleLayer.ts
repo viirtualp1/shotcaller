@@ -1,8 +1,10 @@
 import { Container } from 'pixi.js'
+import type { LaneId } from '@/content/ids'
 import { distance, type Vec2 } from '@/core/math/vec2'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import { isAlive, type Entity } from '@/simulation/ecs/components'
 import type { SimulationEvents } from '@/simulation/events'
+import type { Rect } from '../fitMap'
 import type { Perspective } from '../perspective'
 import type { RoleIcons } from '../roleIcons'
 import { PALETTE, TEAM_COLORS } from '../theme'
@@ -162,6 +164,36 @@ export class BattleLayer extends Container {
     }
 
     return null
+  }
+
+  /** Board-space box around the living heroes of both teams on a lane; null when the lane has none. */
+  laneHeroBounds(lane: LaneId): Rect | null {
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+
+    for (const [entity, view] of this.views) {
+      if (entity.hero?.lane !== lane || !isAlive(entity)) {
+        continue
+      }
+
+      minX = Math.min(minX, view.x)
+      minY = Math.min(minY, view.y)
+      maxX = Math.max(maxX, view.x)
+      maxY = Math.max(maxY, view.y)
+    }
+
+    if (minX === Infinity) {
+      return null
+    }
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    }
   }
 
   heroPosition(uid: string) {

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ArrowRight, FlaskConical, Gauge, Languages, Volume2 } from '@lucide/vue'
+import { ArrowRight, FlaskConical, Gauge, Languages, Smartphone, Volume2 } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
 import { DIFFICULTIES, type Difficulty } from '@/content/rules'
 import { useGameText } from '../../composables/useGameText'
+import { canVibrate } from '../../haptics'
 import { useMenuStore } from '../../stores/menu'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import { useSettingsStore } from '../../stores/settings'
@@ -34,12 +35,14 @@ withDefaults(
   defineProps<{
     language?: boolean
     sound?: boolean
+    device?: boolean
     showDifficulty?: boolean
     showExperiments?: boolean
   }>(),
   {
     language: true,
     sound: true,
+    device: true,
     showDifficulty: true,
     showExperiments: true,
   },
@@ -50,6 +53,8 @@ const audio = useAudioStore()
 const menu = useMenuStore()
 const notes = usePatchNotesStore()
 const { t } = useGameText()
+/** iPhones and desktops have no web vibration; the switch would do nothing there. */
+const vibrates = canVibrate()
 
 const difficulty = computed({
   get: () => settings.difficulty,
@@ -162,6 +167,18 @@ function openOrdersPatch() {
       </label>
     </section>
 
+    <section v-if="device" class="field">
+      <h3 class="label"><Smartphone :size="16" /> {{ t('settings.device') }}</h3>
+
+      <CheckField v-if="vibrates" v-model="settings.vibration">{{ t('settings.vibration') }}</CheckField>
+
+      <div class="experiment">
+        <CheckField v-model="settings.batterySaver">{{ t('settings.batterySaver') }}</CheckField>
+
+        <ExperimentInfo :title="t('settings.batterySaver')" :text="t('settings.batterySaverHint')" />
+      </div>
+    </section>
+
     <div v-if="showExperiments || $slots.beforeExperiments" class="after">
       <slot name="beforeExperiments" />
 
@@ -214,11 +231,13 @@ function openOrdersPatch() {
   color: var(--chalk-dim);
 }
 
+/* As tall as the language switch: the face is laid over an empty button, so it sets no height of its own. */
 .difficulty-option {
   position: relative;
   display: grid;
   place-items: center;
   min-width: 0;
+  min-height: 34px;
   border-radius: var(--radius);
   color: var(--chalk-dim);
 }
@@ -327,7 +346,7 @@ function openOrdersPatch() {
 
 @media (max-width: 380px) {
   .difficulty-face {
-    font-size: 11px;
+    font-size: 13px;
   }
 }
 </style>

@@ -10,6 +10,11 @@ import { Perspective } from '@/rendering/perspective'
 import { FONTS } from '@/rendering/theme'
 import { laneMapFor } from '@/simulation/map/LaneMap'
 import type { MessageSchema } from '../i18n'
+import { useSettingsStore } from '../stores/settings'
+
+const FULL_FPS = 60
+/** Half the frames: animations stay smooth enough to follow and the phone stays cool. */
+const SAVER_FPS = 30
 
 async function loadFonts() {
   const faces = [`700 32px ${FONTS.hand}`, `700 11px ${FONTS.ui}`]
@@ -40,13 +45,20 @@ export function useBoardRenderer(
   mode: ModeId = DEFAULT_MODE,
   /** While this is false the canvas keeps its last frame. Omitted, the board runs whenever the tab is visible. */
   running?: Ref<boolean>,
+  /** Whether a calm moment allows fewer frames; the battery saver setting always does. */
+  calm: () => boolean = () => false,
 ) {
   const renderer = shallowRef<BoardRenderer | null>(null)
   const labels = useBoardLabels()
+  const settings = useSettingsStore()
   let disposed = false
   const visibility = useDocumentVisibility()
   watch([renderer, visibility, () => running?.value ?? true], ([board, state, on]) => {
     board?.setActive(state === 'visible' && on)
+  })
+
+  watch([renderer, () => settings.batterySaver || calm()], ([board, saving]) => {
+    board?.setMaxFPS(saving ? SAVER_FPS : FULL_FPS)
   })
 
   onMounted(async () => {

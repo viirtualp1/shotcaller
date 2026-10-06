@@ -156,11 +156,18 @@ export function useGameText() {
         return t(`abilities.${id}`, abilityParams(number, id, power, healPower, talents))
       }
 
+      /* The borrowed ability shows the numbers the Changeling casts it with, Perfect Copy included. */
       if (role) {
         const borrowed = ROLE_SIGNATURES[role]
+        const tuned = tunedParams('mimic', talents)
+        const boost = tuned.power * tuned.borrowed
+
         return t('abilities.mimicAs', {
           ability: ABILITY_NAMES[borrowed],
-          effect: t(`abilities.${borrowed}`, abilityParams(number, borrowed, power, healPower)),
+          effect: t(
+            `abilities.${borrowed}`,
+            abilityParams(number, borrowed, power * boost, healPower * boost),
+          ),
         })
       }
 

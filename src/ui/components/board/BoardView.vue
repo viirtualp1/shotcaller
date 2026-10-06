@@ -2,11 +2,12 @@
 import { computed, ref, shallowRef, watch } from 'vue'
 import { LANE_IDS, type LaneId } from '@/content/ids'
 import type { LaneStances } from '@/domain/battle/contracts'
-import type { Insets } from '@/rendering/BoardRenderer'
+import type { CameraState, Insets } from '@/rendering/BoardRenderer'
 import type { PlanningModel } from '@/rendering/layers/PlanningLayer'
 import type { HeroHit } from '@/rendering/views/HeroToken'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import { useBoardRenderer } from '../../composables/useBoardRenderer'
+import { useHaptics } from '../../composables/useHaptics'
 import { useBoardStore } from '../../stores/board'
 import { useDragStore } from '../../stores/drag'
 import { locateHero, useMatchStore } from '../../stores/match'
@@ -18,8 +19,18 @@ const props = withDefaults(defineProps<{ insets: Insets; closeUp?: boolean }>(),
 const store = useMatchStore()
 const drag = useDragStore()
 const boardStore = useBoardStore()
+const haptics = useHaptics()
 const host = ref<HTMLElement | null>(null)
-const renderer = useBoardRenderer(host, store.view?.side ?? 0, store.view?.mode)
+
+/* On a touch screen, planning is mostly still: the map draws half the frames until a battle or a finger moves it. */
+const renderer = useBoardRenderer(
+  host,
+  store.view?.side ?? 0,
+  store.view?.mode,
+  undefined,
+  () => props.closeUp && store.phase !== 'battle',
+)
+
 const hovered = shallowRef<HeroHit | null>(null)
 let shownSimulation: BattleSimulation | null = null
 
@@ -103,7 +114,12 @@ watch(
       return
     }
 
-    const onLane = (lane: LaneId) => store.placeSelected(lane)
+    const onLane = (lane: LaneId) => {
+      if (store.selectedUid) {
+        haptics.buzzIfAccepted('drop', () => store.placeSelected(lane))
+      }
+    }
+
     const onHero = ({ uid, clientX, clientY }: { uid: string; clientX: number; clientY: number }) => {
       const located = store.view ? locateHero(store.view.human, uid) : null
       if (located) {
@@ -122,16 +138,22 @@ watch(
 
     const onHover = (hit: HeroHit | null) => (hovered.value = hit)
     const onTap = (hit: HeroHit) => (hit.team === 0 ? store.select(hit.uid) : store.inspect(hit.uid))
+    const onPinch = () => drag.end()
+    const onCamera = (state: CameraState) => boardStore.sync(state)
     board.events.on('lanePicked', onLane)
     board.events.on('heroPressed', onHero)
     board.events.on('heroHovered', onHover)
     board.events.on('heroTapped', onTap)
+    board.events.on('pinchStarted', onPinch)
+    board.events.on('cameraChanged', onCamera)
 
     onCleanup(() => {
       board.events.off('lanePicked', onLane)
       board.events.off('heroPressed', onHero)
       board.events.off('heroHovered', onHover)
       board.events.off('heroTapped', onTap)
+      board.events.off('pinchStarted', onPinch)
+      board.events.off('cameraChanged', onCamera)
       hovered.value = null
       boardStore.register(null)
     })

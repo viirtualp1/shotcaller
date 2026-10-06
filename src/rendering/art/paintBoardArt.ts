@@ -1,5 +1,5 @@
 import { TEAM_IDS } from '@/content/ids'
-import type { Point } from '@/content/map'
+import type { MapStyle, Point } from '@/content/map'
 import { BATTLE } from '@/content/rules'
 import { createRng, type Rng } from '@/core/random/rng'
 import type { Vec2 } from '@/core/math/vec2'
@@ -22,11 +22,27 @@ function strokePath(ctx: CanvasRenderingContext2D, points: readonly Vec2[]) {
   points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)))
 }
 
+/** The ground's shading, the same on the board and on the forest painted around it so the two meet without a seam. */
+function groundGradient(ctx: CanvasRenderingContext2D, style: MapStyle | undefined) {
+  const abyss = style === 'abyss'
+
+  const gradient = ctx.createRadialGradient(
+    WORLD / 2,
+    WORLD / 2,
+    abyss ? 80 : 100,
+    WORLD / 2,
+    WORLD / 2,
+    WORLD * (abyss ? 0.75 : 0.72),
+  )
+
+  gradient.addColorStop(0, cssColor(abyss ? PALETTE.abyssCenter : PALETTE.boardCenter))
+  gradient.addColorStop(1, cssColor(abyss ? PALETTE.abyssEdge : PALETTE.boardEdge))
+
+  return gradient
+}
+
 function paintGround(ctx: CanvasRenderingContext2D, rng: Rng) {
-  const gradient = ctx.createRadialGradient(WORLD / 2, WORLD / 2, 100, WORLD / 2, WORLD / 2, WORLD * 0.72)
-  gradient.addColorStop(0, cssColor(PALETTE.boardCenter))
-  gradient.addColorStop(1, cssColor(PALETTE.boardEdge))
-  ctx.fillStyle = gradient
+  ctx.fillStyle = groundGradient(ctx, 'rift')
   ctx.fillRect(0, 0, WORLD, WORLD)
 
   for (let i = 0; i < 26; i++) {
@@ -113,21 +129,25 @@ function paintTrees(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
     }
 
     planted++
-    const size = rng.range(6, 10)
-    ctx.fillStyle = cssColor(PALETTE.treeFill, 0.38)
-    ctx.strokeStyle = cssColor(PALETTE.treeLine, 0.36)
-    ctx.lineWidth = 1.3
+    paintTree(ctx, p, rng.range(6, 10))
+  }
+}
 
-    for (const [dx, dy] of [
-      [-0.6, 0.2],
-      [0.6, 0.2],
-      [0, -0.55],
-    ] as const) {
-      ctx.beginPath()
-      ctx.arc(p.x + dx * size, p.y + dy * size, size * 0.72, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-    }
+/** Three chalk circles. */
+function paintTree(ctx: CanvasRenderingContext2D, p: Vec2, size: number) {
+  ctx.fillStyle = cssColor(PALETTE.treeFill, 0.38)
+  ctx.strokeStyle = cssColor(PALETTE.treeLine, 0.36)
+  ctx.lineWidth = 1.3
+
+  for (const [dx, dy] of [
+    [-0.6, 0.2],
+    [0.6, 0.2],
+    [0, -0.55],
+  ] as const) {
+    ctx.beginPath()
+    ctx.arc(p.x + dx * size, p.y + dy * size, size * 0.72, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
   }
 }
 
@@ -165,10 +185,7 @@ function paintAbyss(ctx: CanvasRenderingContext2D, map: LaneMap, rng: Rng) {
     return
   }
 
-  const gradient = ctx.createRadialGradient(WORLD / 2, WORLD / 2, 80, WORLD / 2, WORLD / 2, WORLD * 0.75)
-  gradient.addColorStop(0, cssColor(PALETTE.abyssCenter))
-  gradient.addColorStop(1, cssColor(PALETTE.abyssEdge))
-  ctx.fillStyle = gradient
+  ctx.fillStyle = groundGradient(ctx, 'abyss')
   ctx.fillRect(0, 0, WORLD, WORLD)
 
   for (let i = 0; i < 18; i++) {
@@ -290,8 +307,11 @@ function paintFrame(ctx: CanvasRenderingContext2D) {
   ctx.stroke()
 }
 
-/** Static chalkboard art rendered once through Canvas 2D (dashes and dust are cheaper here than in WebGL). */
-export function paintBoardArt(map: LaneMap, labels: BoardLabels, resolution = 2048) {
+/**
+ * Static chalkboard art rendered once through Canvas 2D (dashes and dust are cheaper here than in WebGL). Without
+ * `frame` the board has no chalk border, for a touch screen that frames the lanes and paints the forest on past them.
+ */
+export function paintBoardArt(map: LaneMap, labels: BoardLabels, resolution = 2048, frame = true) {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = resolution
   const ctx = canvas.getContext('2d')
@@ -321,7 +341,62 @@ export function paintBoardArt(map: LaneMap, labels: BoardLabels, resolution = 20
   paintRelicSpots(ctx, map)
   paintBases(ctx, map, labels)
   paintLaneLabels(ctx, map, labels)
-  paintFrame(ctx)
+
+  if (frame) {
+    paintFrame(ctx)
+  }
+
+  return canvas
+}
+
+/** How far past each edge of the board the surrounding ground reaches, in board units. */
+export const SURROUND_REACH = WORLD
+
+/**
+ * The ground around the board, for screens taller or wider than the lanes: the same shading carried on, with trees
+ * and dust, so a phone shows forest past the lanes rather than an empty band. Drawn coarser than the board, which
+ * covers its middle.
+ */
+export function paintSurround(map: LaneMap, resolution = 1536) {
+  const span = WORLD + SURROUND_REACH * 2
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = resolution
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    return canvas
+  }
+
+  const { style } = map.definition
+  ctx.scale(resolution / span, resolution / span)
+  ctx.translate(SURROUND_REACH, SURROUND_REACH)
+  ctx.fillStyle = groundGradient(ctx, style)
+  ctx.fillRect(-SURROUND_REACH, -SURROUND_REACH, span, span)
+
+  const rng = createRng('board-surround')
+  const outside = () => {
+    for (;;) {
+      const x = rng.range(-SURROUND_REACH, WORLD + SURROUND_REACH)
+      const y = rng.range(-SURROUND_REACH, WORLD + SURROUND_REACH)
+      if (x < 0 || y < 0 || x > WORLD || y > WORLD) {
+        return {
+          x,
+          y,
+        }
+      }
+    }
+  }
+
+  for (let i = 0; i < 6000; i++) {
+    const p = outside()
+    ctx.fillStyle = cssColor(PALETTE.chalk, rng.range(0.02, 0.07))
+    ctx.fillRect(p.x, p.y, rng.range(1.2, 2.4), rng.range(1.2, 2.4))
+  }
+
+  if (style !== 'abyss') {
+    for (let i = 0; i < 900; i++) {
+      paintTree(ctx, outside(), rng.range(6, 10))
+    }
+  }
 
   return canvas
 }

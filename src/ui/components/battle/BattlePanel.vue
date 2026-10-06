@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FastForward, Pause, Play, SkipForward, Square } from '@lucide/vue'
+import { useMediaQuery } from '@vueuse/core'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed, onUnmounted, ref } from 'vue'
 import { DUEL_BATTLE_SPEED } from '@/content/rules'
@@ -8,6 +9,7 @@ import { useMatchStore, type BattleSpeed } from '../../stores/match'
 import { usePauseStore } from '../../stores/pause'
 import HudPanel from '../common/HudPanel.vue'
 import TrainingOrders from '../hud/TrainingOrders.vue'
+import CameraControls from './CameraControls.vue'
 import DamageMeter, { type MeterStat } from './DamageMeter.vue'
 import MeterTabs from './MeterTabs.vue'
 
@@ -16,6 +18,8 @@ const SPEEDS: readonly BattleSpeed[] = [1, 2, 4]
 const store = useMatchStore()
 const pause = usePauseStore()
 const { t } = useGameText()
+/** Touch screens zoom the map; the camera can follow a lane. */
+const touch = useMediaQuery('(pointer: coarse)')
 const meter = ref<MeterStat>('damageDealt')
 
 /** The training ground: the battle can be paused to look around, and without a clock it is stopped by hand. */
@@ -84,6 +88,8 @@ onUnmounted(() => pause.set('training', false))
           </template>
         </button>
       </div>
+
+      <CameraControls v-if="touch" class="camera" />
     </HudPanel>
 
     <HudPanel class="meter-panel">
@@ -112,6 +118,10 @@ onUnmounted(() => pause.set('training', false))
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.camera {
+  margin-top: 8px;
 }
 
 .icon {

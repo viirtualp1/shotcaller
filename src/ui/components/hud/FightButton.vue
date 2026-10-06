@@ -47,7 +47,7 @@ const fight = useFightRequest()
         v-else-if="store.phase !== 'battle'"
         key="fight"
         type="button"
-        class="btn primary block fight"
+        class="btn primary block fight start"
         :disabled="!store.isPlanning"
         data-tour="fight"
         @click="fight()"
@@ -73,6 +73,11 @@ const fight = useFightRequest()
 
 .waiting {
   font-size: 15px;
+}
+
+/* Two short words: a narrow slot shrinks the spacing rather than breaking «В бой» over two lines. */
+.start {
+  white-space: nowrap;
 }
 
 .spin {

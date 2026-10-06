@@ -148,8 +148,14 @@ export const ABILITY_PARAMS = {
     /** Health restored per second, grown by the same round scaling as the damage buildings take. */
     repair: 50,
   },
-  /** Multiplies the power of the borrowed ability. */
-  mimic: { power: 1 },
+  /**
+   * The borrowed ability is cast `borrowed` times as strong as its tier-one owner casts it, as befits a rare
+   * tier-three hero; `power` is what the Perfect Copy talent adds on top.
+   */
+  mimic: {
+    power: 1,
+    borrowed: 1.6,
+  },
 } as const
 
 export type AbilityParams = typeof ABILITY_PARAMS

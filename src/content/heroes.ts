@@ -79,7 +79,7 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
   oracle: ['Oracle', 3, 'support', 0xe4d6ff, 'shield', stats(560, 40, 1.1, 150, 90, 0.08, 70)],
   herald: ['Herald', 1, 'initiator', 0xd9a441, 'standard', stats(700, 34, 1.15, 0, 92, 0.18, 80)],
   stonewright: ['Stonewright', 2, 'support', 0x9aa3ad, 'mend', stats(660, 32, 1.25, 0, 88, 0.22, 90)],
-  changeling: ['Changeling', 3, 'carry', 0xb28ce0, 'mimic', stats(560, 40, 1, 120, 96, 0.1, 90)],
+  changeling: ['Changeling', 3, 'carry', 0xb28ce0, 'mimic', stats(720, 50, 1, 120, 96, 0.1, 90)],
 }
 
 const BASHERS: Partial<Record<HeroId, HeroBash>> = {

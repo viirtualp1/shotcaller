@@ -1,6 +1,6 @@
 import gsap from 'gsap'
 import mitt from 'mitt'
-import { Application, Container, Point, Sprite, Texture, type FederatedPointerEvent } from 'pixi.js'
+import { Application, Container, Graphics, Point, Sprite, Texture, type FederatedPointerEvent } from 'pixi.js'
 // Shader and uniform code without eval, so the content security policy can forbid it.
 import 'pixi.js/unsafe-eval'
 import type { LaneId } from '@/content/ids'
@@ -10,35 +10,70 @@ import type { Vec2 } from '@/core/math/vec2'
 import type { LaneStances } from '@/domain/battle/contracts'
 import type { BattleSimulation } from '@/simulation/BattleSimulation'
 import type { LaneMap } from '@/simulation/map/LaneMap'
-import { paintBoardArt } from './art/paintBoardArt'
+import { paintBoardArt, paintSurround, SURROUND_REACH } from './art/paintBoardArt'
 import type { BoardLabels } from './labels'
 import { BattleLayer } from './layers/BattleLayer'
 import { EffectsLayer } from './layers/EffectsLayer'
 import { OrdersLayer } from './layers/OrdersLayer'
 import { PlanningLayer, type PlanningModel } from './layers/PlanningLayer'
 import { TrainingCampsLayer } from './layers/TrainingCampsLayer'
-import { fitMap, WHOLE_BOARD, type Insets } from './fitMap'
+import { fitMap, mapArea, WHOLE_BOARD, type Insets, type Rect } from './fitMap'
+import { blendLens, clampLens, frameLens, IDENTITY_LENS, zoomLens, type LensState } from './lens'
 import { Perspective } from './perspective'
 import { boardResolution } from './quality'
 import { loadRoleIcons, type RoleIcons } from './roleIcons'
+import { PALETTE } from './theme'
 import { TOKEN_RADIUS, type HeroHit } from './views/HeroToken'
+
+/** A touch view of the map: zoomed in by hand, or following the heroes of one lane through the battle. */
+export interface CameraState {
+  readonly zoomed: boolean
+  readonly follow: LaneId | null
+}
 
 export type BoardEvents = {
   heroPressed: { uid: string; clientX: number; clientY: number }
   heroTapped: HeroHit
   heroHovered: HeroHit | null
   lanePicked: LaneId
+  /** Two fingers went down on the map: whatever one finger started gives way to the zoom. */
+  pinchStarted: void
+  cameraChanged: CameraState
 }
 
 export type { Insets } from './fitMap'
 
 const LANE_PICK_DISTANCE = 80
+const FULL_FPS = 60
 const CAMERA_TWEEN = 0.45
+/** How far a finger moves before a press on the map becomes a pan rather than a tap. */
+const PAN_THRESHOLD = 8
+/** Board units kept around the heroes of a followed lane. */
+const FOLLOW_PADDING = 90
+/* Heroes spread along a lane all stay in frame; the camera closes in as they meet. */
+const FOLLOW_MIN_ZOOM = 1
+const FOLLOW_MAX_ZOOM = 2.4
+/** How quickly the camera catches up with a followed lane; higher is quicker. */
+const FOLLOW_RATE = 3
+
+interface ScreenPoint {
+  x: number
+  y: number
+}
 
 export class BoardRenderer {
   readonly events = mitt<BoardEvents>()
+  /** Shakes on impacts. */
   private readonly camera = new Container()
+  /** Zooms and pans over the fitted map on touch screens. */
+  private readonly lens = new Container()
   private readonly artTexture: Texture
+  /** The chalk border of the whole board, shown when the board is framed whole. */
+  private readonly frame = new Graphics()
+  /** Forest past the board's edges for close-up screens; painted the first time one needs it. */
+  private surround: Sprite | null = null
+  /* Kept apart from the sprite: destroying the stage clears a sprite's texture, so the sprite cannot hand it back. */
+  private surroundTexture: Texture | null = null
   private readonly world = new Container()
   /** Holds everything placed in battle coordinates; mirrored when the viewer fights as team 1. */
   private readonly board = new Container()
@@ -55,10 +90,24 @@ export class BoardRenderer {
     left: 0,
   }
   private closeUp = false
+  /** The frame rate asked for; fingers moving the camera always get the full one. */
+  private maxFPS = FULL_FPS
   private clock = 0
   private pressedToken = false
   private placing = false
   private hovered: HeroHit | null = null
+  /** The fitted board in the lens's own space, which a zoomed view must not leave. */
+  private boardRect: Rect = WHOLE_BOARD
+  private follow: LaneId | null = null
+  private reported: CameraState = {
+    zoomed: false,
+    follow: null,
+  }
+  /** Fingers on the map, in canvas pixels. */
+  private readonly touches = new Map<number, ScreenPoint>()
+  private gesture: { lens: LensState; points: ScreenPoint[] } | null = null
+  /** The fingers moved the view, so lifting them is not a tap on the map. */
+  private panned = false
   /** Pixi only follows window resizes; this also catches the host changing size on its own. */
   private readonly hostObserver: ResizeObserver
 
@@ -71,9 +120,10 @@ export class BoardRenderer {
     perspective: Perspective,
   ) {
     /* Every map is symmetric along its mirror, so the art looks the same from either side. */
-    this.artTexture = Texture.from(paintBoardArt(map, labels))
+    this.artTexture = Texture.from(paintBoardArt(map, labels, undefined, false))
     const art = new Sprite(this.artTexture)
     art.width = art.height = BATTLE.worldSize
+    this.paintFrame()
     this.orders = new OrdersLayer(map, perspective)
     this.training = new TrainingCampsLayer(map, labels)
     this.planning = new PlanningLayer(map, icons, perspective)
@@ -81,8 +131,9 @@ export class BoardRenderer {
     this.effects = new EffectsLayer(labels, (strength) => this.shake(strength), perspective)
     perspective.orient(this.board)
     this.board.addChild(this.training, this.orders, this.planning, this.battle, this.effects)
-    this.world.addChild(art, this.board)
-    this.camera.addChild(this.world)
+    this.world.addChild(art, this.frame, this.board)
+    this.lens.addChild(this.world)
+    this.camera.addChild(this.lens)
     app.stage.addChild(this.camera)
 
     app.stage.eventMode = 'static'
@@ -93,6 +144,11 @@ export class BoardRenderer {
 
     app.stage.on('pointerdown', (e) => this.onPointerDown(e))
     app.stage.on('pointertap', (e) => this.onPointerTap(e))
+    /* Registered after Pixi's own listeners, so a press on a hero is known before a finger can start a pan. */
+    app.canvas.addEventListener('pointerdown', this.onTouchDown)
+    window.addEventListener('pointermove', this.onTouchMove)
+    window.addEventListener('pointerup', this.onTouchUp)
+    window.addEventListener('pointercancel', this.onTouchUp)
     app.renderer.on('resize', () => this.fit(false))
     app.ticker.add((ticker) => this.onFrame(ticker.deltaMS / 1000))
     this.hostObserver = new ResizeObserver(() => app.queueResize())
@@ -110,7 +166,7 @@ export class BoardRenderer {
       resolution: boardResolution(host.clientWidth, host.clientHeight, window.devicePixelRatio),
     })
 
-    app.ticker.maxFPS = 60
+    app.ticker.maxFPS = FULL_FPS
 
     const icons = await loadRoleIcons()
     host.appendChild(app.canvas)
@@ -127,7 +183,11 @@ export class BoardRenderer {
   }
 
   setMaxFPS(fps: number) {
-    this.app.ticker.maxFPS = fps
+    this.maxFPS = fps
+
+    if (this.touches.size === 0) {
+      this.app.ticker.maxFPS = fps
+    }
   }
 
   /** Space covered by HUD panels; the map is fitted into what is left. */
@@ -162,13 +222,40 @@ export class BoardRenderer {
     }
 
     this.closeUp = closeUp
+    this.frame.visible = !closeUp
+
+    if (closeUp) {
+      this.showSurround()
+    } else if (this.surround) {
+      this.surround.visible = false
+    }
+
     this.fit(true)
+  }
+
+  /** Follows the heroes of a lane while the battle runs; null goes back to the whole map. */
+  setFollow(lane: LaneId | null) {
+    this.follow = lane
+
+    if (lane === null) {
+      this.resetLens(true)
+    } else {
+      this.report(this.lens.scale.x)
+    }
+  }
+
+  /** Back to the whole map, following nothing. */
+  resetView() {
+    this.follow = null
+    this.resetLens(true)
   }
 
   showPlanning(model: PlanningModel, placing: boolean) {
     if (this.mode === 'battle') {
       this.leaveBattle()
       this.setHovered(null)
+      /* Planning starts on the whole map; a followed lane is picked up again when the next battle starts. */
+      this.resetLens(true)
     }
 
     this.mode = 'planning'
@@ -178,6 +265,11 @@ export class BoardRenderer {
   }
 
   showBattle(simulation: BattleSimulation) {
+    /* Each phase starts on the whole map, unless the camera follows a lane. */
+    if (this.mode === 'planning' && this.follow === null) {
+      this.resetLens(true)
+    }
+
     this.mode = 'battle'
     this.planning.visible = false
     this.planning.setHover(null, null)
@@ -219,7 +311,7 @@ export class BoardRenderer {
 
     const canvas = this.app.canvas.getBoundingClientRect()
     const center = this.board.toGlobal(new Point(position.x, position.y))
-    const radius = TOKEN_RADIUS * this.world.scale.x
+    const radius = TOKEN_RADIUS * this.world.scale.x * this.lens.scale.x
     return new DOMRect(
       canvas.left + center.x - radius,
       canvas.top + center.y - radius,
@@ -252,10 +344,16 @@ export class BoardRenderer {
 
   destroy() {
     this.hostObserver.disconnect()
+    this.app.canvas.removeEventListener('pointerdown', this.onTouchDown)
+    window.removeEventListener('pointermove', this.onTouchMove)
+    window.removeEventListener('pointerup', this.onTouchUp)
+    window.removeEventListener('pointercancel', this.onTouchUp)
     this.leaveBattle()
     this.events.all.clear()
     gsap.killTweensOf(this.world)
     gsap.killTweensOf(this.world.scale)
+    gsap.killTweensOf(this.lens)
+    gsap.killTweensOf(this.lens.scale)
     gsap.killTweensOf(this.camera.position)
 
     this.app.destroy(
@@ -267,6 +365,38 @@ export class BoardRenderer {
     )
 
     this.artTexture.destroy(true)
+    this.surroundTexture?.destroy(true)
+  }
+
+  /** The chalk border: a bold line with a faint one inside it. */
+  private paintFrame() {
+    const size = BATTLE.worldSize
+
+    this.frame
+      .roundRect(4, 4, size - 8, size - 8, 14)
+      .stroke({
+        width: 2,
+        color: PALETTE.chalk,
+        alpha: 0.35,
+      })
+      .roundRect(11, 11, size - 22, size - 22, 10)
+      .stroke({
+        width: 1,
+        color: PALETTE.chalk,
+        alpha: 0.12,
+      })
+  }
+
+  private showSurround() {
+    if (!this.surround) {
+      this.surroundTexture = Texture.from(paintSurround(this.map))
+      this.surround = new Sprite(this.surroundTexture)
+      this.surround.position.set(-SURROUND_REACH, -SURROUND_REACH)
+      this.surround.width = this.surround.height = BATTLE.worldSize + SURROUND_REACH * 2
+      this.world.addChildAt(this.surround, 0)
+    }
+
+    this.surround.visible = true
   }
 
   private leaveBattle() {
@@ -288,6 +418,17 @@ export class BoardRenderer {
     const focus = this.closeUp ? this.map.contentBounds() : WHOLE_BOARD
     const { x, y, scale } = fitMap(width, height, this.insets, focus)
     this.app.stage.hitArea = this.app.screen
+
+    /* The art covers the whole board, so a zoomed view may look past the lanes as far as its edge. */
+    this.boardRect = {
+      x,
+      y,
+      width: WHOLE_BOARD.width * scale,
+      height: WHOLE_BOARD.height * scale,
+    }
+
+    /* A zoomed view stays over the map as the space around it changes. */
+    this.applyLens(this.lensState())
 
     if (!animate) {
       this.world.position.set(x, y)
@@ -355,12 +496,238 @@ export class BoardRenderer {
 
     if (this.mode === 'battle') {
       this.battle.update(dt, this.clock)
+      this.followLane(dt)
     } else {
       this.planning.update(this.clock)
     }
 
     if (this.hovered && !this.heroPosition(this.hovered.uid)) {
       this.setHovered(null)
+    }
+  }
+
+  private area() {
+    return mapArea(this.app.screen.width, this.app.screen.height, this.insets)
+  }
+
+  private lensState(): LensState {
+    return {
+      x: this.lens.x,
+      y: this.lens.y,
+      scale: this.lens.scale.x,
+    }
+  }
+
+  /** Puts the lens where asked, kept over the map. */
+  private applyLens(lens: LensState) {
+    const next = clampLens(lens, this.area(), this.boardRect)
+    this.lens.position.set(next.x, next.y)
+    this.lens.scale.set(next.scale)
+    this.report(next.scale)
+  }
+
+  private resetLens(animate: boolean) {
+    gsap.killTweensOf(this.lens)
+    gsap.killTweensOf(this.lens.scale)
+    this.report(IDENTITY_LENS.scale)
+
+    if (!animate) {
+      this.applyLens(IDENTITY_LENS)
+
+      return
+    }
+
+    gsap.to(this.lens, {
+      x: IDENTITY_LENS.x,
+      y: IDENTITY_LENS.y,
+      duration: CAMERA_TWEEN,
+      ease: 'power2.inOut',
+    })
+
+    gsap.to(this.lens.scale, {
+      x: IDENTITY_LENS.scale,
+      y: IDENTITY_LENS.scale,
+      duration: CAMERA_TWEEN,
+      ease: 'power2.inOut',
+    })
+  }
+
+  private report(scale: number) {
+    const state: CameraState = {
+      zoomed: scale > 1.01,
+      follow: this.follow,
+    }
+
+    if (state.zoomed === this.reported.zoomed && state.follow === this.reported.follow) {
+      return
+    }
+
+    this.reported = state
+    this.events.emit('cameraChanged', state)
+  }
+
+  /** Eases the camera towards the heroes of the followed lane, or the lane itself once they are all down. */
+  private followLane(dt: number) {
+    if (this.follow === null || this.touches.size > 0) {
+      return
+    }
+
+    const box = this.battle.laneHeroBounds(this.follow) ?? this.laneBounds(this.follow)
+
+    const target = frameLens(
+      this.boardToLens(box),
+      this.area(),
+      FOLLOW_PADDING * this.world.scale.x,
+      FOLLOW_MIN_ZOOM,
+      FOLLOW_MAX_ZOOM,
+    )
+
+    gsap.killTweensOf(this.lens)
+    gsap.killTweensOf(this.lens.scale)
+    this.applyLens(blendLens(this.lensState(), target, 1 - Math.exp(-dt * FOLLOW_RATE)))
+  }
+
+  private laneBounds(lane: LaneId): Rect {
+    const points = this.map.path(0, lane).points
+    const xs = points.map((p) => p.x)
+    const ys = points.map((p) => p.y)
+    const x = Math.min(...xs)
+    const y = Math.min(...ys)
+
+    return {
+      x,
+      y,
+      width: Math.max(...xs) - x,
+      height: Math.max(...ys) - y,
+    }
+  }
+
+  /** A board-space box in the lens's own space; a turned board may swap its corners. */
+  private boardToLens(box: Rect): Rect {
+    const a = this.lens.toLocal(new Point(box.x, box.y), this.board)
+    const b = this.lens.toLocal(new Point(box.x + box.width, box.y + box.height), this.board)
+
+    return {
+      x: Math.min(a.x, b.x),
+      y: Math.min(a.y, b.y),
+      width: Math.abs(b.x - a.x),
+      height: Math.abs(b.y - a.y),
+    }
+  }
+
+  private canvasPoint(e: PointerEvent): ScreenPoint {
+    const rect = this.app.canvas.getBoundingClientRect()
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    }
+  }
+
+  /** A gesture is measured from where the fingers are now, so a finger joining or leaving does not make the view jump. */
+  private restartGesture() {
+    this.gesture =
+      this.touches.size > 0
+        ? {
+            lens: this.lensState(),
+            points: [...this.touches.values()].map((p) => ({ ...p })),
+          }
+        : null
+  }
+
+  /** The view was moved by hand: it stops following a lane. */
+  private takeOver() {
+    gsap.killTweensOf(this.lens)
+    gsap.killTweensOf(this.lens.scale)
+    this.follow = null
+    this.panned = true
+  }
+
+  private readonly onTouchDown = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse') {
+      return
+    }
+
+    if (this.touches.size === 0) {
+      this.panned = false
+    }
+
+    this.touches.set(e.pointerId, this.canvasPoint(e))
+    this.restartGesture()
+    this.app.ticker.maxFPS = FULL_FPS
+
+    if (this.touches.size === 2) {
+      this.events.emit('pinchStarted')
+    }
+  }
+
+  private readonly onTouchMove = (e: PointerEvent) => {
+    if (!this.touches.has(e.pointerId) || !this.gesture) {
+      return
+    }
+
+    this.touches.set(e.pointerId, this.canvasPoint(e))
+    const [first, second] = [...this.touches.values()]
+    const [start, startSecond] = this.gesture.points
+    if (!first || !start) {
+      return
+    }
+
+    if (second && startSecond) {
+      const spread = Math.hypot(second.x - first.x, second.y - first.y)
+      const startSpread = Math.max(1, Math.hypot(startSecond.x - start.x, startSecond.y - start.y))
+
+      const middle = {
+        x: (first.x + second.x) / 2,
+        y: (first.y + second.y) / 2,
+      }
+
+      const startMiddle = {
+        x: (start.x + startSecond.x) / 2,
+        y: (start.y + startSecond.y) / 2,
+      }
+
+      const zoomed = zoomLens(this.gesture.lens, spread / startSpread, startMiddle.x, startMiddle.y)
+      this.takeOver()
+
+      this.applyLens({
+        ...zoomed,
+        x: zoomed.x + middle.x - startMiddle.x,
+        y: zoomed.y + middle.y - startMiddle.y,
+      })
+
+      return
+    }
+
+    /* One finger on a hero during planning drags the hero; on a whole map there is nothing to pan. */
+    const dragging = this.pressedToken && this.mode === 'planning'
+    if (dragging || this.gesture.lens.scale <= 1.01) {
+      return
+    }
+
+    const dx = first.x - start.x
+    const dy = first.y - start.y
+    if (!this.panned && Math.hypot(dx, dy) < PAN_THRESHOLD) {
+      return
+    }
+
+    this.takeOver()
+
+    this.applyLens({
+      ...this.gesture.lens,
+      x: this.gesture.lens.x + dx,
+      y: this.gesture.lens.y + dy,
+    })
+  }
+
+  private readonly onTouchUp = (e: PointerEvent) => {
+    if (!this.touches.delete(e.pointerId)) {
+      return
+    }
+
+    this.restartGesture()
+
+    if (this.touches.size === 0) {
+      this.app.ticker.maxFPS = this.maxFPS
     }
   }
 
@@ -410,7 +777,7 @@ export class BoardRenderer {
   }
 
   private onPointerTap(e: FederatedPointerEvent) {
-    if (e.nativeEvent.target !== this.app.canvas || this.pressedToken) {
+    if (e.nativeEvent.target !== this.app.canvas || this.pressedToken || this.panned) {
       return
     }
 

@@ -158,7 +158,7 @@ watch(
           <p v-if="withTutorial && opponent === 'computer'" class="note">{{ t('modes.tutorialNote') }}</p>
         </div>
 
-        <SettingsFields v-if="opponent === 'computer'" :language="false" :sound="false">
+        <SettingsFields v-if="opponent === 'computer'" :language="false" :sound="false" :device="false">
           <template #beforeExperiments>
             <CheckField v-model="withTutorial">{{ t('newMatch.tutorial') }}</CheckField>
           </template>

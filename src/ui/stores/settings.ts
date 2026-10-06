@@ -48,6 +48,10 @@ export const useSettingsStore = defineStore('settings', () => {
   const heroRotation = useLocalStorage(STORAGE_KEYS.heroRotation, false)
   const roundTwists = useLocalStorage(STORAGE_KEYS.roundTwists, false)
 
+  /** Phone comforts: a buzz on the moments that matter, and a calmer map that spares the battery. */
+  const vibration = useLocalStorage(STORAGE_KEYS.vibration, true)
+  const batterySaver = useLocalStorage(STORAGE_KEYS.batterySaver, false)
+
   /** Whether the next match starts with the tutorial; asked again each time a match is set up. */
   const tutorialWanted = ref(firstVisit)
 
@@ -73,6 +77,8 @@ export const useSettingsStore = defineStore('settings', () => {
     laneOrders,
     heroRotation,
     roundTwists,
+    vibration,
+    batterySaver,
     tutorialWanted,
   }
 })
