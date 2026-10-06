@@ -159,6 +159,31 @@ p {
   flex: none;
 }
 
+/*
+ * On a phone the card is exactly as wide as the scoreboard it hangs from, so the two read as one panel. Its edges
+ * reach over the scoreboard's 1px border, which the scoreboard's inner width leaves out.
+ */
+@media (max-width: 760px) {
+  .twist-change {
+    left: -1px;
+    right: -1px;
+    transform: none;
+    gap: 8px;
+    width: auto;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .twist-change > svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .twist-change p {
+    max-width: none;
+  }
+}
+
 .twist-enter-active,
 .twist-leave-active {
   transition:
