@@ -1,0 +1,48 @@
+name: Arbitrate disputed duels
+
+# Replays disputed ranked duels and settles their ratings (scripts/arbiter.ts). Needs the repository secrets
+# SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; missing credentials fail the job visibly.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: arbiter
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  arbitrate:
+    name: Replay disputed duels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Check arbiter credentials
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY before enabling the arbiter."
+            exit 1
+          fi
+
+      - name: Arbitrate
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run arbiter

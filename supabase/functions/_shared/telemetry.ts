@@ -68,7 +68,7 @@ export const telemetrySchema = z.object({
   schema: z.literal(1),
   mode: z.enum(['threeLanes', 'twoLanes', 'oneLane']),
   kind: z.enum(['ai', 'duel', 'trial']),
-  difficulty: z.enum(['relaxed', 'standard']),
+  difficulty: z.enum(['relaxed', 'standard', 'hard']),
   balance: z.string().regex(/^[a-f0-9]{0,32}$/),
   verdict: z.enum(['win', 'loss', 'draw']),
   reason: z.enum(['throne', 'roundLimit', 'forfeit']),

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Swords, Wand2 } from '@lucide/vue'
+import { Anvil, Swords, Wand2 } from '@lucide/vue'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { computed } from 'vue'
 import type { ShopOfferView } from '@/application/views'
@@ -93,6 +93,11 @@ function buy(slot: number) {
       </TabsContent>
 
       <TabsContent value="items" class="list">
+        <p class="forge-hint">
+          <Anvil :size="14" aria-hidden="true" />
+          {{ t('shop.forgeHint') }}
+        </p>
+
         <div class="offers">
           <ItemOffer
             v-for="(offer, i) in human.itemShop"
@@ -149,6 +154,22 @@ function buy(slot: number) {
   flex-direction: column;
   gap: 8px;
   padding: 4px 0 8px 4px;
+}
+
+.forge-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0 2px 4px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--chalk-dim);
+}
+
+.forge-hint svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--gold);
 }
 
 .sold {

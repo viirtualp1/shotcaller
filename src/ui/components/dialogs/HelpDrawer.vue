@@ -4,6 +4,7 @@ import {
   Castle,
   Coins,
   Crown,
+  Flag,
   Hourglass,
   Keyboard,
   Route,
@@ -19,7 +20,17 @@ import {
 } from '@lucide/vue'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { computed, type Component } from 'vue'
-import { ROLE_IDS, SHOP_ITEM_IDS, SYNERGY_IDS } from '@/content/ids'
+import { FACTION_TIERS, FACTIONS } from '@/content/factions'
+import { HEROES } from '@/content/heroes'
+import {
+  FACTION_IDS,
+  HERO_IDS,
+  ROLE_IDS,
+  SHOP_ITEM_IDS,
+  SYNERGY_IDS,
+  type FactionId,
+  type HeroId,
+} from '@/content/ids'
 import { ITEMS } from '@/content/items'
 import { DEFAULT_MODE, MODES } from '@/content/modes'
 import { ROLES } from '@/content/roles'
@@ -28,7 +39,7 @@ import { SYNERGY_BY_ID } from '@/content/synergies'
 import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
-import { ROLE_ICONS } from '../../icons'
+import { FACTION_ICONS, ROLE_ICONS } from '../../icons'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ItemIcon from '../common/ItemIcon.vue'
 import { useMatchStore } from '../../stores/match'
@@ -72,11 +83,16 @@ const STEPS: readonly { key: 'shop' | 'lanes' | 'fight' | 'grow'; icon: Componen
   },
 ]
 
+const FACTION_MEMBERS = Object.fromEntries(
+  FACTION_IDS.map((id) => [id, HERO_IDS.filter((hero) => HEROES[hero].faction === id)]),
+) as Record<FactionId, HeroId[]>
+
 const WIN_RULES = computed(
   (): readonly { key: string; icon: Component; params?: Record<string, number> }[] => [
     {
-      key: 'damage',
+      key: mode.value.killScore ? 'score' : 'damage',
       icon: Castle,
+      params: { kill: mode.value.killScore },
     },
     {
       key: 'draw',
@@ -279,6 +295,33 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
               </span>
 
               <p>{{ text.synergyEffect(id) }}</p>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="section-title"><Flag :size="15" /> {{ t('help.factions') }}</h3>
+          <p>{{ t('help.factionRules') }}</p>
+
+          <ul class="list">
+            <li
+              v-for="id in FACTION_IDS"
+              :key="id"
+              class="card synergy"
+              :style="{ '--accent': cssColor(FACTIONS[id].color) }"
+            >
+              <span class="synergy-head">
+                <component :is="FACTION_ICONS[id]" :size="15" class="faction-icon" aria-hidden="true" />
+                <strong>{{ text.factionName(id) }}</strong>
+
+                <span class="members">
+                  <HeroAvatar v-for="hero in FACTION_MEMBERS[id]" :key="hero" :hero-id="hero" :size="22" />
+                </span>
+              </span>
+
+              <p v-for="tier in FACTION_TIERS" :key="tier">
+                <strong class="tier">{{ tier }}</strong> {{ text.factionEffect(id, tier) }}
+              </p>
             </li>
           </ul>
         </section>
@@ -516,6 +559,28 @@ p {
 
 .role strong {
   color: var(--accent);
+}
+
+.faction-icon {
+  color: var(--accent);
+}
+
+.members {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.tier {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 11px;
 }
 
 .dot {

@@ -3,6 +3,7 @@ import { useEventListener } from '@vueuse/core'
 import { ChevronDown, ChevronUp, Coins, Link2, X } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { previewHeroVitals } from '@/application/heroVitals'
+import { FACTION_TIERS, FACTIONS } from '@/content/factions'
 import { HEROES } from '@/content/heroes'
 import { ITEM_SLOTS } from '@/content/items'
 import { ROLES } from '@/content/roles'
@@ -12,7 +13,7 @@ import { heroSheet } from '@/domain/roster/heroSheet'
 import { cssColor } from '@/rendering/theme'
 import { useGameText } from '../../composables/useGameText'
 import { useLiveHeroVitals } from '../../composables/useLiveHeroVitals'
-import { ADAPTIVE_ICON, ROLE_ICONS } from '../../icons'
+import { ADAPTIVE_ICON, FACTION_ICONS, ROLE_ICONS } from '../../icons'
 import { useBoardStore } from '../../stores/board'
 import { useDragStore } from '../../stores/drag'
 import { loadoutOf, useMatchStore } from '../../stores/match'
@@ -105,6 +106,48 @@ const role = computed(() => {
   }
 })
 
+/** The hero's faction and what it brings on the lane; a Changeling off the lanes has none yet. */
+const faction = computed(() => {
+  const view = store.view
+  const hero = located.value
+  if (!view || !hero) {
+    return null
+  }
+
+  const id = hero.hero.faction ?? HEROES[hero.hero.heroId].faction
+  if (!id) {
+    return {
+      id: null,
+      color: cssColor(0xb28ce0),
+      name: t('roles.adaptive.name'),
+      text: t('card.factionNone'),
+    }
+  }
+
+  const player = enemy.value ? view.opponent : view.human
+
+  const count =
+    hero.slot === 'bench'
+      ? 0
+      : (player.lanes[hero.slot].report.factions.find((f) => f.faction === id)?.count ?? 0)
+
+  const tier = hero.hero.factionTier
+  const need = FACTION_TIERS.find((step) => step > count) ?? null
+
+  return {
+    id,
+    color: cssColor(FACTIONS[id].color),
+    name: text.factionName(id),
+    text: tier
+      ? text.factionEffect(id, tier)
+      : `${t('card.factionNeed', {
+          count,
+          need: need ?? FACTION_TIERS[0],
+        })}: ${text.factionEffect(id, FACTION_TIERS[0])}`,
+    active: tier !== undefined,
+  }
+})
+
 const synergies = computed(() =>
   (loadout.value?.synergies ?? []).map((id) => ({
     id,
@@ -188,6 +231,27 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
               <template #content>
                 <strong class="tip-title">{{ t('card.rolePassive', { role: role.name }) }}</strong>
                 <span class="tip-text">{{ role.passive }}</span>
+              </template>
+            </InfoTooltip>
+
+            <InfoTooltip v-if="faction" side="top" clickable>
+              <button
+                type="button"
+                class="trait faction"
+                :class="{ active: faction.active }"
+                :style="{ '--trait': faction.color }"
+              >
+                <component
+                  :is="faction.id ? FACTION_ICONS[faction.id] : ADAPTIVE_ICON"
+                  :size="13"
+                  aria-hidden="true"
+                />
+                {{ faction.name }}
+              </button>
+
+              <template #content>
+                <strong class="tip-title">{{ t('card.faction', { name: faction.name }) }}</strong>
+                <span class="tip-text">{{ faction.text }}</span>
               </template>
             </InfoTooltip>
 
@@ -438,6 +502,11 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 .trait svg {
   flex: none;
   color: var(--trait);
+}
+
+.trait.faction.active {
+  background: color-mix(in srgb, var(--trait) 35%, transparent);
+  border-color: var(--trait);
 }
 
 .trait.synergy {

@@ -87,7 +87,7 @@ export const coachDossierSchema = z
           playedAt: z.string(),
           mode: z.enum(MODE_IDS).catch(DEFAULT_MODE),
           duel: z.boolean().catch(false),
-          difficulty: z.enum(['relaxed', 'standard']).catch('standard'),
+          difficulty: z.enum(['relaxed', 'standard', 'hard']).catch('standard'),
           verdict: z.enum(['win', 'loss', 'draw']),
           reason: z.enum(MATCH_END_REASONS).nullable().catch(null).default(null),
           rounds: count,

@@ -162,7 +162,7 @@ describe('game modes', () => {
     expect(MODES.oneLane.levels.at(-1)!.board).toBe(5)
   })
 
-  it('counts hero kills toward the round only on one lane', () => {
+  it('decides a round without building damage by hero kills, by a wider gap with more lanes', () => {
     const stats = (heroKills: number) => ({
       heroKills,
       creepKills: 0,
@@ -177,7 +177,16 @@ describe('game modes', () => {
     }
 
     expect(judgeRound(outcome, 'oneLane')).toBe(0)
-    expect(judgeRound(outcome, 'threeLanes')).toBeNull()
+    expect(judgeRound(outcome, 'threeLanes')).toBe(0)
+
+    /* One kill more is a draw on the wider maps, where a kill is worth less. */
+    const close = {
+      ...outcome,
+      stats: [stats(2), stats(1)] as const,
+    }
+
+    expect(judgeRound(close, 'oneLane')).toBe(0)
+    expect(judgeRound(close, 'threeLanes')).toBeNull()
   })
 
   it('keeps heroes off lanes the mode does not have', () => {

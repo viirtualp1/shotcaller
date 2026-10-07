@@ -5,7 +5,8 @@ import { HEROES } from '@/content/heroes'
 import type { HeroId } from '@/content/ids'
 import { ROLES } from '@/content/roles'
 import { cssColor } from '@/rendering/theme'
-import { ADAPTIVE_ICON, ROLE_ICONS } from '../../icons'
+import { FACTIONS } from '@/content/factions'
+import { ADAPTIVE_ICON, FACTION_ICONS, ROLE_ICONS } from '../../icons'
 import { useGameText } from '../../composables/useGameText'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import HeroTooltipCard from '../roster/HeroTooltipCard.vue'
@@ -42,7 +43,19 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
       <HeroAvatar :hero-id="offer.heroId" :size="36" />
 
       <span class="info">
-        <span class="name">{{ text.heroName(offer.heroId) }}</span>
+        <span class="name">
+          {{ text.heroName(offer.heroId) }}
+
+          <span
+            v-if="hero.faction"
+            class="faction"
+            :class="{ kin: offer.kin > 0 }"
+            :style="{ '--f': cssColor(FACTIONS[hero.faction].color) }"
+          >
+            <component :is="FACTION_ICONS[hero.faction]" :size="11" aria-hidden="true" />
+            {{ text.factionName(hero.faction) }}
+          </span>
+        </span>
 
         <span class="role">
           <component :is="roleIcon" :size="12" />
@@ -134,6 +147,35 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
 .name {
   font-weight: 700;
   font-size: 13.5px;
+}
+
+.faction {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--f) 40%, transparent);
+  color: var(--chalk-dim);
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+.faction svg {
+  color: var(--f);
+}
+
+/* Another hero of this faction is already owned: the two can share a lane. */
+.faction.kin {
+  color: var(--ink);
+  background: var(--f);
+  border-color: var(--f);
+}
+
+.faction.kin svg {
+  color: var(--ink);
 }
 
 .role {

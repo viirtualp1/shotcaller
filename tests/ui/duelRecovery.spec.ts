@@ -23,6 +23,7 @@ const match = reactive({
   startDuel: vi.fn<(binding: DuelBinding) => void>(),
   settleDuel: vi.fn(),
   leaveToMenu: vi.fn(),
+  savedDuel: vi.fn(() => null),
 })
 
 const notifications = { push: vi.fn() }
@@ -104,6 +105,7 @@ describe('duel recovery polling', () => {
 
     service = {
       findMatch: vi.fn(async () => null),
+      findGhost: vi.fn(async () => null),
       leaveQueue: vi.fn(async () => null),
       invite: vi.fn(),
       respond: vi.fn(),
@@ -128,7 +130,182 @@ describe('duel recovery polling', () => {
     cloud.connect.mockResolvedValue({ duels: () => service })
   })
 
-  afterEach(() => disposePinia(getActivePinia()!))
+  afterEach(() => {
+    disposePinia(getActivePinia()!)
+    vi.useRealTimers()
+  })
+
+  it('offers a ghost after 45 seconds and only starts it on an explicit choice', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-07T12:00:00Z'))
+    const duel = await ready()
+    await duel.search('oneLane')
+    expect(service.findGhost).not.toHaveBeenCalled()
+    vi.setSystemTime(new Date('2026-10-07T12:00:44Z'))
+    await intervals.get(1000)!()
+    await intervals.get(5000)!()
+    await duel.chooseGhost()
+    expect(service.findGhost).not.toHaveBeenCalled()
+
+    service.findGhost = vi.fn(async () => ({
+      ...entry(),
+      duel: {
+        ...entry().duel,
+        ghost: true,
+        ranked: true,
+      },
+    }))
+
+    vi.setSystemTime(new Date('2026-10-07T12:00:45Z'))
+    await intervals.get(1000)!()
+    await intervals.get(5000)!()
+    expect(service.findGhost).not.toHaveBeenCalled()
+    expect(duel.canChooseGhost).toBe(true)
+    expect(duel.searching).toBe('oneLane')
+    await duel.chooseGhost()
+    expect(service.findGhost).toHaveBeenCalledOnce()
+
+    expect(match.startDuel.mock.calls[0]?.[0]).toMatchObject({
+      ghost: true,
+      ranked: true,
+    })
+
+    expect(duel.active?.duel.ghost).toBe(true)
+    expect(duel.searching).toBeNull()
+    expect(service.reactions).not.toHaveBeenCalled()
+    expect(duel.canPause).toBe(false)
+    expect(duel.canWithdraw).toBe(false)
+    expect(duel.canClaim).toBe(false)
+  })
+
+  it('recovers a ghost created on the server when the start response was lost', async () => {
+    const duel = await ready()
+    service.findMatch = vi.fn().mockRejectedValueOnce(new DuelError('busy'))
+
+    service.mine = vi.fn(async () => [
+      {
+        ...entry(),
+        duel: {
+          ...entry().duel,
+          ghost: true,
+          ranked: true,
+        },
+      },
+    ])
+
+    await duel.search('oneLane')
+    expect(match.startDuel).toHaveBeenCalledOnce()
+    expect(duel.active?.duel.ghost).toBe(true)
+    expect(notifications.push).not.toHaveBeenCalled()
+  })
+
+  it('keeps the live search running when the selected ghost has no available recording', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-07T12:00:00Z'))
+    const duel = await ready()
+    await duel.search('oneLane')
+    vi.setSystemTime(new Date('2026-10-07T12:00:45Z'))
+    await intervals.get(1000)!()
+    await duel.chooseGhost()
+    expect(duel.searching).toBe('oneLane')
+    expect(duel.ghostUnavailable).toBe(true)
+    expect(duel.canChooseGhost).toBe(true)
+    expect(match.startDuel).not.toHaveBeenCalled()
+    await intervals.get(5000)!()
+    expect(service.findGhost).toHaveBeenCalledOnce()
+  })
+
+  it('takes a live pairing that arrives while the ghost choice waits for queue renewal', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-07T12:00:00Z'))
+    const duel = await ready()
+    await duel.search('oneLane')
+    vi.setSystemTime(new Date('2026-10-07T12:00:45Z'))
+    await intervals.get(1000)!()
+    let answer!: (id: string | null) => void
+    service.findMatch = vi.fn(
+      () =>
+        new Promise<string | null>((resolve) => {
+          answer = resolve
+        }),
+    )
+
+    service.mine = vi.fn(async () => [entry()])
+    const renewal = intervals.get(5000)!()
+    await Promise.resolve()
+    const choice = duel.chooseGhost()
+    answer('duel')
+    await Promise.all([renewal, choice])
+    expect(service.findGhost).not.toHaveBeenCalled()
+    expect(match.startDuel).toHaveBeenCalledOnce()
+    expect(duel.active?.duel.ghost).not.toBe(true)
+  })
+
+  it('retries an explicit ghost forfeit after a transient disconnect', async () => {
+    const duel = await ready()
+    service.findMatch = vi.fn().mockRejectedValueOnce(new DuelError('busy'))
+
+    service.mine = vi.fn(async () => [
+      {
+        ...entry(),
+        duel: {
+          ...entry().duel,
+          ghost: true,
+          ranked: true,
+        },
+      },
+    ])
+
+    await duel.search('oneLane')
+    service.forfeit = vi.fn().mockRejectedValueOnce(new DuelError('failed')).mockResolvedValueOnce(undefined)
+    await duel.forfeit()
+    await intervals.get(5000)!()
+    expect(service.forfeit).toHaveBeenCalledTimes(2)
+    expect(service.report).not.toHaveBeenCalled()
+
+    expect(match.settleDuel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ghost: true,
+        won: false,
+      }),
+    )
+  })
+
+  it('does not launch a returned ghost after switching accounts', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-07T12:00:00Z'))
+    const duel = await ready()
+    await duel.search('oneLane')
+    let answer!: (value: DuelEntry | null) => void
+    service.findGhost = vi.fn(
+      () =>
+        new Promise<DuelEntry | null>((resolve) => {
+          answer = resolve
+        }),
+    )
+
+    vi.setSystemTime(new Date('2026-10-07T12:00:45Z'))
+    await intervals.get(1000)!()
+    const polling = duel.chooseGhost()
+    for (let i = 0; i < 5; i++) {
+      await Promise.resolve()
+    }
+
+    cloud.signedIn = false
+    await nextTick()
+
+    answer({
+      ...entry(),
+      duel: {
+        ...entry().duel,
+        ghost: true,
+        ranked: true,
+      },
+    })
+
+    await polling
+    expect(match.startDuel).not.toHaveBeenCalled()
+  })
 
   it('recovers a missed acceptance without restoring a stale invitation or restarting the match', async () => {
     const duel = await begun()

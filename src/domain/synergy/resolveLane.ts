@@ -3,6 +3,7 @@ import { ROLE_IDS, type HeroId, type LaneId, type ModeId, type RoleId, type Syne
 import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { SYNERGIES } from '@/content/synergies'
+import { laneFactions, type LaneFactions } from './laneFactions'
 
 export interface SynergySuggestion {
   readonly synergy: SynergyId
@@ -16,6 +17,8 @@ export interface LaneReport {
   readonly roles: readonly RoleId[]
   readonly synergies: readonly SynergyId[]
   readonly suggestions: readonly SynergySuggestion[]
+  /** The factions of the lane and the bonus each hero gets from its own. */
+  readonly factions: LaneFactions
   synergyModifiersFor(role: RoleId): StatModifiers
   modifiersFor(role: RoleId): StatModifiers
 }
@@ -94,6 +97,7 @@ export function resolveLane(lane: LaneId, heroIds: readonly HeroId[], mode: Mode
     roles,
     synergies: active.map((s) => s.id),
     suggestions,
+    factions: laneFactions(heroIds),
     synergyModifiersFor,
     modifiersFor: (role) => combineModifiers(ROLES[role].modifiers, synergyModifiersFor(role)),
   }

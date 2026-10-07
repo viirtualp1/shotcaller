@@ -316,6 +316,38 @@
     "mimic": "Uses the ability of its chosen role:\nCarry — {carry}. Support — {support}. Mage — {mage}.\nInitiator — {initiator}. Pusher — {pusher}. Ganker — {ganker}.",
     "mimicAs": "{ability}: {effect}"
   },
+  "factions": {
+    "legion": {
+      "name": "Legion",
+      "lore": "Soldiers who hold the line together.",
+      "tier2": "Legion heroes take {damageTaken}% less damage.",
+      "tier3": "Legion heroes take {damageTaken}% less damage and send {thorns}% of the attack damage they take back to the attacker."
+    },
+    "wildkin": {
+      "name": "Wildkin",
+      "lore": "Beasts and rangers who run their prey down.",
+      "tier2": "Wildkin heroes move {speed}% faster and heal for {lifesteal}% of the damage their attacks deal.",
+      "tier3": "Wildkin heroes move {speed}% faster and heal for {lifesteal}% of the damage their attacks deal."
+    },
+    "arcanum": {
+      "name": "Arcanum",
+      "lore": "Spellcasters whose magic answers each other's.",
+      "tier2": "Arcanum heroes gain {manaGain}% more mana.",
+      "tier3": "Arcanum heroes gain {manaGain}% more mana, and their abilities go off again at {echo}% strength {echoDelay} s later."
+    },
+    "grave": {
+      "name": "Grave",
+      "lore": "Killers from the dark who strike where it hurts.",
+      "tier2": "Grave heroes' attacks have a {critChance}% chance to deal {critMultiplier}% damage.",
+      "tier3": "Grave heroes' attacks have a {critChance}% chance to deal {critMultiplier}% damage."
+    },
+    "hearth": {
+      "name": "Hearth",
+      "lore": "Builders and keepers who bring walls down and patch their own.",
+      "tier2": "Hearth heroes deal {structureDamage}% more damage to buildings, and their healing and shields are {healPower}% stronger.",
+      "tier3": "Hearth heroes deal {structureDamage}% more damage to buildings, their healing and shields are {healPower}% stronger, and they have {maxHp}% more health."
+    }
+  },
   "synergies": {
     "guardian": {
       "name": "Guardian",
@@ -448,7 +480,13 @@
     "completes": "★★ on buy",
     "rare": "Rare",
     "sellZone": "Drop to sell",
-    "odds": "Odds by cost"
+    "odds": "Odds by cost",
+    "forgeHint": "Two copies of the same item forge into a stronger one, marked with a plus.",
+    "forgeBuy": "+ on buy",
+    "forgeEquip": "+ on its hero",
+    "forgesInto": "Two copies forge into",
+    "forgeBuyTip": "A copy is in your stash: this one merges with it right away.",
+    "forgeEquipTip": "One of your heroes carries a copy: give this one to that hero to merge them."
   },
   "card": {
     "sell": "Sell for {gold}",
@@ -498,6 +536,9 @@
     "innate": "Innate",
     "rolePassive": "Role: {role}",
     "synergy": "Synergy: {name}",
+    "faction": "Faction: {name}",
+    "factionNeed": "{count} of {need} on the lane",
+    "factionNone": "Joins the faction with the most heroes on its lane",
     "souls": "Souls in the jar: {n} of {max}",
     "unequipHint": "Pick to unequip",
     "seconds": "{n} s",
@@ -627,6 +668,8 @@
     "how": "How to play",
     "roles": "Roles",
     "synergies": "Lane synergies",
+    "factions": "Factions",
+    "factionRules": "Every hero but the Changeling belongs to a faction. Two or three heroes of one faction on the same lane strengthen each other. The Changeling joins the faction with the most heroes on its lane.",
     "items": "Items",
     "stars": "Stars",
     "economy": "Economy",
@@ -634,6 +677,7 @@
     "win": "Who wins a round",
     "winRules": {
       "damage": "A round goes to the side that dealt more damage to buildings: towers and the throne.",
+      "score": "A round goes to the side with the higher score: damage to towers and the throne, plus {kill} for every enemy hero killed.",
       "draw": "If the gap is under {threshold}, the round is a draw.",
       "persist": "Building damage never heals and carries over from round to round.",
       "throne": "Break the enemy throne and the match is won on the spot.",
@@ -748,11 +792,13 @@
     "difficulty": "Difficulty",
     "difficulties": {
       "relaxed": "Relaxed",
-      "standard": "Standard"
+      "standard": "Standard",
+      "hard": "Hard"
     },
     "difficultyHint": {
       "relaxed": "No timer: the battle starts when you press Fight.",
-      "standard": "{s} s to plan. When time runs out, the battle starts on its own."
+      "standard": "{s} s to plan. When time runs out, the battle starts on its own.",
+      "hard": "{s} s to plan. The computer drafts for lane synergies and gets +{gold} gold every round. Hero rotation and round twists are always on."
     },
     "audio": "Audio",
     "musicVolume": "Music",
@@ -768,7 +814,8 @@
     "device": "Device",
     "vibration": "Vibration",
     "batterySaver": "Battery saver",
-    "batterySaverHint": "The map draws 30 frames a second instead of 60, so the phone stays cooler and the battery lasts longer."
+    "batterySaverHint": "The map draws 30 frames a second instead of 60, so the phone stays cooler and the battery lasts longer.",
+    "hardRulesRequired": "Hard always uses hero rotation and round twists. Choose Standard or Relaxed to change them."
   },
   "menu": {
     "resume": "Resume"
@@ -842,6 +889,9 @@
     }
   },
   "patchNotes": {
+    "factions": "Five factions. Find your formation.",
+    "factionPair": "2 on one lane",
+    "factionTrio": "3 on one lane",
     "title": "Patch notes",
     "back": "Main menu",
     "patch": "Patch {version}",
@@ -1068,6 +1118,12 @@
     "wantsToBeFriends": "wants to be friends",
     "incomingBadge": "New: {n}",
     "signInHint": "Friends are available once you sign in with email or Google.",
+    "pitch": {
+      "title": "Play with people",
+      "friends": "Add friends, chat and watch their matches live",
+      "ranked": "Climb the ranked ladder in every mode",
+      "cloud": "Keep your progress on every device"
+    },
     "signIn": "Sign in",
     "yourCode": "Your friend code",
     "codeHint": "Send it to a friend so they can add you.",
@@ -1141,6 +1197,8 @@
     "oldPatchHint": "Wait for the Update button to appear, then update the game to read patch {version}."
   },
   "duel": {
+    "ghostName": "Ghost",
+    "ghostHint": "Recording, then a computer coach · half the rating change",
     "challenge": "Challenge to a duel",
     "challengeName": "Challenge {name} to a duel",
     "invitedTitle": "Duel challenge",
@@ -1160,6 +1218,7 @@
       "gone": "The challenge is no longer open",
       "rateLimited": "Too many challenges. Wait a moment",
       "forbidden": "This duel is unavailable for your account",
+      "restricted": "Ranked is closed for your account for a while: a replay proved some of your duel results false",
       "tooEarly": "Your opponent still has time",
       "wrongRound": "The rounds got out of step. Reload the page",
       "failed": "That did not work. Try again"
@@ -1170,6 +1229,7 @@
       "timeoutWon": "Your opponent stopped answering. The win is yours",
       "timeoutLost": "You took too long to answer. Defeat",
       "disputed": "Your results did not match; the duel does not count",
+      "review": "Your results did not match. The server will replay the duel and settle the rating by what really happened",
       "abandoned": "The inactive duel was closed. Ratings are unchanged"
     },
     "badBoard": "Your opponent sent a board the rules do not allow. The duel is stopped",
@@ -1363,9 +1423,14 @@
     "elapsed": "Search time",
     "cancel": "Cancel search",
     "cancelling": "Cancelling search…",
-    "searchHint": "The search expands as you wait. Your match starts automatically when an opponent is found.",
+    "searchHint": "The search expands as you wait. After 45 seconds, choose a recorded opponent for half the MMR change, or keep waiting for a live coach.",
     "hint": "Play a rated match against another coach. The search expands as you wait.",
-    "signIn": "Sign in to play online"
+    "signIn": "Sign in to play online",
+    "ghostOffer": "Recorded opponent · half the MMR change",
+    "chooseGhost": "Play a ghost",
+    "ghostConnecting": "Connecting to a ghost…",
+    "keepSearching": "The search for a live coach continues until you choose.",
+    "ghostUnavailable": "No recording is available yet. The search for a live coach continues."
   },
   "sandbox": {
     "title": "Training",

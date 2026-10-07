@@ -12,6 +12,9 @@ const settings = reactive({
   laneOrders: false,
   heroRotation: false,
   roundTwists: false,
+  get experimentsRequired() {
+    return this.difficulty === 'hard'
+  },
 })
 
 vi.mock('@vueuse/core', async (original) => ({
@@ -48,7 +51,7 @@ beforeEach(() => {
   app = createApp(SettingsFields, {
     sound: false,
     language: false,
-    showExperiments: false,
+    showExperiments: true,
   }).use(i18n)
 
   app.mount('#host')
@@ -60,6 +63,24 @@ afterEach(() => {
 })
 
 describe('difficulty information', () => {
+  it('disables the two mandatory rules on Hard and explains the lock', async () => {
+    settings.difficulty = 'hard'
+    settings.heroRotation = true
+    settings.roundTwists = true
+    await settle()
+
+    const locked = document.querySelectorAll<HTMLButtonElement>(
+      '.experiments button[role="checkbox"]:disabled',
+    )
+
+    expect(locked).toHaveLength(2)
+    expect([...locked].every((button) => button.getAttribute('aria-checked') === 'true')).toBe(true)
+    expect(document.querySelector('.required-note')?.textContent).toContain('Hard always uses')
+    settings.difficulty = 'standard'
+    await settle()
+    expect(document.querySelectorAll('.experiments button[role="checkbox"]:disabled')).toHaveLength(0)
+  })
+
   it('opens a mobile hint without selecting its difficulty, then selects from the separate text button', async () => {
     const info = document.querySelector<HTMLButtonElement>('.difficulty-option .about')!
     info.click()

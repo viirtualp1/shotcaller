@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ban, Check, ChevronDown, Info, Swords, X } from '@lucide/vue'
+import { Ban, Check, ChevronDown, Cloud, Info, Swords, Trophy, Users, X } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { HERO_IDS } from '@/content/ids'
 import { rankFor } from '@/domain/profile/progression'
@@ -34,10 +34,27 @@ const nameOf = (name: string) => name || t('profile.defaultName')
 </script>
 
 <template>
-  <div v-if="!cloud.signedIn" class="gate">
-    <p>{{ t('friends.signInHint') }}</p>
+  <div v-if="!cloud.signedIn" class="gate pitch">
+    <p class="pitch-title">{{ t('friends.pitch.title') }}</p>
 
-    <button v-if="!chat.docked" type="button" class="btn primary" @click="cloud.signInOpen = true">
+    <ul class="perks">
+      <li>
+        <Users :size="18" aria-hidden="true" />
+        <span>{{ t('friends.pitch.friends') }}</span>
+      </li>
+
+      <li>
+        <Trophy :size="18" aria-hidden="true" />
+        <span>{{ t('friends.pitch.ranked') }}</span>
+      </li>
+
+      <li>
+        <Cloud :size="18" aria-hidden="true" />
+        <span>{{ t('friends.pitch.cloud') }}</span>
+      </li>
+    </ul>
+
+    <button type="button" class="btn primary" @click="cloud.signInOpen = true">
       {{ t('friends.signIn') }}
     </button>
   </div>
@@ -324,6 +341,41 @@ p {
   gap: 10px;
   height: 100%;
   text-align: center;
+}
+
+.pitch {
+  gap: 16px;
+  padding: 8px 4px;
+}
+
+.pitch-title {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 24px;
+  color: var(--gold);
+}
+
+.perks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.perks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--chalk);
+  font-size: 13px;
+}
+
+.perks svg {
+  flex: none;
+  color: var(--gold);
 }
 
 .group {

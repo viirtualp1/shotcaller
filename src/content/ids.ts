@@ -84,6 +84,11 @@ export const SYNERGY_IDS = [
 
 export type SynergyId = (typeof SYNERGY_IDS)[number]
 
+/** Every hero but the Changeling belongs to one; heroes of a faction on the same lane strengthen each other. */
+export const FACTION_IDS = ['legion', 'wildkin', 'arcanum', 'grave', 'hearth'] as const
+
+export type FactionId = (typeof FACTION_IDS)[number]
+
 /** Items the shop sells. Two of the same merge into its upgraded version, whose id ends in `+`. */
 export const SHOP_ITEM_IDS = [
   'broadsword',

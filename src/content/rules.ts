@@ -38,7 +38,7 @@ export const COPIES_PER_STAR: Readonly<Record<StarLevel, number>> = {
 
 export const MERGE_COUNT = 3
 
-export type Difficulty = 'relaxed' | 'standard'
+export type Difficulty = 'relaxed' | 'standard' | 'hard'
 
 /** Online duels always run on the clock: the other player is waiting. */
 export const DUEL_PLANNING_SECONDS = 60
@@ -65,6 +65,7 @@ export const DUEL_PAUSE = {
 export const DIFFICULTIES: Readonly<Record<Difficulty, { readonly planningSeconds: number | null }>> = {
   relaxed: { planningSeconds: null },
   standard: { planningSeconds: 60 },
+  hard: { planningSeconds: 60 },
 }
 
 /** How the computer opponent spends its gold. */
@@ -81,6 +82,10 @@ export interface OpponentStyle {
   readonly benchLimitOverTeam: number
   readonly itemsFromRound: number
   readonly goldReserveForItems: number
+  /** How much the coach values a recruit that completes a lane synergy, or joins heroes of its own faction. */
+  readonly synergyWeight: number
+  /** Gold the computer takes on top of its income every round; only Hard does, and its description says so. */
+  readonly bonusGold: number
 }
 
 /** Relaxed is for learning: the bot never rerolls, levels up late and buys items only in the late game. */
@@ -96,6 +101,8 @@ export const OPPONENT: Readonly<Record<Difficulty, OpponentStyle>> = {
     benchLimitOverTeam: 2,
     itemsFromRound: 12,
     goldReserveForItems: 8,
+    synergyWeight: 0,
+    bonusGold: 0,
   },
   standard: {
     copiesFromRound: 2,
@@ -108,13 +115,30 @@ export const OPPONENT: Readonly<Record<Difficulty, OpponentStyle>> = {
     benchLimitOverTeam: 4,
     itemsFromRound: 3,
     goldReserveForItems: 4,
+    synergyWeight: 1,
+    bonusGold: 0,
+  },
+  /** Hard drafts for lane synergies and takes extra gold every round. */
+  hard: {
+    copiesFromRound: 2,
+    levelFromRound: 2,
+    goldReserveForXp: 2,
+    rerollFromRound: 3,
+    rerollAboveGold: 6,
+    maxRerolls: 5,
+    spareHeroes: 2,
+    benchLimitOverTeam: 4,
+    itemsFromRound: 3,
+    goldReserveForItems: 4,
+    synergyWeight: 3,
+    bonusGold: 2,
   },
 }
 
 /** The shorter bridge match rewards investing in items and upgrades earlier. No extra gold or stats. */
 export function opponentStyleFor(mode: ModeId, difficulty: Difficulty): OpponentStyle {
   const style = OPPONENT[difficulty]
-  if (mode !== 'oneLane' || difficulty !== 'standard') {
+  if (mode !== 'oneLane' || difficulty === 'relaxed') {
     return style
   }
 

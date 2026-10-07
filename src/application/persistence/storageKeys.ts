@@ -29,8 +29,9 @@ export const STORAGE_KEYS = {
   /** Whether lane orders, still an experiment, are offered during planning. */
   laneOrders: `${PREFIX}/lane-orders`,
   /** Experiments for matches against the computer: a rotating hero pool and round twists. */
-  heroRotation: `${PREFIX}/hero-rotation`,
-  roundTwists: `${PREFIX}/round-twists`,
+  /* Renamed when the rule became the default, so coaches who never chose get it. */
+  heroRotation: `${PREFIX}/hero-rotation-v2`,
+  roundTwists: `${PREFIX}/round-twists-v2`,
   /** Whether the phone buzzes when heroes are placed, upgraded and rounds end. */
   vibration: `${PREFIX}/vibration`,
   /** Whether the map draws at a lower frame rate to save the battery. */

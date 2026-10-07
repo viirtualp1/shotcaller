@@ -20,7 +20,7 @@ import type { Lineup } from '../roster/Roster'
 import { resolveLane } from '../synergy/resolveLane'
 import type { TrialId } from '@/content/career'
 import { advanceCareer, emptyCareer, type Career, type CareerReward } from './career'
-import { matchXp, ratingChange, verdictOf, type Verdict } from './progression'
+import { matchXp, rankedRatingChange, verdictOf, type Verdict } from './progression'
 
 export interface HeroRecord {
   readonly matches: number
@@ -183,6 +183,7 @@ export interface DuelInfo {
   readonly opponentRating?: number
   /** A matchmaking duel; a duel between friends leaves MMR as it was. */
   readonly ranked?: boolean
+  readonly ghost?: boolean
 }
 
 /** What the profile needs from a match once it is over. */
@@ -392,7 +393,11 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
 
   /* The computer and friends only give XP; the rating is for beating strangers in ranked, one per mode. */
   const rating = played.duel?.ranked
-    ? Math.max(0, ratingBefore + ratingChange(resultOf(played), ratingBefore, played.duel.opponentRating))
+    ? Math.max(
+        0,
+        ratingBefore +
+          rankedRatingChange(resultOf(played), ratingBefore, played.duel.opponentRating, played.duel.ghost),
+      )
     : ratingBefore
 
   const ratings = {

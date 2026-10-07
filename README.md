@@ -69,6 +69,7 @@ to `.env`, add a Supabase project and apply `supabase/migrations` in order.
 | `npm run build` | Typecheck and production build, including static patch pages and the sitemap |
 | `npm run preview` | Serve the build with production security headers |
 | `npm test` | Unit, simulation and component tests |
+| `npm run test:sql` | Disposable PostgreSQL migration and ranked-security checks; no cloud credentials |
 | `npm run lint` · `npm run format:check` · `npm run typecheck` | The checks CI runs |
 | `npm run balance` | Headless matches for hero and item balance |
 | `npm run desktop` | Build the desktop game and open it in Electron |
@@ -98,6 +99,7 @@ scripts/        balance, A/B and performance tools
 - [Google Play](docs/google-play.md): the Android app, its signing keys and the store submission
 - [Gameplay telemetry](docs/telemetry.md): consent-based PostHog analytics
 - [Discord Activity](docs/discord-activity.md)
+- [Duel arbiter](docs/arbiter.md): replaying disputed ranked duels
 - [Performance and connection audit](docs/performance-audit.md)
 
 <details>

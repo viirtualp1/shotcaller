@@ -9,6 +9,7 @@ import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import HudPanel from '../common/HudPanel.vue'
 import { ORDER_ICONS } from './orderIcons'
+import FactionChip from './FactionChip.vue'
 import SynergyChip from './SynergyChip.vue'
 
 const MAX_SUGGESTIONS = 2
@@ -22,11 +23,22 @@ const { t } = text
 const lanes = computed(() => {
   const view = store.view!
 
-  return MODES[view.mode].lanes.map((lane) => ({
-    lane,
-    ours: view.human.lanes[lane],
-    theirs: view.opponent.lanes[lane],
-  }))
+  return MODES[view.mode].lanes.map((lane) => {
+    const ours = view.human.lanes[lane]
+    const theirs = view.opponent.lanes[lane]
+
+    return {
+      lane,
+      ours,
+      theirs,
+      ourFactions: ours.report.factions.filter((standing) => standing.tier !== null),
+      /* While planning, the faction one hero short of its first step is worth a reminder. */
+      nearFaction: store.isPlanning
+        ? (ours.report.factions.find((standing) => standing.count === 1) ?? null)
+        : null,
+      theirFactions: theirs.report.factions.filter((standing) => standing.tier !== null),
+    }
+  })
 })
 
 const placing = computed(() => store.isPlanning && store.selectedUid !== null)
@@ -102,6 +114,7 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
 
         <div class="chip-row">
           <div class="chips ours">
+            <FactionChip v-for="f in entry.ourFactions" :key="f.faction" v-bind="f" />
             <SynergyChip v-for="id in entry.ours.report.synergies" :key="id" :synergy="id" />
 
             <SynergyChip
@@ -112,9 +125,12 @@ const placing = computed(() => store.isPlanning && store.selectedUid !== null)
               :recruit="store.isPlanning ? s.recruit?.heroId : null"
               @recruit="s.recruit && store.move(s.recruit.uid, entry.lane)"
             />
+
+            <FactionChip v-if="entry.nearFaction" v-bind="entry.nearFaction" />
           </div>
 
           <div class="chips theirs">
+            <FactionChip v-for="f in entry.theirFactions" :key="f.faction" v-bind="f" />
             <SynergyChip v-for="id in entry.theirs.report.synergies" :key="id" :synergy="id" />
           </div>
         </div>

@@ -1,5 +1,6 @@
+import { FACTIONS, type FactionTier } from '@/content/factions'
 import { HEROES } from '@/content/heroes'
-import type { HeroId, ItemId, RoleId, StarLevel, SynergyId } from '@/content/ids'
+import type { FactionId, HeroId, ItemId, RoleId, StarLevel, SynergyId } from '@/content/ids'
 import { ITEMS, loadoutModifiers } from '@/content/items'
 import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
@@ -52,6 +53,8 @@ export interface HeroLoadout {
   readonly items?: readonly ItemId[]
   /** Synergies active on the hero's lane; none on the bench. */
   readonly synergies?: readonly SynergyId[]
+  /** The step the hero's faction reaches on its lane, when it reaches one. */
+  readonly faction?: { readonly faction: FactionId; readonly tier: FactionTier }
   /** The role the hero took on its lane, for an adaptive hero; its own role otherwise. */
   readonly role?: RoleId
   /** Soul Jar charges; they add attack damage while the hero carries a jar. */
@@ -87,6 +90,7 @@ export function heroSheet({
   stars,
   items = [],
   synergies = [],
+  faction,
   role: roleId,
   souls = 0,
   talent,
@@ -103,7 +107,12 @@ export function heroSheet({
   const total = numbersOf(
     heroId,
     stars,
-    combineModifiers(role.modifiers, ...synergyModifiers, loadoutModifiers(items, playedRole)),
+    combineModifiers(
+      role.modifiers,
+      ...synergyModifiers,
+      faction ? FACTIONS[faction.faction].tiers[faction.tier].modifiers : {},
+      loadoutModifiers(items, playedRole),
+    ),
     soulPower(items, souls),
   )
 

@@ -54,6 +54,15 @@ function rivalFor(options: Omit<MatchOptions, 'seed'>): Rival {
 
 export function createMatch(options: MatchOptions = {}) {
   const trial = !options.link && options.trialId ? trialById(options.trialId) : null
+  const solo = !trial && !options.link && !options.sandbox
+
+  let rules = options.rules
+  if (solo && options.difficulty === 'hard') {
+    rules = {
+      rotation: true,
+      twists: true,
+    }
+  }
 
   return new Match({
     rng: createRng(options.seed ?? (trial ? `career-trial-v1:${trial.id}` : undefined)),
@@ -65,7 +74,7 @@ export function createMatch(options: MatchOptions = {}) {
     }),
     mode: trial?.mode ?? options.mode ?? DEFAULT_MODE,
     ...(trial ? { trialId: trial.id } : {}),
-    ...(options.rules && !trial && !options.link && !options.sandbox ? { rules: options.rules } : {}),
+    ...(rules && solo ? { rules } : {}),
   })
 }
 

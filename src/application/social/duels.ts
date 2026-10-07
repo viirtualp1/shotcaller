@@ -5,7 +5,8 @@ import type { ReactionId, ReactionLink } from './reactions'
 export type DuelStatus =
   'invited' | 'declined' | 'cancelled' | 'expired' | 'active' | 'finished' | 'disputed' | 'abandoned'
 
-export type DuelEnding = 'result' | 'forfeit' | 'timeout'
+/** How a finished duel ended; `arbiter` is a dispute the server settled by replaying the duel. */
+export type DuelEnding = 'result' | 'forfeit' | 'timeout' | 'arbiter'
 
 /** The shared pause of an active duel, as the server keeps it. Times are server timestamps. */
 export interface DuelPause {
@@ -35,6 +36,10 @@ export interface Duel {
   readonly mode: ModeId
   /** Found by matchmaking rather than picked between friends; only these move MMR. */
   readonly ranked: boolean
+  /** A recorded opponent, with half the rating change of a live duel. */
+  readonly ghost?: boolean
+  /** Recorded turns before the ghost continues with a coach strategy. */
+  readonly ghostRounds?: number
   /** Set once the invite is accepted; both devices derive the battles from it. */
   readonly seed: string | null
   /** The round both coaches are planning now. */
@@ -54,7 +59,16 @@ export interface DuelEntry {
   readonly opponent: CoachCard
 }
 
-export type DuelFailure = 'busy' | 'gone' | 'rateLimited' | 'forbidden' | 'tooEarly' | 'wrongRound' | 'failed'
+export type DuelFailure =
+  | 'busy'
+  | 'gone'
+  | 'rateLimited'
+  | 'forbidden'
+  /** Ranked is closed for a while after results a replay proved false. */
+  | 'restricted'
+  | 'tooEarly'
+  | 'wrongRound'
+  | 'failed'
 
 export class DuelError extends Error {
   constructor(readonly reason: DuelFailure) {
@@ -72,6 +86,7 @@ export const ROUND_TIMEOUT_SECONDS = 180
 export interface DuelService {
   /** Joins or renews a short-lived queue entry; returns the match once paired. */
   findMatch(mode: ModeId, balance: string): Promise<string | null>
+  findGhost(mode: ModeId, balance: string): Promise<DuelEntry | null>
   /** Cancels searching, or returns a duel that was paired just before cancellation. */
   leaveQueue(): Promise<string | null>
   invite(friendId: string, mode: ModeId): Promise<string>

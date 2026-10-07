@@ -43,6 +43,17 @@ describe('public page SEO', () => {
     }
   })
 
+  it('includes each faction and both bonus thresholds in the static release article', () => {
+    const html = patchArticle(LATEST_PATCH)
+    expect(LATEST_PATCH.factions).toHaveLength(5)
+
+    for (const faction of LATEST_PATCH.factions ?? []) {
+      expect(html).toContain(escapeHtml(faction.name.en))
+      expect(html).toContain(escapeHtml(faction.pair.en.replaceAll('**', '')))
+      expect(html).toContain(escapeHtml(faction.trio.en.replaceAll('**', '')))
+    }
+  })
+
   it('escapes note text and attribute values', () => {
     expect(escapeHtml('<script a="x">&\'</script>')).toBe(
       '&lt;script a=&quot;x&quot;&gt;&amp;&#39;&lt;/script&gt;',

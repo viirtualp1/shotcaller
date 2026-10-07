@@ -141,6 +141,15 @@ export interface Database {
         Args: { game_mode: string; game_balance: string }
         Returns: string | null
       }
+      find_ghost: {
+        Args: { game_mode: string; game_balance: string }
+        Returns: Json
+      }
+      active_ghost: { Args: Record<PropertyKey, never>; Returns: Json }
+      ghost_duel: { Args: { ghost: string }; Returns: Json }
+      ghost_round: { Args: { ghost: string; board_round: number; payload: Json }; Returns: Json }
+      report_ghost: { Args: { ghost: string; winning_side: number }; Returns: number }
+      forfeit_ghost: { Args: { ghost: string }; Returns: undefined }
       leave_queue: {
         Args: Record<PropertyKey, never>
         Returns: string | null

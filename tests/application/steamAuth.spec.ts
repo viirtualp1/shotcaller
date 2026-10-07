@@ -135,7 +135,7 @@ describe('Steam sign-in', () => {
   })
 
   it('gives Steam accounts an address the game recognises', () => {
-    expect(isSteamEmail(steamEmail(STEAM_ID))).toBe(true)
+    expect(isSteamEmail(steamEmail(STEAM_ID, 'f00d'))).toBe(true)
     expect(isSteamEmail('coach@example.com')).toBe(false)
     expect(isSteamEmail(null)).toBe(false)
   })

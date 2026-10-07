@@ -105,6 +105,8 @@ const history = computed(() =>
         {{ t('duel.opponentReady') }}
       </span>
 
+      <span v-if="store.duel?.ghost" class="ready">{{ t('duel.ghostHint') }}</span>
+
       <TransitionGroup v-if="history.length" name="pop" tag="ol" class="history">
         <li
           v-for="entry in history"

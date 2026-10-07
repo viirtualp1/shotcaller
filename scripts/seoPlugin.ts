@@ -42,6 +42,16 @@ export function patchArticle(patch: PatchNote) {
 
   section('General', (patch.general ?? []).map(textLine).join(''))
 
+  section(
+    'Factions',
+    (patch.factions ?? [])
+      .map(
+        (faction) =>
+          `<h3>${escapeHtml(faction.name.en)}</h3>${textLine(faction.identity)}<p>${escapeHtml(faction.heroes.join(', '))}</p><h4>2 on one lane</h4>${textLine(faction.pair)}<h4>3 on one lane</h4>${textLine(faction.trio)}`,
+      )
+      .join(''),
+  )
+
   for (const [name, entries] of [
     ['Items', patch.items],
     ['Roles', patch.roles],

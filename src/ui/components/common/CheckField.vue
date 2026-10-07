@@ -4,11 +4,13 @@ import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 
 /** A checkbox with its label; the whole line toggles it. */
 const checked = defineModel<boolean>({ required: true })
+
+defineProps<{ disabled?: boolean }>()
 </script>
 
 <template>
-  <label class="check-field">
-    <CheckboxRoot v-model="checked" class="checkbox">
+  <label class="check-field" :class="{ disabled }">
+    <CheckboxRoot v-model="checked" class="checkbox" :disabled="disabled">
       <CheckboxIndicator class="tick"><Check :size="15" :stroke-width="3" /></CheckboxIndicator>
     </CheckboxRoot>
 
@@ -41,6 +43,15 @@ const checked = defineModel<boolean>({ required: true })
 .checkbox[data-state='checked'] {
   background: var(--gold);
   border-color: var(--gold);
+}
+
+.check-field.disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.checkbox:disabled {
+  cursor: default;
 }
 
 .tick {

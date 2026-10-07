@@ -2,6 +2,7 @@ import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, RoleId } from '@/content/ids'
 import { isUpgraded, ITEM_SLOTS, ITEMS } from '@/content/items'
 import { COPIES_PER_STAR, ECONOMY, OPPONENT, type OpponentStyle } from '@/content/rules'
+import { SYNERGIES } from '@/content/synergies'
 import type { Player } from '../player/Player'
 import { arrangeStrongestLineup } from './arrange'
 import type { CoachContext, CoachStrategy } from './CoachStrategy'
@@ -18,6 +19,21 @@ const ITEM_WISHLIST: Readonly<Record<RoleId, readonly ItemId[]>> = {
 
 const MAX_ACTIONS_PER_TURN = 40
 
+/** Lane synergies a hero of this role would switch on next to the roles already owned; mode and lane aside. */
+function synergiesCompleted(owned: readonly RoleId[], role: RoleId) {
+  return SYNERGIES.filter((synergy) => {
+    const lane = (roles: readonly RoleId[]) => ({
+      mode: 'twoLanes' as const,
+      lane: 'top' as const,
+      roles,
+    })
+
+    return (
+      synergy.id !== 'trilane' && !synergy.isActive(lane(owned)) && synergy.isActive(lane([...owned, role]))
+    )
+  }).length
+}
+
 export class GreedyCoach implements CoachStrategy {
   private readonly options: OpponentStyle
 
@@ -32,6 +48,10 @@ export class GreedyCoach implements CoachStrategy {
   }
 
   playTurn(player: Player, context: CoachContext) {
+    if (this.options.bonusGold) {
+      player.wallet.earn(this.options.bonusGold)
+    }
+
     /* Reserve one item before shopping can spend the whole round's income on heroes and rerolls. */
     const itemBought = this.outfit(player, context)
     const goldFloor = itemBought ? this.options.goldReserveForItems : 0
@@ -102,8 +122,18 @@ export class GreedyCoach implements CoachStrategy {
     const ownedIds = new Set(owned.map((h) => h.heroId))
     const allowCopies = round >= this.options.copiesFromRound
 
-    const roles = new Set(owned.map((h) => HEROES[h.heroId].role))
-    const score = (id: HeroId) => HEROES[id].tier * 2 + (roles.has(HEROES[id].role) ? 0 : 1.5) + rng.next()
+    const ownedRoles = owned.map((h) => HEROES[h.heroId].role)
+    const roles = new Set(ownedRoles)
+
+    /* A hero of a faction already owned can share a lane with it; the first pair matters most. */
+    const kin = (id: HeroId) =>
+      Math.min(owned.filter((h) => HEROES[h.heroId].faction === HEROES[id].faction).length, 2)
+
+    const score = (id: HeroId) =>
+      HEROES[id].tier * 2 +
+      (roles.has(HEROES[id].role) ? 0 : 1.5) +
+      this.options.synergyWeight * (synergiesCompleted(ownedRoles, HEROES[id].role) + kin(id) / 2) +
+      rng.next()
 
     const best = player.shop.slots
       .map((id, slot) => ({

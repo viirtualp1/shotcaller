@@ -4,13 +4,18 @@ import {
   Crosshair,
   Crown,
   Droplets,
+  Flag,
+  Flame,
   Footprints,
   Gem,
+  Ghost,
   HandMetal,
   Heart,
   HeartHandshake,
   HeartPulse,
   Link2,
+  Orbit,
+  PawPrint,
   Repeat2,
   ScrollText,
   Shield,
@@ -24,7 +29,7 @@ import {
   Zap,
 } from '@lucide/vue'
 import type { Component } from 'vue'
-import type { RoleId, ShopItemId } from '@/content/ids'
+import type { FactionId, RoleId, ShopItemId } from '@/content/ids'
 
 /** An upgraded item keeps the icon of the item it was made from. */
 export const ITEM_ICONS: Readonly<Record<ShopItemId, Component>> = {
@@ -53,6 +58,14 @@ export const ROLE_ICONS: Readonly<Record<RoleId, Component>> = {
   initiator: Zap,
   pusher: Castle,
   ganker: Crosshair,
+}
+
+export const FACTION_ICONS: Readonly<Record<FactionId, Component>> = {
+  legion: Flag,
+  wildkin: PawPrint,
+  arcanum: Orbit,
+  grave: Ghost,
+  hearth: Flame,
 }
 
 /** Shown for an adaptive hero wherever no lane has given it a role yet. */

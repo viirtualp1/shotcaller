@@ -53,15 +53,16 @@ begin
   where n.nspname = 'public'
     and p.prosecdef
     and has_function_privilege(r.rolname, p.oid, 'EXECUTE')
-    and not (r.rolname = 'anon' and p.proname = 'mmr_leaderboard')
+    and not (r.rolname = 'anon' and p.proname = any (array['mmr_leaderboard', 'public_coach_match', 'public_coach_profile']))
     and not (r.rolname = 'authenticated' and p.proname = any (array[
       'block_coach', 'cancel_duel', 'claim_duel', 'coach_live_match', 'coach_match', 'coach_profile',
       'conversation', 'delete_account', 'duel_board', 'duel_board_sent', 'ensure_coach', 'find_match',
       'forfeit_duel', 'friends_online', 'invite_duel', 'keep_live_match', 'leave_queue', 'list_blocked',
-      'list_friends', 'mark_read', 'mmr_leaderboard', 'my_duels', 'my_privacy', 'my_ratings', 'pause_duel',
+      'list_friends', 'mark_read', 'mmr_leaderboard', 'my_duels', 'my_privacy', 'my_public_profile', 'my_ratings',
+      'pause_duel', 'public_coach_match', 'find_ghost', 'active_ghost', 'ghost_duel', 'forfeit_ghost', 'ghost_round', 'report_ghost', 'public_coach_profile', 'report_player',
       'publish_live_match', 'remove_friend', 'report_duel', 'request_friend', 'request_leaderboard_friend',
       'reserve_telemetry', 'respond_duel', 'respond_friend', 'resume_duel', 'send_message', 'set_coach_photo',
-      'set_privacy', 'submit_board', 'submit_feedback', 'unblock_coach', 'unread_counts', 'withdraw_board'
+      'set_privacy', 'set_public_profile', 'submit_board', 'submit_feedback', 'unblock_coach', 'unread_counts', 'withdraw_board'
     ]));
 
   if exposed is not null then

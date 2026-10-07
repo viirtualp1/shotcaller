@@ -16,7 +16,7 @@ export type SocialNotice =
   | { readonly kind: 'duelDeclined' | 'duelExpired' | 'duelCancelled'; readonly name: string }
   | {
       readonly kind: 'duelEnded'
-      readonly how: 'forfeit' | 'timeout' | 'disputed' | 'abandoned'
+      readonly how: 'forfeit' | 'timeout' | 'disputed' | 'review' | 'abandoned'
       readonly won: boolean
     }
   | { readonly kind: 'duelFailed'; readonly reason: DuelFailure }

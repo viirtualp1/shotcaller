@@ -2,8 +2,10 @@ import { useI18n } from 'vue-i18n'
 import { ABILITY_NAMES } from '@/content/abilities'
 import { TWISTS, type TwistId } from '@/content/experiments'
 import { HEROES, ROLE_SIGNATURES } from '@/content/heroes'
+import { FACTIONS, type FactionTier } from '@/content/factions'
 import type {
   AbilityId,
+  FactionId,
   HeroId,
   ItemId,
   LaneId,
@@ -141,6 +143,16 @@ function itemParams(format: Format, id: ItemId, role?: RoleId) {
   return params
 }
 
+function factionParams(format: Format, id: FactionId, tier: FactionTier) {
+  const { modifiers, effects } = FACTIONS[id].tiers[tier]
+  const params = modifierParams(format, modifiers)
+  for (const [key, value] of Object.entries(effects)) {
+    params[key] = PLAIN_EFFECTS.has(key) ? format(value) : format(Math.round(value * 100))
+  }
+
+  return params
+}
+
 export const starsLabel = (stars: StarLevel) => '★'.repeat(stars)
 
 /** Localised game text. Hero, ability and item names are proper names and come from content untranslated. */
@@ -250,6 +262,10 @@ export function useGameText() {
       })
     },
     synergyName: (id: SynergyId) => t(`synergies.${id}.name`),
+    factionName: (id: FactionId) => t(`factions.${id}.name`),
+    factionLore: (id: FactionId) => t(`factions.${id}.lore`),
+    factionEffect: (id: FactionId, tier: FactionTier) =>
+      t(`factions.${id}.tier${tier}`, factionParams(number, id, tier)),
     synergyNeed: (id: SynergyId) => t(`synergyNeeds.${id}`),
     synergyEffect: (id: SynergyId) =>
       t(

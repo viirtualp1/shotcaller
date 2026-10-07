@@ -3,8 +3,13 @@ import { z } from 'zod'
 /** The ticket identity the desktop app asks Steam for (`electron/steam.ts`). */
 export const STEAM_TICKET_IDENTITY = 'theshotcaller'
 
-/** Accounts made by Steam sign-in get an address here; nothing is sent to it. `src/application/steam.ts` matches. */
-export const steamEmail = (steamId: string) => `steam-${steamId}@steam.theshotcaller.online`
+/**
+ * Accounts made by Steam sign-in get an address here; nothing is sent to it. `src/application/steam.ts` matches.
+ * Steam IDs are public, so the address carries a random part: nobody can register it first and lock the Steam
+ * player out of their own sign-in.
+ */
+export const steamEmail = (steamId: string, nonce: string) =>
+  `steam-${steamId}-${nonce}@steam.theshotcaller.online`
 
 const requestSchema = z.strictObject({
   ticket: z.string().regex(/^[0-9a-f]{16,4096}$/i),

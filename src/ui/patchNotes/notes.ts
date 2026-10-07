@@ -1,4 +1,4 @@
-import type { AbilityId, HeroId, ItemId, LaneStance, ModeId, RoleId } from '@/content/ids'
+import type { AbilityId, FactionId, HeroId, ItemId, LaneStance, ModeId, RoleId } from '@/content/ids'
 import type { Locale } from '../i18n/index.ts'
 
 /**
@@ -71,6 +71,7 @@ export type FeatureArt =
   | { readonly kind: 'hud'; readonly focus: 'scoreboard' | 'lineup' | 'scale' | 'twist' }
   /** The 9.4 phone release: the camera, the folding battle panel, placing heroes and a cool, awake phone. */
   | { readonly kind: 'pocket'; readonly focus: 'camera' | 'sheet' | 'placement' | 'comfort' }
+  | { readonly kind: 'alliance'; readonly focus: 'factions' | 'ghosts' | 'forge' | 'variety' }
   | { readonly kind: 'dossier'; readonly focus: 'scout' | 'build' | 'rounds' }
 
 /** One highlight of a major update: a picture and a few words. The full list of changes follows below. */
@@ -78,6 +79,16 @@ export interface FeatureNote {
   readonly art: FeatureArt
   readonly title: NoteText
   readonly text: NoteText
+}
+
+export interface FactionNote {
+  readonly id: FactionId
+  readonly color: string
+  readonly heroes: readonly HeroId[]
+  readonly name: NoteText
+  readonly identity: NoteText
+  readonly pair: NoteText
+  readonly trio: NoteText
 }
 
 export interface PatchNote {
@@ -98,10 +109,12 @@ export interface PatchNote {
     | 'hud'
     | 'pocket'
     | 'dossier'
+    | 'alliance'
   /** A wider page, for a release whose introduction needs the room. */
   readonly wide?: boolean
   /** Major updates open with these; the first one is shown large. */
   readonly features?: readonly FeatureNote[]
+  readonly factions?: readonly FactionNote[]
   /** One line for the start-screen card. The full notes stay on the patch page. */
   readonly card?: NoteText
   readonly general?: readonly NoteText[]
@@ -113,6 +126,285 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '10.0',
+    date: '2026-10-07',
+    title: {
+      en: 'Strength in formation',
+      ru: 'Сила в связках',
+    },
+    campaign: 'alliance',
+    wide: true,
+    card: {
+      en: '**Five factions**, recorded rivals for ranked, a smarter shop and a new **Hard** opponent. Find your people. Hold your lane.',
+      ru: '**Пять фракций**, призраки в ранкеде, понятная лавка и новая **сложная** игра против бота. Найди своих. Держи линию.',
+    },
+    features: [
+      {
+        art: {
+          kind: 'alliance',
+          focus: 'factions',
+        },
+        title: {
+          en: 'One recruit can change the whole lane',
+          ru: 'Один боец меняет всю линию',
+        },
+        text: {
+          en: 'Put **2 faction members on one lane** to unlock their first bonus. Add a **third** to strengthen it. Roles, items and faction bonuses work together: choose who holds the front, who keeps them alive and who delivers the finish.',
+          ru: 'Поставь **2 героев одной фракции на одну линию**, чтобы включить первый бонус. Найди **третьего** — связка станет сильнее. Роли, предметы и фракции работают вместе: выбери, кто держит фронт, кто спасает своих и кто наносит решающий удар.',
+        },
+      },
+      {
+        art: {
+          kind: 'alliance',
+          focus: 'ghosts',
+        },
+        title: {
+          en: 'A ghost is a recording of a finished match',
+          ru: 'Призрак — запись завершённой партии',
+        },
+        text: {
+          en: 'A **ghost** repeats the saved squads and positions from a finished match. **When its recording ends, a computer coach continues with the last squad.** After **45 seconds** of ranked search, press **Play a ghost** or keep waiting for a live coach. Ghost matches change your rating by **half the usual amount**.',
+          ru: '**Призрак** повторяет сохранённые составы и расстановки завершённой партии. **Когда запись заканчивается, последним составом продолжает играть бот.** Через **45 секунд** поиска в ранкеде нажми **«Сыграть с призраком»** или продолжай ждать живого тренера. Такой матч меняет рейтинг на **половину обычного значения**.',
+        },
+      },
+      {
+        art: {
+          kind: 'alliance',
+          focus: 'forge',
+        },
+        title: {
+          en: 'See the upgrade before you buy',
+          ru: 'Увидь улучшение до покупки',
+        },
+        text: {
+          en: 'The shop shows **which purchase will forge an upgrade**, which item should go to a hero carrying its pair, and how many copies you already own. Hover an offer to inspect **the upgraded item** before spending your gold.',
+          ru: 'Лавка показывает, **какая покупка сразу создаст улучшение**, какой предмет нужно отдать герою с парой и сколько копий у тебя уже есть. Подсказка предложения показывает **улучшенный предмет** до того, как ты потратишь золото.',
+        },
+      },
+      {
+        art: {
+          kind: 'alliance',
+          focus: 'variety',
+        },
+        title: {
+          en: 'A fresh draft. A tougher rival.',
+          ru: 'Новый расклад. Сильнее соперник.',
+        },
+        text: {
+          en: 'Solo matches now start with **hero rotation and round twists** enabled by default. Try **Hard** when you want a rival that hunts combinations and rerolls more aggressively. Its advantage is explicit: **+2 gold each round**. Rotation and twists are always on in Hard.',
+          ru: 'В матчах против компьютера теперь по умолчанию включены **ротация героев и модификаторы раундов**. Попробуй **сложную** игру: бот активнее ищет связки и обновляет лавку. Его преимущество указано прямо — **+2 золота каждый раунд**. Ротация и модификаторы здесь обязательны.',
+        },
+      },
+    ],
+    factions: [
+      {
+        id: 'legion',
+        color: '#d9a441',
+        heroes: ['spearman', 'herald', 'blademaster', 'sniper'],
+        name: {
+          en: 'Legion',
+          ru: 'Легион',
+        },
+        identity: {
+          en: 'Hold formation. Make every hit cost them.',
+          ru: 'Держи строй. Пусть каждый удар обходится врагу дорого.',
+        },
+        pair: {
+          en: 'Faction heroes take **12% less damage**.',
+          ru: 'Герои фракции получают на **12% меньше урона**.',
+        },
+        trio: {
+          en: '**22% less damage** and **20% attack damage reflected** back to the attacker.',
+          ru: 'На **22% меньше урона** и **20% урона атак обратно** нападающему.',
+        },
+      },
+      {
+        id: 'wildkin',
+        color: '#7fbf6a',
+        heroes: ['archer', 'packLeader', 'warden', 'giant'],
+        name: {
+          en: 'Wildkin',
+          ru: 'Дикие',
+        },
+        identity: {
+          en: 'Close the distance. Stay alive on the hunt.',
+          ru: 'Настигай врага. Восстанавливай силы в охоте.',
+        },
+        pair: {
+          en: '**+10% movement speed** and healing for **10% of attack damage dealt**.',
+          ru: '**+10% скорости передвижения** и лечение на **10% нанесённого атакой урона**.',
+        },
+        trio: {
+          en: '**+20% movement speed** and healing for **20% of attack damage dealt**.',
+          ru: '**+20% скорости передвижения** и лечение на **20% нанесённого атакой урона**.',
+        },
+      },
+      {
+        id: 'arcanum',
+        color: '#8f9cff',
+        heroes: ['shaman', 'pyromancer', 'frostWitch', 'oracle'],
+        name: {
+          en: 'Arcanum',
+          ru: 'Арканум',
+        },
+        identity: {
+          en: 'Let one spell answer another.',
+          ru: 'Пусть за одной способностью отзовётся другая.',
+        },
+        pair: {
+          en: '**+10% mana gain** for earlier casts.',
+          ru: '**+10% получения маны**, чтобы раньше применять способности.',
+        },
+        trio: {
+          en: '**+20% mana gain**. Abilities echo after **1.5 s** at **20% power**.',
+          ru: '**+20% получения маны**. Способности повторяются через **1,5 с** с силой **20%**.',
+        },
+      },
+      {
+        id: 'grave',
+        color: '#b06ad0',
+        heroes: ['rogue', 'shade', 'necromancer', 'butcher'],
+        name: {
+          en: 'Grave',
+          ru: 'Склеп',
+        },
+        identity: {
+          en: 'Find an opening. Hit where it hurts.',
+          ru: 'Найди слабое место. Ударь по больному.',
+        },
+        pair: {
+          en: 'Attacks have a **20% critical chance** and deal **175% damage** on a critical hit.',
+          ru: 'Атаки с шансом **20%** становятся критическими и наносят **175% урона**.',
+        },
+        trio: {
+          en: 'Critical chance rises to **35%**, with critical attacks dealing **200% damage**.',
+          ru: 'Шанс критического удара растёт до **35%**, его урон — до **200%**.',
+        },
+      },
+      {
+        id: 'hearth',
+        color: '#e07b4a',
+        heroes: ['sapper', 'acolyte', 'stonewright', 'engineer'],
+        name: {
+          en: 'Hearth',
+          ru: 'Очаг',
+        },
+        identity: {
+          en: 'Break their walls. Keep your people standing.',
+          ru: 'Ломай чужие стены. Береги своих.',
+        },
+        pair: {
+          en: '**+30% building damage** and **+20% healing and shield strength**.',
+          ru: '**+30% урона строениям** и **+20% силы лечения и щитов**.',
+        },
+        trio: {
+          en: '**+60% building damage**, **+35% healing and shields**, and **+10% health**.',
+          ru: '**+60% урона строениям**, **+35% силы лечения и щитов** и **+10% здоровья**.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'Faction bonuses belong to **members of that faction on the same lane**. Split them between lanes and each lane needs its own pair. Every fighter counts once, regardless of stars. A third member replaces the first bonus with the stronger step.',
+        ru: 'Бонус получают **герои этой фракции на той же линии**. Разделишь их между линиями — на каждой нужна своя пара. Каждый боец считается один раз, независимо от звёзд. Третий герой заменяет первый бонус более сильной ступенью.',
+      },
+      {
+        en: '**Role synergies and factions work together.** Archer and Warden activate Wildkin’s speed and lifesteal, while Guardian adds **35% attack speed** to Archer. A recruit from another faction can open a new combination: Pyromancer alongside Spearman and Herald gets **40% more spell power** from Setup while the two soldiers keep their Legion bonus.',
+        ru: '**Ролевые синергии и фракции работают вместе.** Лучник и Страж получают скорость и вампиризм Диких, а синергия с поддержкой даёт Лучнику ещё **35% скорости атаки**. Герой другой фракции тоже открывает новую связку: Пиромант рядом с Копейщиком и Глашатаем получает **+40% силы заклинаний**, а два легионера сохраняют свой бонус.',
+      },
+      {
+        en: '**Changeling joins the largest faction on its lane** and counts towards its bonus while still adapting its role. A Changeling with nobody to join has no faction bonus.',
+        ru: '**Changeling присоединяется к самой многочисленной фракции своей линии** и помогает включить её бонус, продолжая подбирать роль. Без напарников ему не к кому присоединиться.',
+      },
+      {
+        en: 'In **Two Lanes and Three Lanes**, each hero kill now adds **30 points** to the round score alongside building damage. A fight won away from the towers can win the round.',
+        ru: 'В режимах **«Две линии» и «Три линии»** убийство героя теперь даёт **30 очков** к результату раунда вместе с уроном строениям. Победа в бою вдали от башен тоже может принести раунд.',
+      },
+      {
+        en: 'The **Standard and Hard** computer coaches now value recruits that complete role synergies and faction groups. Hard also keeps more gold in play through rerolls.',
+        ru: 'Компьютер на **обычной и сложной** сложности теперь ценит героев, которые дополняют ролевые синергии и фракции. На сложной сложности он также активнее тратит золото на обновления лавки.',
+      },
+      {
+        en: 'The first ghosts come from **finished computer matches**. Completed ranked matches then add **reviewed player recordings**. The game picks a recording for your mode under the current battle rules, with the nearest available rating.',
+        ru: 'Первые призраки берутся из **завершённых партий компьютера**. Затем к ним добавляются **проверенные записи рейтинговых партий игроков**. Игра выбирает запись для твоего режима с действующими правилами и ближайшим доступным рейтингом.',
+      },
+      {
+        en: 'While recorded rounds remain, the ghost repeats their squads and positions. **After the recording ends, a computer coach takes over the last squad**: it buys heroes and items, levels up and rearranges lanes using the ordinary income from your match, without bonus gold. You see the opponent’s lineup only **after your planning ends**, when you press Fight or the timer runs out. The continuing coach cannot see your current draft.',
+        ru: 'Пока в записи есть раунды, призрак повторяет их составы и расстановки. **После конца записи последним составом управляет бот**: покупает героев и предметы, повышает уровень и перестраивает линии на обычный доход из вашей партии, без дополнительного золота. Состав соперника ты видишь только **после окончания своей подготовки** — когда нажмёшь «В бой» или истечёт таймер. Бот тоже не видит твою текущую расстановку.',
+      },
+      {
+        en: 'At equal ratings, a ghost win gives **+13 MMR instead of +25**, and a loss takes **13 MMR**, down to zero. The recorded coach’s rating does not change, and their name stays hidden. The ghost option is voluntary: waiting longer never starts it automatically.',
+        ru: 'При равном рейтинге победа над призраком даёт **+13 MMR вместо +25**, а поражение отнимает **13 MMR**, но не опускает рейтинг ниже нуля. Рейтинг автора записи не меняется, его имя скрыто. Призрак — добровольный выбор: долгое ожидание не запускает такой матч автоматически.',
+      },
+      {
+        en: 'You can **resume a ghost match saved on this device** after a reload, or give it up as a loss. Leaving one unfinished for **2 hours** counts as a defeat.',
+        ru: 'После перезагрузки можно **продолжить сохранённый на этом устройстве матч с призраком** или сдаться с поражением. Матч, оставленный незавершённым на **2 часа**, засчитывается как проигранный.',
+      },
+      {
+        en: 'On Relaxed and Standard, turn **hero rotation and round twists** off in Settings whenever you want a familiar draft. They change solo matches; ranked follows its own shared rules.',
+        ru: 'На лёгкой и обычной сложности отключи **ротацию героев и модификаторы раундов** в настройках, когда захочешь привычный расклад. Они меняют одиночные матчи; ранкед следует общим для соперников правилам.',
+      },
+      {
+        en: 'Disputed ranked results now receive a **replay review**. A false result can be corrected, including the rating. **Two false reports in 30 days** close ranked for **14 days**.',
+        ru: 'Спорный результат ранкеда теперь проходит **проверку повтором**. Неверный результат можно исправить вместе с рейтингом. **Две ложные заявки на результат за 30 дней** закрывают ранкед на **14 дней**.',
+      },
+      {
+        en: 'Giving up during the first **3 rounds** of a live ranked duel no longer rewards the winner with MMR; the loser still loses rating. The same pair of coaches can earn rating from at most **3 decisive duels a day**.',
+        ru: 'Сдача в первые **3 раунда** живой рейтинговой дуэли больше не приносит победителю MMR; проигравший всё равно теряет рейтинг. Одна и та же пара тренеров может менять рейтинг максимум в **3 результативных дуэлях за день**.',
+      },
+    ],
+    interface: [
+      {
+        en: 'Hero offers show their **faction and owned lane-mates**. The lane tracker shows its progress towards two and three members, so your next recruit has a clear purpose.',
+        ru: 'Предложения героев показывают **фракцию и уже купленных соратников**. Счётчик линии показывает прогресс к двум и трём героям — следующий боец получает понятную цель.',
+      },
+      {
+        en: 'The hero card shows **the active faction bonus** alongside its role and items, with the resulting protection, damage and other stats already included.',
+        ru: 'Карточка героя показывает **активный бонус фракции** рядом с ролью и предметами. Защита, урон и другие итоговые характеристики уже учитывают его.',
+      },
+      {
+        en: 'The planning countdown stays visible when the scoreboard is folded, and **the scoreboard opens for the final seconds**.',
+        ru: 'Отсчёт подготовки остаётся виден при свёрнутом табло, а **в последние секунды табло открывается само**.',
+      },
+      {
+        en: 'The in-game guide now explains **all five factions**, their members and both bonus steps, so you can look up a combination while planning.',
+        ru: 'Игровая справка теперь объясняет **все пять фракций**, их составы и обе ступени бонусов — проверь нужную связку во время подготовки.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Ranked results against ghosts retry after a lost connection, including **an explicit forfeit**. Repeated sends do not count the match twice.',
+        ru: 'Результат матча с призраком повторно отправляется после обрыва связи, включая **явную сдачу**. Повторная отправка не засчитывает матч дважды.',
+      },
+      {
+        en: 'An incorrect ghost result can no longer leave behind **an inflated rating or peak** after review.',
+        ru: 'Неверный результат против призрака больше не оставляет **завышенный рейтинг или рекорд** после проверки.',
+      },
+      {
+        en: 'Another person’s registration can no longer block your first sign-in through **Steam**.',
+        ru: 'Чужая регистрация больше не может заблокировать твой первый вход через **Steam**.',
+      },
+      {
+        en: 'Abuse reports bring an automatic chat restriction closer only when the reported coach **actually messaged the reporter**. Reports from strangers you never wrote to can no longer silence you.',
+        ru: 'Жалобы на оскорбления приближают автоматическое ограничение чата, только если тренер **действительно писал подавшему жалобу**. Незнакомцы, которым ты не писал, больше не могут лишить тебя чата своими жалобами.',
+      },
+    ],
+  },
+  {
+    version: '9.5.3',
+    date: '2026-10-07',
+    title: {
+      en: 'Placement hint',
+      ru: 'Подсказка размещения',
+    },
+    fixes: [
+      {
+        en: 'In **One Lane**, selecting a hero already on the lane no longer shows the placement hint.',
+        ru: 'В режиме **«Одна линия»** при выборе героя, который уже стоит на линии, больше не появляется подсказка размещения.',
+      },
+    ],
+  },
   {
     version: '9.5.2',
     date: '2026-10-07',

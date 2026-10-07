@@ -56,7 +56,7 @@ import { useDuelStore } from '../stores/duel'
 import { useMatchStore } from '../stores/match'
 import { useMenuStore } from '../stores/menu'
 import { usePauseStore } from '../stores/pause'
-import { usePlanningTimerStore } from '../stores/planningTimer'
+import { URGENT_SECONDS, usePlanningTimerStore } from '../stores/planningTimer'
 import { useSettingsStore } from '../stores/settings'
 import { useTutorial } from '../tutorial/useTutorial'
 
@@ -111,9 +111,20 @@ const pinned = computed(() => !store.view?.sandbox || viewportHeight.value >= 10
 
 /**
  * With a mouse the scoreboard hides above the window behind a handle, and the map lines up with the side panels.
- * It slides out on hover, on entering the match, and at the start and end of rounds.
+ * It slides out on hover, on entering the match, at the start and end of rounds and for the last seconds of planning;
+ * meanwhile the handle shows the seconds left.
  */
 const peek = computed(() => wide.value && !touch.value)
+
+const planningSeconds = computed(() =>
+  store.isPlanning && timer.remaining !== null ? Math.ceil(timer.remaining) : null,
+)
+
+const planningUrgent = computed(
+  () => planningSeconds.value !== null && planningSeconds.value <= URGENT_SECONDS,
+)
+
+const scoreboardShown = computed(() => scoreboardOut.value || planningUrgent.value)
 
 /** During a battle on a phone held upright the dock folds into a sheet over the map. */
 const sheet = computed(() => battling.value && !wide.value && !landscape.value)
@@ -170,6 +181,10 @@ const mapAnchor = computed(() => {
 
 const placementHint = computed(() => {
   if (!store.isPlanning) {
+    return null
+  }
+
+  if (store.view?.mode === 'oneLane' && store.selected?.slot === 'mid') {
     return null
   }
 
@@ -316,15 +331,18 @@ onMounted(() => zoomHint.setActive(true))
         <GameMenu v-if="touch" />
       </div>
 
-      <div ref="scoreboard" class="top-center" :class="{ out: scoreboardOut }">
-        <span v-if="peek" class="handle" aria-hidden="true" />
+      <div ref="scoreboard" class="top-center" :class="{ out: scoreboardShown }">
+        <span v-if="peek" class="handle" aria-hidden="true">
+          <span v-if="planningSeconds !== null" class="handle-time">{{ planningSeconds }}</span>
+        </span>
+
         <MatchScoreboard />
         <TavernStrip class="tavern" />
         <ReactionStickers v-if="store.isDuel" />
       </div>
 
       <div class="corner reactions-corner">
-        <template v-if="store.isDuel">
+        <template v-if="store.isDuel && !store.duel?.ghost">
           <DuelPauseButton />
           <ReactionWheel />
         </template>
@@ -511,6 +529,25 @@ onMounted(() => zoomHint.setActive(true))
 
 .top-center:hover .handle::before {
   opacity: 1;
+}
+
+/* The seconds left of planning hang under the pill while the scoreboard is away. */
+.handle-time {
+  position: absolute;
+  top: 8px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--edge-strong);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+
+.top-center.out .handle-time {
+  opacity: 0;
 }
 
 /* The fallen heroes stay in view under the handle while the scoreboard is away. */

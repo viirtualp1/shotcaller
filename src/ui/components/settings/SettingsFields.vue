@@ -2,7 +2,7 @@
 import { ArrowRight, FlaskConical, Gauge, Languages, Smartphone, Volume2 } from '@lucide/vue'
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { computed } from 'vue'
-import { DIFFICULTIES, type Difficulty } from '@/content/rules'
+import { DIFFICULTIES, OPPONENT, type Difficulty } from '@/content/rules'
 import { useGameText } from '../../composables/useGameText'
 import { canVibrate, vibrate } from '../../haptics'
 import { useMenuStore } from '../../stores/menu'
@@ -100,7 +100,10 @@ function difficultyHint(id: Difficulty) {
   const seconds = DIFFICULTIES[id].planningSeconds
   return seconds === null
     ? t('settings.difficultyHint.relaxed')
-    : t('settings.difficultyHint.standard', { s: seconds })
+    : t(`settings.difficultyHint.${id}`, {
+        s: seconds,
+        gold: OPPONENT[id].bonusGold,
+      })
 }
 
 function openOrdersPatch() {
@@ -199,6 +202,10 @@ function openOrdersPatch() {
       <section v-if="showExperiments" class="field experiments">
         <h3 class="label"><FlaskConical :size="16" /> {{ t('settings.experiments') }}</h3>
 
+        <p v-if="settings.experimentsRequired" class="required-note">
+          {{ t('settings.hardRulesRequired') }}
+        </p>
+
         <div class="experiment">
           <CheckField v-model="settings.laneOrders">{{ t('settings.laneOrders') }}</CheckField>
 
@@ -210,7 +217,9 @@ function openOrdersPatch() {
         </div>
 
         <div v-for="experiment in EXPERIMENTS" :key="experiment.key" class="experiment">
-          <CheckField v-model="settings[experiment.key]">{{ t(experiment.name) }}</CheckField>
+          <CheckField v-model="settings[experiment.key]" :disabled="settings.experimentsRequired">
+            {{ t(experiment.name) }}
+          </CheckField>
 
           <ExperimentInfo :title="t(experiment.name)" :text="t(experiment.hint)" />
         </div>
@@ -339,6 +348,13 @@ function openOrdersPatch() {
 
 .experiments {
   gap: 14px;
+}
+
+.required-note {
+  color: var(--gold);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .guide {

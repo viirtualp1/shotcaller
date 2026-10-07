@@ -5,6 +5,7 @@ import { computed, markRaw, ref, shallowRef, watch } from 'vue'
 import { BattleSession } from '@/application/BattleSession'
 import { trialById, type TrialId } from '@/content/career'
 import { createMatch, restoreMatch } from '@/application/createMatch'
+import { continueGhostBoard } from '@/application/social/ghostContinuation'
 import { LocalStorageMatchRepository } from '@/application/persistence/MatchRepository'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import {
@@ -64,6 +65,8 @@ export interface DuelBinding {
   readonly opponentName: string
   readonly opponentRating?: number
   readonly ranked: boolean
+  readonly ghost?: boolean
+  readonly ghostRounds?: number
   /** Sends this round's board and resolves with the other player's once both are in. */
   exchange(round: number, board: PlayerState): Promise<PlayerState>
   /** The result this device replayed, seen from its own side: 0 won, 1 lost, null a draw. */
@@ -78,6 +81,7 @@ export interface SettledDuel {
   readonly opponentName: string
   /** Missing in a duel saved by an older version; such a duel counts as friendly. */
   readonly ranked?: boolean
+  readonly ghost?: boolean
   readonly won: boolean
 }
 
@@ -134,6 +138,14 @@ export function loadoutOf(player: PlayerView, { hero, slot }: LocatedHero): Hero
     stars: hero.stars,
     items: hero.items,
     synergies: slot === 'bench' ? [] : player.lanes[slot].report.synergies,
+    ...(hero.faction && hero.factionTier
+      ? {
+          faction: {
+            faction: hero.faction,
+            tier: hero.factionTier,
+          },
+        }
+      : {}),
     ...(hero.role ? { role: hero.role } : {}),
     souls: hero.souls,
     ...(hero.talent !== undefined ? { talent: hero.talent } : {}),
@@ -294,13 +306,16 @@ export const useMatchStore = defineStore('match', () => {
     duel.value = null
 
     match = createMatch({
-      difficulty: settings.difficulty,
+      difficulty: settings.tutorialWanted ? 'standard' : settings.difficulty,
       mode,
       trialId,
-      rules: {
-        rotation: settings.heroRotation,
-        twists: settings.roundTwists,
-      },
+      /* The tutorial match keeps the plain rules it explains. */
+      rules: settings.tutorialWanted
+        ? {}
+        : {
+            rotation: settings.heroRotation,
+            twists: settings.roundTwists,
+          },
     })
 
     clearSelection()
@@ -493,7 +508,17 @@ export const useMatchStore = defineStore('match', () => {
         return
       }
 
-      apply(current.receiveOpponent(theirs))
+      const opponent =
+        binding.ghost && current.round > (binding.ghostRounds ?? Infinity)
+          ? continueGhostBoard(
+              current.opponent.snapshot(),
+              current.mode,
+              current.snapshot().link!.seed,
+              current.round,
+            )
+          : theirs
+
+      apply(current.receiveOpponent(opponent, { trusted: binding.ghost }))
       const setup = apply(current.startBattle({ allowEmptyBoard: true }))
       if (setup) {
         startDuelBattle()
@@ -958,6 +983,7 @@ export const useMatchStore = defineStore('match', () => {
       id: ended.id,
       opponentName: ended.opponentName,
       ranked: ended.ranked ?? false,
+      ...(ended.ghost ? { ghost: true } : {}),
     }
 
     if (match && duel.value?.id === ended.id) {

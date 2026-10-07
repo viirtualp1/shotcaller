@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { MODE_IDS, type ModeId, type TeamId } from '@/content/ids'
 import { DEFAULT_MODE } from '@/content/modes'
 import { DuelError, type Duel, type DuelFailure, type DuelService } from '../social/duels'
+import { GHOST_COACH_ID } from '../social/ghosts'
 import { coachPhoto } from '../social/friends'
 import { isReactionId, type ReactionId } from '../social/reactions'
 import type { Database } from './database'
@@ -14,6 +15,7 @@ const FAILURES: Readonly<Record<string, DuelFailure>> = {
   P0410: 'gone',
   P0429: 'rateLimited',
   P0425: 'tooEarly',
+  P0403: 'restricted',
   '42501': 'forbidden',
 }
 
@@ -44,7 +46,7 @@ const duelRow = z.object({
   host_board_round: z.int(),
   guest_board_round: z.int(),
   winner: z.uuid().nullable().optional(),
-  ended_by: z.enum(['result', 'forfeit', 'timeout']).nullable().optional(),
+  ended_by: z.enum(['result', 'forfeit', 'timeout', 'arbiter']).nullable().optional(),
   created_at: z.string(),
   /* Servers without the pause migration send none of these: such duels are never paused. */
   paused_by: z.uuid().nullable().default(null),
@@ -79,7 +81,84 @@ function toDuel(row: z.infer<typeof duelRow>): Duel {
   }
 }
 
+const ghostRow = z.object({
+  id: z.uuid(),
+  mode: z.enum(MODE_IDS),
+  seed: z.string().min(1).max(64),
+  rating: z.int().nonnegative(),
+  recordedRounds: z.int().min(1).max(40),
+  round: z.int().min(1).max(41),
+  status: z.enum(['active', 'finished']),
+  result: z.union([z.literal(-1), z.literal(0), z.literal(1)]).nullable(),
+  endedBy: z.enum(['result', 'forfeit', 'abandoned', 'arbiter']).nullable(),
+  startedAt: z.string(),
+})
+
 export class SupabaseDuels implements DuelService {
+  private readonly ghostIds = new Set<string>()
+
+  private ghostEntry(raw: unknown) {
+    if (raw === null) {
+      return null
+    }
+
+    const parsed = ghostRow.safeParse(raw)
+    if (!parsed.success) {
+      throw new DuelError('failed')
+    }
+
+    const row = parsed.data
+    this.ghostIds.add(row.id)
+
+    return {
+      duel: {
+        id: row.id,
+        host: this.userId,
+        guest: GHOST_COACH_ID,
+        status: row.status,
+        mode: row.mode,
+        ranked: true,
+        ghost: true,
+        ghostRounds: row.recordedRounds,
+        seed: row.seed,
+        round: row.round,
+        roundOpenedAt: row.startedAt,
+        boardRounds: [row.round - 1, row.round - 1] as const,
+        winner: row.result === 0 ? this.userId : row.result === 1 ? GHOST_COACH_ID : null,
+        endedBy: row.endedBy === 'abandoned' ? ('timeout' as const) : row.endedBy,
+        createdAt: row.startedAt,
+        pause: {
+          by: null,
+          since: null,
+          used: [0, 0] as const,
+          last: [null, null] as const,
+        },
+      },
+      opponent: {
+        id: GHOST_COACH_ID,
+        name: 'Ghost',
+        avatar: null,
+        photo: null,
+        rating: row.rating,
+      },
+    }
+  }
+
+  async findGhost(mode: ModeId, balance: string) {
+    const { data, error } = await this.client
+      .rpc('find_ghost', {
+        game_mode: mode,
+        game_balance: balance,
+      })
+      .abortSignal(AbortSignal.timeout(12_000))
+
+    if (error) {
+      throw failure(error)
+    }
+
+    return this.ghostEntry(data)
+  }
+
   constructor(
     private readonly client: SupabaseClient<Database>,
     private readonly userId: string,
@@ -152,7 +231,18 @@ export class SupabaseDuels implements DuelService {
       throw failure(error)
     }
 
-    return data.flatMap((row) => {
+    const { data: ghost, error: ghostError } = await this.client
+      .rpc('active_ghost')
+      .abortSignal(AbortSignal.timeout(12_000))
+
+    // An older server still supports live duels until the ghost migration is deployed.
+    if (ghostError && ghostError.code !== 'PGRST202') {
+      throw failure(ghostError)
+    }
+
+    const ghostEntry = ghostError ? null : this.ghostEntry(ghost)
+
+    const entries = data.flatMap((row) => {
       const duel = duelRow.safeParse(row)
 
       return duel.success
@@ -170,6 +260,8 @@ export class SupabaseDuels implements DuelService {
           ]
         : []
     })
+
+    return ghostEntry ? [...entries, ghostEntry] : entries
   }
 
   async find(duelId: string) {
@@ -185,11 +277,42 @@ export class SupabaseDuels implements DuelService {
     }
 
     const row = duelRow.safeParse(data)
+    if (row.success) {
+      return toDuel(row.data)
+    }
 
-    return row.success ? toDuel(row.data) : null
+    const { data: ghost, error: ghostError } = await this.client
+      .rpc('ghost_duel', { ghost: duelId })
+      .abortSignal(AbortSignal.timeout(12_000))
+
+    if (ghostError) {
+      if (ghostError.code === 'PGRST202') {
+        return null
+      }
+
+      throw failure(ghostError)
+    }
+
+    return this.ghostEntry(ghost)?.duel ?? null
   }
 
   async submitBoard(duelId: string, round: number, board: unknown) {
+    if (this.ghostIds.has(duelId)) {
+      const { data, error } = await this.client
+        .rpc('ghost_round', {
+          ghost: duelId,
+          board_round: round,
+          payload: asJson(board),
+        })
+        .abortSignal(AbortSignal.timeout(12_000))
+
+      if (error) {
+        throw failure(error, { P0409: 'wrongRound' })
+      }
+
+      return data
+    }
+
     const { data, error } = await this.client
       .rpc('submit_board', {
         duel: duelId,
@@ -236,6 +359,23 @@ export class SupabaseDuels implements DuelService {
   }
 
   async report(duelId: string, winningSide: TeamId | null, byThrone: boolean) {
+    // Pending reports survive reloads: discover the duel type before choosing the endpoint.
+    const duel = await this.find(duelId)
+    if (duel?.ghost) {
+      const { error } = await this.client
+        .rpc('report_ghost', {
+          ghost: duelId,
+          winning_side: winningSide ?? -1,
+        })
+        .abortSignal(AbortSignal.timeout(12_000))
+
+      if (error) {
+        throw failure(error)
+      }
+
+      return
+    }
+
     const { error } = await this.client
       .rpc('report_duel', {
         duel: duelId,
@@ -250,6 +390,18 @@ export class SupabaseDuels implements DuelService {
   }
 
   async forfeit(duelId: string) {
+    if ((await this.find(duelId))?.ghost) {
+      const { error } = await this.client
+        .rpc('forfeit_ghost', { ghost: duelId })
+        .abortSignal(AbortSignal.timeout(12_000))
+
+      if (error) {
+        throw failure(error)
+      }
+
+      return
+    }
+
     const { error } = await this.client.rpc('forfeit_duel', { duel: duelId })
     if (error) {
       throw failure(error)

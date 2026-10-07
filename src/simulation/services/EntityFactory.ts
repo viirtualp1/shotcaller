@@ -1,7 +1,7 @@
 import type { World } from 'miniplex'
 import { HEROES } from '@/content/heroes'
 import type { ItemId, LaneId, LaneStance, StructureSlot, TeamId, TowerSlot } from '@/content/ids'
-import { ITEMS, loadoutModifiers } from '@/content/items'
+import { ITEMS, loadoutModifiers, type ItemEffects } from '@/content/items'
 import { combineModifiers } from '@/content/modifiers'
 import { ROLES } from '@/content/roles'
 import { BATTLE, STAR_POWER } from '@/content/rules'
@@ -27,11 +27,16 @@ const freshStatus = () => ({
   slowFactor: 0,
 })
 
+/** The passives a hero carries: its items', and its faction's as one more item. */
+const passivesOf = (items: readonly ItemId[], extra: ItemEffects | null): readonly ItemEffects[] => [
+  ...items.map((id) => ITEMS[id].effects),
+  ...(extra ? [extra] : []),
+]
+
 /** Sustain adds up across slots; a second copy of any other effect does nothing more than the first. */
-function itemEffects(items: readonly ItemId[]) {
-  return items.reduce<ItemEffectsState>(
-    (acc, id) => {
-      const effects = ITEMS[id].effects
+function itemEffects(passives: readonly ItemEffects[]) {
+  return passives.reduce<ItemEffectsState>(
+    (acc, effects) => {
       return {
         lifesteal: acc.lifesteal + (effects.lifesteal ?? 0),
         spellLifesteal: acc.spellLifesteal + (effects.spellLifesteal ?? 0),
@@ -63,11 +68,10 @@ function itemEffects(items: readonly ItemId[]) {
 }
 
 /** Crit chances from several items combine as independent rolls; the biggest multiplier wins. */
-function itemCrit(items: readonly ItemId[]) {
+function itemCrit(passives: readonly ItemEffects[]) {
   let noCrit = 1
   let multiplier = 1
-  for (const id of items) {
-    const { critChance = 0, critMultiplier = 1 } = ITEMS[id].effects
+  for (const { critChance = 0, critMultiplier = 1 } of passives) {
     if (critChance > 0) {
       noCrit *= 1 - critChance
       multiplier = Math.max(multiplier, critMultiplier)
@@ -191,13 +195,16 @@ export class EntityFactory {
     const role = ROLES[roleId]
     const stats = definition.stats
     const star = STAR_POWER[owned.stars]
-    const effects = itemEffects(owned.items)
+    const faction = report.factions.bonusFor(slot)
+    const passives = passivesOf(owned.items, faction?.bonus.effects ?? null)
+    const effects = itemEffects(passives)
     const talents = activeTalents(owned.stars, owned.talent)
     const manaCost = stats.mana * talentManaCost(definition.ability, talents)
 
     const mods = combineModifiers(
       report.modifiersFor(roleId),
       loadoutModifiers(owned.items, roleId),
+      faction?.bonus.modifiers ?? {},
       this.twist?.heroes ?? {},
     )
 
@@ -205,7 +212,7 @@ export class EntityFactory {
 
     const maxHp = stats.hp * star * mods.maxHp
     const base = this.map.base(team)
-    const crit = itemCrit(owned.items)
+    const crit = itemCrit(passives)
     return this.world.add({
       team,
       kind: 'hero',

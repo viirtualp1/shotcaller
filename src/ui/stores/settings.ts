@@ -44,9 +44,28 @@ export const useSettingsStore = defineStore('settings', () => {
   /** Lane orders are an experiment: off until the coach turns them on. */
   const laneOrders = useLocalStorage(STORAGE_KEYS.laneOrders, false)
 
-  /** Experiments that change the rules of new matches against the computer. */
-  const heroRotation = useLocalStorage(STORAGE_KEYS.heroRotation, false)
-  const roundTwists = useLocalStorage(STORAGE_KEYS.roundTwists, false)
+  /** Hard always uses both rules; preserve the coach's choices for other difficulties. */
+  const storedHeroRotation = useLocalStorage(STORAGE_KEYS.heroRotation, true)
+  const storedRoundTwists = useLocalStorage(STORAGE_KEYS.roundTwists, true)
+  const experimentsRequired = computed(() => difficulty.value === 'hard')
+
+  const heroRotation = computed({
+    get: () => experimentsRequired.value || storedHeroRotation.value,
+    set: (value: boolean) => {
+      if (!experimentsRequired.value) {
+        storedHeroRotation.value = value
+      }
+    },
+  })
+
+  const roundTwists = computed({
+    get: () => experimentsRequired.value || storedRoundTwists.value,
+    set: (value: boolean) => {
+      if (!experimentsRequired.value) {
+        storedRoundTwists.value = value
+      }
+    },
+  })
 
   /** Phone comforts: a buzz on the moments that matter, and a calmer map that spares the battery. */
   const vibration = useLocalStorage(STORAGE_KEYS.vibration, true)
@@ -77,6 +96,7 @@ export const useSettingsStore = defineStore('settings', () => {
     laneOrders,
     heroRotation,
     roundTwists,
+    experimentsRequired,
     vibration,
     batterySaver,
     tutorialWanted,

@@ -78,7 +78,8 @@ export const MODES: Readonly<Record<ModeId, ModeDefinition>> = {
     levels: RIFT_LEVELS,
     maxRounds: 20,
     baseIncome: 5,
-    killScore: 0,
+    /* A round of fights that never reach the buildings goes to the side that won them, not to a draw. */
+    killScore: 30,
     relics: false,
   },
   twoLanes: {
@@ -88,7 +89,7 @@ export const MODES: Readonly<Record<ModeId, ModeDefinition>> = {
     levels: LANES_LEVELS,
     maxRounds: 20,
     baseIncome: 5,
-    killScore: 0,
+    killScore: 30,
     relics: false,
   },
   /* One long fight: a shorter match with more gold, and two towers so a round won is not the whole lane. */

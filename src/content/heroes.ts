@@ -1,4 +1,4 @@
-import type { AbilityId, HeroId, RoleId, Tier } from './ids'
+import type { AbilityId, FactionId, HeroId, RoleId, Tier } from './ids'
 
 export interface HeroStats {
   readonly hp: number
@@ -25,6 +25,8 @@ export interface HeroDefinition {
   readonly role: RoleId
   readonly color: number
   readonly ability: AbilityId
+  /** Null for the Changeling, which joins the strongest faction of its lane. */
+  readonly faction: FactionId | null
   readonly stats: HeroStats
   readonly bash?: HeroBash
   /**
@@ -75,11 +77,35 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
   giant: ['Giant', 3, 'initiator', 0xa7a08f, 'quake', stats(1000, 54, 1.3, 0, 90, 0.25, 110)],
   engineer: ['Engineer', 3, 'pusher', 0xe0b43c, 'turret', stats(560, 42, 1.1, 150, 88, 0.1, 80)],
   butcher: ['Butcher', 3, 'ganker', 0xc4506a, 'hook', stats(1050, 64, 1.2, 0, 102, 0.18, 75)],
-  sniper: ['Sniper', 3, 'carry', 0xc7b27a, 'assassinate', stats(480, 52, 1.1, 230, 86, 0.05, 100)],
+  sniper: ['Sniper', 3, 'carry', 0xc7b27a, 'assassinate', stats(540, 57, 1.1, 230, 86, 0.05, 100)],
   oracle: ['Oracle', 3, 'support', 0xe4d6ff, 'shield', stats(560, 40, 1.1, 150, 90, 0.08, 70)],
   herald: ['Herald', 1, 'initiator', 0xd9a441, 'standard', stats(700, 34, 1.15, 0, 92, 0.18, 80)],
   stonewright: ['Stonewright', 2, 'support', 0x9aa3ad, 'mend', stats(660, 32, 1.25, 0, 88, 0.22, 90)],
   changeling: ['Changeling', 3, 'carry', 0xb28ce0, 'mimic', stats(720, 50, 1, 120, 96, 0.1, 90)],
+}
+
+const FACTIONS_OF: Readonly<Record<HeroId, FactionId | null>> = {
+  spearman: 'legion',
+  herald: 'legion',
+  blademaster: 'legion',
+  sniper: 'legion',
+  archer: 'wildkin',
+  packLeader: 'wildkin',
+  warden: 'wildkin',
+  giant: 'wildkin',
+  shaman: 'arcanum',
+  pyromancer: 'arcanum',
+  frostWitch: 'arcanum',
+  oracle: 'arcanum',
+  rogue: 'grave',
+  shade: 'grave',
+  necromancer: 'grave',
+  butcher: 'grave',
+  sapper: 'hearth',
+  acolyte: 'hearth',
+  stonewright: 'hearth',
+  engineer: 'hearth',
+  changeling: null,
 }
 
 const BASHERS: Partial<Record<HeroId, HeroBash>> = {
@@ -122,6 +148,7 @@ export const HEROES: Readonly<Record<HeroId, HeroDefinition>> = Object.fromEntri
       role,
       color,
       ability,
+      faction: FACTIONS_OF[id as HeroId],
       stats: heroStats,
       bash: BASHERS[id as HeroId],
       ...TRAITS[id as HeroId],

@@ -326,13 +326,16 @@ export class Match {
     return ok(this.battle)
   }
 
-  /** The other player's board for this round, sent once they are ready to fight. */
-  receiveOpponent(state: PlayerState): Result<void, DomainError> {
+  /**
+   * The other player's board for this round, sent once they are ready to fight. A `trusted` board is a ghost's,
+   * recorded in another match: its gold followed that match, not this one, so it is not checked against it.
+   */
+  receiveOpponent(state: PlayerState, { trusted = false } = {}): Result<void, DomainError> {
     if (!this.link || this.currentPhase !== 'planning') {
       return err({ code: 'wrongPhase' })
     }
 
-    if (!this.acceptsOpponent(state)) {
+    if (!trusted && !this.acceptsOpponent(state)) {
       return err({ code: 'invalidBoard' })
     }
 

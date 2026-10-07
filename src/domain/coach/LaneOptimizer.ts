@@ -1,7 +1,8 @@
+import type { FactionEffects } from '@/content/factions'
 import { HEROES } from '@/content/heroes'
 import type { LaneId, ModeId } from '@/content/ids'
 import { MODES } from '@/content/modes'
-import type { StatModifiers } from '@/content/modifiers'
+import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { STAR_POWER } from '@/content/rules'
 import type { Rng } from '@/core/random/rng'
 import type { OwnedHero } from '../roster/Roster'
@@ -26,6 +27,15 @@ const ITEM_POWER = 0.8
 
 export const heroPower = (hero: OwnedHero) =>
   (HEROES[hero.heroId].tier + 1.5) * STAR_POWER[hero.stars] + hero.items.length * ITEM_POWER
+
+/** A rough worth of a faction's passives, as a share of the hero's power. */
+const passiveWorth = ({
+  lifesteal = 0,
+  thorns = 0,
+  critChance = 0,
+  critMultiplier = 1,
+  echo = 0,
+}: FactionEffects) => lifesteal * 0.8 + thorns * 0.4 + critChance * (critMultiplier - 1) + echo * 0.5
 
 function effectiveness(modifiers: StatModifiers) {
   return (Object.keys(MODIFIER_WEIGHTS) as (keyof StatModifiers)[]).reduce(
@@ -52,10 +62,18 @@ export class LaneOptimizer {
         mode,
       )
 
-      const power = group.reduce(
-        (sum, h, i) => sum + heroPower(h) * effectiveness(report.synergyModifiersFor(report.roles[i]!)),
-        0,
-      )
+      const power = group.reduce((sum, h, i) => {
+        const faction = report.factions.bonusFor(i)?.bonus
+
+        const modifiers = combineModifiers(
+          report.synergyModifiersFor(report.roles[i]!),
+          faction?.modifiers ?? {},
+        )
+
+        return (
+          sum + heroPower(h) * effectiveness(modifiers) * (1 + (faction ? passiveWorth(faction.effects) : 0))
+        )
+      }, 0)
 
       total += Math.sqrt(power)
     }

@@ -32,6 +32,8 @@ import CrossPlatformRelease from '../components/patchNotes/CrossPlatformRelease.
 import HudRelease from '../components/patchNotes/HudRelease.vue'
 import PocketRelease from '../components/patchNotes/PocketRelease.vue'
 import DossierRelease from '../components/patchNotes/DossierRelease.vue'
+import AllianceRelease from '../components/patchNotes/AllianceRelease.vue'
+import FactionFieldGuide from '../components/patchNotes/FactionFieldGuide.vue'
 import NoteBadge from '../components/patchNotes/NoteBadge.vue'
 import NoteLine from '../components/patchNotes/NoteLine.vue'
 import PatchPager from '../components/patchNotes/PatchPager.vue'
@@ -111,6 +113,8 @@ watch(
 
         <DossierRelease v-else-if="patch.campaign === 'dossier'" />
 
+        <AllianceRelease v-else-if="patch.campaign === 'alliance'" />
+
         <section v-if="patch.features?.length" id="patch-features" class="section">
           <h2 class="section-title"><Sparkles :size="18" /> {{ t('patchNotes.sections.features') }}</h2>
 
@@ -123,6 +127,11 @@ watch(
               :class="{ lead: i === 0 && !patch.campaign }"
             />
           </div>
+        </section>
+
+        <section v-if="patch.factions?.length" id="patch-factions" class="section">
+          <h2 class="section-title"><Users :size="18" /> {{ t('patchNotes.factions') }}</h2>
+          <FactionFieldGuide :factions="patch.factions" />
         </section>
 
         <section v-if="patch.general?.length" id="patch-general" class="section">
@@ -382,6 +391,10 @@ watch(
   flex-direction: column;
   gap: 14px;
   padding-top: 40px;
+}
+
+#patch-factions {
+  scroll-margin-top: calc(var(--topbar) + env(safe-area-inset-top, 0px));
 }
 
 .section-title {

@@ -148,7 +148,7 @@ const matchRecord = z.object({
   playedAt: z.iso.datetime(),
   /** Matches played before game modes were all three lanes. */
   mode: z.enum(MODE_IDS).default(DEFAULT_MODE),
-  difficulty: z.enum(['relaxed', 'standard']),
+  difficulty: z.enum(['relaxed', 'standard', 'hard']),
   verdict,
   reason: z.enum(MATCH_END_REASONS),
   rounds: count,
@@ -177,6 +177,7 @@ const matchRecord = z.object({
       opponentName: z.string().max(64),
       opponentRating: count.optional(),
       ranked: z.boolean().optional(),
+      ghost: z.boolean().optional(),
     })
     .nullable()
     .default(null),

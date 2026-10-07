@@ -53,6 +53,13 @@ export function ratingChange(result: MatchResult, mine = 0, theirs = mine) {
     : -Math.max(1, Math.round(RATING.k * expected))
 }
 
+/** Ghosts move rating by half; PostgreSQL rounds ties away from zero. */
+export function rankedRatingChange(result: MatchResult, mine = 0, theirs = mine, ghost = false) {
+  const change = ratingChange(result, mine, theirs)
+
+  return ghost ? Math.sign(change) * Math.round(Math.abs(change) / 2) : change
+}
+
 export function matchXp(verdict: Verdict, roundsWon: number) {
   return (
     PROFILE_XP.perMatch + PROFILE_XP.perRoundWon * roundsWon + (verdict === 'win' ? PROFILE_XP.winBonus : 0)

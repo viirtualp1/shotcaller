@@ -1,7 +1,7 @@
 {
   "name": "shotcaller",
   "private": true,
-  "version": "9.5.2",
+  "version": "10.0.0",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc -b && tsc -p tsconfig.electron.json --noEmit",
     "test": "vitest run",
+    "test:sql": "tsx --tsconfig tsconfig.node.json scripts/sqlChecks.ts",
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write src tests scripts electron",
@@ -18,6 +19,8 @@
     "balance": "tsx --tsconfig tsconfig.node.json scripts/balance.ts",
     "balance:ab": "tsx --tsconfig tsconfig.node.json scripts/abTest.ts",
     "balance:items": "tsx --tsconfig tsconfig.node.json scripts/itemBalance.ts",
+    "ghosts:seed": "tsx --tsconfig tsconfig.node.json scripts/seedGhosts.ts",
+    "arbiter": "tsx --tsconfig tsconfig.node.json scripts/arbiter.ts",
     "icons": "pwa-assets-generator && tsx --tsconfig tsconfig.node.json scripts/desktopIcon.ts",
     "patch:discord": "tsx --tsconfig tsconfig.node.json scripts/discordPatch.ts",
     "desktop": "npm run desktop:build && electron .",
@@ -55,6 +58,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@intlify/unplugin-vue-i18n": "^11.2.5",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^26.6.4",

@@ -76,6 +76,7 @@ export const useProfileStore = defineStore('profile', () => {
         opponentName: duel.opponentName,
         ...(duel.opponentRating === undefined ? {} : { opponentRating: duel.opponentRating }),
         ...(duel.ranked ? { ranked: true } : {}),
+        ...(duel.ghost ? { ghost: true } : {}),
       },
     )
 

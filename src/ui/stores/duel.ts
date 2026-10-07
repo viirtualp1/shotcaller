@@ -9,6 +9,8 @@ import {
 } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
+import { GHOST_WAIT_SECONDS, parseGhostBoard } from '@/application/social/ghosts'
+import { i18n } from '@/ui/i18n'
 import { BoardExchange } from '@/application/social/BoardExchange'
 import {
   cooldownLeft,
@@ -43,6 +45,7 @@ interface PendingReport {
   readonly id: string
   readonly winner: TeamId | null
   readonly byThrone: boolean
+  readonly forfeit?: boolean
 }
 
 export interface ShownReaction {
@@ -118,6 +121,8 @@ export const useDuelStore = defineStore('duel', () => {
   const cancellingSearch = ref(false)
   const searchStartedAt = ref<number | null>(null)
   const searchRecovering = ref(false)
+  const choosingGhost = ref(false)
+  const ghostUnavailable = ref(false)
   /** Fight is being taken back; the server decides whether the other coach was quicker. */
   const withdrawing = ref(false)
   /** A pause or resume request is on its way. */
@@ -132,6 +137,15 @@ export const useDuelStore = defineStore('duel', () => {
     searchStartedAt.value === null
       ? 0
       : Math.max(0, Math.floor((now.value.getTime() - searchStartedAt.value) / 1000)),
+  )
+
+  const canChooseGhost = computed(
+    () =>
+      searching.value !== null &&
+      searchSeconds.value >= GHOST_WAIT_SECONDS &&
+      !cancellingSearch.value &&
+      !reconnecting.value &&
+      !choosingGhost.value,
   )
 
   const mySide = computed(() => (active.value && userId ? sideOf(active.value.duel, userId) : 0))
@@ -149,7 +163,12 @@ export const useDuelStore = defineStore('duel', () => {
 
   /** Fight can be taken back until the other coach is ready too: then the round starts. */
   const canWithdraw = computed(
-    () => matchStore.awaiting && !opponentReady.value && !withdrawing.value && !reconnecting.value,
+    () =>
+      !active.value?.duel.ghost &&
+      matchStore.awaiting &&
+      !opponentReady.value &&
+      !withdrawing.value &&
+      !reconnecting.value,
   )
 
   const duelPause = computed(() => active.value?.duel.pause ?? NO_PAUSE)
@@ -167,6 +186,7 @@ export const useDuelStore = defineStore('duel', () => {
   const canPause = computed(
     () =>
       matchStore.isDuel &&
+      !active.value?.duel.ghost &&
       matchStore.phase !== 'finished' &&
       active.value?.duel.status === 'active' &&
       !paused.value &&
@@ -193,7 +213,11 @@ export const useDuelStore = defineStore('duel', () => {
   /** Waiting on a coach who went quiet for longer than a round may take. */
   const canClaim = computed(() => {
     const entry = active.value
-    if (!entry || (matchStore.phase !== 'finished' && (!matchStore.awaiting || opponentReady.value))) {
+    if (
+      !entry ||
+      entry.duel.ghost ||
+      (matchStore.phase !== 'finished' && (!matchStore.awaiting || opponentReady.value))
+    ) {
       return false
     }
 
@@ -239,7 +263,7 @@ export const useDuelStore = defineStore('duel', () => {
 
     const me = userId
     const connection = service
-    let entries = await connection.mine()
+    let entries = (await connection.mine()).map(localizeEntry)
     if (service !== connection || userId !== me) {
       return
     }
@@ -284,6 +308,18 @@ export const useDuelStore = defineStore('duel', () => {
     await settleMissed(entries).catch(() => undefined)
   }
 
+  function localizeEntry(entry: DuelEntry): DuelEntry {
+    return entry.duel.ghost
+      ? {
+          ...entry,
+          opponent: {
+            ...entry.opponent,
+            name: i18n.global.t('duel.ghostName'),
+          },
+        }
+      : entry
+  }
+
   function remember(entry: DuelEntry) {
     playing.value = entry.duel.seed
       ? {
@@ -291,6 +327,7 @@ export const useDuelStore = defineStore('duel', () => {
           seed: entry.duel.seed,
           opponentName: entry.opponent.name,
           ranked: entry.duel.ranked,
+          ...(entry.duel.ghost ? { ghost: true } : {}),
         }
       : null
   }
@@ -302,6 +339,7 @@ export const useDuelStore = defineStore('duel', () => {
         seed: entry.duel.seed,
         opponentName: entry.opponent.name,
         ranked: entry.duel.ranked,
+        ...(entry.duel.ghost ? { ghost: true } : {}),
         won,
       })
     }
@@ -353,6 +391,13 @@ export const useDuelStore = defineStore('duel', () => {
   }
 
   function listenForReactions(entry: DuelEntry) {
+    if (entry.duel.ghost) {
+      reactionLink?.leave()
+      reactionLink = null
+
+      return
+    }
+
     reactionLink?.leave()
 
     reactionLink =
@@ -386,7 +431,8 @@ export const useDuelStore = defineStore('duel', () => {
   /** A board from the other device, checked against the rules of the duel's mode. */
   function checkBoard(raw: unknown) {
     const mode = active.value?.duel.mode
-    const board = mode ? parseRemoteBoard(raw, mode) : null
+    const ghost = active.value?.duel.ghost
+    const board = mode ? (ghost ? parseGhostBoard(raw, mode) : parseRemoteBoard(raw, mode)) : null
     const mine = new Set(matchStore.view ? matchStore.view.human.bench.map((h) => h.uid) : [])
 
     for (const lane of Object.values(matchStore.view?.human.lanes ?? {})) {
@@ -396,7 +442,11 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     const theirs = board ? [...board.roster.bench, ...Object.values(board.roster.lanes).flat()] : []
-    if (!board || theirs.some((hero) => mine.has(hero.uid)) || !matchStore.acceptsOpponent(board)) {
+    if (
+      !board ||
+      theirs.some((hero) => mine.has(hero.uid)) ||
+      (!ghost && !matchStore.acceptsOpponent(board))
+    ) {
       return null
     }
 
@@ -493,9 +543,17 @@ export const useDuelStore = defineStore('duel', () => {
     reporting = true
 
     try {
-      await connection.report(queued.id, queued.winner, queued.byThrone)
+      if (queued.forfeit) {
+        await connection.forfeit(queued.id)
+      } else {
+        await connection.report(queued.id, queued.winner, queued.byThrone)
+      }
 
       reports.value = reports.value.filter((report) => report.id !== queued.id)
+
+      if (queued.forfeit && service === connection) {
+        void cloud.syncNow()
+      }
 
       if (service === connection && !matchStore.isDuel) {
         stopDuel()
@@ -541,6 +599,12 @@ export const useDuelStore = defineStore('duel', () => {
       exchange: (round, board) => exchange(entry.duel.id, round, board),
       opponentRating: entry.opponent.rating,
       ranked: entry.duel.ranked,
+      ...(entry.duel.ghost
+        ? {
+            ghost: true,
+            ghostRounds: entry.duel.ghostRounds,
+          }
+        : {}),
       finish: (result) => report(entry.duel.id, result),
     }
   }
@@ -558,6 +622,8 @@ export const useDuelStore = defineStore('duel', () => {
     searchStartedAt.value = null
     searchRecovering.value = false
     foundMatch = null
+    choosingGhost.value = false
+    ghostUnavailable.value = false
     active.value = entry
     remember(entry)
     listenForReactions(entry)
@@ -613,7 +679,8 @@ export const useDuelStore = defineStore('duel', () => {
     } else if (duel.status === 'disputed') {
       notifications.push({
         kind: 'duelEnded',
-        how: 'disputed',
+        /* A ranked dispute is replayed on the server, which decides it. */
+        how: duel.ranked ? 'review' : 'disputed',
         won: false,
       })
     } else if (duel.endedBy === 'forfeit' || duel.endedBy === 'timeout') {
@@ -706,6 +773,18 @@ export const useDuelStore = defineStore('duel', () => {
       searchRecovering.value = false
 
       if (!id) {
+        if (mode && searching.value === mode && choosingGhost.value) {
+          const ghost = await connection.findGhost(mode, BALANCE_FINGERPRINT)
+          if (service === connection) {
+            if (ghost) {
+              begin(localizeEntry(ghost))
+            } else {
+              choosingGhost.value = false
+              ghostUnavailable.value = true
+            }
+          }
+        }
+
         return
       }
 
@@ -715,6 +794,19 @@ export const useDuelStore = defineStore('duel', () => {
         begin(entry)
       }
     } catch (error) {
+      // A lost ghost-start response must recover the existing match, including while cancelling.
+      if (service === connection && error instanceof DuelError && error.reason === 'busy') {
+        const running = (await connection.mine().catch(() => [])).find(
+          (entry) => entry.duel.status === 'active',
+        )
+
+        if (service === connection && running) {
+          begin(localizeEntry(running))
+
+          return
+        }
+      }
+
       if (service === connection) {
         searchRecovering.value = true
       }
@@ -756,6 +848,24 @@ export const useDuelStore = defineStore('duel', () => {
     searchMode.value = mode
     searchStartedAt.value = Date.now()
     searchRecovering.value = false
+    choosingGhost.value = false
+    ghostUnavailable.value = false
+    await pollQueue()
+  }
+
+  async function chooseGhost() {
+    if (!canChooseGhost.value) {
+      return
+    }
+
+    await queueRequest
+
+    if (!canChooseGhost.value) {
+      return
+    }
+
+    choosingGhost.value = true
+    ghostUnavailable.value = false
     await pollQueue()
   }
 
@@ -809,6 +919,7 @@ export const useDuelStore = defineStore('duel', () => {
     const firstAttempt = !cancellingSearch.value
     searching.value = null
     searchRecovering.value = false
+    choosingGhost.value = false
     cancellingSearch.value = true
 
     if (!leaveRequest) {
@@ -890,6 +1001,24 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     settle(entry, false)
+
+    if (entry.duel.ghost && userId) {
+      reports.value = [
+        ...reports.value.filter((report) => report.id !== entry.duel.id),
+        {
+          userId,
+          id: entry.duel.id,
+          winner: 1,
+          byThrone: false,
+          forfeit: true,
+        },
+      ]
+
+      await retryReport()
+
+      return
+    }
+
     await service?.forfeit(entry.duel.id).catch(fail)
   }
 
@@ -1007,6 +1136,8 @@ export const useDuelStore = defineStore('duel', () => {
     searchStartedAt.value = null
     searchRecovering.value = false
     cancellingSearch.value = false
+    choosingGhost.value = false
+    ghostUnavailable.value = false
     queueRequest = null
     leaveRequest = null
     foundMatch = null
@@ -1137,6 +1268,10 @@ export const useDuelStore = defineStore('duel', () => {
     searchMode,
     matchmaking,
     searchSeconds,
+    canChooseGhost,
+    choosingGhost,
+    ghostUnavailable,
+    chooseGhost,
     cancellingSearch,
     search,
     cancelSearch,

@@ -22,6 +22,7 @@ import CrossPlatformFeatureArt from './CrossPlatformFeatureArt.vue'
 import HudFeatureArt from './HudFeatureArt.vue'
 import PocketFeatureArt from './PocketFeatureArt.vue'
 import DossierFeatureArt from './DossierFeatureArt.vue'
+import AllianceFeatureArt from './AllianceFeatureArt.vue'
 import RankMedal from '../profile/RankMedal.vue'
 
 /** A made-up rank per mode, only to show that each has its own. */
@@ -122,6 +123,8 @@ onMounted(() => {
     <HudFeatureArt v-else-if="art.kind === 'hud'" :focus="art.focus" />
 
     <PocketFeatureArt v-else-if="art.kind === 'pocket'" :focus="art.focus" />
+
+    <AllianceFeatureArt v-else-if="art.kind === 'alliance'" :focus="art.focus" />
 
     <DossierFeatureArt v-else-if="art.kind === 'dossier'" :focus="art.focus" />
 

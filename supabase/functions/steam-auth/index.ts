@@ -114,7 +114,7 @@ Deno.serve(async (request: Request) => {
 
       async createAccount(steamId) {
         const { data, error } = await admin.auth.admin.createUser({
-          email: steamEmail(steamId),
+          email: steamEmail(steamId, crypto.randomUUID().replaceAll('-', '')),
           email_confirm: true,
           app_metadata: { steam_id: steamId },
         })
