@@ -120,6 +120,10 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       en: 'Clearer descriptions',
       ru: 'Понятные описания',
     },
+    card: {
+      en: 'Clearer ability, talent and item descriptions, notification links, and a reminder when your game needs an update.',
+      ru: 'Понятные описания способностей, талантов и предметов, переходы из уведомлений и подсказки об обновлении игры.',
+    },
     interface: [
       {
         en: 'An **update notice** now shows when your game is behind the latest release. Check for updates from the home screen or patch notes.',
