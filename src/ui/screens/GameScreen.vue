@@ -656,8 +656,8 @@ onMounted(() => zoomHint.setActive(true))
 }
 
 /*
- * The bench and the stash stay in view as drop targets: a busy lanes panel scrolls on its own instead. Only a window
- * too short for even one lane falls back to scrolling the whole column.
+ * The lanes panel keeps one height whatever opens below it, so selecting a hero never squeezes it. Only a busy panel
+ * past a share of the window scrolls on its own; otherwise the whole column scrolls when it runs out of room.
  */
 .wide .hud-left {
   gap: 8px;
@@ -668,15 +668,9 @@ onMounted(() => zoomHint.setActive(true))
 }
 
 .wide .hud-left.pinned > [data-tour='tracker'] {
-  flex: 0 1 auto;
-  min-height: 180px;
+  max-height: calc(45dvh / var(--game-zoom, 1));
   overflow-y: auto;
   scrollbar-width: thin;
-}
-
-/* With the hero panel open the lanes give up height first, so the bench and the stash stay in reach. */
-.wide .side-left:has(> .left-card) .hud-left.pinned > [data-tour='tracker'] {
-  min-height: 96px;
 }
 
 .wide .hud-left.collapsed {
