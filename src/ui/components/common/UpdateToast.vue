@@ -2,26 +2,26 @@
 import { useEventListener } from '@vueuse/core'
 import { RefreshCw } from '@lucide/vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
-import { computed, onScopeDispose, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, onScopeDispose, watch } from 'vue'
 import { useGameText } from '../../composables/useGameText'
-import { usePwaUpdate } from '../../composables/usePwaUpdate'
+import { useGameUpdateStore } from '../../stores/gameUpdate'
 import { useLeaderboardStore } from '../../stores/leaderboard'
 import { useLegalStore } from '../../stores/legal'
 import { useMatchStore } from '../../stores/match'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 
-/** The game stays open for hours, so it asks the server for a new version often; the request is tiny. */
 const UPDATE_CHECK_MS = 60 * 1000
-let registration: ServiceWorkerRegistration | undefined
-let stopChecking: (() => void) | undefined
+let timer: ReturnType<typeof setInterval> | undefined
 
 const match = useMatchStore()
 const patchNotes = usePatchNotesStore()
 const leaderboard = useLeaderboardStore()
 const legal = useLegalStore()
+const updates = useGameUpdateStore()
+const { needRefresh, updating, failed, registration } = storeToRefs(updates)
 const { t } = useGameText()
 
-/* The game screen is up, as App picks it: the offer waits for the menu instead of covering the match. */
 const inGame = computed(
   () =>
     match.view !== null &&
@@ -31,107 +31,27 @@ const inGame = computed(
     !leaderboard.isOpen,
 )
 
-const { updating, failed, applyUpdate, reloadIfUpdating } = usePwaUpdate({
-  registration: () => registration,
-  workers: navigator.serviceWorker,
-  reload: () => {
-    needRefresh.value = false
-    window.location.reload()
-  },
-})
-
-function applyWaitingUpdate() {
-  if (!patchNotes.awaitingUpdate || !registration || match.isDuel) {
+function check() {
+  if (document.visibilityState !== 'visible' || !navigator.onLine) {
     return
   }
 
-  void applyUpdate()
+  void updates.checkLatest()
+  const registered = registration.value
+  if (registered && !registered.installing) {
+    void registered.update().catch(() => undefined)
+  }
 }
 
-/** A link named a patch this build does not have yet. Install the current build instead of opening an older one. */
-async function catchUp(registered: ServiceWorkerRegistration) {
-  if (!patchNotes.awaitingUpdate) {
-    return
-  }
-
-  let found = false
-
-  const onFound = () => {
-    found = true
-
-    const installing = registered.installing
-    installing?.addEventListener('statechange', () => {
-      if (installing.state === 'installed' || installing.state === 'activated') {
-        applyWaitingUpdate()
-      }
-    })
-  }
-
-  registered.addEventListener('updatefound', onFound)
-
-  try {
-    await registered.update()
-  } catch {
-    if (patchNotes.awaitingUpdate) {
-      failed.value = true
-    }
-
-    return
-  } finally {
-    registered.removeEventListener('updatefound', onFound)
-  }
-
-  if (!patchNotes.awaitingUpdate) {
-    return
-  }
-
-  if (found || registered.installing || registered.waiting || needRefresh.value) {
-    if (registered.waiting || needRefresh.value) {
-      applyWaitingUpdate()
-    }
-
-    return
-  }
-
-  patchNotes.releaseUnknown()
-}
-
-const { needRefresh } = useRegisterSW({
-  onNeedReload: reloadIfUpdating,
+const { needRefresh: workerNeedsRefresh } = useRegisterSW({
+  onNeedReload: updates.reloadIfUpdating,
   onRegisteredSW(_url, registered) {
-    stopChecking?.()
-    registration = registered
-
-    if (!registered) {
-      patchNotes.releaseUnknown()
-
-      return
-    }
-
-    if (patchNotes.awaitingUpdate) {
-      void catchUp(registered)
-    }
-
-    /* A hidden tab waits: coming back checks at once, so nothing is missed. */
-    const check = () => {
-      if (document.visibilityState === 'visible' && navigator.onLine && !registered.installing) {
-        void registered.update().catch(() => undefined)
-      }
-    }
-
-    const timer = setInterval(check, UPDATE_CHECK_MS)
-    document.addEventListener('visibilitychange', check)
-    window.addEventListener('online', check)
-
-    stopChecking = () => {
-      clearInterval(timer)
-      document.removeEventListener('visibilitychange', check)
-      window.removeEventListener('online', check)
-    }
+    registration.value = registered
+    check()
   },
 })
 
-/* While the new version installs, the game is frozen: no clicks reach it (the veil takes them) and no hotkeys. */
+/* While the new version installs, the veil and this listener prevent game input. */
 useEventListener(
   window,
   'keydown',
@@ -144,18 +64,28 @@ useEventListener(
   { capture: true },
 )
 
+useEventListener(document, 'visibilitychange', check)
+useEventListener(window, 'online', check)
+
+watch(workerNeedsRefresh, (ready) => {
+  needRefresh.value = ready
+})
+
 watch(
-  () => patchNotes.awaitingUpdate && !match.isDuel && (needRefresh.value || registration?.waiting != null),
+  () => patchNotes.awaitingUpdate && !match.isDuel && needRefresh.value,
   (ready) => {
     if (ready) {
-      applyWaitingUpdate()
+      void updates.updateGame()
     }
   },
 )
 
-onScopeDispose(() => {
-  stopChecking?.()
+onMounted(() => {
+  check()
+  timer = setInterval(check, UPDATE_CHECK_MS)
 })
+
+onScopeDispose(() => clearInterval(timer))
 </script>
 
 <template>
@@ -165,34 +95,27 @@ onScopeDispose(() => {
 
   <Transition name="toast">
     <div
-      v-if="(needRefresh || patchNotes.awaitingUpdate) && (!inGame || updating)"
+      v-if="(needRefresh && !patchNotes.awaitingUpdate && !inGame) || updating"
       class="toast"
       role="status"
-      :aria-busy="updating || (patchNotes.awaitingUpdate && !failed && !match.isDuel)"
+      :aria-busy="updating"
     >
-      <RefreshCw
-        :size="16"
-        class="icon"
-        :class="{ spinning: updating || (patchNotes.awaitingUpdate && !failed && !match.isDuel) }"
-      />
+      <RefreshCw :size="16" class="icon" :class="{ spinning: updating }" />
 
       <span class="text">
         <strong>{{
-          updating || (patchNotes.awaitingUpdate && !failed && !match.isDuel)
-            ? t('pwa.updating')
-            : failed
-              ? t('pwa.updateFailed')
-              : t('pwa.updateTitle')
+          updating ? t('pwa.updating') : failed ? t('pwa.updateFailed') : t('pwa.updateTitle')
         }}</strong>
 
         <span v-if="match.isDuel && !updating" class="hint">{{ t('pwa.duelHint') }}</span>
       </span>
 
       <button
-        v-if="!updating && (!patchNotes.awaitingUpdate || failed || match.isDuel)"
+        v-if="!updating"
+        :disabled="match.isDuel || updates.checking || updates.requesting"
         type="button"
         class="btn primary small"
-        @click="applyUpdate"
+        @click="updates.updateGame"
       >
         {{ t('pwa.update') }}
       </button>

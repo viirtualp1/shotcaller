@@ -6,7 +6,12 @@ import { LEGAL_DOCUMENTS, type LegalDocument } from '@/ui/legal/documents'
 import { LATEST_PATCH, type PatchNote } from '@/ui/patchNotes/notes'
 
 const settings = reactive({ locale: 'en' as 'en' | 'ru' })
-const notes = reactive({ patch: null as PatchNote | null })
+
+const notes = reactive({
+  patch: null as PatchNote | null,
+  awaitingUpdate: false,
+  requestedVersion: null as string | null,
+})
 
 const profile = reactive({
   isOpen: false,
@@ -74,6 +79,15 @@ describe('screen indexing rules', () => {
     scope.run(useDocumentHead)
     expect(robots()).toBe('index, follow')
     expect(canonical()).toBe('https://theshotcaller.online/')
+
+    notes.awaitingUpdate = true
+    notes.requestedVersion = '999.0'
+    await nextTick()
+    expect(document.title).toBe('Patch 999.0 · The Shotcaller')
+    expect(canonical()).toBe('https://theshotcaller.online/patches/999.0')
+    expect(robots()).toBe('noindex, nofollow')
+    notes.awaitingUpdate = false
+    notes.requestedVersion = null
 
     profile.isOpen = true
     await nextTick()

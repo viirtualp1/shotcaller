@@ -58,6 +58,72 @@ afterEach(() => {
 })
 
 describe('service worker activation', () => {
+  it('waits for downloading files before activating the new worker', async () => {
+    const current = fixture()
+    const installing = worker('installing')
+
+    const registration = {
+      ...current.registration,
+      waiting: null as ReturnType<typeof worker> | null,
+      installing,
+    }
+
+    const pending = activateWaitingWorker(registration, current.workers)
+    expect(installing.postMessage).not.toHaveBeenCalled()
+
+    registration.waiting = installing
+    installing.state = 'installed'
+    installing.dispatchEvent(new Event('statechange'))
+    await Promise.resolve()
+    expect(installing.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'SKIP_WAITING' })
+
+    installing.state = 'activated'
+    installing.dispatchEvent(new Event('statechange'))
+    await pending
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('reports failed installation instead of reloading the old cache', async () => {
+    const current = fixture()
+    const installing = worker('installing')
+
+    const pending = activateWaitingWorker(
+      {
+        ...current.registration,
+        installing,
+      },
+      current.workers,
+    )
+
+    const rejection = expect(pending).rejects.toThrow('Update installation failed')
+    installing.state = 'redundant'
+    installing.dispatchEvent(new Event('statechange'))
+    await rejection
+    expect(current.waiting.postMessage).not.toHaveBeenCalled()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('cancels an installation wait without activating or leaving timers', async () => {
+    const current = fixture()
+    const installing = worker('installing')
+    const lifetime = new AbortController()
+
+    const pending = activateWaitingWorker(
+      {
+        ...current.registration,
+        installing,
+      },
+      current.workers,
+      lifetime.signal,
+    )
+
+    const rejection = expect(pending).rejects.toThrow('Update canceled')
+    lifetime.abort()
+    await rejection
+    expect(current.waiting.postMessage).not.toHaveBeenCalled()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('requests the actual waiting worker and finishes when it activates', async () => {
     const current = fixture()
     const pending = activateWaitingWorker(current.registration, current.workers)

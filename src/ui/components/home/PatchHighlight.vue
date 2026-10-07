@@ -4,29 +4,42 @@ import { useGameText } from '../../composables/useGameText'
 import { isFresh, LATEST_PATCH } from '../../patchNotes/notes'
 import { usePatchNotesStore } from '../../stores/patchNotes'
 import NoteLine from '../patchNotes/NoteLine.vue'
+import ReleaseNotice from '../common/ReleaseNotice.vue'
 
 /** The latest patch on the start screen: the title, then one line worth opening. */
+const lead = LATEST_PATCH.card ?? LATEST_PATCH.features?.[0]?.text ?? LATEST_PATCH.general?.[0] ?? null
+
 const notes = usePatchNotesStore()
 const { t } = useGameText()
-
-const lead = LATEST_PATCH.card ?? LATEST_PATCH.features?.[0]?.text ?? LATEST_PATCH.general?.[0] ?? null
 </script>
 
 <template>
-  <a :href="`/patches/${LATEST_PATCH.version}/`" class="patch" @click.prevent="notes.open()">
-    <span class="eyebrow">
-      <ScrollText :size="14" /> {{ t('patchNotes.patch', { version: LATEST_PATCH.version }) }}
-      <span v-if="isFresh(LATEST_PATCH)" class="fresh">{{ t('start.home.fresh') }}</span>
-    </span>
+  <div class="patch-highlight">
+    <ReleaseNotice />
 
-    <NoteLine :text="LATEST_PATCH.title" class="title hand" />
+    <a :href="`/patches/${LATEST_PATCH.version}/`" class="patch" @click.prevent="notes.open()">
+      <span class="eyebrow">
+        <ScrollText :size="14" /> {{ t('patchNotes.patch', { version: LATEST_PATCH.version }) }}
+        <span v-if="isFresh(LATEST_PATCH)" class="fresh">{{ t('start.home.fresh') }}</span>
+      </span>
 
-    <NoteLine v-if="lead" :text="lead" class="lead" />
-  </a>
+      <NoteLine :text="LATEST_PATCH.title" class="title hand" />
+
+      <NoteLine v-if="lead" :text="lead" class="lead" />
+    </a>
+  </div>
 </template>
 
 <style scoped>
+.patch-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
 .patch {
+  flex: 1;
   display: grid;
   align-content: start;
   gap: 10px;

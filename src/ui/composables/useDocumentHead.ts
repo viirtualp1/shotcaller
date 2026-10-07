@@ -41,6 +41,8 @@ export function useDocumentHead() {
   watch(
     [
       () => notes.patch,
+      () => notes.awaitingUpdate,
+      () => notes.requestedVersion,
       () => settings.locale,
       () => profile.isOpen,
       () => profile.isCareer,
@@ -52,11 +54,12 @@ export function useDocumentHead() {
     () => {
       const locale = settings.locale
       const patch = notes.patch
+      const missingVersion = notes.awaitingUpdate ? notes.requestedVersion : null
       const legalDocument = legal.document
 
       const personal = replay.match
         ? 'replay'
-        : patch || legalDocument
+        : patch || missingVersion || legalDocument
           ? null
           : leaderboard.isOpen
             ? 'leaderboard'
@@ -91,7 +94,9 @@ export function useDocumentHead() {
           ? `${legalDocument.title[locale]} · ${SITE_NAME}`
           : patch
             ? patchTitle(patch, locale)
-            : `${SITE_NAME} — ${locale === 'ru' ? 'Бесплатная стратегия в браузере' : 'Free browser strategy game'}`
+            : missingVersion
+              ? `${locale === 'ru' ? 'Патч' : 'Patch'} ${missingVersion} · ${SITE_NAME}`
+              : `${SITE_NAME} — ${locale === 'ru' ? 'Бесплатная стратегия в браузере' : 'Free browser strategy game'}`
 
       const description = personal
         ? PRIVATE_DESCRIPTIONS[personal][locale]
@@ -104,7 +109,7 @@ export function useDocumentHead() {
       document.title = title
       document.documentElement.lang = locale
       meta('name', 'description', description)
-      meta('name', 'robots', personal ? 'noindex, nofollow' : 'index, follow')
+      meta('name', 'robots', personal || missingVersion ? 'noindex, nofollow' : 'index, follow')
       meta('property', 'og:title', title)
       meta('property', 'og:description', description)
       meta('property', 'og:locale', locale === 'ru' ? 'ru_RU' : 'en_US')
@@ -113,7 +118,14 @@ export function useDocumentHead() {
         canonical?.remove()
         document.querySelector('meta[property="og:url"]')?.remove()
       } else {
-        const path = legalDocument ? legalPath(legalDocument.id) : patch ? patchPath(patch.version) : '/'
+        const path = legalDocument
+          ? legalPath(legalDocument.id)
+          : patch
+            ? patchPath(patch.version)
+            : missingVersion
+              ? patchPath(missingVersion)
+              : '/'
+
         const url = `${SITE_ORIGIN}${path}`
         const link = canonical ?? document.createElement('link')
         link.rel = 'canonical'

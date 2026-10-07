@@ -22,6 +22,7 @@ import GameScreen from './screens/GameScreen.vue'
 import ReplayScreen from './screens/ReplayScreen.vue'
 import LiveMatchWaiting from './screens/LiveMatchWaiting.vue'
 import PatchNotesScreen from './screens/PatchNotesScreen.vue'
+import UnknownPatchScreen from './screens/UnknownPatchScreen.vue'
 import LegalScreen from './screens/LegalScreen.vue'
 import ProfileScreen from './screens/ProfileScreen.vue'
 import CareerScreen from './screens/CareerScreen.vue'
@@ -109,7 +110,7 @@ useDocumentHead()
     <Transition name="screen" mode="out-in" @after-leave="scrollToTop">
       <LegalScreen v-if="legal.document" />
       <PatchNotesScreen v-else-if="patchNotes.patch" />
-      <div v-else-if="patchNotes.awaitingUpdate" class="patch-pending" />
+      <UnknownPatchScreen v-else-if="patchNotes.awaitingUpdate" />
       <LeaderboardScreen v-else-if="leaderboard.isOpen" />
       <GameScreen v-else-if="store.view" />
       <CareerScreen v-else-if="profile.isCareer" />
@@ -148,10 +149,6 @@ useDocumentHead()
 </template>
 
 <style scoped>
-.patch-pending {
-  min-height: 100%;
-}
-
 .social-launcher {
   position: fixed;
   right: calc(16px + env(safe-area-inset-right, 0px));

@@ -3,7 +3,7 @@ import { activateWaitingWorker } from '@/application/pwaUpdate'
 
 interface UpdateEnvironment {
   readonly registration: () => ServiceWorkerRegistration | undefined
-  readonly workers: ServiceWorkerContainer
+  readonly workers: ServiceWorkerContainer | undefined
   readonly reload: () => void
 }
 
@@ -40,7 +40,7 @@ export function usePwaUpdate(environment: UpdateEnvironment) {
 
     try {
       const registration = environment.registration()
-      if (registration) {
+      if (registration && environment.workers) {
         await activateWaitingWorker(registration, environment.workers, lifetime.signal)
       }
 

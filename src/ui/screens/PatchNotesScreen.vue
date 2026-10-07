@@ -20,6 +20,7 @@ import { ROLES } from '@/content/roles'
 import { cssColor } from '@/rendering/theme'
 import HeroAvatar from '../components/common/HeroAvatar.vue'
 import ItemIcon from '../components/common/ItemIcon.vue'
+import ReleaseNotice from '../components/common/ReleaseNotice.vue'
 import FeatureCard from '../components/patchNotes/FeatureCard.vue'
 import CareerRelease from '../components/patchNotes/CareerRelease.vue'
 import MatchmakingRelease from '../components/patchNotes/MatchmakingRelease.vue'
@@ -80,6 +81,7 @@ watch(
     <Transition name="fade" mode="out-in">
       <main :key="patch.version" class="page" :class="{ wide: patch.wide }">
         <section class="masthead">
+          <ReleaseNotice />
           <h1 v-optical-align class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
           <time :datetime="patch.date" class="date">{{ date }}</time>
@@ -311,6 +313,11 @@ watch(
   flex-direction: column;
   align-items: flex-start;
   padding: 48px 0 0;
+}
+
+.masthead > :deep(.release-notice) {
+  width: 100%;
+  margin-bottom: 24px;
 }
 
 .kicker {
