@@ -11,13 +11,24 @@ const root = path.resolve('dist-desktop')
 describe('desktop bundle', () => {
   it('serves files from the bundle and the game for every page', () => {
     expect(bundleFile(root, `${APP_ORIGIN}/assets/index.js`)).toBe(path.join(root, 'assets', 'index.js'))
+    expect(bundleFile(root, `${APP_ORIGIN}/assets%5Cindex.js`)).toBe(path.join(root, 'assets', 'index.js'))
     expect(bundleFile(root, `${APP_ORIGIN}/`)).toBe(path.join(root, 'index.html'))
     expect(bundleFile(root, `${APP_ORIGIN}/leaderboard/two-lanes`)).toBe(path.join(root, 'index.html'))
   })
 
+  it.each([
+    '..%2Fpackage.json',
+    '..%5Cpackage.json',
+    'assets%2F..%5C..%2Fpackage.json',
+    'assets%5C..%2F..%5Cpackage.json',
+    '..%2Fprivate',
+    '..%5Cprivate',
+    '..%5Cdist-desktop-other%5Cpackage.json',
+  ])('refuses traversal with either separator: %s', (pathname) => {
+    expect(bundleFile(root, `${APP_ORIGIN}/${pathname}`)).toBeNull()
+  })
+
   it('refuses paths that leave the bundle and other hosts', () => {
-    expect(bundleFile(root, `${APP_ORIGIN}/..%2Fpackage.json`)).toBeNull()
-    expect(bundleFile(root, `${APP_ORIGIN}/..%5Cpackage.json`)).toBeNull()
     expect(bundleFile(root, `${APP_ORIGIN}/%E0%A4%A.js`)).toBeNull()
     expect(bundleFile(root, 'app://elsewhere/index.html')).toBeNull()
   })

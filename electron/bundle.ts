@@ -40,18 +40,18 @@ export function bundleFile(root: string, url: string) {
   let relative: string
 
   try {
-    relative = decodeURIComponent(pathname)
+    relative = decodeURIComponent(pathname).replaceAll('\\', '/')
   } catch {
     return null
   }
 
-  if (path.extname(relative) === '') {
-    return path.join(root, 'index.html')
-  }
-
   const file = path.resolve(root, `.${relative}`)
 
-  return file.startsWith(`${root}${path.sep}`) ? file : null
+  if (file !== root && !file.startsWith(`${root}${path.sep}`)) {
+    return null
+  }
+
+  return path.extname(relative) === '' ? path.join(root, 'index.html') : file
 }
 
 export function contentType(file: string) {
