@@ -80,6 +80,7 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
 .desc {
   font-size: 11px;
   color: var(--chalk-dim);
+  white-space: pre-line;
 }
 
 .cost {

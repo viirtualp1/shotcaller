@@ -56,7 +56,7 @@ const signatures = computed(() =>
 </script>
 
 <template>
-  <Translation :keypath="keypath" scope="global">
+  <Translation :keypath="keypath" scope="global" tag="span" class="description">
     <template v-for="(value, key) in values" :key="key" #[key]>
       <StatValue v-bind="value" />
     </template>
@@ -76,3 +76,9 @@ const signatures = computed(() =>
     </template>
   </Translation>
 </template>
+
+<style scoped>
+.description {
+  white-space: pre-line;
+}
+</style>

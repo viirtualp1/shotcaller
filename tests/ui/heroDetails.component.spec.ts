@@ -44,6 +44,26 @@ afterEach(() => {
 })
 
 describe('hero detail bonuses', () => {
+  it.each(['en', 'ru'] as const)('shows Prayer’s talented target count in %s', async (locale) => {
+    i18n.global.locale.value = locale
+    props.heroId = 'acolyte'
+    await nextTick()
+
+    expect(document.querySelector('.ability > p')?.textContent).toContain(
+      locale === 'en' ? 'up to 1 at a time' : 'Максимум целей — 1',
+    )
+
+    props.stars = 2
+    props.talent = 0
+    await nextTick()
+
+    expect(document.querySelector('.ability > p')?.textContent).toContain(
+      locale === 'en' ? 'up to 2 at a time' : 'Максимум целей — 2',
+    )
+
+    expect(document.querySelector('.ability > p')?.textContent).not.toContain('{')
+  })
+
   it.each(['en', 'ru'] as const)('separates damage from the item bonus in %s', async (locale) => {
     i18n.global.locale.value = locale
     props.items = ['staff']

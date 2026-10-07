@@ -253,7 +253,7 @@
     },
     "pusher": {
       "name": "Pusher",
-      "passive": "Deals {mult} times more damage to structures. Creeps on its lane deal +{bonus}% damage."
+      "passive": "Deals {mult}× damage to structures. Creeps on its lane deal {bonus}% more damage."
     },
     "ganker": {
       "name": "Ganker",
@@ -269,27 +269,27 @@
     "manaRegen": "Patience: gains {mana} mana every second, even when it does not fight."
   },
   "abilities": {
-    "charge": "Leaps to the farthest enemy within {radius}: {damage} damage and a {stun} s stun.",
-    "volley": "{arrows} arrows at the nearest enemies, {damage} damage each.",
-    "prayer": "Heals the most wounded nearby core for {heal}; other supports only when no core needs it.",
-    "barrel": "Explosion dealing {damage} area damage. Structures take {structureBonus} times more.",
-    "chainLightning": "Lightning jumps between {bounces} enemies: {damage} damage to the first, {falloff}% less to each next one.",
-    "poisonDagger": "Dagger at the most wounded hero: {damage} damage, then {poison} poison every {tick} s for {duration} s and a {slow}% slow.",
-    "backstab": "Appears behind the most wounded hero within {radius} and hits for {damage}.",
-    "fireball": "Fireball into the densest group of enemies: {damage} area damage.",
-    "roots": "Roots enemies around the target for {duration} s and deals {damage} damage. Heals nearby allies for {heal}.",
-    "whirl": "Spins for {duration} s, hitting everyone nearby for {damage} every {tick} s.",
-    "leap": "Jumps into the enemy crowd: {damage} damage and a {stun} s stun to everyone nearby.",
-    "raiseDead": "Summons {count} skeletons for {lifetime} s. Each has {hp} health and hits for {damage}. At most {maxAlive} skeletons at a time.",
-    "blizzard": "Storm for {duration} s: {damage} damage every {tick} s and a {slow}% slow.",
-    "quake": "Stuns every enemy nearby for {stun} s and deals {damage} damage.",
-    "turret": "Deploys a turret for {lifetime} s with {hp} health and {damage} damage per shot. It hits structures too.",
-    "hook": "Pulls the farthest hero within {radius}: {damage} damage and a {stun} s stun.",
-    "assassinate": "Shoots the most wounded hero within {radius} for {damage} damage.",
-    "shield": "Gives up to {targets} wounded allies, cores first, a shield that absorbs {absorb} damage for {duration} s.",
-    "standard": "Plants a banner for {lifetime} s with {hp} health. Allies within {radius} get what the lane's order calls for. Push: creeps attack {pushAttackSpeed}% faster and hit buildings {pushStructureDamage}% harder. Defence: towers and the throne take {holdProtection}% less damage. Together: heroes deal {groupDamage}% more damage, and enemies where it lands are stunned for {stun} s. No order: heroes take {guard}% less damage.",
-    "mend": "Stands still to repair the most damaged allied tower or throne within {radius}: {repair} health per second for {duration} s, more in later rounds. A stun breaks it. Under Defence, the repair also wins back the building damage the enemy dealt this round.",
-    "mimic": "Casts the ability of the role it takes: {carry} as a carry, {support} as a support, {mage} as a mage, {initiator} as an initiator, {pusher} as a pusher, {ganker} as a ganker.",
+    "charge": "Leaps to the farthest enemy within {radius}. Deals {damage} damage and stuns the target for {stun} s.",
+    "volley": "Fires up to {arrows} arrows at the nearest enemies. Each arrow deals {damage} damage.",
+    "prayer": "Restores {heal} health to nearby wounded allies, up to {targets} at a time. Prioritizes heroes of other roles over supports.",
+    "barrel": "Detonates a barrel, dealing {damage} damage to enemies in the blast. Deals {structureBonus}× damage to structures.",
+    "chainLightning": "Lightning strikes up to {bounces} enemies. The first takes {damage} damage. Each following hit deals {falloff}% less damage than the previous one.",
+    "poisonDagger": "Throws a dagger at the most wounded enemy hero, dealing {damage} damage.\nPoison deals another {poison} damage every {tick} s for {duration} s. Slows the target by {slow}%.",
+    "backstab": "Teleports behind the most wounded enemy hero within {radius} and deals {damage} damage.",
+    "fireball": "Throws a fireball into the largest cluster of enemies, dealing {damage} area damage.",
+    "roots": "Holds enemies around the target in place for {duration} s and deals {damage} damage. Restores {heal} health to nearby allied heroes.",
+    "whirl": "Spins for {duration} s. Deals {damage} damage to every nearby enemy every {tick} s.",
+    "leap": "Leaps into a group of enemies. Deals {damage} damage and stuns nearby enemies for {stun} s.",
+    "raiseDead": "Summons {count} skeletons for {lifetime} s. Each has {hp} health and deals {damage} damage per attack.\nNo more than {maxAlive} skeletons can be alive at once.",
+    "blizzard": "Creates a snowstorm for {duration} s. Enemies in the storm take {damage} damage every {tick} s and are slowed by {slow}%.",
+    "quake": "Deals {damage} damage to every nearby enemy and stuns them for {stun} s.",
+    "turret": "Deploys a turret for {lifetime} s. It has {hp} health and deals {damage} damage per shot. Attacks enemies and structures.",
+    "hook": "Pulls in the farthest enemy hero within {radius}. Deals {damage} damage and stuns the target for {stun} s.",
+    "assassinate": "Shoots the most wounded enemy hero within {radius}, dealing {damage} damage.",
+    "shield": "Shields up to {targets} nearby wounded allies. Each shield absorbs {absorb} damage and lasts {duration} s. Prioritizes heroes of other roles over supports.",
+    "standard": "Plants a banner for {lifetime} s. It has {hp} health and a radius of {radius}. Its effect depends on the lane order:\nPush — creeps and summoned units attack {pushAttackSpeed}% faster and deal {pushStructureDamage}% more damage to structures.\nDefence — towers and the throne take {holdProtection}% less damage.\nTogether — heroes deal {groupDamage}% more damage. When planted, the banner stuns nearby enemies for {stun} s.\nNo order — heroes take {guard}% less damage.",
+    "mend": "Repairs the most damaged allied tower or throne within {radius}. Restores {repair} health per second for {duration} s, with more healing in later rounds.\nStands still while repairing. A stun interrupts the repair.\nDefence order: repairs also reduce the structure damage credited to your opponent this round.",
+    "mimic": "Uses the ability of its chosen role:\nCarry — {carry}. Support — {support}. Mage — {mage}.\nInitiator — {initiator}. Pusher — {pusher}. Ganker — {ganker}.",
     "mimicAs": "{ability}: {effect}"
   },
   "synergies": {
@@ -337,22 +337,22 @@
     "bulwark": "Support + initiator"
   },
   "items": {
-    "broadsword": "{critChance}% chance for an attack to crit for {critMultiplier}% damage",
-    "gloves": "+{attackSpeed}% attack speed",
-    "chainmail": "{damageTaken}% less damage taken",
-    "vitality": "+{maxHp}% health",
-    "boots": "+{speed}% movement speed",
-    "staff": "+{spellPower}% ability power",
-    "chalice": "+{healPower}% healing, shields and support aura",
-    "manaStone": "Mana builds {manaGain}% faster",
-    "vampireFang": "Heals for {lifesteal}% of attack damage and {spellLifesteal}% of ability damage",
-    "thornMail": "Returns {thorns}% of attack damage to the attacker",
-    "aegis": "Once per round prevents death and restores {revive}% health",
-    "soulJar": "Every hero kill adds a soul, up to {soulMax}. Each soul gives +{soulDamage}% attack damage, and the hero keeps them from round to round.",
-    "soulbond": "Works in pairs: with a second Soulbond on the same lane, {bond}% of the damage either hero takes goes to the other, softened by that hero's own armor, while they stay within {bondRange} of each other.",
-    "echoShard": "The ability goes off again {echoDelay} s later at {echo}% power, with stuns {echo}% as long. Mana builds {manaGain}% slower.",
-    "townPortal": "Once a round, when an allied tower below {portal}% health is hit and the wearer is at least {portalDistance} away, the wearer travels to it and fights on that lane.",
-    "cursedBlade": "+{damage}% damage and +{attackSpeed}% attack speed. Every time the wearer dies, your throne loses {curse} health, and it counts for the enemy this round."
+    "broadsword": "Attacks have a {critChance}% chance to critically strike. Critical hits deal {critMultiplier}% of normal attack damage.",
+    "gloves": "+{attackSpeed}% attack speed.",
+    "chainmail": "Reduces damage taken by {damageTaken}%.",
+    "vitality": "+{maxHp}% maximum health.",
+    "boots": "+{speed}% movement speed.",
+    "staff": "+{spellPower}% ability power.",
+    "chalice": "Increases healing, shields and the support aura by {healPower}%.",
+    "manaStone": "Increases mana gain by {manaGain}%.",
+    "vampireFang": "Restores health when dealing damage: {lifesteal}% of attack damage and {spellLifesteal}% of ability damage.",
+    "thornMail": "Reflects {thorns}% of damage taken from attacks back to the attacker. Reduces damage taken by {damageTaken}%.",
+    "aegis": "Once per round, prevents death and restores {revive}% of maximum health.",
+    "soulJar": "Gains a soul for each enemy hero killed, up to {soulMax} souls. Each soul grants +{soulDamage}% attack damage.\nSouls carry over between rounds.",
+    "soulbond": "Requires another hero with Soulbond on the same lane, no farther than {bondRange} away.\nTransfers {bond}% of incoming damage to that hero. Their armor reduces the transferred damage. The link works both ways.",
+    "echoShard": "Repeats the ability after {echoDelay} s at {echo}% power. Repeated stuns last {echo}% of their normal duration.\nReduces mana gain by {manaGain}%.",
+    "townPortal": "Once per round, teleports the wearer to an allied tower when that tower is attacked while below {portal}% health.\nThe wearer must be at least {portalDistance} away. After teleporting, the hero fights on that tower’s lane.",
+    "cursedBlade": "+{damage}% attack damage and +{attackSpeed}% attack speed.\nEach time the wearer dies, your throne loses {curse} health. This damage counts toward your opponent’s score for the round."
   },
   "hud": {
     "round": "Round {round} of {max}",
@@ -1333,7 +1333,7 @@
   "talents": {
     "charge": {
       "0": "Enemy heroes within {splash} of the target take {splashDamage} damage too.",
-      "1": "Charges enemies up to {radius} away and hits for {damage}."
+      "1": "Increases leap range to {radius} and damage to {damage}."
     },
     "volley": {
       "0": "Fires {arrows} arrows.",
@@ -1341,50 +1341,50 @@
     },
     "prayer": {
       "0": "Heals {targets} wounded allies at once.",
-      "1": "Heals for {heal}."
+      "1": "Restores {heal} health to each target."
     },
     "barrel": {
-      "0": "The explosion covers {radius}.",
-      "1": "Buildings take {structureBonus} times more damage."
+      "0": "Increases the blast radius to {radius}.",
+      "1": "The blast deals {structureBonus}× damage to structures."
     },
     "chainLightning": {
-      "0": "Jumps between {bounces} enemies.",
+      "0": "Lightning strikes up to {bounces} enemies.",
       "1": "Loses only {falloff}% damage on each jump."
     },
     "poisonDagger": {
-      "0": "Poison deals {poison} every {tick} s.",
-      "1": "Slows by {slow}% and poisons for {duration} s."
+      "0": "Poison deals {poison} damage every {tick} s.",
+      "1": "Slows the target by {slow}%. Poison lasts {duration} s."
     },
     "backstab": {
-      "0": "Hits for {damage}.",
-      "1": "Reaches wounded heroes within {radius}."
+      "0": "Deals {damage} damage.",
+      "1": "Increases teleport range to {radius}."
     },
     "fireball": {
-      "0": "Burns everyone within {radius} of the impact.",
+      "0": "Increases the blast radius to {radius}.",
       "1": "Deals {damage} damage."
     },
     "roots": {
-      "0": "Roots for {duration} s.",
-      "1": "Heals nearby allies for {heal}."
+      "0": "Holds enemies in place for {duration} s.",
+      "1": "Restores {heal} health to nearby allied heroes."
     },
     "whirl": {
       "0": "Spins for {duration} s.",
-      "1": "Hits everyone within {radius}."
+      "1": "Damages every enemy within {radius}."
     },
     "leap": {
       "0": "Stuns for {stun} s.",
       "1": "Deals {damage} damage."
     },
     "raiseDead": {
-      "0": "Raises {count} skeletons, up to {maxAlive} at a time.",
-      "1": "Skeletons have {hp} health and hit for {damage}."
+      "0": "Summons {count} skeletons. No more than {maxAlive} can be alive at once.",
+      "1": "Skeletons have {hp} health and deal {damage} damage per attack."
     },
     "blizzard": {
       "0": "Slows by {slow}%.",
-      "1": "The storm covers {radius}."
+      "1": "Increases the storm radius to {radius}."
     },
     "quake": {
-      "0": "Goes off with just {minTargets} enemies nearby.",
+      "0": "Can be cast with just {minTargets} enemies nearby.",
       "1": "Stuns for {stun} s."
     },
     "turret": {
@@ -1397,7 +1397,7 @@
     },
     "assassinate": {
       "0": "Deals {damage} damage.",
-      "1": "Finds wounded heroes within {radius}."
+      "1": "Increases target range to {radius}."
     },
     "shield": {
       "0": "Shields up to {targets} allies.",
@@ -1405,11 +1405,11 @@
     },
     "standard": {
       "0": "The banner stands for {lifetime} s with {hp} health.",
-      "1": "The banner reaches allies within {radius}."
+      "1": "Increases the banner’s radius to {radius}."
     },
     "mend": {
-      "0": "Repairs {repair} health per second.",
-      "1": "Repairs buildings up to {radius} away."
+      "0": "Restores {repair} health to the structure per second.",
+      "1": "Increases repair range to {radius}."
     },
     "mimic": {
       "0": "The borrowed ability is {power}% stronger.",

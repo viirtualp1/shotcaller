@@ -1,11 +1,54 @@
-/*
- * Taps on the game's own notifications. Phones only let a page show them through this worker, and without a
- * handler here a tap did nothing. The game is brought forward, or opened when it is closed, and told what the
- * tap was about: the page opens that chat, the friends list, or just itself for a duel invite.
- */
+/* A live page acknowledges the tap; a cold or suspended page receives it in its launch URL. */
+const TAP_ACK_WAIT_MS = 1000
+
+function launchUrl(target) {
+  const url = new URL(self.registration.scope)
+  url.searchParams.set('notification', target.kind)
+
+  if (target.kind === 'chat') {
+    url.searchParams.set('notificationFriend', target.friendId)
+  }
+
+  return url.href
+}
+
+function deliver(client, target) {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel()
+    const finish = (received) => {
+      clearTimeout(timer)
+      channel.port1.close()
+      channel.port2.close()
+      resolve(received)
+    }
+
+    const timer = setTimeout(() => finish(false), TAP_ACK_WAIT_MS)
+    channel.port1.onmessage = (event) => finish(event.data === 'notification-click-received')
+
+    try {
+      client.postMessage(
+        {
+          type: 'notification-click',
+          target,
+        },
+        [channel.port2],
+      )
+    } catch {
+      finish(false)
+    }
+  })
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const target = event.notification.data ?? { kind: 'game' }
+  const data = event.notification.data
+
+  const target =
+    data?.kind === 'friends' ||
+    data?.kind === 'game' ||
+    (data?.kind === 'chat' && typeof data.friendId === 'string' && data.friendId.length > 0)
+      ? data
+      : { kind: 'game' }
 
   event.waitUntil(
     (async () => {
@@ -14,21 +57,43 @@ self.addEventListener('notificationclick', (event) => {
         includeUncontrolled: true,
       })
 
-      const open = windows.find((client) => new URL(client.url).origin === self.location.origin)
-      const client = open ?? (await self.clients.openWindow('/'))
-      if (!client) {
-        return
-      }
+      const scope = new URL(self.registration.scope)
+
+      const open = windows.find((client) => {
+        const url = new URL(client.url)
+
+        return url.origin === scope.origin && url.pathname.startsWith(scope.pathname)
+      })
 
       if (open) {
-        await client.focus().catch(() => undefined)
+        try {
+          await open.focus()
+
+          if (await deliver(open, target)) {
+            return
+          }
+        } catch {
+          /* A suspended mobile window can reject focus; navigation can still wake it. */
+        }
+
+        try {
+          const navigated = await open.navigate(launchUrl(target))
+
+          if (navigated) {
+            await navigated.focus()
+
+            return
+          }
+        } catch {
+          /* The client may have disappeared or stayed suspended. Open the app through its launch URL. */
+        }
       }
 
-      /* A freshly opened page queues this until its script listens for it. */
-      client.postMessage({
-        type: 'notification-click',
-        target,
-      })
+      const client = await self.clients.openWindow(launchUrl(target))
+
+      if (client) {
+        await client.focus().catch(() => undefined)
+      }
     })(),
   )
 })

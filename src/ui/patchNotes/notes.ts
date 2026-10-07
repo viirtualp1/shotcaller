@@ -114,6 +114,30 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '9.5.2',
+    date: '2026-10-07',
+    title: {
+      en: 'Clearer descriptions',
+      ru: 'Понятные описания',
+    },
+    interface: [
+      {
+        en: '**Ability, talent and item descriptions in English and Russian** are easier to read: effects and conditions use shorter sentences, and complex effects are split into separate lines.',
+        ru: '**Описания способностей, талантов и предметов на русском и английском** стали понятнее: эффекты и условия описаны короткими предложениями, а сложные эффекты разбиты на отдельные строки.',
+      },
+    ],
+    fixes: [
+      {
+        en: 'Tapping a notification opens **the game and the relevant chat or friends list**, including when the app has to launch again.',
+        ru: 'Нажатие на уведомление открывает **игру и нужный чат или список друзей**, в том числе когда приложение приходится запускать заново.',
+      },
+      {
+        en: 'The description of **Prayer** now shows its target count with talents. **Thorn Mail** also explains its damage reduction.',
+        ru: 'Описание **Prayer** теперь учитывает число целей с талантами. Описание **Thorn Mail** также объясняет снижение получаемого урона.',
+      },
+    ],
+  },
+  {
     version: '9.5.1',
     date: '2026-10-07',
     title: {

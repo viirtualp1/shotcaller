@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ability and item descriptions preview</title>
+    <style>
+      main {
+        max-width: 1000px;
+        margin: 24px auto;
+        padding: 16px;
+      }
+
+      nav {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        align-items: start;
+        gap: 16px;
+      }
+
+      article {
+        padding: 16px;
+        border-radius: var(--radius);
+        background: var(--panel);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { createApp, h } from 'vue'
+      import { i18n } from '/src/ui/i18n/index.ts'
+      import HeroDetails from '/src/ui/components/common/HeroDetails.vue'
+      import ItemDetails from '/src/ui/components/common/ItemDetails.vue'
+      import '/src/ui/styles/base.css'
+
+      const locale = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ru'
+      i18n.global.locale.value = locale
+      document.documentElement.lang = locale
+
+      createApp({
+        render: () =>
+          h('main', [
+            h('nav', [h('a', { href: '?lang=ru' }, 'Русский'), h('a', { href: '?lang=en' }, 'English')]),
+            h('div', { class: 'cards' }, [
+              ...['herald', 'stonewright', 'acolyte', 'oracle', 'necromancer', 'changeling'].map((heroId) =>
+                h('article', h(HeroDetails, { heroId, stars: heroId === 'acolyte' ? 2 : 1, talent: 0 })),
+              ),
+              ...['broadsword', 'thornMail', 'soulbond', 'townPortal', 'echoShard', 'cursedBlade'].map(
+                (itemId) => h('article', h(ItemDetails, { itemId })),
+              ),
+            ]),
+          ]),
+      })
+        .use(i18n)
+        .mount('#app')
+    </script>
+  </body>
+</html>

@@ -1,6 +1,11 @@
 import { until, useDocumentVisibility, useEventListener, useLocalStorage, useWindowFocus } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import {
+  consumeNotificationTarget,
+  isNotificationTarget,
+  type NotificationTarget,
+} from '@/application/notificationTarget'
 import { STORAGE_KEYS } from '@/application/persistence/storageKeys'
 import { useGameText } from '../composables/useGameText'
 import { useNotificationText } from '../composables/useNotificationText'
@@ -15,26 +20,13 @@ const ICON = `${import.meta.env.BASE_URL}pwa-192x192.png`
 /** A game just opened by a tap waits this long for the account to sign back in before opening a chat. */
 const SIGN_IN_WAIT_MS = 15_000
 
-/** What a tap on a notification opens. It travels with the notification, so the service worker can pass it on. */
-export type NotificationTarget =
-  | { readonly kind: 'chat'; readonly friendId: string }
-  | { readonly kind: 'friends' }
-  /** The game itself: a duel invite asks for an answer as soon as the game is in front. */
-  | { readonly kind: 'game' }
-
-const isTarget = (value: unknown): value is NotificationTarget =>
-  typeof value === 'object' &&
-  value !== null &&
-  'kind' in value &&
-  (value.kind === 'friends' ||
-    value.kind === 'game' ||
-    (value.kind === 'chat' && 'friendId' in value && typeof value.friendId === 'string'))
-
 /**
  * The browser's own notifications for social news while the game is in the background: a message, a friend
  * request, a duel challenge. In front, the stack in the corner already says it. Off until the player allows it.
  */
 export const useSystemNotificationsStore = defineStore('systemNotifications', () => {
+  const shown = new Set<number>()
+
   const notifications = useNotificationsStore()
   const chat = useChatStore()
   const friends = useFriendsStore()
@@ -53,7 +45,6 @@ export const useSystemNotificationsStore = defineStore('systemNotifications', ()
   /** The player closed the offer to turn them on. */
   const promptDismissed = useLocalStorage(STORAGE_KEYS.systemNotificationsPrompt, false)
   const active = computed(() => enabled.value && permission.value === 'granted')
-  const shown = new Set<number>()
 
   /** Asks the browser; it only shows its question in answer to a click. */
   async function request() {
@@ -186,13 +177,27 @@ export const useSystemNotificationsStore = defineStore('systemNotifications', ()
         'type' in data &&
         data.type === 'notification-click' &&
         'target' in data &&
-        isTarget(data.target)
+        isNotificationTarget(data.target)
       ) {
+        event.ports?.[0]?.postMessage('notification-click-received')
         void openTarget(data.target)
       }
     })
 
     navigator.serviceWorker.startMessages()
+  }
+
+  if (globalThis.location) {
+    const url = new URL(globalThis.location.href)
+    const target = consumeNotificationTarget(url)
+
+    if (url.href !== globalThis.location.href) {
+      globalThis.history.replaceState(globalThis.history.state, '', url.href)
+    }
+
+    if (target) {
+      void openTarget(target)
+    }
   }
 
   return {

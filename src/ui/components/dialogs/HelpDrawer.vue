@@ -298,7 +298,7 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
                 </span>
               </span>
 
-              <p>{{ text.itemDescription(id) }}</p>
+              <p class="item-description">{{ text.itemDescription(id) }}</p>
             </li>
           </ul>
         </section>
@@ -544,6 +544,10 @@ p {
 
 .item-title strong {
   font-size: 12.5px;
+}
+
+.item-description {
+  white-space: pre-line;
 }
 
 .cost {

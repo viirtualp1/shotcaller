@@ -194,6 +194,7 @@ const changes = computed(() => {
 .text {
   margin: 0;
   color: var(--chalk);
+  white-space: pre-line;
 }
 
 .changes {
