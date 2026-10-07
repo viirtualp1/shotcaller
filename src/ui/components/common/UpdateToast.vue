@@ -2,10 +2,9 @@
 import { useEventListener } from '@vueuse/core'
 import { RefreshCw } from '@lucide/vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted, onScopeDispose, watch } from 'vue'
+import { computed, onMounted, onScopeDispose } from 'vue'
 import { useGameText } from '../../composables/useGameText'
-import { useGameUpdateStore } from '../../stores/gameUpdate'
+import { usePwaUpdate } from '../../composables/usePwaUpdate'
 import { useLeaderboardStore } from '../../stores/leaderboard'
 import { useLegalStore } from '../../stores/legal'
 import { useMatchStore } from '../../stores/match'
@@ -13,13 +12,12 @@ import { usePatchNotesStore } from '../../stores/patchNotes'
 
 const UPDATE_CHECK_MS = 60 * 1000
 let timer: ReturnType<typeof setInterval> | undefined
+let registration: ServiceWorkerRegistration | undefined
 
 const match = useMatchStore()
 const patchNotes = usePatchNotesStore()
 const leaderboard = useLeaderboardStore()
 const legal = useLegalStore()
-const updates = useGameUpdateStore()
-const { needRefresh, updating, failed, registration } = storeToRefs(updates)
 const { t } = useGameText()
 
 const inGame = computed(
@@ -31,22 +29,36 @@ const inGame = computed(
     !leaderboard.isOpen,
 )
 
+const { updating, failed, applyUpdate, reloadIfUpdating } = usePwaUpdate({
+  registration: () => registration,
+  workers: navigator.serviceWorker,
+  reload: () => {
+    needRefresh.value = false
+    window.location.reload()
+  },
+})
+
+function updateGame() {
+  if (!match.isDuel) {
+    void applyUpdate()
+  }
+}
+
 function check() {
   if (document.visibilityState !== 'visible' || !navigator.onLine) {
     return
   }
 
-  void updates.checkLatest()
-  const registered = registration.value
+  const registered = registration
   if (registered && !registered.installing) {
     void registered.update().catch(() => undefined)
   }
 }
 
-const { needRefresh: workerNeedsRefresh } = useRegisterSW({
-  onNeedReload: updates.reloadIfUpdating,
+const { needRefresh } = useRegisterSW({
+  onNeedReload: reloadIfUpdating,
   onRegisteredSW(_url, registered) {
-    registration.value = registered
+    registration = registered
     check()
   },
 })
@@ -67,19 +79,6 @@ useEventListener(
 useEventListener(document, 'visibilitychange', check)
 useEventListener(window, 'online', check)
 
-watch(workerNeedsRefresh, (ready) => {
-  needRefresh.value = ready
-})
-
-watch(
-  () => patchNotes.awaitingUpdate && !match.isDuel && needRefresh.value,
-  (ready) => {
-    if (ready) {
-      void updates.updateGame()
-    }
-  },
-)
-
 onMounted(() => {
   check()
   timer = setInterval(check, UPDATE_CHECK_MS)
@@ -94,12 +93,7 @@ onScopeDispose(() => clearInterval(timer))
   </Transition>
 
   <Transition name="toast">
-    <div
-      v-if="(needRefresh && !patchNotes.awaitingUpdate && !inGame) || updating"
-      class="toast"
-      role="status"
-      :aria-busy="updating"
-    >
+    <div v-if="(needRefresh && !inGame) || updating" class="toast" role="status" :aria-busy="updating">
       <RefreshCw :size="16" class="icon" :class="{ spinning: updating }" />
 
       <span class="text">
@@ -112,10 +106,10 @@ onScopeDispose(() => clearInterval(timer))
 
       <button
         v-if="!updating"
-        :disabled="match.isDuel || updates.checking || updates.requesting"
+        :disabled="match.isDuel"
         type="button"
         class="btn primary small"
-        @click="updates.updateGame"
+        @click="updateGame"
       >
         {{ t('pwa.update') }}
       </button>

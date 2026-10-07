@@ -92,10 +92,10 @@ export function useDocumentHead() {
         ? `${labels[personal]} · ${SITE_NAME}`
         : legalDocument
           ? `${legalDocument.title[locale]} · ${SITE_NAME}`
-          : patch
-            ? patchTitle(patch, locale)
-            : missingVersion
-              ? `${locale === 'ru' ? 'Патч' : 'Patch'} ${missingVersion} · ${SITE_NAME}`
+          : missingVersion
+            ? `${locale === 'ru' ? 'Патч' : 'Patch'} ${missingVersion} · ${SITE_NAME}`
+            : patch
+              ? patchTitle(patch, locale)
               : `${SITE_NAME} — ${locale === 'ru' ? 'Бесплатная стратегия в браузере' : 'Free browser strategy game'}`
 
       const description = personal
@@ -120,10 +120,10 @@ export function useDocumentHead() {
       } else {
         const path = legalDocument
           ? legalPath(legalDocument.id)
-          : patch
-            ? patchPath(patch.version)
-            : missingVersion
-              ? patchPath(missingVersion)
+          : missingVersion
+            ? patchPath(missingVersion)
+            : patch
+              ? patchPath(patch.version)
               : '/'
 
         const url = `${SITE_ORIGIN}${path}`

@@ -1079,13 +1079,8 @@
     "update": "Update",
     "updating": "Installing the update…",
     "updateFailed": "The update could not finish. Try again",
-    "mayNeedUpdate": "Your game may need an update",
-    "patchUnavailable": "Patch {version} is not included in your current game version. Check for updates or try again later.",
-    "versions": "Installed: {current} · Available: {latest}",
-    "checkUpdate": "Check for updates",
-    "checking": "Checking for updates…",
-    "notReady": "The update is not ready yet. Check your connection and try again shortly.",
-    "readInstalledPatch": "Read patch {version} from this version of the game"
+    "oldPatchTitle": "You may be viewing an older patch",
+    "oldPatchHint": "Wait for the Update button to appear, then update the game to read patch {version}."
   },
   "duel": {
     "challenge": "Challenge to a duel",

@@ -329,7 +329,7 @@ onBeforeUnmount(() => {
   min-height: 0;
 }
 
-.tall > :deep(.patch-highlight) {
+.tall > :deep(.patch) {
   flex: 1;
   min-height: 0;
 }

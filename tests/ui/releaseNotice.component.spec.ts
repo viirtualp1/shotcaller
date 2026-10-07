@@ -1,13 +1,14 @@
 // @vitest-environment happy-dom
 import { createPinia, disposePinia, setActivePinia, type Pinia } from 'pinia'
-import { createApp, nextTick, reactive, type App } from 'vue'
+import { createApp, nextTick, type App } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ReleaseNotice from '@/ui/components/common/ReleaseNotice.vue'
-import { useGameUpdateStore } from '@/ui/stores/gameUpdate'
+import PatchNotesScreen from '@/ui/screens/PatchNotesScreen.vue'
+import { usePatchNotesStore } from '@/ui/stores/patchNotes'
+import { useSettingsStore } from '@/ui/stores/settings'
+import { LATEST_PATCH } from '@/ui/patchNotes/notes'
 import { i18n } from '@/ui/i18n'
 
-const match = reactive({ isDuel: false })
-vi.mock('@/ui/stores/match', () => ({ useMatchStore: () => match }))
+vi.mock('@/ui/directives/opticalAlign', () => ({ vOpticalAlign: {} }))
 
 let app: App | undefined
 let pinia: Pinia
@@ -16,8 +17,8 @@ const initialLocale = i18n.global.locale.value
 beforeEach(() => {
   pinia = createPinia()
   setActivePinia(pinia)
-  match.isDuel = false
-  i18n.global.locale.value = 'en'
+  localStorage.clear()
+  useSettingsStore().locale = 'en'
 })
 
 afterEach(() => {
@@ -25,51 +26,40 @@ afterEach(() => {
   app = undefined
   disposePinia(pinia)
   document.body.innerHTML = ''
+  window.history.replaceState(null, '', '/')
   i18n.global.locale.value = initialLocale
 })
 
-function mount(requestedVersion?: string) {
-  app = createApp(ReleaseNotice, { requestedVersion }).use(pinia).use(i18n)
+function mount(version: string) {
+  window.history.replaceState(null, '', '/patches/' + version)
+  app = createApp(PatchNotesScreen).use(pinia).use(i18n)
   app.mount(document.body.appendChild(document.createElement('div')))
 }
 
-describe('game update banner', () => {
-  it('stays hidden until an update is known or a future patch is requested', async () => {
-    mount()
-    expect(document.querySelector('[role="status"]')).toBeNull()
-    const updates = useGameUpdateStore()
-    updates.latestVersion = '999.0.0'
+describe('older patch notice', () => {
+  it('shows the installed patch with a notice above its version when the requested patch is missing', async () => {
+    mount('999.0')
+    const heading = document.querySelector('h1')!
+    const notice = document.querySelector('[role="status"]')!
+    expect(heading.textContent).toBe(LATEST_PATCH.version)
+    expect(notice.textContent).toContain('You may be viewing an older patch')
+    expect(notice.textContent).toContain('Wait for the Update button to appear')
+    expect(notice.textContent).toContain('999.0')
+    expect(notice.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(notice.querySelector('button')).toBeNull()
+    expect(window.location.pathname).toBe('/patches/999.0')
+
+    useSettingsStore().locale = 'ru'
     await nextTick()
-    expect(document.body.textContent).toContain('A new version is out')
-    expect(document.body.textContent).toContain(`Installed: ${updates.currentVersion} · Available: 999.0.0`)
-    updates.latestVersion = updates.currentVersion
-    await nextTick()
-    expect(document.querySelector('[role="status"]')).toBeNull()
+    expect(notice.textContent).toContain('Возможно, это старый патч')
+    expect(notice.textContent).toContain('Подожди, пока появится кнопка «Обновить»')
   })
 
-  it('explains an unavailable patch in both languages without claiming it is installing', async () => {
+  it('shows no notice for an available patch and clears it after an explicit selection', async () => {
     mount('999.0')
-    expect(document.body.textContent).toContain('Your game may need an update')
-    expect(document.body.textContent).toContain('Patch 999.0 is not included')
-    expect(document.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('false')
-    i18n.global.locale.value = 'ru'
+    usePatchNotesStore().select(LATEST_PATCH.version)
     await nextTick()
-    expect(document.body.textContent).toContain('Возможно, игру нужно обновить')
-    expect(document.body.textContent).toContain('ещё нет патча 999.0')
-  })
-
-  it('offers updating when ready, with the action disabled during a duel', async () => {
-    const updates = useGameUpdateStore()
-    const update = vi.spyOn(updates, 'updateGame').mockResolvedValue()
-    mount('999.0')
-    const button = document.querySelector<HTMLButtonElement>('button')!
-    button.click()
-    expect(update).toHaveBeenCalledTimes(1)
-    match.isDuel = true
-    await nextTick()
-    expect(button.disabled).toBe(true)
-    expect(document.body.textContent).toContain('wait for the duel to end')
-    button.click()
-    expect(update).toHaveBeenCalledTimes(1)
+    expect(document.querySelector('[role="status"]')).toBeNull()
+    expect(document.querySelector('h1')?.textContent).toBe(LATEST_PATCH.version)
   })
 })

@@ -33,7 +33,9 @@ export function versionFromPath(path: string) {
 export const usePatchNotesStore = defineStore('patchNotes', () => {
   const page = usePage(versionFromPath, patchPath)
 
-  const patch = computed(() => (page.state.value === null ? null : (findPatch(page.state.value) ?? null)))
+  const patch = computed(() =>
+    page.state.value === null ? null : (findPatch(page.state.value) ?? LATEST_PATCH),
+  )
 
   const awaitingUpdate = computed(
     () => page.state.value !== null && findPatch(page.state.value) === undefined,

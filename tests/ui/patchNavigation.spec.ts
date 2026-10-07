@@ -11,7 +11,7 @@ afterEach(() => {
 
 describe('patch links on an older client', () => {
   it.each([undefined, { controller: null }, { controller: {} }])(
-    'preserves the future version regardless of worker availability: %j',
+    'opens the installed patch with a warning while preserving the requested version: %j',
     (serviceWorker) => {
       vi.stubGlobal('navigator', { serviceWorker })
       window.history.replaceState(null, '', '/patches/999.0/?from=link')
@@ -19,13 +19,13 @@ describe('patch links on an older client', () => {
       setActivePinia(pinia)
       const notes = usePatchNotesStore()
 
-      expect(notes.patch).toBeNull()
+      expect(notes.patch).toBe(LATEST_PATCH)
       expect(notes.awaitingUpdate).toBe(true)
       expect(notes.requestedVersion).toBe('999.0')
       expect(window.location.pathname).toBe('/patches/999.0')
       expect(window.location.search).toBe('?from=link')
 
-      // Only an explicit player choice opens the installed patch.
+      // Choosing an available patch removes the warning.
       notes.select(LATEST_PATCH.version)
       expect(notes.patch).toBe(LATEST_PATCH)
       expect(notes.awaitingUpdate).toBe(false)

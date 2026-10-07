@@ -6,7 +6,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 import { assetLinksPlugin } from './scripts/assetLinks.ts'
 import { seoPlugin } from './scripts/seoPlugin.ts'
-import { releaseVersionPlugin } from './scripts/releaseVersion.ts'
 import { thirdPartyNotices } from './scripts/thirdPartyNotices.ts'
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url))
@@ -29,7 +28,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     seoPlugin(),
-    releaseVersionPlugin(),
     assetLinksPlugin(),
     thirdPartyNotices(),
     VitePWA({
@@ -92,10 +90,6 @@ export default defineConfig(({ mode }) => ({
         importScripts: ['notification-click.js'],
         /* Supabase is never cached: saves, friends and duels have to be live. */
         runtimeCaching: [
-          {
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname === '/release.json',
-            handler: 'NetworkOnly',
-          },
           {
             urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/audio/'),
             handler: 'CacheFirst',

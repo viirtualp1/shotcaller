@@ -126,8 +126,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     },
     interface: [
       {
-        en: 'An **update notice** now shows when your game is behind the latest release. Check for updates from the home screen or patch notes.',
-        ru: 'Если игра отстаёт от последнего релиза, появится **сообщение об обновлении**. Проверить обновления можно на главной или в патчноутах.',
+        en: 'A link to a patch your game does not have yet now opens the last available patch with **a notice to wait for the Update button**.',
+        ru: 'Ссылка на патч, которого ещё нет в твоей версии игры, открывает последний доступный патч с **подсказкой дождаться кнопки «Обновить»**.',
       },
       {
         en: '**Ability, talent and item descriptions in English and Russian** are easier to read: effects and conditions use shorter sentences, and complex effects are split into separate lines.',
@@ -136,8 +136,8 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     ],
     fixes: [
       {
-        en: 'Links to **newer patches** keep the requested version and explain when an update is needed, instead of opening an older patch.',
-        ru: 'Ссылки на **новые патчи** сохраняют нужную версию и объясняют, когда требуется обновление, вместо открытия старого патча.',
+        en: 'Links to **newer patches** keep their address, so updating the game opens the patch you requested.',
+        ru: 'Ссылки на **новые патчи** сохраняют адрес, чтобы после обновления игры открылся нужный патч.',
       },
       {
         en: 'Tapping a notification opens **the game and the relevant chat or friends list**, including when the app has to launch again.',

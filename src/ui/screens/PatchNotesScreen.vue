@@ -81,7 +81,10 @@ watch(
     <Transition name="fade" mode="out-in">
       <main :key="patch.version" class="page" :class="{ wide: patch.wide }">
         <section class="masthead">
-          <ReleaseNotice />
+          <ReleaseNotice
+            v-if="notes.awaitingUpdate"
+            :requested-version="notes.requestedVersion ?? undefined"
+          />
           <h1 v-optical-align class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
           <time :datetime="patch.date" class="date">{{ date }}</time>
