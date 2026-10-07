@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ArrowUpRight, ChartNoAxesColumn } from '@lucide/vue'
+import { ChartNoAxesColumn } from '@lucide/vue'
 import { computed } from 'vue'
 import { useGameText } from '../../composables/useGameText'
 import { useCloudStore } from '../../stores/cloud'
 import { usePrivacyStore } from '../../stores/privacy'
 import { useMenuStore } from '../../stores/menu'
 
-const props = defineProps<{ compact?: boolean }>()
+const props = defineProps<{ iconOnly?: boolean }>()
 
 const privacy = usePrivacyStore()
 const cloud = useCloudStore()
@@ -23,12 +23,14 @@ const status = computed(() => {
   }
 
   const active = privacy.current && privacy.choices?.telemetry
-  if (props.compact) {
+  if (props.iconOnly) {
     return active ? 'telemetry.enabled' : 'telemetry.disabled'
   }
 
   return active ? 'telemetry.on' : 'telemetry.off'
 })
+
+const label = computed(() => `${t('telemetry.settings')} · ${t(status.value)}`)
 
 function edit() {
   menu.settings = false
@@ -40,19 +42,14 @@ function edit() {
 
 <template>
   <button
-    v-if="privacy.enabled && cloud.signedIn && compact"
-    class="telemetry-settings compact"
+    v-if="privacy.enabled && cloud.signedIn && iconOnly"
+    class="telemetry-settings icon-only"
     type="button"
+    :title="label"
+    :aria-label="label"
     @click="edit"
   >
-    <ChartNoAxesColumn class="icon" :size="20" aria-hidden="true" />
-
-    <span class="text">
-      <strong>{{ t('telemetry.shortTitle') }}</strong>
-      <span class="status">{{ t(status) }}</span>
-    </span>
-
-    <ArrowUpRight class="arrow" :size="16" aria-hidden="true" />
+    <ChartNoAxesColumn :size="20" aria-hidden="true" />
   </button>
 
   <section v-else-if="privacy.enabled && cloud.signedIn" class="telemetry-settings">
@@ -76,53 +73,27 @@ function edit() {
   font-size: 13px;
 }
 
-.compact {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border: 1px solid var(--edge);
+.icon-only {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius);
-  background: var(--card);
-  color: var(--chalk);
+  background: rgba(244, 197, 91, 0.1);
+  color: var(--gold);
   font: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
-.compact:hover {
-  border-color: var(--edge-strong);
-  background: linear-gradient(180deg, var(--panel-raised), rgba(24, 34, 29, 0.95));
+.icon-only:hover {
+  background: rgba(244, 197, 91, 0.18);
 }
 
-.compact:focus-visible {
+.icon-only:focus-visible {
   outline: 2px solid var(--gold);
-  outline-offset: 3px;
-}
-
-.icon {
-  flex: none;
-  box-sizing: content-box;
-  padding: 10px;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--gold) 14%, transparent);
-  color: var(--gold);
-}
-
-.text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.compact strong {
-  font-size: 13px;
-}
-
-.arrow {
-  flex: none;
-  color: var(--chalk-faint);
+  outline-offset: 2px;
 }
 </style>

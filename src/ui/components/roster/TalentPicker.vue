@@ -49,7 +49,6 @@ const options = computed(() =>
   <section class="talents" :class="{ picking }">
     <header class="head">
       <span class="label">{{ t('talentPicker.title') }}</span>
-      <span class="stars">★★</span>
     </header>
 
     <p v-if="hint" class="hint">{{ hint }}</p>
@@ -103,12 +102,6 @@ const options = computed(() =>
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--chalk-dim);
-}
-
-.stars {
-  font-size: 11px;
-  color: var(--gold);
-  letter-spacing: -0.05em;
 }
 
 .hint {

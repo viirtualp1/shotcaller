@@ -10,8 +10,8 @@ import { verdictFor } from '@/domain/match/judge'
 import { addRound, emptyMatchStats } from '@/domain/match/matchStats'
 import { headlessResolver } from '@/simulation/BattleSimulation'
 
-/* Whole matches run alongside the rest of the suite; 9.0's larger pool and talents made them longer on CI. */
-const FULL_MATCH_TIMEOUT = 30_000
+/* Multi-round simulations run alongside the rest of the suite and need room on slower CI workers. */
+const MATCH_SIMULATION_TIMEOUT = 30_000
 
 const emptyIncome = {
   base: 0,
@@ -63,7 +63,7 @@ function playOut(seed: string, rounds = Infinity) {
 describe('match statistics', () => {
   // Plays a whole match: since thrones are defended (v5) this seed goes all 20 rounds instead of ending
   // in round 7, which takes about as long as vitest's default 5 s timeout.
-  it('adds up every round of the match', { timeout: FULL_MATCH_TIMEOUT }, () => {
+  it('adds up every round of the match', { timeout: MATCH_SIMULATION_TIMEOUT }, () => {
     const match = playOut('stats')
     const { stats } = match
     const [ours, theirs] = stats.teams
@@ -79,7 +79,7 @@ describe('match statistics', () => {
     expect(heroKills).toBeLessThanOrEqual(ours.heroKills)
   })
 
-  it('keeps one row per hero fielded, adding up its rounds', () => {
+  it('keeps one row per hero fielded, adding up its rounds', { timeout: MATCH_SIMULATION_TIMEOUT }, () => {
     const { stats } = playOut('rows', 4)
     const keys = stats.heroes.map((h) => `${h.team}:${h.uid}`)
 
@@ -137,7 +137,7 @@ describe('match statistics', () => {
     }
   })
 
-  it('remembers who took each round, in order', () => {
+  it('remembers who took each round, in order', { timeout: MATCH_SIMULATION_TIMEOUT }, () => {
     const match = playOut('history', 4)
     const { winners, teams, draws } = match.stats
 
@@ -155,7 +155,7 @@ describe('match statistics', () => {
     expect(parseSnapshot(JSON.stringify(saved))?.stats.winners).toEqual([])
   })
 
-  it('survives a save and load', () => {
+  it('survives a save and load', { timeout: MATCH_SIMULATION_TIMEOUT }, () => {
     const match = playOut('saved', 4)
     const restored = parseSnapshot(serializeSnapshot(match.snapshot()))!
 

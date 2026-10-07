@@ -23,6 +23,12 @@ import { formatNumber, type MessageSchema } from '../i18n'
 type Params = Record<string, string>
 type Format = (value: number) => string
 
+interface AbilityValue {
+  readonly base: string
+  readonly bonus: string | null
+  readonly better: boolean
+}
+
 const SCALED_PARAMS = new Set(['damage', 'heal', 'hp', 'absorb', 'poison', 'repair', 'splashDamage'])
 /** Healing, shields and repairs grow with heal power rather than spell power. */
 const HEALING_PARAMS = new Set(['heal', 'absorb', 'repair'])
@@ -61,6 +67,41 @@ function abilityParams(
   }
 
   return params
+}
+
+/** Keep the ability's own numbers separate from equipment and lane bonuses. */
+function abilityValues(
+  format: Format,
+  id: AbilityId,
+  basePower: number,
+  power: number,
+  baseHealPower: number,
+  healPower: number,
+  talents: readonly TalentChoice[],
+): Record<string, AbilityValue> {
+  const base = abilityParams(format, id, basePower, baseHealPower, talents)
+  const values = tunedParams(id, talents)
+
+  return Object.fromEntries(
+    Object.entries(base).map(([key, value]) => {
+      const amount = values[key as keyof typeof values]
+      const healing = HEALING_PARAMS.has(key)
+
+      const delta = SCALED_PARAMS.has(key)
+        ? Math.round(amount * (healing ? healPower : power)) -
+          Math.round(amount * (healing ? baseHealPower : basePower))
+        : 0
+
+      return [
+        key,
+        {
+          base: value,
+          bonus: delta === 0 ? null : `${delta > 0 ? '+' : '−'}${format(Math.abs(delta))}`,
+          better: delta >= 0,
+        },
+      ]
+    }),
+  )
 }
 
 function modifierParams(format: Format, modifiers: Partial<StatModifiers>) {
@@ -141,6 +182,14 @@ export function useGameText() {
       return manaRegen ? t('innate.manaRegen', { mana: number(manaRegen) }) : null
     },
     abilityName: (id: AbilityId) => ABILITY_NAMES[id],
+    abilityValues: (
+      id: AbilityId,
+      basePower: number,
+      power: number,
+      baseHealPower: number,
+      healPower: number,
+      talents: readonly TalentChoice[] = [],
+    ) => abilityValues(number, id, basePower, power, baseHealPower, healPower, talents),
     /**
      * Mimicry names the ability of each role; given the role it took, it describes that one ability. Talents in effect
      * show up in the numbers.

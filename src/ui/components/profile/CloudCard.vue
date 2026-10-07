@@ -9,6 +9,7 @@ import { useSettingsStore } from '../../stores/settings'
 import { CLOUD_ICONS, maskEmail } from './cloudStatus'
 import { relativeTime } from './format'
 import DeleteAccountDialog from './DeleteAccountDialog.vue'
+import TelemetrySettings from '../settings/TelemetrySettings.vue'
 
 const cloud = useCloudStore()
 const settings = useSettingsStore()
@@ -59,10 +60,14 @@ function confirmDeletion() {
 
 <template>
   <section v-if="cloud.enabled" class="cloud" :data-status="local ? 'local' : cloud.status">
-    <span class="icon">
-      <HardDrive v-if="local" :size="20" />
-      <component :is="CLOUD_ICONS[cloud.status]" v-else :size="20" :class="{ spin: cloud.busy }" />
-    </span>
+    <div class="icons">
+      <TelemetrySettings icon-only class="telemetry" />
+
+      <span class="icon">
+        <HardDrive v-if="local" :size="20" />
+        <component :is="CLOUD_ICONS[cloud.status]" v-else :size="20" :class="{ spin: cloud.busy }" />
+      </span>
+    </div>
 
     <div class="text">
       <p class="heading">
@@ -114,11 +119,18 @@ function confirmDeletion() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 18px;
+  gap: 12px;
   padding: 14px 18px;
   border-radius: var(--radius);
   border: 1px solid var(--edge);
   background: var(--card);
+}
+
+.icons {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
 }
 
 .cloud[data-status='synced'] {

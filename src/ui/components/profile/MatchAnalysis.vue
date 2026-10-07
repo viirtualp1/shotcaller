@@ -16,8 +16,8 @@ import MatchDetails from './MatchDetails.vue'
 type Tab = 'rounds' | 'stats'
 
 /**
- * A match in full, for our own history and a coach's alike. Rounds first: a strip of every round, the turning one
- * marked, and the chosen round's lineups by lane, ours and theirs, with a replay. The usual stats sit in a second tab.
+ * A match in full, for our own history and a coach's alike. Match stats open first; the rounds tab shows each
+ * round, marks the turning one, and offers both lineups by lane with a replay.
  */
 const props = defineProps<{
   match: MatchRecord
@@ -29,7 +29,7 @@ const replay = useReplayStore()
 const text = useGameText()
 const { t } = text
 
-const tab = ref<Tab>('rounds')
+const tab = ref<Tab>('stats')
 const picked = ref<number | null>(null)
 
 const steps = computed(() => lineupSteps(props.match))
@@ -55,12 +55,12 @@ function watchRound() {
 <template>
   <div class="analysis">
     <div v-if="steps.length" class="tabs" role="tablist">
-      <button type="button" role="tab" class="tab" :aria-selected="tab === 'rounds'" @click="tab = 'rounds'">
-        {{ t('dossier.tabRounds') }}
-      </button>
-
       <button type="button" role="tab" class="tab" :aria-selected="tab === 'stats'" @click="tab = 'stats'">
         {{ t('dossier.tabStats') }}
+      </button>
+
+      <button type="button" role="tab" class="tab" :aria-selected="tab === 'rounds'" @click="tab = 'rounds'">
+        {{ t('dossier.tabRounds') }}
       </button>
     </div>
 

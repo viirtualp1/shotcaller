@@ -3,7 +3,6 @@ import { ArrowLeft, Castle, Flame, Percent, Skull, Swords, Timer, Trophy } from 
 import { computed, ref, type Component } from 'vue'
 import AvatarPicker from '../components/profile/AvatarPicker.vue'
 import CloudCard from '../components/profile/CloudCard.vue'
-import TelemetrySettings from '../components/settings/TelemetrySettings.vue'
 import CareerCard from '../components/profile/CareerCard.vue'
 import { winRate } from '../components/profile/format'
 import HeroTable from '../components/profile/HeroTable.vue'
@@ -16,7 +15,6 @@ import { useCloudStore } from '../stores/cloud'
 import { useDuelStore } from '../stores/duel'
 import { useMenuStore } from '../stores/menu'
 import { useProfileStore } from '../stores/profile'
-import { usePrivacyStore } from '../stores/privacy'
 import { useLeaderboardStore } from '../stores/leaderboard'
 
 interface Tile {
@@ -29,7 +27,6 @@ interface Tile {
 
 const profile = useProfileStore()
 const cloud = useCloudStore()
-const privacy = usePrivacyStore()
 const menu = useMenuStore()
 const duel = useDuelStore()
 const leaderboard = useLeaderboardStore()
@@ -123,14 +120,7 @@ function play() {
     </header>
 
     <main class="page">
-      <div
-        v-if="cloud.enabled"
-        class="save-overview"
-        :class="{ single: !privacy.enabled || !cloud.signedIn }"
-      >
-        <CloudCard class="cloud-save" />
-        <TelemetrySettings compact class="telemetry-card" />
-      </div>
+      <CloudCard class="cloud-save" />
 
       <div class="profile-overview">
         <ProfileHeader class="profile-header" @pick-avatar="picking = true" />
@@ -208,7 +198,6 @@ function play() {
   padding: 28px 20px calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
-.save-overview,
 .profile-overview {
   display: grid;
   grid-template-columns: minmax(0, 4fr) minmax(230px, 1fr);
@@ -216,15 +205,7 @@ function play() {
   gap: 16px;
 }
 
-.save-overview.single {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 .cloud-save {
-  min-width: 0;
-}
-
-.telemetry-card {
   min-width: 0;
 }
 
@@ -322,7 +303,6 @@ function play() {
 }
 
 @media (max-width: 900px) {
-  .save-overview,
   .profile-overview {
     grid-template-columns: minmax(0, 1fr);
   }

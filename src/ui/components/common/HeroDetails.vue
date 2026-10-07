@@ -15,6 +15,8 @@ import { useHeroStats } from '../../composables/useHeroStats'
 import { ADAPTIVE_ICON, ROLE_ICONS } from '../../icons'
 import ItemIcon from './ItemIcon.vue'
 import HeroResources from './HeroResources.vue'
+import AbilityDescription from './AbilityDescription.vue'
+import StatValue from './StatValue.vue'
 
 /**
  * Dota-style hero sheet: identity, then stats with the hero's own value in white and what items and lane synergies
@@ -92,6 +94,12 @@ const mana = computed(() => sheet.value.mana)
 /** Mana per attack the hero gets on its own, role included; items and synergies add the rest. */
 const basePerAttack = computed(() => BATTLE.manaPerAttack * sheet.value.base.manaGain)
 const bonusPerAttack = computed(() => Math.round((mana.value.perAttack - basePerAttack.value) * 10) / 10)
+const basePerDamage = computed(() => (BATTLE.manaPerDamageTaken / 10) * sheet.value.base.manaGain)
+
+const bonusPerDamage = computed(
+  () => Math.round((mana.value.perTenthOfHealthLost - basePerDamage.value) * 10) / 10,
+)
+
 const startingMana = computed(() => roleRules.value.startingManaRatio ?? 0)
 const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
 </script>
@@ -127,8 +135,7 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
           </dt>
 
           <dd>
-            {{ row.base }}
-            <span v-if="row.bonus" class="bonus" :class="{ worse: !row.better }">{{ row.bonus }}</span>
+            <StatValue :base="row.base" :bonus="row.bonus" :better="row.better" />
           </dd>
         </div>
       </dl>
@@ -151,15 +158,15 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
         </strong>
 
         <p>
-          {{
-            text.abilityDescription(
-              hero.ability,
-              sheet.total.spellPower,
-              sheet.total.healPower,
-              props.role,
-              activeTalents(stars, talent),
-            )
-          }}
+          <AbilityDescription
+            :ability-id="hero.ability"
+            :base-power="sheet.base.spellPower"
+            :power="sheet.total.spellPower"
+            :base-heal-power="sheet.base.healPower"
+            :heal-power="sheet.total.healPower"
+            :role="props.role"
+            :talents="activeTalents(stars, talent)"
+          />
         </p>
 
         <dl class="mana">
@@ -167,14 +174,24 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
             <dt>{{ t('card.mana.perAttack') }}</dt>
 
             <dd>
-              +{{ text.number(basePerAttack) }}
-              <span v-if="bonusPerAttack" class="bonus">+{{ text.number(bonusPerAttack) }}</span>
+              <StatValue
+                :base="`+${text.number(basePerAttack)}`"
+                :bonus="bonusPerAttack ? text.signed(bonusPerAttack) : null"
+                :better="bonusPerAttack > 0"
+              />
             </dd>
           </div>
 
           <div :title="t('card.mana.perDamageHint')">
             <dt>{{ t('card.mana.perDamage') }}</dt>
-            <dd>+{{ text.number(mana.perTenthOfHealthLost) }}</dd>
+
+            <dd>
+              <StatValue
+                :base="`+${text.number(basePerDamage)}`"
+                :bonus="bonusPerDamage ? text.signed(bonusPerDamage) : null"
+                :better="bonusPerDamage > 0"
+              />
+            </dd>
           </div>
 
           <div :title="t('card.mana.castHint')">
@@ -337,16 +354,6 @@ dd {
 .stat.spellAmp svg,
 .stat.healAmp svg {
   color: var(--mana);
-}
-
-.bonus {
-  margin-left: 2px;
-  color: var(--heal);
-  font-weight: 700;
-}
-
-.bonus.worse {
-  color: var(--theirs);
 }
 
 .block {
