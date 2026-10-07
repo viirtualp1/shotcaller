@@ -85,6 +85,7 @@ watch(
             v-if="notes.awaitingUpdate"
             :requested-version="notes.requestedVersion ?? undefined"
           />
+
           <h1 v-optical-align class="version hand">{{ patch.version }}</h1>
           <NoteLine :text="patch.title" class="headline" />
           <time :datetime="patch.date" class="date">{{ date }}</time>

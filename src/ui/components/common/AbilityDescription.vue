@@ -4,8 +4,9 @@ import { Translation } from 'vue-i18n'
 import { ROLE_SIGNATURES } from '@/content/heroes'
 import type { AbilityId, RoleId } from '@/content/ids'
 import { tunedParams, type TalentChoice } from '@/content/talents'
+import { abilityValueKind } from '../../abilityValueKinds'
 import { useGameText } from '../../composables/useGameText'
-import StatValue from './StatValue.vue'
+import AbilityValue from './AbilityValue.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -58,7 +59,7 @@ const signatures = computed(() =>
 <template>
   <Translation :keypath="keypath" scope="global" tag="span" class="description">
     <template v-for="(value, key) in values" :key="key" #[key]>
-      <StatValue v-bind="value" />
+      <AbilityValue :kind="abilityValueKind(props.abilityId, key)" v-bind="value" />
     </template>
 
     <template v-for="(name, roleId) in signatures" :key="roleId" #[roleId]>{{ name }}</template>

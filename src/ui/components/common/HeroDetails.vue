@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Axe, BowArrow, Droplet, Sparkles } from '@lucide/vue'
+import { Droplet, Link2, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
 import { previewHeroVitals, type HeroVitals } from '@/application/heroVitals'
 import { HEROES } from '@/content/heroes'
@@ -8,6 +8,7 @@ import { ITEMS } from '@/content/items'
 import { activeTalents, type TalentChoice } from '@/content/talents'
 import { ROLES } from '@/content/roles'
 import { BATTLE } from '@/content/rules'
+import { SYNERGY_BY_ID } from '@/content/synergies'
 import { heroSheet } from '@/domain/roster/heroSheet'
 import { cssColor } from '@/rendering/theme'
 import { starsLabel, useGameText } from '../../composables/useGameText'
@@ -19,8 +20,8 @@ import AbilityDescription from './AbilityDescription.vue'
 import StatValue from './StatValue.vue'
 
 /**
- * Dota-style hero sheet: identity, then stats with the hero's own value in white and what items and lane synergies
- * add in green, then the ability with its mana, and the passives.
+ * Dota-style hero sheet: identity and resources, then role and stats with the hero's own value in white
+ * and what items and lane synergies add in green, then the ability and innate passive.
  */
 const props = withDefaults(
   defineProps<{
@@ -30,6 +31,8 @@ const props = withDefaults(
     /** Synergies of the lane the hero stands on; none on the bench or in the shop. */
     synergies?: readonly SynergyId[]
     heading?: boolean
+    /** Off when the containing card shows live resources in its own header. */
+    resourceBars?: boolean
     /** Off where the hero's item slots are already on screen next to the sheet. */
     itemIcons?: boolean
     vitals?: HeroVitals | null
@@ -42,6 +45,7 @@ const props = withDefaults(
     items: () => [],
     synergies: () => [],
     heading: true,
+    resourceBars: true,
     itemIcons: true,
     vitals: null,
     role: undefined,
@@ -65,15 +69,6 @@ const soulMax = computed(
   () => props.items.map((id) => ITEMS[id].effects.soulMax ?? 0).find((max) => max > 0) ?? 0,
 )
 
-const range = computed(() => hero.value.stats.range)
-const attackReach = computed(() => range.value || BATTLE.meleeReach)
-
-const attackLabel = computed(() =>
-  range.value
-    ? t('card.ranged', { range: range.value })
-    : `${t('card.melee')} · ${t('card.peek.range')} ${text.number(attackReach.value)}`,
-)
-
 const innate = computed(() => text.heroPassive(props.heroId))
 
 const sheet = computed(() =>
@@ -88,7 +83,8 @@ const sheet = computed(() =>
   }),
 )
 
-const rows = computed(() => stats.rows(sheet.value, props.stars))
+const rows = computed(() => stats.sheetRows(sheet.value, props.heroId, props.stars))
+
 const mana = computed(() => sheet.value.mana)
 
 /** Mana per attack the hero gets on its own, role included; items and synergies add the rest. */
@@ -100,32 +96,43 @@ const bonusPerDamage = computed(
   () => Math.round((mana.value.perTenthOfHealthLost - basePerDamage.value) * 10) / 10,
 )
 
-const startingMana = computed(() => roleRules.value.startingManaRatio ?? 0)
 const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
 </script>
 
 <template>
   <div class="hero-details">
     <div class="facts">
-      <header v-if="heading" class="heading">
-        <strong class="name">{{ text.heroName(heroId) }}</strong>
-        <span class="stars">{{ starsLabel(stars) }}</span>
+      <header v-if="heading || resourceBars" class="sheet-head">
+        <div v-if="heading" class="heading">
+          <strong class="name">{{ text.heroName(heroId) }}</strong>
+          <span class="stars">{{ starsLabel(stars) }}</span>
+        </div>
+
+        <HeroResources v-if="resourceBars" :values="vitals" compact />
       </header>
 
-      <div class="meta">
-        <span class="chip attack" :title="attackLabel" :aria-label="attackLabel">
-          <BowArrow v-if="range" :size="14" />
-          <Axe v-else :size="14" />
-          <span class="range">{{ text.number(attackReach) }}</span>
+      <section class="block passive" :style="{ '--role': cssColor(roleRules.color) }">
+        <span class="label role-label">
+          <component :is="roleIcon" :size="14" aria-hidden="true" />
+          {{ t('card.rolePassive', { role: text.heroRoleName(heroId, props.role) }) }}
         </span>
 
-        <span class="chip role" :style="{ '--role': cssColor(roleRules.color) }">
-          <component :is="roleIcon" :size="13" />
-          {{ text.heroRoleName(heroId, props.role) }}
-        </span>
-      </div>
+        <p>{{ undecided ? t('roles.adaptive.passive') : text.rolePassive(playedRole) }}</p>
+      </section>
 
-      <HeroResources :values="vitals" />
+      <section
+        v-for="synergy in synergies"
+        :key="synergy"
+        class="block synergy"
+        :style="{ '--synergy': cssColor(SYNERGY_BY_ID[synergy].color) }"
+      >
+        <span class="label synergy-label">
+          <Link2 :size="14" aria-hidden="true" />
+          {{ t('card.synergy', { name: text.synergyName(synergy) }) }}
+        </span>
+
+        <p>{{ text.synergyEffect(synergy) }}</p>
+      </section>
 
       <dl class="stats" :title="t('card.statsHint')">
         <div v-for="row in rows" :key="row.key" class="stat" :class="row.key" :title="row.hint">
@@ -169,6 +176,8 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
           />
         </p>
 
+        <p class="mana-rule">{{ t('card.mana.rule', { n: text.number(mana.cost) }) }}</p>
+
         <dl class="mana">
           <div :title="t('card.mana.perAttackHint')">
             <dt>{{ t('card.mana.perAttack') }}</dt>
@@ -194,35 +203,16 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
             </dd>
           </div>
 
-          <div :title="t('card.mana.castHint')">
+          <div>
             <dt>{{ t('card.mana.cast') }}</dt>
             <dd>{{ stats.attacks(mana.attacksToCast) }}</dd>
           </div>
         </dl>
-
-        <p v-if="startingMana" class="first-cast">
-          {{
-            t('card.mana.firstCast', {
-              percent: text.number(startingMana * 100),
-              attacks: stats.attacks(mana.attacksToFirstCast),
-            })
-          }}
-        </p>
       </section>
 
       <section v-if="innate" class="block innate">
         <span class="label">{{ t('card.innate') }}</span>
         <p>{{ innate }}</p>
-      </section>
-
-      <section v-if="undecided" class="block passive">
-        <span class="label">{{ t('card.rolePassive', { role: t('roles.adaptive.name') }) }}</span>
-        <p>{{ t('roles.adaptive.passive') }}</p>
-      </section>
-
-      <section v-else class="block passive" :style="{ '--role': cssColor(roleRules.color) }">
-        <span class="label">{{ t('card.rolePassive', { role: text.roleName(playedRole) }) }}</span>
-        <p>{{ text.rolePassive(playedRole) }}</p>
       </section>
 
       <p v-if="soulMax" class="souls">
@@ -256,6 +246,12 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
   min-width: 0;
 }
 
+.sheet-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .heading {
   display: flex;
   align-items: baseline;
@@ -270,32 +266,21 @@ const vitals = computed(() => props.vitals ?? previewHeroVitals(props))
   color: var(--gold);
 }
 
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.chip {
+.role-label,
+.synergy-label {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--edge-strong);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--chalk-dim);
 }
 
-.range {
-  font-variant-numeric: tabular-nums;
-}
-
-.chip.role {
-  border-color: color-mix(in srgb, var(--role) 55%, transparent);
-  background: color-mix(in srgb, var(--role) 14%, transparent);
+.role-label svg {
   color: var(--role);
+  flex: none;
+}
+
+.synergy-label svg {
+  color: var(--synergy);
+  flex: none;
 }
 
 dl,
@@ -385,6 +370,10 @@ dd {
   border-left-color: var(--role);
 }
 
+.block.synergy {
+  border-left-color: var(--synergy);
+}
+
 .label {
   font-size: 10.5px;
   font-weight: 700;
@@ -421,22 +410,22 @@ p {
 
 .mana {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-top: 4px;
 }
 
 .mana > div {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 4px 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--mana) 8%, transparent);
 }
 
 .mana dt {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--chalk-dim);
 }
@@ -447,11 +436,6 @@ p {
   color: var(--chalk);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.first-cast {
-  font-size: 11.5px;
-  color: var(--chalk-faint);
 }
 
 .souls {

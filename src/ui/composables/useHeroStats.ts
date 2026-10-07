@@ -1,4 +1,6 @@
 import {
+  Axe,
+  BowArrow,
   Droplet,
   Footprints,
   Heart,
@@ -10,8 +12,9 @@ import {
   WandSparkles,
 } from '@lucide/vue'
 import type { Component } from 'vue'
-import type { StarLevel } from '@/content/ids'
-import { STAR_POWER } from '@/content/rules'
+import { HEROES } from '@/content/heroes'
+import type { HeroId, StarLevel } from '@/content/ids'
+import { BATTLE, STAR_POWER } from '@/content/rules'
 import type { HeroNumbers, HeroSheet } from '@/domain/roster/heroSheet'
 import { useGameText } from './useGameText'
 
@@ -90,6 +93,11 @@ export interface StatRow {
   readonly better: boolean
 }
 
+/** A row of the sheet as shown on cards: the stats with the attack range after the attack time. */
+export interface SheetRow extends Omit<StatRow, 'key'> {
+  readonly key: StatKey | 'range'
+}
+
 export interface StatChange {
   readonly key: StatKey | ManaKey
   readonly icon: Component
@@ -145,6 +153,32 @@ export function useHeroStats() {
     })
   }
 
+  /** Melee heroes show their reach, so every hero has a range to compare. */
+  function sheetRows(sheet: HeroSheet, heroId: HeroId, stars: StarLevel): SheetRow[] {
+    const values = rows(sheet, stars)
+    const attackIndex = values.findIndex((row) => row.key === 'attackTime')
+    const range = HEROES[heroId].stats.range
+    const reach = range || BATTLE.meleeReach
+
+    const hint = range
+      ? t('card.ranged', { range })
+      : `${t('card.melee')} · ${t('card.peek.range')} ${text.number(reach)}`
+
+    return [
+      ...values.slice(0, attackIndex + 1),
+      {
+        key: 'range',
+        icon: range ? BowArrow : Axe,
+        label: t('card.stats.range'),
+        hint,
+        base: text.number(reach),
+        bonus: null,
+        better: true,
+      },
+      ...values.slice(attackIndex + 1),
+    ]
+  }
+
   const attacks = (n: number) => t('card.mana.attacks', { n }, n)
 
   /** The stats an item changes on a hero, mana included: before and after it. */
@@ -197,6 +231,7 @@ export function useHeroStats() {
 
   return {
     rows,
+    sheetRows,
     changes,
     attacks,
   }

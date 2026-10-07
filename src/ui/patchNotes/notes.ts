@@ -126,12 +126,16 @@ export const PATCH_NOTES: readonly PatchNote[] = [
     },
     interface: [
       {
+        en: '**Ability values now have colors and icons**: physical damage is red, magical damage is blue, health and healing are green, and durations are gold. Descriptions also name the damage type.',
+        ru: '**Числа в описаниях способностей получили цвет и иконки**: физический урон — красный, магический — синий, здоровье и лечение — зелёные, длительность — золотая. В тексте также указан тип урона.',
+      },
+      {
         en: 'A link to a patch your game does not have yet now opens the last available patch with **a notice to wait for the Update button**.',
         ru: 'Ссылка на патч, которого ещё нет в твоей версии игры, открывает последний доступный патч с **подсказкой дождаться кнопки «Обновить»**.',
       },
       {
-        en: '**Ability, talent and item descriptions in English and Russian** are easier to read: effects and conditions use shorter sentences, and complex effects are split into separate lines.',
-        ru: '**Описания способностей, талантов и предметов на русском и английском** стали понятнее: эффекты и условия описаны короткими предложениями, а сложные эффекты разбиты на отдельные строки.',
+        en: '**Ability, talent and item descriptions in English and Russian** are easier to read: effects and conditions use shorter sentences, and complex effects are split into separate lines. Hero cards also explain how mana fills and when abilities activate.',
+        ru: '**Описания способностей, талантов и предметов на русском и английском** стали понятнее: эффекты и условия описаны короткими предложениями, а сложные эффекты разбиты на отдельные строки. Карточки героев также объясняют, как копится мана и когда срабатывает способность.',
       },
     ],
     fixes: [

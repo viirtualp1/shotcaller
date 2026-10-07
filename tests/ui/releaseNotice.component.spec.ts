@@ -52,7 +52,7 @@ describe('older patch notice', () => {
     useSettingsStore().locale = 'ru'
     await nextTick()
     expect(notice.textContent).toContain('Возможно, это старый патч')
-    expect(notice.textContent).toContain('Подожди, пока появится кнопка «Обновить»')
+    expect(notice.textContent).toContain('пока появится кнопка «Обновить»')
   })
 
   it('shows no notice for an available patch and clears it after an explicit selection', async () => {

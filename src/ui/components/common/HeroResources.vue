@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import type { HeroVitals } from '@/application/heroVitals'
 import { useGameText } from '../../composables/useGameText'
 
-const props = defineProps<{ values: HeroVitals }>()
+const props = withDefaults(defineProps<{ values: HeroVitals; compact?: boolean }>(), {
+  compact: false,
+})
+
 const text = useGameText()
 const { t } = text
 
@@ -26,7 +29,7 @@ function share(current: number, max: number) {
 </script>
 
 <template>
-  <div class="resources">
+  <div class="resources" :class="{ compact }">
     <div
       class="bar health"
       role="meter"
@@ -122,6 +125,22 @@ strong {
   visibility: hidden;
   padding-right: 0;
   padding-left: 8px;
+}
+
+.compact {
+  gap: 4px;
+}
+
+.compact .bar {
+  height: 18px;
+}
+
+.compact strong {
+  font-size: 12px;
+}
+
+.compact .gain {
+  font-size: 10px;
 }
 
 @media (prefers-reduced-motion: reduce) {

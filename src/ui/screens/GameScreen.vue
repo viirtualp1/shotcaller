@@ -343,17 +343,17 @@ onMounted(() => zoomHint.setActive(true))
     </header>
 
     <template v-if="wide">
-      <aside
-        ref="left"
-        class="hud-left"
-        :class="{ collapsed: battling, raised: !touch, pinned }"
-        :inert="battling"
-      >
-        <SandboxPanel />
-        <SynergyTracker />
-        <BenchGrid :dense="touch" />
-        <StashGrid :dense="touch" />
-      </aside>
+      <div ref="left" class="side-left" :class="{ raised: !touch }">
+        <aside class="hud-left" :class="{ collapsed: battling, pinned }" :inert="battling">
+          <SandboxPanel />
+          <SynergyTracker />
+          <BenchGrid :dense="touch" />
+          <StashGrid :dense="touch" />
+        </aside>
+
+        <!-- With a mouse the hero panel sits under the bench, Underlords style: it never covers the map. -->
+        <HeroCard v-if="!touch" class="left-card" />
+      </div>
 
       <aside
         ref="right"
@@ -384,7 +384,7 @@ onMounted(() => zoomHint.setActive(true))
       <div ref="sheetPeek" class="sheet-peek" aria-hidden="true" />
     </template>
 
-    <!-- Over the map, clear of the dock: notices, the placement hint and, on desktop, the open card. -->
+    <!-- Over the map, clear of the dock: notices, the placement hint and, on desktop, the open item card. -->
     <div class="hud-bottom">
       <NoticeToast />
 
@@ -396,10 +396,7 @@ onMounted(() => zoomHint.setActive(true))
         </p>
       </Transition>
 
-      <template v-if="wide && !touch">
-        <HeroCard spread />
-        <ItemCard />
-      </template>
+      <ItemCard v-if="wide && !touch" />
     </div>
 
     <PhaseBanner />
@@ -559,7 +556,6 @@ onMounted(() => zoomHint.setActive(true))
   zoom: var(--game-zoom);
 }
 
-.hud-bottom :deep(.hero-card),
 .hud-bottom :deep(.item-card) {
   max-height: calc((100dvh - 100px) / var(--game-zoom));
   overflow: auto;
@@ -605,7 +601,7 @@ onMounted(() => zoomHint.setActive(true))
   padding-top: 12px;
 }
 
-.wide .hud-left,
+.wide .side-left,
 .wide .hud-right {
   position: absolute;
   top: calc(84px + env(safe-area-inset-top, 0px));
@@ -619,7 +615,7 @@ onMounted(() => zoomHint.setActive(true))
 }
 
 /* Beside an empty corner a panel rises to the top of the window and gains its height. */
-.wide .hud-left.raised,
+.wide .side-left.raised,
 .wide .hud-right.raised {
   top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
 }
@@ -634,9 +630,26 @@ onMounted(() => zoomHint.setActive(true))
   overflow-y: auto;
 }
 
-.wide .hud-left {
+.wide .side-left {
   left: var(--gutter);
   width: var(--side);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.wide .side-left > * {
+  pointer-events: auto;
+}
+
+/* The column scrolls above the hero panel; during a battle it slides away and the panel stays put. */
+.wide .hud-left {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition:
     translate 0.35s ease-in-out,
     opacity 0.35s ease-in-out;
@@ -661,9 +674,22 @@ onMounted(() => zoomHint.setActive(true))
   scrollbar-width: thin;
 }
 
+/* With the hero panel open the lanes give up height first, so the bench and the stash stay in reach. */
+.wide .side-left:has(> .left-card) .hud-left.pinned > [data-tour='tracker'] {
+  min-height: 96px;
+}
+
 .wide .hud-left.collapsed {
   translate: calc(-100% - var(--gutter)) 0;
   opacity: 0;
+}
+
+/* The full sheet may grow taller than the window: then the panel scrolls and the column above it gives way. */
+.wide .side-left > .left-card {
+  flex: none;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .wide .hud-right {

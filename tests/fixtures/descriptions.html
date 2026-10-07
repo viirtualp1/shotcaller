@@ -49,7 +49,17 @@
           h('main', [
             h('nav', [h('a', { href: '?lang=ru' }, 'Русский'), h('a', { href: '?lang=en' }, 'English')]),
             h('div', { class: 'cards' }, [
-              ...['herald', 'stonewright', 'acolyte', 'oracle', 'necromancer', 'changeling'].map((heroId) =>
+              ...[
+                'engineer',
+                'pyromancer',
+                'rogue',
+                'herald',
+                'stonewright',
+                'acolyte',
+                'oracle',
+                'necromancer',
+                'changeling',
+              ].map((heroId) =>
                 h('article', h(HeroDetails, { heroId, stars: heroId === 'acolyte' ? 2 : 1, talent: 0 })),
               ),
               ...['broadsword', 'thornMail', 'soulbond', 'townPortal', 'echoShard', 'cursedBlade'].map(

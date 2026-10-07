@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { createApp, h, nextTick, reactive, type App } from 'vue'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { HeroId, ItemId, RoleId, StarLevel } from '@/content/ids'
+import type { HeroId, ItemId, RoleId, StarLevel, SynergyId } from '@/content/ids'
 import type { TalentChoice } from '@/content/talents'
 import HeroDetails from '@/ui/components/common/HeroDetails.vue'
 import { i18n } from '@/ui/i18n'
@@ -10,6 +10,7 @@ const props = reactive({
   heroId: 'pyromancer' as HeroId,
   stars: 1 as StarLevel,
   items: [] as ItemId[],
+  synergies: [] as SynergyId[],
   role: undefined as RoleId | undefined,
   talent: undefined as TalentChoice | undefined,
 })
@@ -29,6 +30,7 @@ beforeEach(() => {
   props.heroId = 'pyromancer'
   props.stars = 1
   props.items = []
+  props.synergies = []
   props.role = undefined
   props.talent = undefined
   i18n.global.locale.value = 'en'
@@ -44,6 +46,82 @@ afterEach(() => {
 })
 
 describe('hero detail bonuses', () => {
+  it.each(['en', 'ru'] as const)('shows current lane synergies below the role in %s', async (locale) => {
+    i18n.global.locale.value = locale
+    props.synergies = ['setup', 'trilane']
+    await nextTick()
+
+    const role = document.querySelector('.passive')!
+    const cards = [...document.querySelectorAll('.block.synergy')]
+    expect(role.querySelector('.role-label')?.firstElementChild?.tagName.toLowerCase()).toBe('svg')
+    expect(role.nextElementSibling).toBe(cards[0])
+    expect(cards[0]?.nextElementSibling).toBe(cards[1])
+    expect(cards[0]?.textContent).toContain('40%')
+    expect(cards[1]?.textContent).toContain('25%')
+    expect(cards[0]?.querySelector('.label')?.textContent).toContain(locale === 'en' ? 'Synergy:' : 'Связка:')
+
+    props.synergies = ['arcane']
+    await nextTick()
+    expect(document.querySelectorAll('.block.synergy')).toHaveLength(1)
+    expect(document.querySelector('.block.synergy p')?.textContent).toContain('20%')
+
+    props.synergies = []
+    await nextTick()
+    expect(document.querySelector('.block.synergy')).toBeNull()
+  })
+
+  it.each(['en', 'ru'] as const)('gives turret values distinct meanings and icons in %s', async (locale) => {
+    i18n.global.locale.value = locale
+    props.heroId = 'engineer'
+    await nextTick()
+
+    const duration = document.querySelector('.ability-value.duration')!
+    const health = document.querySelector('.ability-value.health')!
+    const damage = document.querySelector('.ability-value.physicalDamage')!
+    expect(duration.textContent).toBe('10')
+    expect(health.textContent).toBe('320')
+    expect(damage.textContent).toBe('28')
+    expect(duration.querySelector('svg')).not.toBeNull()
+    expect(health.querySelector('svg')).not.toBeNull()
+    expect(damage.querySelector('svg')).not.toBeNull()
+    expect(damage.getAttribute('title')).toBe(locale === 'en' ? 'Physical damage' : 'Физический урон')
+
+    expect(document.querySelector('.ability > p')?.textContent).toContain(
+      locale === 'en' ? 'physical damage per shot' : 'физического урона за выстрел',
+    )
+  })
+
+  it('distinguishes both damage types in a single ability and keeps item bonuses typed', async () => {
+    props.heroId = 'rogue'
+    props.items = ['staff']
+    await nextTick()
+
+    expect(document.querySelector('.ability-value.physicalDamage .stat-value')?.textContent).toBe('70+21')
+    expect(document.querySelector('.ability-value.magicalDamage .stat-value')?.textContent).toBe('25+8')
+    expect(document.querySelector('.ability > p')?.textContent).toContain('physical damage')
+    expect(document.querySelector('.ability > p')?.textContent).toContain('magical damage')
+
+    props.heroId = 'changeling'
+    props.role = 'carry'
+    await nextTick()
+    expect(document.querySelector('.ability-value.magicalDamage')).not.toBeNull()
+    expect(document.querySelector('.ability-value.physicalDamage')).toBeNull()
+  })
+
+  it.each(['en', 'ru'] as const)('explains automatic casting and labels mana gains in %s', async (locale) => {
+    i18n.global.locale.value = locale
+    props.heroId = 'spearman'
+    await nextTick()
+
+    const rule = document.querySelector('.mana-rule')?.textContent
+    const labels = [...document.querySelectorAll('.mana dt')].map((label) => label.textContent)
+
+    expect(rule).toContain(locale === 'en' ? 'automatically once they have 80 mana' : 'когда накопит 80 маны')
+
+    expect(labels[0]).toContain(locale === 'en' ? 'Mana per' : 'Мана за свою атаку')
+    expect(labels[1]).toContain(locale === 'en' ? '10% max health lost' : 'потерю 10% макс. здоровья')
+  })
+
   it.each(['en', 'ru'] as const)('shows Prayer’s talented target count in %s', async (locale) => {
     i18n.global.locale.value = locale
     props.heroId = 'acolyte'
