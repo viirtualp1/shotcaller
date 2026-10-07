@@ -73,7 +73,10 @@ const mana = computed(() => props.sheet.mana)
 /** Mimicry lists the numbers of the ability it borrowed, cast with Perfect Copy; undecided, it has none yet. */
 const shown = computed<{ id: AbilityId; boost: number } | null>(() => {
   if (ability.value !== 'mimic') {
-    return { id: ability.value, boost: 1 }
+    return {
+      id: ability.value,
+      boost: 1,
+    }
   }
 
   if (!props.role) {
@@ -82,7 +85,10 @@ const shown = computed<{ id: AbilityId; boost: number } | null>(() => {
 
   const tuned = tunedParams('mimic', active.value)
 
-  return { id: ROLE_SIGNATURES[props.role], boost: tuned.power * tuned.borrowed }
+  return {
+    id: ROLE_SIGNATURES[props.role],
+    boost: tuned.power * tuned.borrowed,
+  }
 })
 
 /** What the ability does, without numbers: they all stand in the rows below, as in Dota. */
@@ -104,10 +110,20 @@ const damageType = computed(() => {
   const kind = shown.value ? abilityValueKind(shown.value.id, 'damage') : null
 
   if (kind === 'magicalDamage') {
-    return { kind, icon: Zap, label: t('card.abilityTip.magical') }
+    return {
+      kind,
+      icon: Zap,
+      label: t('card.abilityTip.magical'),
+    }
   }
 
-  return kind === 'physicalDamage' ? { kind, icon: Swords, label: t('card.abilityTip.physical') } : null
+  return kind === 'physicalDamage'
+    ? {
+        kind,
+        icon: Swords,
+        label: t('card.abilityTip.physical'),
+      }
+    : null
 })
 
 const rows = computed(() => {
@@ -174,6 +190,7 @@ function withUnit(key: string, value: string) {
     <dl v-if="damageType" class="meta">
       <div>
         <dt>{{ t('card.abilityTip.damageType') }}</dt>
+
         <dd class="damage-type" :class="damageType.kind">
           <component :is="damageType.icon" :size="12" aria-hidden="true" />
           {{ damageType.label }}
@@ -186,6 +203,7 @@ function withUnit(key: string, value: string) {
     <dl v-if="rows.length" class="values">
       <div v-for="row in rows" :key="row.key">
         <dt>{{ row.label }}:</dt>
+
         <dd>
           <AbilityValue :kind="row.kind" :base="row.base" :bonus="row.bonus" :better="row.better" />
         </dd>

@@ -8,7 +8,7 @@ import AbilityTooltip from '@/ui/components/roster/AbilityTooltip.vue'
 import { i18n } from '@/ui/i18n'
 
 const props = reactive({
-  heroId: 'stormShaman' as HeroId,
+  heroId: 'shaman' as HeroId,
   stars: 1 as StarLevel,
   role: undefined as RoleId | undefined,
 })
@@ -24,7 +24,7 @@ function rows() {
 }
 
 beforeEach(() => {
-  props.heroId = 'stormShaman'
+  props.heroId = 'shaman'
   props.stars = 1
   props.role = undefined
   i18n.global.locale.value = 'en'
@@ -33,7 +33,11 @@ beforeEach(() => {
     render: () =>
       h(AbilityTooltip, {
         ...props,
-        sheet: heroSheet({ heroId: props.heroId, stars: props.stars, ...(props.role ? { role: props.role } : {}) }),
+        sheet: heroSheet({
+          heroId: props.heroId,
+          stars: props.stars,
+          ...(props.role ? { role: props.role } : {}),
+        }),
       }),
   }).use(i18n)
 
@@ -51,16 +55,17 @@ describe('ability tooltip', () => {
     i18n.global.locale.value = locale
     await nextTick()
 
-    expect(document.querySelector('.tip-name')?.textContent).toBe(
-      locale === 'en' ? 'Chain Lightning' : 'Цепная молния',
-    )
+    expect(document.querySelector('.tip-name')?.textContent).toBe('Chain Lightning')
+
     expect(document.querySelector('.meta')?.textContent).toContain(locale === 'en' ? 'Magical' : 'Магический')
     expect(document.querySelector('.body')?.textContent).not.toMatch(/\d/)
+
     expect(rows()).toEqual([
       [locale === 'en' ? 'Magical damage:' : 'Магический урон:', '110'],
       [locale === 'en' ? 'Targets:' : 'Целей:', '4'],
       [locale === 'en' ? 'Less damage per hit:' : 'Ослабление за удар:', '20%'],
     ])
+
     expect(document.querySelector('.tip-foot')?.textContent).toContain(
       locale === 'en' ? 'Full in 6 attacks' : 'Копится за 6 атак',
     )
