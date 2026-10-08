@@ -10,7 +10,7 @@ import { COPIES_PER_STAR, ECONOMY, MATCH, MERGE_COUNT, OPPONENT, POOL_COPIES, RO
  * judging, the shop, board checks, or the computer coach that plays on after a ghost's recording ends.
  * `tests/domain/matchRules.spec.ts` pins what this revision does and fails until it is bumped and repinned.
  */
-const MATCH_LOGIC_REVISION = 2
+const MATCH_LOGIC_REVISION = 3
 
 /**
  * Everything a whole match reads on top of the fights in `BALANCE_FINGERPRINT`: gold, prices, levels, judging and

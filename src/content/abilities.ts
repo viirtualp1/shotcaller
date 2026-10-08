@@ -1,4 +1,22 @@
 export const ABILITY_PARAMS = {
+  packCall: {
+    triggerRadius: 300,
+    count: 3,
+    maxAlive: 6,
+    hp: 180,
+    damage: 22,
+    lifetime: 10,
+    speed: 125,
+  },
+  starfall: {
+    damage: 170,
+    stun: 0.6,
+  },
+  reap: {
+    radius: 240,
+    threshold: 0.2,
+    damage: 190,
+  },
   charge: {
     radius: 260,
     damage: 120,
@@ -162,6 +180,9 @@ export type AbilityParams = typeof ABILITY_PARAMS
 
 /** Ability names are proper names and are not translated. */
 export const ABILITY_NAMES: Readonly<Record<keyof AbilityParams, string>> = {
+  packCall: 'Call of the Pack',
+  starfall: 'Starfall',
+  reap: 'Reaping',
   charge: 'Charge',
   volley: 'Volley',
   prayer: 'Prayer',

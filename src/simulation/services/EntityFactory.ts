@@ -405,7 +405,14 @@ export class EntityFactory {
   }
 
   skeleton(owner: HeroUnit, position: Vec2) {
-    const p = paramsOf(owner, 'raiseDead')
+    return this.summon(owner, position, paramsOf(owner, 'raiseDead'))
+  }
+
+  summon(
+    owner: HeroUnit,
+    position: Vec2,
+    p: { hp: number; damage: number; lifetime: number; speed?: number },
+  ) {
     const power = owner.caster.power
     const path = this.map.path(owner.team, owner.hero.lane)
     const { segment } = this.map.project(path, position)
@@ -421,7 +428,7 @@ export class EntityFactory {
       },
       armor: 0.1,
       structureDamage: 1.2,
-      speed: 80,
+      speed: p.speed ?? 80,
       status: freshStatus(),
       attack: {
         damage: p.damage * power,

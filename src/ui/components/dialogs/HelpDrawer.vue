@@ -369,6 +369,11 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
           </ul>
         </section>
 
+        <section>
+          <h3>{{ t('legends.title') }}</h3>
+          <p>{{ t('legends.help') }}</p>
+        </section>
+
         <RecipeBook />
       </DialogContent>
     </DialogPortal>

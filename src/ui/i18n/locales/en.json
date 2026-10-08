@@ -290,7 +290,10 @@
     "standard": "Plants a banner. Its effect depends on the lane order.",
     "mend": "Repairs the most damaged allied tower or throne in range, more in later rounds. Stands still while repairing; a stun interrupts it. Under the Defence order, repairs also reduce the structure damage credited to your opponent this round.",
     "mimic": "Uses the ability of the role it takes on its lane.",
-    "mimicAs": "Uses {ability}, the ability of its role. {effect}"
+    "mimicAs": "Uses {ability}, the ability of its role. {effect}",
+    "packCall": "Summons a pack of fast wolves to its lane.",
+    "starfall": "Damages and stuns heroes on the busiest enemy lane.",
+    "reap": "Executes a wounded hero. A kill makes the ability ready again."
   },
   "abilities": {
     "charge": "Leaps to the farthest enemy within {radius}. Deals {damage} magical damage and stuns the target for {stun} s.",
@@ -314,7 +317,10 @@
     "standard": "Plants a banner for {lifetime} s. It has {hp} health and a radius of {radius}. Its effect depends on the lane order:\nPush — creeps and summoned units attack {pushAttackSpeed}% faster and deal {pushStructureDamage}% more damage to structures.\nDefence — towers and the throne take {holdProtection}% less damage.\nTogether — heroes deal {groupDamage}% more damage. When planted, the banner stuns nearby enemies for {stun} s.\nNo order — heroes take {guard}% less damage.",
     "mend": "Repairs the most damaged allied tower or throne within {radius}. Restores {repair} health per second for {duration} s, with more healing in later rounds.\nStands still while repairing. A stun interrupts the repair.\nDefence order: repairs also reduce the structure damage credited to your opponent this round.",
     "mimic": "Uses the ability of its chosen role:\nCarry — {carry}. Support — {support}. Mage — {mage}.\nInitiator — {initiator}. Pusher — {pusher}. Ganker — {ganker}.",
-    "mimicAs": "{ability}: {effect}"
+    "mimicAs": "{ability}: {effect}",
+    "packCall": "Summons {count} wolves for {lifetime} s, each with {hp} health and {damage} physical attack damage. At most {maxAlive} wolves can be alive.",
+    "starfall": "Strikes every enemy hero on the lane with the most living enemy heroes for {damage} magical damage and a {stun} s stun, from anywhere on the map.",
+    "reap": "Strikes the most wounded hero within {radius} for {damage} magical damage. At or below {threshold}% health, executes through mitigation and shields. A kill fully refunds mana; revival prevents the refund."
   },
   "factions": {
     "legion": {
@@ -1547,6 +1553,18 @@
     "mimic": {
       "0": "The borrowed ability is {power}% stronger.",
       "1": "Mimicry costs {manaCost}% less mana."
+    },
+    "packCall": {
+      "0": "Summons {count} wolves, up to {maxAlive} at once.",
+      "1": "Wolves have {hp} health and {damage} damage."
+    },
+    "starfall": {
+      "0": "Damage increases to {damage}.",
+      "1": "Stuns for {stun} s."
+    },
+    "reap": {
+      "0": "Executes at {threshold}% health.",
+      "1": "Range {radius}, damage {damage}."
     }
   },
   "talentPicker": {
@@ -1692,5 +1710,9 @@
     "completes": "Builds into {name}",
     "confirm": "The components will be combined. This cannot be undone.",
     "cancel": "Cancel"
+  },
+  "legends": {
+    "title": "Tier IV heroes",
+    "help": "Alpha, Archon and Reaper cost 4 gold, with 4 shared copies each. Shop odds: 8% at the penultimate level and 20% at the maximum. Three copies grant two stars and a talent choice."
   }
 }

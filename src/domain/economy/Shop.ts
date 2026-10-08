@@ -6,7 +6,7 @@ import type { HeroPool } from './HeroPool'
 
 export type ShopSlot = HeroId | null
 
-const TIERS: readonly Tier[] = [1, 2, 3]
+const TIERS: readonly Tier[] = [1, 2, 3, 4]
 
 export class Shop {
   private offers: ShopSlot[] = []
@@ -58,6 +58,10 @@ export class Shop {
     ]
 
     for (const tier of fallbackOrder) {
+      if (tier === 4 && odds[3] === 0) {
+        continue
+      }
+
       const id = this.pool.draw(tier, this.rng)
       if (id) {
         return id

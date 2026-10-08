@@ -20,6 +20,45 @@ type TalentTable = { readonly [A in AbilityId]: readonly [TalentDefinition<A>, T
  * choice shapes the hero in the middle of a match without locking it out of the other upgrade for good.
  */
 export const TALENTS: TalentTable = {
+  packCall: [
+    {
+      name: 'Great Hunt',
+      params: {
+        count: 4,
+        maxAlive: 8,
+      },
+    },
+    {
+      name: 'Iron Fangs',
+      params: {
+        damage: 34,
+        hp: 240,
+      },
+    },
+  ],
+  starfall: [
+    {
+      name: 'Falling Stars',
+      params: { damage: 230 },
+    },
+    {
+      name: 'Event Horizon',
+      params: { stun: 1.4 },
+    },
+  ],
+  reap: [
+    {
+      name: 'Final Hour',
+      params: { threshold: 0.28 },
+    },
+    {
+      name: 'Long Shadow',
+      params: {
+        radius: 280,
+        damage: 330,
+      },
+    },
+  ],
   charge: [
     {
       name: 'Trample',
