@@ -127,6 +127,44 @@ export interface PatchNote {
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: '10.0.1',
+    date: '2026-10-08',
+    title: {
+      en: 'Fair ghosts',
+      ru: 'Честные призраки',
+    },
+    fixes: [
+      {
+        en: 'A ghost recording now meets you **only once in 30 days**, so every ghost match is a fresh opponent rather than a fight you have already learnt.',
+        ru: 'Запись призрака теперь попадается тебе **не чаще раза в 30 дней**: каждый матч с призраком — новый соперник, а не бой, который ты уже выучил.',
+      },
+      {
+        en: 'Your first **10 ghost matches each day** change your rating; further ones still count as matches played.',
+        ru: 'Рейтинг меняют **первые 10 матчей с призраками за день**; следующие засчитываются как сыгранные матчи.',
+      },
+      {
+        en: 'A win or a draw against a ghost counts only after **3 rounds** have been played.',
+        ru: 'Победа или ничья с призраком засчитывается только после **3 сыгранных раундов**.',
+      },
+      {
+        en: 'A game update no longer takes away rating you **earned against ghosts**.',
+        ru: 'Обновление игры больше не отнимает рейтинг, **заработанный в матчах с призраками**.',
+      },
+      {
+        en: 'Ranked now pairs you only with coaches whose game plays **exactly the same match**: same prices, gold and rules.',
+        ru: 'Ранкед теперь сводит тебя только с тренерами, у которых игра проходит **точно так же**: те же цены, золото и правила.',
+      },
+      {
+        en: 'Duels that changed no rating no longer use up the daily limit of **3 rated duels** between the same two coaches.',
+        ru: 'Дуэли, которые не изменили рейтинг, больше не расходуют дневной лимит в **3 рейтинговые дуэли** между одними и теми же тренерами.',
+      },
+      {
+        en: 'The privacy policy now explains how **ghost recordings** are used and how long they are kept.',
+        ru: 'Политика конфиденциальности теперь объясняет, как используются **записи призраков** и сколько они хранятся.',
+      },
+    ],
+  },
+  {
     version: '10.0',
     date: '2026-10-07',
     title: {
@@ -311,7 +349,7 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       },
       {
         en: '**Role synergies and factions work together.** Archer and Warden activate Wildkin’s speed and lifesteal, while Guardian adds **35% attack speed** to Archer. A recruit from another faction can open a new combination: Pyromancer alongside Spearman and Herald gets **40% more spell power** from Setup while the two soldiers keep their Legion bonus.',
-        ru: '**Ролевые синергии и фракции работают вместе.** Лучник и Страж получают скорость и вампиризм Диких, а синергия с поддержкой даёт Лучнику ещё **35% скорости атаки**. Герой другой фракции тоже открывает новую связку: Пиромант рядом с Копейщиком и Глашатаем получает **+40% силы заклинаний**, а два легионера сохраняют свой бонус.',
+        ru: '**Ролевые синергии и фракции работают вместе.** Archer и Warden получают скорость и вампиризм Диких, а синергия с поддержкой даёт Archer ещё **35% скорости атаки**. Герой другой фракции тоже открывает новую связку: Pyromancer рядом со Spearman и Herald получает **+40% силы заклинаний**, а два легионера сохраняют свой бонус.',
       },
       {
         en: '**Changeling joins the largest faction on its lane** and counts towards its bonus while still adapting its role. A Changeling with nobody to join has no faction bonus.',

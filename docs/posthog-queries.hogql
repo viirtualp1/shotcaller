@@ -37,3 +37,15 @@ where event = 'game_match_finished' and timestamp >= now() - interval 30 day
 group by hero, mode, kind, balance, rating_band
 having player_matches >= 30 and players >= 5
 order by player_matches desc;
+
+-- Faction steps: how often a lineup reached `legion:2` or `legion:3` in a match, and how those matches ended.
+-- `roundBoards[].factions` gives the same per round, against each round's verdict.
+select arrayJoin(JSONExtractArrayRaw(properties.faction_steps ?? '[]')) as faction_step,
+  properties.mode as mode, properties.kind as kind, properties.balance as balance,
+  count() as player_matches, count(distinct distinct_id) as players,
+  round(100.0 * countIf(properties.verdict = 'win') / count(), 2) as win_rate
+from events
+where event = 'game_match_finished' and timestamp >= now() - interval 30 day
+group by faction_step, mode, kind, balance
+having player_matches >= 30 and players >= 5
+order by player_matches desc;

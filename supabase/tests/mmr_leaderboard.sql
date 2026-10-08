@@ -1,4 +1,5 @@
--- Public fields, authoritative ordering and a read-only leaderboard. All fixtures roll back.
+-- Public fields and authoritative ordering of the leaderboard. Friend requests from it came back in
+-- 20261004160000_leaderboard_friend_requests. All fixtures roll back.
 begin;
 do $$
 begin
@@ -6,9 +7,6 @@ begin
     raise exception 'Apply supabase/migrations/20261003140000_mmr_leaderboard.sql before running this test';
   end if;
 
-  if to_regprocedure('public.request_leaderboard_friend(uuid)') is not null then
-    raise exception 'Apply supabase/migrations/20261003150000_read_only_leaderboard.sql before running this test';
-  end if;
 end;
 $$;
 

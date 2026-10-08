@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { LANE_IDS } from '@/content/ids'
+import { LANE_IDS, type HeroId, type LaneId } from '@/content/ids'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import { resolveLane } from '@/domain/synergy/resolveLane'
 import {
@@ -21,11 +21,28 @@ export const privacySchema = z.object({
 
 export { telemetrySchema, type Telemetry } from '../../../supabase/functions/_shared/telemetry.ts'
 
+/** The faction steps a lineup reaches on its lanes, as `legion:2`. */
+function factionSteps(picks: readonly { readonly heroId: HeroId; readonly lane: LaneId }[]) {
+  return [
+    ...new Set(
+      LANE_IDS.flatMap((lane) =>
+        resolveLane(
+          lane,
+          picks.filter((pick) => pick.lane === lane).map((pick) => pick.heroId),
+          'threeLanes',
+        )
+          .factions.standings.filter((standing) => standing.tier !== null)
+          .map((standing) => `${standing.faction}:${standing.tier}` as const),
+      ),
+    ),
+  ]
+}
+
 export function telemetryOf(record: MatchRecord): Telemetry {
   return telemetrySchema.parse({
     schema: 1,
     mode: record.mode,
-    kind: record.trialId ? 'trial' : record.duel ? 'duel' : 'ai',
+    kind: record.trialId ? 'trial' : record.duel?.ghost ? 'ghost' : record.duel ? 'duel' : 'ai',
     difficulty: record.difficulty,
     balance: record.balance,
     verdict: record.verdict,
@@ -33,6 +50,7 @@ export function telemetryOf(record: MatchRecord): Telemetry {
     rounds: record.rounds,
     lineup: record.lineup,
     synergies: record.synergies,
+    factions: factionSteps(record.lineup),
     heroes: record.heroes,
     ratingBand: Math.floor(record.ratingBefore / 200) * 200,
     goldEarned: record.goldEarned,
@@ -45,6 +63,12 @@ export function telemetryOf(record: MatchRecord): Telemetry {
         lane,
         items,
       })),
+      factions: factionSteps(
+        own.map(([heroId, , lane]) => ({
+          heroId,
+          lane,
+        })),
+      ),
       synergies: [
         ...new Set(
           LANE_IDS.flatMap(

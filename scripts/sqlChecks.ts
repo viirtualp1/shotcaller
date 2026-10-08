@@ -10,14 +10,6 @@ import { PGlite } from '@electric-sql/pglite'
  */
 const ROOT = fileURLToPath(new URL('../supabase/', import.meta.url))
 
-const TESTS = [
-  'ghosts.sql',
-  'ranked_integrity.sql',
-  'fair_duels.sql',
-  'security_hardening.sql',
-  'moderation.sql',
-]
-
 const db = new PGlite()
 
 try {
@@ -63,7 +55,12 @@ try {
     `${migrations.length} migrations loaded; Auth, Vault and pg_net are stubs; cron is unavailable.`,
   )
 
-  for (const file of TESTS) {
+  /* Every check, in name order: each one rolls its fixtures back, so they share the database. */
+  const tests = readdirSync(join(ROOT, 'tests'))
+    .filter((file) => file.endsWith('.sql'))
+    .sort()
+
+  for (const file of tests) {
     try {
       await db.exec(readFileSync(join(ROOT, 'tests', file), 'utf8'))
     } catch (error) {

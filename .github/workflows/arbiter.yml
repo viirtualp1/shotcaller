@@ -1,6 +1,7 @@
 name: Arbitrate disputed duels
 
-# Replays disputed ranked duels and settles their ratings (scripts/arbiter.ts). Needs the repository secrets
+# Replays disputed ranked duels and ghost duels and settles their ratings (scripts/arbiter.ts). The schedule runs once
+# the repository variable ARBITER_ENABLED is 'true'; a manual run always does. Needs the repository secrets
 # SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; missing credentials fail the job visibly.
 on:
   schedule:
@@ -17,6 +18,7 @@ permissions:
 jobs:
   arbitrate:
     name: Replay disputed duels
+    if: github.event_name == 'workflow_dispatch' || vars.ARBITER_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 

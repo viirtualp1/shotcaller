@@ -22,6 +22,8 @@ deterministic simulation the game runs. The replay settles the rating as the due
 2. Add the repository secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in **GitHub > Settings > Secrets and
    variables > Actions**. Missing credentials fail the workflow visibly instead of reporting a successful empty run.
 3. Run the workflow once by hand (**Actions > Arbitrate disputed duels > Run workflow**) and check its log.
+4. Add the repository variable `ARBITER_ENABLED` = `true` on the same page (**Variables** tab). Until then the
+   15-minute schedule stays idle instead of failing every run.
 
 To try it locally without settling anything:
 
@@ -31,9 +33,16 @@ SUPABASE_URL=https://<project>.supabase.co SUPABASE_SERVICE_ROLE_KEY=<key> npm r
 
 ## Versions
 
-A duel remembers the battle rules (`BALANCE_FINGERPRINT`) its coaches queued with. The arbiter only replays duels
-played under the rules of its own code; it waits a day for one played under other rules, then leaves it uncounted.
-Run the arbiter from the branch that is deployed, so a balance change and its arbiter go live together.
+A duel remembers the rules of the whole match (`MATCH_RULES_FINGERPRINT` in `src/content/matchRules.ts`) its
+coaches queued with: the fights, and also prices, gold, levels, round judging and the computer coach that plays a
+ghost on. Two clients that would judge a board or a round differently are never paired, and the arbiter only
+replays a match under the rules of its own code. `tests/domain/matchRules.spec.ts` pins what each fingerprint does;
+a code change that plays a match differently fails it until `MATCH_LOGIC_REVISION` is bumped and the new
+fingerprint is pinned.
+
+A live dispute played under other rules waits a day for an arbiter of its version, then stays uncounted. A ghost
+duel under other rules keeps the result its coach reported. Run the arbiter from the branch that is deployed, and
+seed ghosts again (`npm run ghosts:seed`) after any release that changes the fingerprint.
 
 ## Ghost opponents
 
@@ -47,6 +56,9 @@ it. An abandoned match loses after two hours.
 The bootstrap ratings (0, 500, 1000) are provisional tiers for easy, standard and hard bot recordings, not measured
 player ratings. Finished live ranked matches supply real recordings. Seed every new balance fingerprint;
 old-rule runs are never selected. The pool keeps the newest 300 recordings per mode and balance.
+
+A coach meets each recording at most once in 30 days, only the first ten ghost duels of a day move their rating,
+and a ghost duel can be reported as won or drawn only after three rounds.
 
 The arbiter now also checks ghost results. Incomplete claimed results count as losses; explicit forfeits do not
 require a replay and cannot count as false reports. A broken ghost board or unavailable old rules neutralizes
@@ -65,8 +77,8 @@ are separate from the human's, so purchases and reloads cannot change the arbite
 
 ## Release checks
 
-`npm run test:sql` loads all migrations into a disposable PGlite PostgreSQL database and runs the ghost,
-ranked integrity, fair-duel, security-hardening and moderation checks. It uses local Auth/Vault/pg_net stubs and
+`npm run test:sql` loads all migrations into a disposable PGlite PostgreSQL database and runs every check in
+`supabase/tests`. It uses local Auth/Vault/pg_net stubs and
 does not validate hosted cron or Edge Functions. CI runs it alongside application tests and both builds.
 
 Apply migrations, deploy the changed `steam-auth` and `game-telemetry` Edge Functions, seed the current balance

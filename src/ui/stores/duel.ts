@@ -31,7 +31,7 @@ import {
   type DuelService,
 } from '@/application/social/duels'
 import type { ReactionId, ReactionLink } from '@/application/social/reactions'
-import { BALANCE_FINGERPRINT } from '@/content/balance'
+import { MATCH_RULES_FINGERPRINT } from '@/content/matchRules'
 import { DUEL_PAUSE } from '@/content/rules'
 import { opponentOf, type ModeId, type TeamId } from '@/content/ids'
 import type { MatchResult } from '@/domain/match/judge'
@@ -765,7 +765,7 @@ export const useDuelStore = defineStore('duel', () => {
     }
 
     try {
-      const id = foundMatch ?? (mode ? await connection.findMatch(mode, BALANCE_FINGERPRINT) : null)
+      const id = foundMatch ?? (mode ? await connection.findMatch(mode, MATCH_RULES_FINGERPRINT) : null)
       if (service !== connection) {
         return
       }
@@ -774,7 +774,7 @@ export const useDuelStore = defineStore('duel', () => {
 
       if (!id) {
         if (mode && searching.value === mode && choosingGhost.value) {
-          const ghost = await connection.findGhost(mode, BALANCE_FINGERPRINT)
+          const ghost = await connection.findGhost(mode, MATCH_RULES_FINGERPRINT)
           if (service === connection) {
             if (ghost) {
               begin(localizeEntry(ghost))
