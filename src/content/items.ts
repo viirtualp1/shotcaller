@@ -1,4 +1,11 @@
-import type { ItemId, RoleId, ShopItemId, UpgradedItemId } from './ids'
+import {
+  SHOP_ITEM_IDS,
+  type ItemId,
+  type RoleId,
+  type ShopItemId,
+  type UpgradedItemId,
+  type RecipeItemId,
+} from './ids'
 import { combineModifiers, type StatModifiers } from './modifiers'
 import { ROLES } from './roles'
 
@@ -232,16 +239,148 @@ const UPGRADES: Readonly<Record<ShopItemId, Upgrade>> = {
   },
 }
 
+export interface ItemRecipe {
+  readonly a: ShopItemId
+  readonly b: ShopItemId
+  readonly result: RecipeItemId
+}
+
+export const RECIPES: readonly ItemRecipe[] = [
+  {
+    a: 'broadsword',
+    b: 'gloves',
+    result: 'tempestBlade',
+  },
+  {
+    a: 'chainmail',
+    b: 'vitality',
+    result: 'bastionPlate',
+  },
+  {
+    a: 'staff',
+    b: 'manaStone',
+    result: 'echoStaff',
+  },
+  {
+    a: 'vampireFang',
+    b: 'broadsword',
+    result: 'bloodEdge',
+  },
+  {
+    a: 'thornMail',
+    b: 'vitality',
+    result: 'thornHeart',
+  },
+  {
+    a: 'aegis',
+    b: 'chalice',
+    result: 'phoenixChalice',
+  },
+  {
+    a: 'soulJar',
+    b: 'broadsword',
+    result: 'soulReaper',
+  },
+  {
+    a: 'soulbond',
+    b: 'boots',
+    result: 'wayfarerBond',
+  },
+]
+
+export const isShopItem = (id: ItemId): id is ShopItemId => (SHOP_ITEM_IDS as readonly string[]).includes(id)
+
+export const recipeOf = (a: ItemId, b: ItemId) =>
+  RECIPES.find((r) => (r.a === a && r.b === b) || (r.a === b && r.b === a))?.result ?? null
+
+export const recipeFor = (id: ItemId) => RECIPES.find((r) => r.result === id)
+
+const RECIPE_ITEMS: Readonly<Record<RecipeItemId, ItemDefinition>> = {
+  tempestBlade: item(
+    'tempestBlade',
+    'Tempest Blade',
+    6,
+    { attackSpeed: 1.2 },
+    {
+      critChance: 0.2,
+      critMultiplier: 2,
+    },
+  ),
+  bastionPlate: item('bastionPlate', 'Bastion Plate', 6, {
+    damageTaken: 0.85,
+    maxHp: 1.25,
+  }),
+  echoStaff: item(
+    'echoStaff',
+    'Echo Staff',
+    7,
+    {
+      spellPower: 1.5,
+      manaGain: 1.5,
+    },
+    {
+      echo: 0.25,
+      echoDelay: 1.5,
+    },
+  ),
+  bloodEdge: item(
+    'bloodEdge',
+    'Blood Edge',
+    7,
+    {},
+    {
+      lifesteal: 0.2,
+      spellLifesteal: 0.1,
+      critChance: 0.2,
+      critMultiplier: 2,
+    },
+  ),
+  thornHeart: item(
+    'thornHeart',
+    'Thorn Heart',
+    7,
+    {
+      damageTaken: 0.95,
+      maxHp: 1.25,
+    },
+    { thorns: 0.3 },
+  ),
+  phoenixChalice: item('phoenixChalice', 'Phoenix Chalice', 9, { healPower: 1.35 }, { revive: 0.6 }),
+  soulReaper: item(
+    'soulReaper',
+    'Soul Reaper',
+    7,
+    {},
+    {
+      soulDamage: 0.04,
+      soulMax: 10,
+      critChance: 0.2,
+      critMultiplier: 2,
+    },
+  ),
+  wayfarerBond: item(
+    'wayfarerBond',
+    'Wayfarer Bond',
+    5,
+    { speed: 1.25 },
+    {
+      bond: 0.35,
+      bondRange: 320,
+    },
+  ),
+}
+
 export const isUpgraded = (id: ItemId): id is UpgradedItemId => id.endsWith('+')
 
 /** The shop item an item was made from; a shop item is its own base. */
-export const baseItemOf = (id: ItemId) => (isUpgraded(id) ? id.slice(0, -1) : id) as ShopItemId
+export const baseItemOf = (id: ItemId) => (isUpgraded(id) ? id.slice(0, -1) : id) as ShopItemId | RecipeItemId
 
 export const upgradeOf = (id: ShopItemId): UpgradedItemId => `${id}+`
 
 /** An upgrade is worth both copies that went into it, so selling or merging never makes or loses gold. */
-export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = Object.fromEntries(
-  Object.values(SHOP_ITEMS).flatMap((plain) => [
+export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = Object.fromEntries([
+  ...Object.entries(RECIPE_ITEMS),
+  ...Object.values(SHOP_ITEMS).flatMap((plain) => [
     [plain.id, plain],
     [
       upgradeOf(plain.id as ShopItemId),
@@ -254,7 +393,7 @@ export const ITEMS: Readonly<Record<ItemId, ItemDefinition>> = Object.fromEntrie
       },
     ],
   ]),
-) as Record<ItemId, ItemDefinition>
+]) as Record<ItemId, ItemDefinition>
 
 export const ITEM_SLOTS = 2
 export const STASH_SIZE = 6

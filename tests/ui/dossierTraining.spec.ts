@@ -37,6 +37,18 @@ describe('training a scouted build', () => {
     expect(match.view!.human.bench).toHaveLength(0)
   })
 
+  it('rebuilds crafted items from their components', () => {
+    const match = useMatchStore()
+    expect(
+      match.tryBuild('oneLane', {
+        ...build,
+        loadout: ['echoStaff', 'tempestBlade'],
+      }),
+    ).toBe(true)
+
+    expect(match.view!.human.lanes.mid.heroes[0]!.items).toEqual(['echoStaff', 'tempestBlade'])
+  })
+
   it('keeps an active match when training is requested', () => {
     const match = useMatchStore()
     match.newMatch()

@@ -1,6 +1,7 @@
 import type { FactionEffects } from '@/content/factions'
 import { HEROES } from '@/content/heroes'
 import type { LaneId, ModeId } from '@/content/ids'
+import { isShopItem } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { combineModifiers, type StatModifiers } from '@/content/modifiers'
 import { STAR_POWER } from '@/content/rules'
@@ -26,7 +27,8 @@ const gain = (key: keyof StatModifiers, value: number) => (key === 'damageTaken'
 const ITEM_POWER = 0.8
 
 export const heroPower = (hero: OwnedHero) =>
-  (HEROES[hero.heroId].tier + 1.5) * STAR_POWER[hero.stars] + hero.items.length * ITEM_POWER
+  (HEROES[hero.heroId].tier + 1.5) * STAR_POWER[hero.stars] +
+  hero.items.reduce((sum, item) => sum + (isShopItem(item) ? 1 : 2), 0) * ITEM_POWER
 
 /** A rough worth of a faction's passives, as a share of the hero's power. */
 const passiveWorth = ({

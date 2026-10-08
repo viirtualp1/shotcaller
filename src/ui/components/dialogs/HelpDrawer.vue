@@ -41,6 +41,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useModal } from '../../composables/useModal'
 import { FACTION_ICONS, ROLE_ICONS } from '../../icons'
 import HeroAvatar from '../common/HeroAvatar.vue'
+import RecipeBook from '../common/RecipeBook.vue'
 import ItemIcon from '../common/ItemIcon.vue'
 import { useMatchStore } from '../../stores/match'
 import { useMenuStore } from '../../stores/menu'
@@ -367,6 +368,8 @@ const copies = Array.from({ length: MERGE_COUNT }, (_, i) => i)
             </li>
           </ul>
         </section>
+
+        <RecipeBook />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>

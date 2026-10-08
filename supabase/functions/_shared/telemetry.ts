@@ -50,7 +50,18 @@ const shopItemIds = [
 ] as const
 
 /** Two copies of an item merge into its upgrade, named with a trailing plus. */
-const itemId = z.enum([...shopItemIds, ...shopItemIds.map((id) => `${id}+` as const)])
+const itemId = z.enum([
+  ...shopItemIds,
+  ...shopItemIds.map((id) => `${id}+` as const),
+  'tempestBlade',
+  'bastionPlate',
+  'echoStaff',
+  'bloodEdge',
+  'thornHeart',
+  'phoenixChalice',
+  'soulReaper',
+  'wayfarerBond',
+])
 
 const synergyId = z.enum(['guardian', 'setup', 'soloMid', 'trilane', 'siege', 'hunt', 'arcane', 'bulwark'])
 

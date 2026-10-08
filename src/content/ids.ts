@@ -111,11 +111,25 @@ export const SHOP_ITEM_IDS = [
 
 export type ShopItemId = (typeof SHOP_ITEM_IDS)[number]
 export type UpgradedItemId = `${ShopItemId}+`
-export type ItemId = ShopItemId | UpgradedItemId
+
+export const RECIPE_ITEM_IDS = [
+  'tempestBlade',
+  'bastionPlate',
+  'echoStaff',
+  'bloodEdge',
+  'thornHeart',
+  'phoenixChalice',
+  'soulReaper',
+  'wayfarerBond',
+] as const
+
+export type RecipeItemId = (typeof RECIPE_ITEM_IDS)[number]
+export type ItemId = ShopItemId | UpgradedItemId | RecipeItemId
 
 /** Every item a hero can carry: the shop's, then their upgrades in the same order. */
 export const ITEM_IDS = [
   ...SHOP_ITEM_IDS,
+  ...RECIPE_ITEM_IDS,
   ...SHOP_ITEM_IDS.map((id): UpgradedItemId => `${id}+`),
 ] as unknown as readonly [ItemId, ...ItemId[]]
 

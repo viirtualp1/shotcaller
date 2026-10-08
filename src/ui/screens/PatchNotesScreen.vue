@@ -22,6 +22,7 @@ import HeroAvatar from '../components/common/HeroAvatar.vue'
 import ItemIcon from '../components/common/ItemIcon.vue'
 import ReleaseNotice from '../components/common/ReleaseNotice.vue'
 import FeatureCard from '../components/patchNotes/FeatureCard.vue'
+import RecipeRelease from '../components/patchNotes/RecipeRelease.vue'
 import CareerRelease from '../components/patchNotes/CareerRelease.vue'
 import MatchmakingRelease from '../components/patchNotes/MatchmakingRelease.vue'
 import TrainingRelease from '../components/patchNotes/TrainingRelease.vue'
@@ -93,7 +94,9 @@ watch(
           <time :datetime="patch.date" class="date">{{ date }}</time>
         </section>
 
-        <CareerRelease v-if="patch.campaign === 'career'" />
+        <RecipeRelease v-if="patch.campaign === 'recipes'" />
+
+        <CareerRelease v-else-if="patch.campaign === 'career'" />
 
         <MatchmakingRelease v-else-if="patch.campaign === 'matchmaking'" />
 

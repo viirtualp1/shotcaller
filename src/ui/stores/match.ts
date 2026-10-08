@@ -29,7 +29,8 @@ import {
 import { DUEL_BATTLE_SPEED, DUEL_PLANNING_SECONDS, DUEL_SUMMARY_SECONDS } from '@/content/rules'
 import { DEFAULT_SANDBOX, type SandboxGoal, type SandboxSettings } from '@/content/sandbox'
 import { MODES } from '@/content/modes'
-import { baseItemOf, isUpgraded } from '@/content/items'
+import type { ItemLocation } from '@/domain/player/Player'
+import { baseItemOf, isUpgraded, recipeFor, recipeOf } from '@/content/items'
 import type { HeroBuild } from '@/domain/profile/dossier'
 import type { TalentChoice } from '@/content/talents'
 import type { BattleSetup } from '@/domain/battle/contracts'
@@ -170,6 +171,14 @@ export const useMatchStore = defineStore('match', () => {
   const live = shallowRef<LiveBattleView | null>(null)
   const simulation = shallowRef<BattleSimulation | null>(null)
   const battleSkipped = ref(false)
+
+  const pendingRecipe = shallowRef<{
+    from: ItemLocation
+    to: ItemLocation
+    parts: readonly [ItemId, ItemId]
+    result: ItemId
+  } | null>(null)
+
   const notice = shallowRef<Notice | null>(null)
   /** The match against the computer saved on this device, for the start screen. */
   const saved = shallowRef<MatchState | null>(repository.load())
@@ -295,6 +304,7 @@ export const useMatchStore = defineStore('match', () => {
   }
 
   function clearSelection() {
+    pendingRecipe.value = null
     selectedUid.value = null
     selectedItem.value = null
     inspectedUid.value = null
@@ -362,7 +372,14 @@ export const useMatchStore = defineStore('match', () => {
 
     for (const item of build.loadout) {
       const base = baseItemOf(item)
-      match.human.buyItem(base)
+      const recipe = recipeFor(item)
+      if (recipe) {
+        match.human.buyItem(recipe.a)
+        match.human.buyItem(recipe.b)
+        match.human.combine({ index: 1 }, { index: 0 })
+      } else {
+        match.human.buyItem(base)
+      }
 
       if (isUpgraded(item)) {
         match.human.buyItem(base)
@@ -646,6 +663,41 @@ export const useMatchStore = defineStore('match', () => {
 
     selectedItem.value = null
     apply(match.human.sellItem(index))
+  }
+
+  function requestCombine(from: ItemLocation, to: ItemLocation) {
+    if (!match || !isPlanning.value) {
+      return
+    }
+
+    const itemAt = (at: ItemLocation) =>
+      (at.uid === undefined ? match!.human.stash.items : match!.human.roster.locate(at.uid)?.hero.items)?.[
+        at.index
+      ]
+
+    const a = itemAt(from)
+    const b = itemAt(to)
+    const result = a && b ? recipeOf(a, b) : null
+    if (a && b && result) {
+      pendingRecipe.value = {
+        from,
+        to,
+        parts: [a, b],
+        result,
+      }
+    }
+  }
+
+  function confirmCombine() {
+    const pending = pendingRecipe.value
+    pendingRecipe.value = null
+
+    if (!match || !isPlanning.value || !pending) {
+      return
+    }
+
+    selectedItem.value = null
+    apply(match.human.combine(pending.from, pending.to, pending.parts))
   }
 
   function equip(index: number, uid: string) {
@@ -1059,6 +1111,10 @@ export const useMatchStore = defineStore('match', () => {
     live.value = null
   }
 
+  watch([isPlanning, liveMatchId], () => {
+    pendingRecipe.value = null
+  })
+
   /* Turning lane orders off takes back the ones given, so nothing unseen keeps steering the heroes. */
   watch(
     () => settings.laneOrders,
@@ -1123,6 +1179,9 @@ export const useMatchStore = defineStore('match', () => {
     sellItem,
     equip,
     unequip,
+    pendingRecipe,
+    requestCombine,
+    confirmCombine,
     reroll,
     buyXp,
     move,

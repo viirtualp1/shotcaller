@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { recipeOf } from '@/content/items'
 import type { StashItemView } from '@/application/views'
 import { useGameText } from '../../composables/useGameText'
 import { useDragStore } from '../../stores/drag'
@@ -21,6 +22,11 @@ const empties = computed(() => Math.max(0, human.value.stashSize - human.value.s
 
 /** With a hero picked, each item shows what it would change on them. */
 const target = computed(() => (store.selected ? loadoutOf(human.value, store.selected) : null))
+
+function preview(item: StashItemView) {
+  const source = drag.active && drag.payload?.kind === 'item' ? drag.payload : null
+  return source ? recipeOf(source.itemId, item.itemId) : null
+}
 
 function press(item: StashItemView, e: PointerEvent) {
   if (e.button !== 0) {
@@ -51,7 +57,13 @@ function press(item: StashItemView, e: PointerEvent) {
         <button
           type="button"
           class="slot anim-pop"
-          :class="{ selected: store.selectedItem === item.index }"
+          :class="{ selected: store.selectedItem === item.index, combinable: preview(item) !== null }"
+          :data-drop="`item:${item.index}`"
+          :title="
+            preview(item)
+              ? t('recipes.combine', { name: text.itemName(preview(item)!) })
+              : text.itemName(item.itemId)
+          "
           data-stash-item
           @pointerdown="press(item, $event)"
           @keydown.enter="store.selectItem(item.index)"
@@ -98,6 +110,7 @@ function press(item: StashItemView, e: PointerEvent) {
   transform: translateY(-2px);
 }
 
+.slot.combinable,
 .slot.selected {
   border-color: var(--gold);
   box-shadow: 0 0 0 1px var(--gold);

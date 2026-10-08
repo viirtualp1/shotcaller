@@ -1,7 +1,7 @@
 import { err, ok, type Result } from 'neverthrow'
 import { HEROES } from '@/content/heroes'
 import type { CoachLevel, HeroId, ItemId, LaneId, LaneStance, ModeId, TeamId } from '@/content/ids'
-import { isUpgraded, ITEM_SELL_RATIO, ITEMS, upgradeOf } from '@/content/items'
+import { isShopItem, recipeOf, recipeFor, ITEM_SELL_RATIO, ITEMS, upgradeOf } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, ECONOMY, ROSTER } from '@/content/rules'
 import { SANDBOX } from '@/content/sandbox'
@@ -43,10 +43,18 @@ export interface PlayerState {
   readonly ledger: Ledger
 }
 
+export type ItemLocation = { readonly index: number; readonly uid?: string }
+
 export type RoundVerdict = 'win' | 'loss' | 'draw'
 
 export const sellValue = (hero: OwnedHero) => HEROES[hero.heroId].tier * COPIES_PER_STAR[hero.stars]
-export const itemSellValue = (item: ItemId) => Math.floor(ITEMS[item].cost * ITEM_SELL_RATIO)
+
+export const itemSellValue = (item: ItemId): number => {
+  const recipe = recipeFor(item)
+  return recipe
+    ? itemSellValue(recipe.a) + itemSellValue(recipe.b)
+    : Math.floor(ITEMS[item].cost * ITEM_SELL_RATIO)
+}
 
 export class Player {
   readonly wallet: Wallet
@@ -168,7 +176,7 @@ export class Player {
 
   /** Returns the upgrade when the new item merged with a copy waiting in the stash. */
   buyItem(item: ItemId): Result<ItemId | null, DomainError> {
-    if (isUpgraded(item)) {
+    if (!isShopItem(item)) {
       return err({ code: 'itemNotFound' })
     }
 
@@ -220,7 +228,7 @@ export class Player {
     const copy = hero.items.findIndex((carried) => mergesWith(item, carried))
 
     return this.stash.take(stashIndex).map((taken) => {
-      if (copy >= 0 && !isUpgraded(taken)) {
+      if (copy >= 0 && isShopItem(taken)) {
         const upgrade = upgradeOf(taken)
         hero.items[copy] = upgrade
 
@@ -231,6 +239,35 @@ export class Player {
 
       return null
     })
+  }
+
+  /** Both locations are checked before changing either inventory. The result stays in the target slot. */
+  combine(
+    from: ItemLocation,
+    to: ItemLocation,
+    expected?: readonly [ItemId, ItemId],
+  ): Result<ItemId, DomainError> {
+    const source = from.uid === undefined ? this.stash.items : this.roster.locate(from.uid)?.hero.items
+    const target = to.uid === undefined ? this.stash.items : this.roster.locate(to.uid)?.hero.items
+    const a = source?.[from.index]
+    const b = target?.[to.index]
+    if (!source || !target || !a || !b || (source === target && from.index === to.index)) {
+      return err({ code: 'itemNotFound' })
+    }
+
+    if (expected && (expected[0] !== a || expected[1] !== b)) {
+      return err({ code: 'itemNotFound' })
+    }
+
+    const result = recipeOf(a, b)
+    if (!result) {
+      return err({ code: 'itemNotFound' })
+    }
+
+    target[to.index] = result
+    source.splice(from.index, 1)
+
+    return ok(result)
   }
 
   unequip(uid: string, itemIndex: number): Result<void, DomainError> {

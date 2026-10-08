@@ -1,10 +1,10 @@
 import { err, ok, type Result } from 'neverthrow'
 import type { ItemId } from '@/content/ids'
-import { isUpgraded, ITEM_SLOTS, STASH_SIZE, upgradeOf } from '@/content/items'
+import { isShopItem, ITEM_SLOTS, STASH_SIZE, upgradeOf } from '@/content/items'
 import type { DomainError } from '../errors'
 
 /** A shop item that a second copy turns into its upgrade; upgrades merge no further. */
-export const mergesWith = (item: ItemId, other: ItemId) => item === other && !isUpgraded(item)
+export const mergesWith = (item: ItemId, other: ItemId) => item === other && isShopItem(item)
 
 /** A free slot takes the item. A full hero still takes a copy of something it already carries. */
 export function heroCanEquip(carried: readonly ItemId[], item: ItemId) {
@@ -36,7 +36,7 @@ export class Stash {
     }
 
     const copy = this.stored.findIndex((stored) => mergesWith(item, stored))
-    if (copy >= 0 && !isUpgraded(item)) {
+    if (copy >= 0 && isShopItem(item)) {
       const upgrade = upgradeOf(item)
       this.stored[copy] = upgrade
 
