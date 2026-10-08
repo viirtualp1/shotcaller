@@ -20,6 +20,7 @@ import BoardView from '../components/board/BoardView.vue'
 import ZoomHint from '../components/board/ZoomHint.vue'
 import ConfirmFightDialog from '../components/dialogs/ConfirmFightDialog.vue'
 import GameMenuDialog from '../components/dialogs/GameMenuDialog.vue'
+import CombineDialog from '../components/dialogs/CombineDialog.vue'
 import HelpDrawer from '../components/dialogs/HelpDrawer.vue'
 import MatchReportDialog from '../components/dialogs/report/MatchReportDialog.vue'
 import RoundSummaryDialog from '../components/dialogs/RoundSummaryDialog.vue'
@@ -423,6 +424,7 @@ onMounted(() => zoomHint.setActive(true))
     <RoundSummaryDialog />
     <ConfirmFightDialog />
     <MatchReportDialog />
+    <CombineDialog />
     <HelpDrawer v-model:open="menu.help" />
     <GameMenuDialog />
     <ZoomHint />

@@ -15,7 +15,7 @@ import {
   type StarLevel,
   type TeamId,
 } from '@/content/ids'
-import { ITEMS, ITEM_SLOTS, STASH_SIZE, upgradeOf } from '@/content/items'
+import { ITEMS, ITEM_SLOTS, STASH_SIZE, upgradeOf, recipeOf } from '@/content/items'
 import { MODES } from '@/content/modes'
 import { COPIES_PER_STAR, MERGE_COUNT } from '@/content/rules'
 import type { TwistId } from '@/content/experiments'
@@ -73,7 +73,7 @@ export interface ShopOfferView {
 export type ItemForge = 'buy' | 'equip'
 
 export interface ItemOfferView {
-  readonly itemId: ItemId
+  readonly itemId: ShopItemId
   readonly cost: number
   readonly affordable: boolean
   /** The stash has room for it. */
@@ -82,6 +82,7 @@ export interface ItemOfferView {
   readonly ownedCopies: number
   /** Buying this item can make its upgrade; null without a plain copy to pair with. */
   readonly forge: ItemForge | null
+  readonly recipes: readonly ItemId[]
 }
 
 export interface StashItemView {
@@ -318,6 +319,7 @@ function toPlayerView(player: Player) {
       fits: player.stash.accepts(itemId),
       ownedCopies: itemCopiesOf(itemId),
       forge: itemForge(itemId),
+      recipes: [...new Set(items.flatMap((other) => recipeOf(itemId, other) ?? []))],
     })),
   }
 }

@@ -18,6 +18,7 @@ const MATCH_TIMEOUT = 30_000
  * Then add the new fingerprint here. Old entries stay, so a fingerprint can never be reused for other behaviour.
  */
 const PINNED: Readonly<Record<string, string>> = {
+  '29d1cf83': '07d54e1d',
   '5c05c6b7': '6990e625',
 }
 

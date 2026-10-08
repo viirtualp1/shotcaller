@@ -1,7 +1,7 @@
 import { BALANCE_FINGERPRINT, fnv1a } from './balance'
 import { HEROES } from './heroes'
 import { HERO_IDS, ITEM_IDS, MODE_IDS } from './ids'
-import { ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS, STASH_SIZE } from './items'
+import { ITEM_SELL_RATIO, ITEM_SLOTS, ITEMS, STASH_SIZE, RECIPES } from './items'
 import { MODES } from './modes'
 import { COPIES_PER_STAR, ECONOMY, MATCH, MERGE_COUNT, OPPONENT, POOL_COPIES, ROSTER } from './rules'
 
@@ -10,7 +10,7 @@ import { COPIES_PER_STAR, ECONOMY, MATCH, MERGE_COUNT, OPPONENT, POOL_COPIES, RO
  * judging, the shop, board checks, or the computer coach that plays on after a ghost's recording ends.
  * `tests/domain/matchRules.spec.ts` pins what this revision does and fails until it is bumped and repinned.
  */
-const MATCH_LOGIC_REVISION = 1
+const MATCH_LOGIC_REVISION = 2
 
 /**
  * Everything a whole match reads on top of the fights in `BALANCE_FINGERPRINT`: gold, prices, levels, judging and
@@ -37,6 +37,7 @@ function matchRulesData() {
       id,
       cost: ITEMS[id].cost,
     })),
+    recipes: RECIPES,
     itemSlots: ITEM_SLOTS,
     stash: STASH_SIZE,
     itemSellRatio: ITEM_SELL_RATIO,

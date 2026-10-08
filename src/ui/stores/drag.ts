@@ -8,10 +8,11 @@ import { useMatchStore } from './match'
 
 export type DragPayload =
   | { readonly kind: 'hero'; readonly uid: string; readonly heroId: HeroId; readonly stars: StarLevel }
-  | { readonly kind: 'item'; readonly index: number; readonly itemId: ItemId }
+  | { readonly kind: 'item'; readonly index: number; readonly itemId: ItemId; readonly uid?: string }
 
 export type DropTarget =
   | { readonly kind: 'lane'; readonly lane: LaneId }
+  | { readonly kind: 'item'; readonly index: number; readonly uid?: string }
   | { readonly kind: 'bench' }
   | { readonly kind: 'sell' }
   | { readonly kind: 'hero'; readonly uid: string }
@@ -21,7 +22,18 @@ const LANE_IDS = new Set<string>(['top', 'mid', 'bot'])
 
 /** Parses `data-drop` attributes: "bench", "sell", "hero:<uid>" or "lane:<id>". */
 function parseDropAttribute(value: string): DropTarget | null {
-  const [kind, id] = value.split(':')
+  const [kind, id, slot] = value.split(':')
+  if (kind === 'item' && id !== undefined) {
+    const index = Number(slot ?? id)
+    if (Number.isInteger(index) && index >= 0) {
+      return {
+        kind: 'item',
+        index,
+        ...(slot === undefined ? {} : { uid: id }),
+      }
+    }
+  }
+
   if (kind === 'bench') {
     return { kind: 'bench' }
   }
@@ -49,10 +61,13 @@ function parseDropAttribute(value: string): DropTarget | null {
 
 function accepts(payload: DragPayload, target: DropTarget) {
   if (payload.kind === 'hero') {
-    return target.kind !== 'hero'
+    return target.kind !== 'hero' && target.kind !== 'item'
   }
 
-  return target.kind === 'hero' || target.kind === 'sell'
+  return (
+    target.kind === 'item' ||
+    (payload.uid === undefined && (target.kind === 'hero' || target.kind === 'sell'))
+  )
 }
 
 /**
@@ -209,7 +224,18 @@ export const useDragStore = defineStore('drag', () => {
       return
     }
 
-    if (where.kind === 'hero') {
+    if (where.kind === 'item') {
+      match.requestCombine(
+        {
+          index: current.index,
+          uid: current.uid,
+        },
+        {
+          index: where.index,
+          uid: where.uid,
+        },
+      )
+    } else if (where.kind === 'hero') {
       match.equip(current.index, where.uid)
     } else if (where.kind === 'sell') {
       match.sellItem(current.index)
@@ -219,6 +245,8 @@ export const useDragStore = defineStore('drag', () => {
   function click(current: DragPayload) {
     if (current.kind === 'hero') {
       match.select(current.uid)
+    } else if (current.uid) {
+      match.unequip(current.uid, current.index)
     } else {
       match.selectItem(current.index)
     }

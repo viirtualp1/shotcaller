@@ -408,7 +408,15 @@
     "soulbond": "Requires another hero with Soulbond on the same lane, no farther than {bondRange} away.\nTransfers {bond}% of incoming damage to that hero. Their armor reduces the transferred damage. The link works both ways.",
     "echoShard": "Repeats the ability after {echoDelay} s at {echo}% power. Repeated stuns last {echo}% of their normal duration.\nReduces mana gain by {manaGain}%.",
     "townPortal": "Once per round, teleports the wearer to an allied tower when that tower is attacked while below {portal}% health.\nThe wearer must be at least {portalDistance} away. After teleporting, the hero fights on that tower’s lane.",
-    "cursedBlade": "+{damage}% attack damage and +{attackSpeed}% attack speed.\nEach time the wearer dies, your throne loses {curse} health. This damage counts toward your opponent’s score for the round."
+    "cursedBlade": "+{damage}% attack damage and +{attackSpeed}% attack speed.\nEach time the wearer dies, your throne loses {curse} health. This damage counts toward your opponent’s score for the round.",
+    "tempestBlade": "Attacks have a {critChance}% chance to critically strike. Critical hits deal {critMultiplier}% of normal attack damage.\n+{attackSpeed}% attack speed.",
+    "bastionPlate": "Reduces damage taken by {damageTaken}%.\n+{maxHp}% maximum health.",
+    "echoStaff": "+{spellPower}% ability power.\nIncreases mana gain by {manaGain}%.\nRepeats the ability after {echoDelay} s at {echo}% power.",
+    "bloodEdge": "Restores health when dealing damage: {lifesteal}% of attack damage and {spellLifesteal}% of ability damage.\nAttacks have a {critChance}% chance to critically strike. Critical hits deal {critMultiplier}% of normal attack damage.",
+    "thornHeart": "Reflects {thorns}% of damage taken from attacks back to the attacker. Reduces damage taken by {damageTaken}%.\n+{maxHp}% maximum health.",
+    "phoenixChalice": "Once per round, prevents death and restores {revive}% of maximum health.\nIncreases healing, shields and the support aura by {healPower}%.",
+    "soulReaper": "Gains a soul for each enemy hero killed, up to {soulMax} souls. Each soul grants +{soulDamage}% attack damage.\nSouls carry over between rounds.\nAttacks have a {critChance}% chance to critically strike. Critical hits deal {critMultiplier}% of normal attack damage.",
+    "wayfarerBond": "Requires another hero with Soulbond on the same lane, no farther than {bondRange} away.\nTransfers {bond}% of incoming damage to that hero. Their armor reduces the transferred damage. The link works both ways.\n+{speed}% movement speed."
   },
   "hud": {
     "round": "Round {round} of {max}",
@@ -1676,5 +1684,13 @@
     "damageBonus": "Damage bonus",
     "damageReduction": "Damage reduction",
     "strength": "Ability strength"
+  },
+  "recipes": {
+    "title": "Recipe book",
+    "hint": "Drag one component onto the other in the stash or on a hero, then confirm. Two different items become one slot. Crafted items cannot be upgraded or bought from the shop.",
+    "combine": "Craft {name}",
+    "completes": "Builds into {name}",
+    "confirm": "The components will be combined. This cannot be undone.",
+    "cancel": "Cancel"
   }
 }

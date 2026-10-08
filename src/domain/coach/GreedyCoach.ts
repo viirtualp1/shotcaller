@@ -1,6 +1,6 @@
 import { HEROES } from '@/content/heroes'
 import type { HeroId, ItemId, RoleId } from '@/content/ids'
-import { isUpgraded, ITEM_SLOTS, ITEMS } from '@/content/items'
+import { isShopItem, recipeOf, RECIPES, ITEM_SLOTS, ITEMS } from '@/content/items'
 import { COPIES_PER_STAR, ECONOMY, OPPONENT, type OpponentStyle } from '@/content/rules'
 import { SYNERGIES } from '@/content/synergies'
 import type { Player } from '../player/Player'
@@ -53,7 +53,9 @@ export class GreedyCoach implements CoachStrategy {
     }
 
     /* Reserve one item before shopping can spend the whole round's income on heroes and rerolls. */
-    const itemBought = this.outfit(player, context)
+    this.combineItems(player)
+    const itemBought = this.completeRecipe(player, context) || this.outfit(player, context)
+    this.combineItems(player)
     const goldFloor = itemBought ? this.options.goldReserveForItems : 0
 
     let rerolls = 0
@@ -177,6 +179,78 @@ export class GreedyCoach implements CoachStrategy {
       .forEach((h) => player.sell(h.uid))
   }
 
+  private combineItems(player: Player) {
+    for (const hero of player.roster.all()) {
+      if (hero.items.length === 2 && recipeOf(hero.items[0]!, hero.items[1]!)) {
+        player.combine(
+          {
+            uid: hero.uid,
+            index: 1,
+          },
+          {
+            uid: hero.uid,
+            index: 0,
+          },
+        )
+      }
+
+      for (let i = player.stash.items.length - 1; i >= 0; i--) {
+        const target = hero.items.findIndex((item) => recipeOf(item, player.stash.items[i]!) !== null)
+        if (target >= 0) {
+          player.combine(
+            { index: i },
+            {
+              uid: hero.uid,
+              index: target,
+            },
+          )
+        }
+      }
+    }
+
+    for (let i = player.stash.items.length - 1; i > 0; i--) {
+      const target = player.stash.items.findIndex(
+        (item, j) => j < i && recipeOf(item, player.stash.items[i]!) !== null,
+      )
+
+      if (target >= 0) {
+        player.combine({ index: i }, { index: target })
+      }
+    }
+  }
+
+  private completeRecipe(player: Player, { round }: CoachContext) {
+    if (round < this.options.itemsFromRound || player.stash.items.length) {
+      return false
+    }
+
+    const budget = player.wallet.gold - this.options.goldReserveForItems
+    for (const hero of [...player.roster.boardHeroes()].sort((a, b) => heroPower(b) - heroPower(a))) {
+      const wishlist = ITEM_WISHLIST[HEROES[hero.heroId].role]
+      for (const recipe of RECIPES) {
+        const owned = hero.items.findIndex((item) => item === recipe.a || item === recipe.b)
+        if (owned < 0 || !wishlist.includes(recipe.a) || !wishlist.includes(recipe.b)) {
+          continue
+        }
+
+        const missing = hero.items[owned] === recipe.a ? recipe.b : recipe.a
+        if (ITEMS[missing].cost <= budget && player.buyItem(missing).isOk()) {
+          player.combine(
+            { index: player.stash.items.length - 1 },
+            {
+              uid: hero.uid,
+              index: owned,
+            },
+          )
+
+          return true
+        }
+      }
+    }
+
+    return false
+  }
+
   /** Buys at most one item per turn, keeping the gold reserve for its next shop and level purchase. */
   private outfit(player: Player, context: CoachContext) {
     const { round } = context
@@ -222,7 +296,7 @@ export class GreedyCoach implements CoachStrategy {
 
     const budget = player.wallet.gold - this.options.goldReserveForItems
     for (const hero of [...player.roster.boardHeroes()].sort((a, b) => heroPower(b) - heroPower(a))) {
-      const plain = hero.items.find((item) => !isUpgraded(item) && ITEMS[item].cost <= budget)
+      const plain = hero.items.find((item) => isShopItem(item) && ITEMS[item].cost <= budget)
       if (plain && player.buyItem(plain).isOk()) {
         player.equip(player.stash.items.length - 1, hero.uid)
 

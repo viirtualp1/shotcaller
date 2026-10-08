@@ -41,6 +41,7 @@ export interface HeroNote extends Changes {
 
 /** The picture of a highlight card, drawn by the game itself rather than shipped as an image. */
 export type FeatureArt =
+  | { readonly kind: 'recipes'; readonly focus: 'slots' | 'choice' | 'echo' }
   | { readonly kind: 'map'; readonly mode: ModeId }
   | { readonly kind: 'modes' }
   | { readonly kind: 'ratings' }
@@ -99,6 +100,7 @@ export interface PatchNote {
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
   readonly campaign?:
+    | 'recipes'
     | 'career'
     | 'matchmaking'
     | 'training'
@@ -126,6 +128,74 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '10.1',
+    date: '2026-10-08',
+    campaign: 'recipes',
+    wide: true,
+    title: {
+      en: 'Two parts. More possibilities.',
+      ru: 'Два предмета. Больше возможностей.',
+    },
+    card: {
+      en: '**Eight recipes** turn familiar items into a new build. Combine two components, free a slot and make room for your next advantage.',
+      ru: '**Восемь рецептов** превращают знакомые предметы в новую сборку. Соедини компоненты, освободи слот и усиль героя ещё одним предметом.',
+    },
+    features: [
+      {
+        art: {
+          kind: 'recipes',
+          focus: 'slots',
+        },
+        title: {
+          en: 'A slot worth fighting for',
+          ru: 'Место для нового усиления',
+        },
+        text: {
+          en: 'Combine **two different items into one**. Keep critical strikes and attack speed together with Tempest Blade, or bring armor and health together in Bastion Plate.',
+          ru: 'Объедини **два разных предмета в один**. Tempest Blade соединяет критические удары и скорость атаки, а Bastion Plate — защиту и здоровье.',
+        },
+      },
+      {
+        art: {
+          kind: 'recipes',
+          focus: 'choice',
+        },
+        title: {
+          en: 'You choose when to craft',
+          ru: 'Решение за тобой',
+        },
+        text: {
+          en: '**Drag a component onto its partner** in the stash or on a hero, review the result and confirm. Find all **eight recipes** in the help book.',
+          ru: '**Перетащи компонент на его пару** на складе или на герое, посмотри результат и подтверди. Все **восемь рецептов** собраны в справке.',
+        },
+      },
+      {
+        art: {
+          kind: 'recipes',
+          focus: 'echo',
+        },
+        title: {
+          en: 'Give your spells an encore',
+          ru: 'Заклинание на бис',
+        },
+        text: {
+          en: 'Mage Staff + Mana Stone creates Echo Staff: ability power, faster mana gain and a second cast at **25% power** after **1.5 seconds**.',
+          ru: 'Mage Staff + Mana Stone дают Echo Staff: силу способностей, ускоренный набор маны и повторное применение с **25% силы** через **1,5 секунды**.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'A crafted item sells for the **combined sale value of its components**. Try a new build without losing extra gold to crafting.',
+        ru: 'Собранный предмет продаётся за **сумму цен продажи компонентов**. Пробуй новые сборки без дополнительной потери золота за сборку.',
+      },
+      {
+        en: 'The shop points out components for recipes you can complete. Computer coaches now craft items too.',
+        ru: 'Лавка подсказывает компоненты для доступных тебе рецептов. Тренеры-боты тоже собирают предметы.',
+      },
+    ],
+  },
   {
     version: '10.0.1',
     date: '2026-10-08',

@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { ItemId } from '@/content/ids'
-import { baseItemOf, isUpgraded } from '@/content/items'
+import { baseItemOf, isUpgraded, recipeFor } from '@/content/items'
 import { ITEM_ICONS } from '../../icons'
 
 /** `fill` stretches the icon over its container, for grid slots whose size depends on the layout. */
-withDefaults(defineProps<{ itemId: ItemId; size?: number; fill?: boolean }>(), { size: 34 })
+const props = withDefaults(defineProps<{ itemId: ItemId; size?: number; fill?: boolean }>(), { size: 34 })
+
+const parts = computed(() => {
+  const recipe = recipeFor(props.itemId)
+  return recipe ? [recipe.a, recipe.b] : [baseItemOf(props.itemId) as keyof typeof ITEM_ICONS]
+})
 </script>
 
 <template>
@@ -14,12 +20,27 @@ withDefaults(defineProps<{ itemId: ItemId; size?: number; fill?: boolean }>(), {
     :style="{ '--size': `${size}px` }"
     aria-hidden="true"
   >
-    <component :is="ITEM_ICONS[baseItemOf(itemId)]" :size="Math.round(size * 0.56)" :stroke-width="2.2" />
+    <span class="parts" :class="{ pair: parts.length === 2 }"
+      ><component
+        :is="ITEM_ICONS[part]"
+        v-for="part in parts"
+        :key="part"
+        :size="Math.round(size * (parts.length === 2 ? 0.36 : 0.56))"
+        :stroke-width="2.2"
+    /></span>
+
     <span v-if="isUpgraded(itemId)" class="plus">+</span>
   </span>
 </template>
 
 <style scoped>
+.parts {
+  display: flex;
+  align-items: center;
+}
+.parts.pair {
+  transform: rotate(-15deg);
+}
 .item {
   display: inline-grid;
   place-items: center;
@@ -64,8 +85,13 @@ withDefaults(defineProps<{ itemId: ItemId; size?: number; fill?: boolean }>(), {
   height: 100%;
 }
 
-.item.fill > svg {
+.item.fill .parts {
   width: 56%;
   height: 56%;
+}
+
+.item.fill .parts svg {
+  width: 100%;
+  height: 100%;
 }
 </style>

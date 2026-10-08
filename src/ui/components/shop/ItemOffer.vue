@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ItemOfferView } from '@/application/views'
-import { baseItemOf, upgradeOf } from '@/content/items'
+import { upgradeOf } from '@/content/items'
 import { useGameText } from '../../composables/useGameText'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ItemDetails from '../common/ItemDetails.vue'
@@ -14,7 +14,7 @@ defineEmits<{ buy: [itemId: ItemOfferView['itemId']] }>()
 const text = useGameText()
 const { t } = text
 const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
-const upgrade = computed(() => upgradeOf(baseItemOf(props.offer.itemId)))
+const upgrade = computed(() => upgradeOf(props.offer.itemId))
 </script>
 
 <template>
@@ -32,6 +32,11 @@ const upgrade = computed(() => upgradeOf(baseItemOf(props.offer.itemId)))
 
       <span class="info">
         <span class="name">{{ text.itemName(offer.itemId) }}</span>
+
+        <span v-if="offer.recipes.length" class="recipe">{{
+          t('recipes.completes', { name: text.itemName(offer.recipes[0]!) })
+        }}</span>
+
         <span class="desc">{{ text.itemDescription(offer.itemId) }}</span>
       </span>
 
@@ -60,6 +65,10 @@ const upgrade = computed(() => upgradeOf(baseItemOf(props.offer.itemId)))
 </template>
 
 <style scoped>
+.recipe {
+  font-size: 11px;
+  color: var(--gold);
+}
 .offer {
   display: flex;
   align-items: center;

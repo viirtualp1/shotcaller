@@ -5,7 +5,8 @@ import { computed, ref, watch } from 'vue'
 import { previewHeroVitals } from '@/application/heroVitals'
 import { FACTION_TIERS, FACTIONS } from '@/content/factions'
 import { HEROES } from '@/content/heroes'
-import { ITEM_SLOTS } from '@/content/items'
+import type { ItemId } from '@/content/ids'
+import { ITEM_SLOTS, recipeOf } from '@/content/items'
 import { ROLES } from '@/content/roles'
 import { SYNERGY_BY_ID } from '@/content/synergies'
 import { heroCanEquip } from '@/domain/items/Stash'
@@ -29,7 +30,7 @@ import TalentPicker from './TalentPicker.vue'
 
 /** Presses that keep the card open: the card itself and everything that acts on the selected hero. */
 const KEEP_OPEN =
-  '.hero-card, [data-drop^="lane:"], [data-drop^="hero:"], [data-drop="bench"], [data-stash-item]'
+  '.recipe-confirm, .hero-card, [data-drop^="lane:"], [data-drop^="hero:"], [data-drop="bench"], [data-stash-item]'
 
 /**
  * A unit panel in the manner of Dota and Underlords: who the hero is, its numbers and ability at a glance, items and
@@ -165,6 +166,27 @@ const slots = computed(() =>
 )
 
 const accent = computed(() => (located.value ? cssColor(HEROES[located.value.hero.heroId].color) : undefined))
+
+function pressItem(index: number, itemId: ItemId, event: PointerEvent) {
+  if (!canManage.value || event.button !== 0 || !located.value) {
+    return
+  }
+
+  drag.press(
+    {
+      kind: 'item',
+      uid: located.value.hero.uid,
+      index,
+      itemId,
+    },
+    event.clientX,
+    event.clientY,
+  )
+}
+
+function previewRecipe(item: ItemId) {
+  return draggedItem.value ? recipeOf(draggedItem.value.itemId, item) : null
+}
 
 function closeOnOutsidePress(event: PointerEvent) {
   if (!located.value) {
@@ -317,9 +339,16 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
               <button
                 type="button"
                 class="slot filled"
-                :class="{ locked: !canManage }"
+                :class="{ locked: !canManage, combinable: previewRecipe(slot.itemId) }"
+                :data-drop="canManage ? `item:${located.hero.uid}:${slot.index}` : undefined"
+                :title="
+                  previewRecipe(slot.itemId)
+                    ? t('recipes.combine', { name: text.itemName(previewRecipe(slot.itemId)!) })
+                    : undefined
+                "
                 :aria-label="text.itemName(slot.itemId)"
-                @click="canManage && store.unequip(located.hero.uid, slot.index)"
+                @pointerdown="pressItem(slot.index, slot.itemId, $event)"
+                @keydown.enter="canManage && store.unequip(located.hero.uid, slot.index)"
               >
                 <ItemIcon :item-id="slot.itemId" :size="38" />
               </button>
@@ -359,7 +388,7 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 
       <Transition name="fade">
         <div
-          v-if="equipping"
+          v-if="equipping && !slots.some((slot) => slot.itemId && previewRecipe(slot.itemId))"
           class="equip-zone"
           :class="{ hovered: equipHovered, blocked: !canReceiveItem }"
           :data-drop="`hero:${located.hero.uid}`"
@@ -372,6 +401,12 @@ useEventListener(document, 'pointerdown', closeOnOutsidePress, { capture: true }
 </template>
 
 <style scoped>
+.slot.combinable {
+  outline: 2px solid var(--gold);
+}
+.slot.filled {
+  touch-action: none;
+}
 /* A card for another hero fades in over the old one; the old one leaves the layout so nothing jumps. */
 .card-enter-active {
   transition:
