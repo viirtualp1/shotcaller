@@ -87,7 +87,7 @@ const copy = computed(() =>
 <style scoped>
 .legends-release {
   padding: 44px 32px;
-  margin-bottom: 40px;
+  margin-block: 40px;
   border: 1px solid var(--edge);
   border-radius: var(--radius);
   overflow: hidden;
