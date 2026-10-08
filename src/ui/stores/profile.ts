@@ -1,3 +1,5 @@
+import { cosmeticsFor } from '@/domain/profile/cosmetics'
+import type { FrameId, TitleId } from '@/content/progression'
 import { defineStore } from 'pinia'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed, shallowRef } from 'vue'
@@ -60,8 +62,8 @@ export const useProfileStore = defineStore('profile', () => {
   })
 
   function update(next: Profile) {
-    profile.value = next
-    repository.save(next)
+    profile.value = { ...next, cosmetics: cosmeticsFor(next.xp, next.cosmetics) }
+    repository.save(profile.value)
   }
 
   /**
@@ -133,6 +135,24 @@ export const useProfileStore = defineStore('profile', () => {
     })
   }
 
+  function equipFrame(frame: FrameId | null) {
+    const cosmetics = cosmeticsFor(profile.value.xp, profile.value.cosmetics)
+    if (frame && !cosmetics.frames.includes(frame)) {
+      return
+    }
+
+    update({ ...profile.value, cosmetics: { ...cosmetics, frame } })
+  }
+
+  function equipTitle(title: TitleId | null) {
+    const cosmetics = cosmeticsFor(profile.value.xp, profile.value.cosmetics)
+    if (title && !cosmetics.titles.includes(title)) {
+      return
+    }
+
+    update({ ...profile.value, cosmetics: { ...cosmetics, title } })
+  }
+
   function markZoomHintSeen() {
     if (profile.value.zoomHintSeen) {
       return
@@ -165,6 +185,8 @@ export const useProfileStore = defineStore('profile', () => {
     reset,
     rename,
     setAvatar,
+    equipFrame,
+    equipTitle,
     markZoomHintSeen,
   }
 })

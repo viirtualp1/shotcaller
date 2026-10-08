@@ -70,7 +70,7 @@ export function createMatch(options: MatchOptions = {}) {
     rival: rivalFor({
       ...options,
       mode: trial?.mode ?? options.mode,
-      difficulty: trial ? 'standard' : options.difficulty,
+      difficulty: trial ? (trial.difficulty ?? 'standard') : options.difficulty,
     }),
     mode: trial?.mode ?? options.mode ?? DEFAULT_MODE,
     ...(trial ? { trialId: trial.id } : {}),
@@ -86,7 +86,7 @@ export function restoreMatch(state: MatchState, options: Omit<MatchOptions, 'see
       rival: rivalFor({
         ...options,
         mode: state.mode,
-        ...(state.trialId ? { difficulty: 'standard' } : {}),
+        ...(state.trialId ? { difficulty: trialById(state.trialId).difficulty ?? 'standard' } : {}),
         link: state.link,
         sandbox: state.sandbox,
       }),

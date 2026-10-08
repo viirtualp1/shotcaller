@@ -6,6 +6,7 @@ import { HERO_IDS, MODE_IDS, type ModeId } from '@/content/ids'
 import type { LeaderboardEntry } from '@/application/social/leaderboard'
 import { rankFor } from '@/domain/profile/progression'
 import ModeMap from '../modes/ModeMap.vue'
+import CoachTitle from '../profile/CoachTitle.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import RankMedal from '../profile/RankMedal.vue'
 import { useGameText } from '../../composables/useGameText'
@@ -152,15 +153,15 @@ watch([mode, () => cloud.enabled, () => cloud.account?.id, () => cloud.signedIn]
               :aria-label="t('dossier.open', { name: entry.name || t('profile.defaultName') })"
               @click="friends.openProfile(entry.id)"
             >
-              <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="28" />
+              <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="28" />
 
-              <span class="name">{{ entry.name || t('profile.defaultName') }}</span>
+              <span class="name">{{ entry.name || t('profile.defaultName') }}<CoachTitle :title="entry.title" /></span>
             </button>
 
             <span v-else class="who" :title="t('dossier.private')">
-              <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="28" />
+              <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="28" />
 
-              <span class="name">{{ entry.name || t('profile.defaultName') }}</span>
+              <span class="name">{{ entry.name || t('profile.defaultName') }}<CoachTitle :title="entry.title" /></span>
 
               <Lock :size="11" class="lock" :aria-label="t('dossier.private')" />
             </span>

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { FRAME_IDS, TITLE_IDS } from '@/content/progression'
 import { z } from 'zod'
 import type { ModeId } from '@/content/ids'
 import { coachPhoto } from '../social/friends'
@@ -7,6 +8,8 @@ import type { Database } from './database'
 import { coachDossierSchema, dossierMatchSchema } from './dossierSchema'
 
 const entry = z.object({
+  frame: z.enum(FRAME_IDS).nullable().catch(null),
+  title: z.enum(TITLE_IDS).nullable().catch(null),
   id: z.uuid(),
   position: z.int().positive(),
   name: z.string().max(40),

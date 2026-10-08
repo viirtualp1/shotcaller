@@ -6,6 +6,7 @@ import { HERO_IDS, MODE_IDS, type ModeId } from '@/content/ids'
 import type { FriendRequestResult } from '@/application/social/friends'
 import { rankFor } from '@/domain/profile/progression'
 import ModeMap from '../components/modes/ModeMap.vue'
+import CoachTitle from '../components/profile/CoachTitle.vue'
 import CoachAvatar from '../components/profile/CoachAvatar.vue'
 import RankMedal from '../components/profile/RankMedal.vue'
 import { useGameText } from '../composables/useGameText'
@@ -175,6 +176,7 @@ watch(
                   <span class="bone round face" />
 
                   <div class="identity">
+                    <CoachTitle :title="entry.title" />
                     <span class="bone nick" />
                     <span class="bone action" />
                   </div>
@@ -204,7 +206,7 @@ watch(
 
               <td>
                 <div class="coach">
-                  <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="34" />
+                  <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="34" />
 
                   <div class="identity">
                     <button

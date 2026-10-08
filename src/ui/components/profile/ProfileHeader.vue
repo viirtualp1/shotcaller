@@ -9,6 +9,7 @@ import { useGameText } from '../../composables/useGameText'
 import { useProfileStore } from '../../stores/profile'
 import { useSettingsStore } from '../../stores/settings'
 import { useAccountPhoto } from '../../composables/useAccountPhoto'
+import CoachTitle from './CoachTitle.vue'
 import CoachAvatar from './CoachAvatar.vue'
 import RankDropdown from './RankDropdown.vue'
 import ProfileVisibility from './ProfileVisibility.vue'
@@ -92,6 +93,7 @@ function save() {
       >
         <CoachAvatar
           :hero-id="profile.avatar"
+          :frame="profile.profile.cosmetics?.frame"
           :level="profile.level.level"
           :size="compact ? (linked ? 48 : 60) : linked ? 76 : 104"
           :photo="photo.shown.value"
@@ -136,6 +138,8 @@ function save() {
             <Pencil :size="13" />
           </button>
         </component>
+
+        <CoachTitle :title="profile.profile.cosmetics?.title" />
 
         <div class="level">
           <span class="level-label">{{ t('profile.level', { level: profile.level.level }) }}</span>

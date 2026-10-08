@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { FRAME_IDS, TITLE_IDS } from '@/content/progression'
 import { z } from 'zod'
 import {
   coachPhoto,
@@ -71,6 +72,8 @@ export class SupabaseFriends implements FriendsService {
       .filter((row) => FRIEND_STATUSES.has(row.status))
       .map((row) => ({
         id: row.id,
+        frame: z.enum(FRAME_IDS).nullable().catch(null).parse(row.frame),
+        title: z.enum(TITLE_IDS).nullable().catch(null).parse(row.title),
         name: row.name,
         avatar: row.avatar,
         photo: coachPhoto(row.photo),

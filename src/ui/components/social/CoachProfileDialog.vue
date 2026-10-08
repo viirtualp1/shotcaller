@@ -39,6 +39,7 @@ import { useReplayStore } from '../../stores/replay'
 import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeRatings from '../modes/ModeRatings.vue'
+import CoachTitle from '../profile/CoachTitle.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import PresenceDot from './PresenceDot.vue'
 import WatchLiveButton from './WatchLiveButton.vue'
@@ -246,12 +247,13 @@ watch(
           </span>
 
           <span class="avatar">
-            <CoachAvatar :hero-id="hero" :photo="photo" :level="level" :size="56" />
+            <CoachAvatar :hero-id="hero" :frame="profile?.frame" :photo="photo" :level="level" :size="56" />
             <PresenceDot v-if="entry" :friend-id="entry.id" />
           </span>
 
           <div class="who">
             <DialogTitle class="name">{{ name }}</DialogTitle>
+            <CoachTitle :title="profile?.title" />
 
             <span v-if="entry" class="status" :class="{ online: friends.isOnline(entry.id) }">
               {{ statusText(entry.id) }}
