@@ -60,7 +60,7 @@ const copy = computed(() =>
   grid-template-columns: 1fr 1fr;
   gap: 40px;
   padding: 48px;
-  margin-bottom: 40px;
+  margin-block: 40px;
   border: 1px solid var(--edge);
   border-radius: var(--radius);
   background: radial-gradient(ellipse at 80% 60%, #40564280, transparent 65%), #172923;
