@@ -18,6 +18,9 @@ export type AbilityValueKind =
 
 /** Damage dealt by the ability, including the basic attacks of its summons. */
 const DAMAGE_KINDS: Partial<Record<AbilityId, 'physicalDamage' | 'magicalDamage'>> = {
+  packCall: 'physicalDamage',
+  starfall: 'magicalDamage',
+  reap: 'magicalDamage',
   charge: 'magicalDamage',
   volley: 'magicalDamage',
   barrel: 'magicalDamage',

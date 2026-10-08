@@ -41,6 +41,7 @@ export interface HeroNote extends Changes {
 
 /** The picture of a highlight card, drawn by the game itself rather than shipped as an image. */
 export type FeatureArt =
+  | { readonly kind: 'legends'; readonly hero: 'alpha' | 'archon' | 'reaper' }
   | { readonly kind: 'recipes'; readonly focus: 'slots' | 'choice' | 'echo' }
   | { readonly kind: 'map'; readonly mode: ModeId }
   | { readonly kind: 'modes' }
@@ -100,6 +101,7 @@ export interface PatchNote {
   readonly title: NoteText
   /** A release-specific visual introduction, kept alongside its historical notes. */
   readonly campaign?:
+    | 'legends'
     | 'recipes'
     | 'career'
     | 'matchmaking'
@@ -128,6 +130,74 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: readonly PatchNote[] = [
+  {
+    version: '10.2',
+    date: '2026-10-08',
+    campaign: 'legends',
+    wide: true,
+    title: {
+      en: 'The final pick',
+      ru: 'Решающий выбор',
+    },
+    card: {
+      en: '**Three tier IV heroes** bring a wolf pack, a strike across the map and a chain of executions. Save **4 gold** for a new endgame.',
+      ru: '**Три героя IV тира**: волчья стая, удар через всю карту и цепочка казней. Прибереги **4 золота** для нового финала.',
+    },
+    features: [
+      {
+        art: {
+          kind: 'legends',
+          hero: 'alpha',
+        },
+        title: {
+          en: 'Alpha · Lead the hunt',
+          ru: 'Alpha · Возглавь охоту',
+        },
+        text: {
+          en: 'The Wildkin pusher calls **three fast wolves** for **10 seconds**. Fill your lane with a pack, then choose between more wolves and stronger fangs at two stars.',
+          ru: 'Пушер Диких призывает **трёх быстрых волков** на **10 секунд**. Заполни линию стаей, а на двух звёздах выбери: больше волков или сильнее клыки.',
+        },
+      },
+      {
+        art: {
+          kind: 'legends',
+          hero: 'archon',
+        },
+        title: {
+          en: 'Archon · Reach every fight',
+          ru: 'Archon · Дотянись до каждого боя',
+        },
+        text: {
+          en: 'The Arcanum mage strikes every enemy hero on the **busiest enemy lane**, wherever he stands. Starfall deals **170 magical damage** and briefly stuns the whole group.',
+          ru: 'Маг Арканума бьёт всех героев на **самой занятой противником линии**, где бы сам ни стоял. Starfall наносит **170 магического урона** и ненадолго оглушает всю группу.',
+        },
+      },
+      {
+        art: {
+          kind: 'legends',
+          hero: 'reaper',
+        },
+        title: {
+          en: 'Reaper · Finish the fight',
+          ru: 'Reaper · Поставь точку',
+        },
+        text: {
+          en: 'The Grave hunter executes a hero at **20% health or less**, cutting through shields and mitigation. A kill **fully restores mana** for the next victim. Aegis can still save its wearer.',
+          ru: 'Охотник Склепа казнит героя с **20% здоровья или меньше**, пробивая щиты и защиту. Убийство **полностью восстанавливает ману** для следующей цели. Aegis всё ещё может спасти владельца.',
+        },
+      },
+    ],
+    general: [
+      {
+        en: 'Tier IV costs **4 gold**, with **4 copies** of each hero shared between both coaches. Three copies make a two-star hero with a choice of two talents.',
+        ru: 'IV тир стоит **4 золота**; в общем пуле обоих тренеров — **4 копии** каждого героя. Три копии дают героя с двумя звёздами и выбором из двух талантов.',
+      },
+      {
+        en: 'Tier IV shop chance is **8% at the penultimate level** and **20% at the maximum** in every mode. All three heroes join every rotated pool.',
+        ru: 'Шанс IV тира в лавке — **8% на предпоследнем уровне** и **20% на максимальном** в каждом режиме. Все три героя участвуют в каждой ротации.',
+      },
+    ],
+  },
   {
     version: '10.1',
     date: '2026-10-08',

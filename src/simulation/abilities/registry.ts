@@ -1,5 +1,6 @@
 import type { AbilityId } from '@/content/ids'
 import type { Ability } from './Ability'
+import { packCall, starfall, reap } from './legends'
 import { assassinate } from './assassinate'
 import { backstab } from './backstab'
 import { barrel } from './barrel'
@@ -25,6 +26,9 @@ import { whirl } from './whirl'
 export type AbilityRegistry = Readonly<Record<AbilityId, Ability>>
 
 export const ABILITIES: AbilityRegistry = {
+  packCall,
+  starfall,
+  reap,
   charge,
   volley,
   prayer,

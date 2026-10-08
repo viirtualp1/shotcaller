@@ -27,11 +27,13 @@ describe('hero rotation', () => {
     const match = experimental()
     const roster = match.rotation!
 
-    expect(roster).toHaveLength(ROTATION_PER_TIER * 3)
+    expect(roster).toHaveLength(ROTATION_PER_TIER * 3 + 3)
 
     for (const tier of [1, 2, 3] as const) {
       expect(roster.filter((id) => HEROES[id].tier === tier)).toHaveLength(ROTATION_PER_TIER)
     }
+
+    expect(roster.filter((id) => HEROES[id].tier === 4)).toHaveLength(3)
 
     match.human.wallet.earn(500)
 

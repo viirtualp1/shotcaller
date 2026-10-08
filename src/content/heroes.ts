@@ -61,6 +61,9 @@ const stats = (
 })
 
 const TABLE: Readonly<Record<HeroId, Row>> = {
+  alpha: ['Alpha', 4, 'pusher', 0xa7cb7e, 'packCall', stats(880, 52, 1.1, 0, 104, 0.18, 110)],
+  archon: ['Archon', 4, 'mage', 0xc2a6ff, 'starfall', stats(660, 40, 1.2, 180, 88, 0.08, 120)],
+  reaper: ['Reaper', 4, 'ganker', 0x66c5a3, 'reap', stats(850, 58, 1, 0, 108, 0.15, 90)],
   spearman: ['Spearman', 1, 'initiator', 0xc9824a, 'charge', stats(780, 40, 1.1, 0, 95, 0.2, 80)],
   archer: ['Archer', 1, 'carry', 0x9bcf53, 'volley', stats(420, 40, 0.9, 150, 90, 0.05, 100)],
   acolyte: ['Acolyte', 1, 'support', 0xe8d9a0, 'prayer', stats(440, 26, 1.2, 140, 90, 0.05, 70)],
@@ -85,6 +88,9 @@ const TABLE: Readonly<Record<HeroId, Row>> = {
 }
 
 const FACTIONS_OF: Readonly<Record<HeroId, FactionId | null>> = {
+  alpha: 'wildkin',
+  archon: 'arcanum',
+  reaper: 'grave',
   spearman: 'legion',
   herald: 'legion',
   blademaster: 'legion',
@@ -120,6 +126,12 @@ const BASHERS: Partial<Record<HeroId, HeroBash>> = {
  * The Stonewright builds mana on its own.
  */
 const TRAITS: Partial<Record<HeroId, Pick<HeroDefinition, 'adaptive' | 'copies' | 'manaRegen'>>> = {
+  alpha: { copies: 4 },
+  archon: {
+    copies: 4,
+    manaRegen: 4,
+  },
+  reaper: { copies: 4 },
   changeling: {
     adaptive: true,
     copies: 4,

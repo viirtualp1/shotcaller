@@ -15,9 +15,7 @@ const { t } = text
     <article v-for="recipe in RECIPES" :key="recipe.result" class="recipe-row">
       <div class="formula">
         <ItemIcon :item-id="recipe.a" /><span>+</span><ItemIcon :item-id="recipe.b" />
-
         <span>→</span>
-
         <ItemIcon :item-id="recipe.result" />
       </div>
 
@@ -25,6 +23,7 @@ const { t } = text
         <strong>{{ text.itemName(recipe.result) }}</strong>
 
         <small>{{ text.itemName(recipe.a) }} + {{ text.itemName(recipe.b) }}</small>
+
         <p>{{ text.itemDescription(recipe.result) }}</p>
       </div>
     </article>

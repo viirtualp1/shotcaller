@@ -12,11 +12,11 @@ import { laneMapFor } from '@/simulation/map/LaneMap'
 import { createRng } from '@/core/random/rng'
 
 describe('factions', () => {
-  it('gives every hero but the Changeling a faction, four heroes each across the tiers', () => {
+  it('gives every hero but the Changeling a faction, including the three tier-four additions', () => {
     for (const faction of FACTION_IDS) {
       const members = HERO_IDS.filter((id) => HEROES[id].faction === faction)
 
-      expect(members).toHaveLength(4)
+      expect(members).toHaveLength(['wildkin', 'arcanum', 'grave'].includes(faction) ? 5 : 4)
       expect(new Set(members.map((id) => HEROES[id].tier)).size).toBeGreaterThan(1)
     }
 

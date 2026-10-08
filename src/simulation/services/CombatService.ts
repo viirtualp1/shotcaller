@@ -17,6 +17,8 @@ import type { TowerSafety } from './TowerSafety'
 import { trainingTargetAllowed } from './training'
 
 export interface DamageOptions {
+  /** Executions bypass shields, sharing and mitigation, but still allow once-per-round revival. */
+  readonly execution?: boolean
   readonly structureBonus?: number
   /** Reflected damage never reflects again. */
   readonly reflected?: boolean
@@ -97,6 +99,7 @@ export class CombatService {
     if (
       bond &&
       !options.bonded &&
+      !options.execution &&
       isAlive(bond.partner) &&
       distance(target.position, bond.partner.position) <= bond.range
     ) {
@@ -109,7 +112,10 @@ export class CombatService {
       })
     }
 
-    let value = amount * (target.damageTaken ?? 1) * (target.rally?.damageTaken ?? 1)
+    let value = options.execution
+      ? amount
+      : amount * (target.damageTaken ?? 1) * (target.rally?.damageTaken ?? 1)
+
     if (target.kind === 'structure') {
       value *=
         (source.structureDamage ?? 1) *
@@ -118,11 +124,13 @@ export class CombatService {
         (options.structureBonus ?? 1)
     }
 
-    if (type === 'physical') {
+    if (type === 'physical' && !options.execution) {
       value *= 1 - target.armor
     }
 
-    value = this.absorb(target, value)
+    if (!options.execution) {
+      value = this.absorb(target, value)
+    }
 
     /* A training dummy takes every hit in full, so damage reads true, and heals before it could fall. */
     if (target.dummy) {

@@ -41,6 +41,9 @@ export const HERO_IDS = [
   'herald',
   'stonewright',
   'changeling',
+  'alpha',
+  'archon',
+  'reaper',
 ] as const
 
 export type HeroId = (typeof HERO_IDS)[number]
@@ -67,6 +70,9 @@ export const ABILITY_IDS = [
   'standard',
   'mend',
   'mimic',
+  'packCall',
+  'starfall',
+  'reap',
 ] as const
 
 export type AbilityId = (typeof ABILITY_IDS)[number]
@@ -133,7 +139,7 @@ export const ITEM_IDS = [
   ...SHOP_ITEM_IDS.map((id): UpgradedItemId => `${id}+`),
 ] as unknown as readonly [ItemId, ...ItemId[]]
 
-export type Tier = 1 | 2 | 3
+export type Tier = 1 | 2 | 3 | 4
 export type StarLevel = 1 | 2 | 3
 /** Starts at 1; what each level allows depends on the game mode. */
 export type CoachLevel = number

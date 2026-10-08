@@ -11,6 +11,7 @@ import { useSettingsStore } from '../../stores/settings'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ModeMap from '../modes/ModeMap.vue'
 import LaneOrderArt from './LaneOrderArt.vue'
+import LegendsFeatureArt from './LegendsFeatureArt.vue'
 import RecipeFeatureArt from './RecipeFeatureArt.vue'
 import CareerFeatureArt from './CareerFeatureArt.vue'
 import MatchmakingFeatureArt from './MatchmakingFeatureArt.vue'
@@ -104,6 +105,8 @@ onMounted(() => {
     <LaneOrderArt v-else-if="art.kind === 'orders'" />
 
     <LaneOrderArt v-else-if="art.kind === 'order'" :order="art.order" />
+
+    <LegendsFeatureArt v-else-if="art.kind === 'legends'" :hero="art.hero" />
 
     <RecipeFeatureArt v-else-if="art.kind === 'recipes'" :focus="art.focus" />
 

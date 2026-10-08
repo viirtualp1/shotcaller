@@ -83,6 +83,10 @@ const unavailable = computed(() => !props.offer.affordable || !props.offer.fits)
 </template>
 
 <style scoped>
+.offer.tier-4 {
+  border-color: var(--gold);
+  background: linear-gradient(115deg, #534126, var(--panel-raised));
+}
 .offer {
   position: relative;
   display: flex;

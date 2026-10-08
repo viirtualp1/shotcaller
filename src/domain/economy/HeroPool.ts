@@ -42,7 +42,7 @@ export class HeroPool {
   /** Keeps a random few heroes of each tier and takes the rest out of this match; returns the heroes kept. */
   rotate(rng: Rng, perTier: number) {
     const roster: HeroId[] = []
-    for (const tier of [1, 2, 3] as const) {
+    for (const tier of [1, 2, 3, 4] as const) {
       const heroes = HERO_IDS.filter((id) => HEROES[id].tier === tier)
       const kept = new Set<HeroId>()
       while (kept.size < Math.min(perTier, heroes.length)) {

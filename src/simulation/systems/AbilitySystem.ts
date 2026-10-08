@@ -30,11 +30,13 @@ export class AbilitySystem implements System {
       }
 
       const ability = this.abilities[caster.caster.ability]
-      if (!ability.cast(caster, this.ctx)) {
+      const cast = ability.cast(caster, this.ctx)
+      if (!cast) {
         continue
       }
 
-      caster.mana.current = 0
+      caster.mana.current =
+        typeof cast === 'object' ? Math.min(caster.mana.max, Math.max(0, cast.manaRefund)) : 0
 
       this.ctx.events.emit('abilityCast', {
         caster,

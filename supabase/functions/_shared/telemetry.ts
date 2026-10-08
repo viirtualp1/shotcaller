@@ -28,6 +28,9 @@ const heroId = z.enum([
   'herald',
   'stonewright',
   'changeling',
+  'alpha',
+  'archon',
+  'reaper',
 ])
 
 const shopItemIds = [

@@ -22,6 +22,7 @@ export const POOL_COPIES: Readonly<Record<Tier, number>> = {
   1: 12,
   2: 9,
   3: 6,
+  4: 4,
 }
 
 export const STAR_POWER: Readonly<Record<StarLevel, number>> = {

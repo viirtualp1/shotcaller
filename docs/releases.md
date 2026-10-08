@@ -32,3 +32,17 @@ The browser check covers dragging two stash components, cancelling and confirmin
 Local Windows worktree checks share installed dependencies. Vitest needs a writable
 TEMP/TMP under the project and a local Vite `server.fs.allow` override for the
 junction's resolved dependency directory. These are local runner settings only.
+
+## 10.2 — legends
+
+Implemented on `codex/10.2-legends`. New match rules: `a2279149`.
+Validation: typecheck, lint, formatting, production build, 699 tests.
+The built `/patches/10.2/` page was checked in EN/RU at 1440×900 and 390×844.
+
+Round A/B (150 paired setups): Alpha 57% wins, Archon 63%, Reaper 52%; draws 14–15%.
+This is a round diagnostic, not a measured whole-match win rate. Final talent A/B
+(80 paired setups at two stars) improved building-damage margin for both choices:
+Alpha +12/+112, Archon +211/+132, Reaper +1/+19. Execution's utility is not fully
+captured by building damage. Keep monitoring actual match outcomes after release.
+
+Deploy the client and arbiter together, redeploy `game-telemetry`, then seed ghosts.
