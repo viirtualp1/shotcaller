@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { arbitrateGhost } from '@/application/social/ghostArbiter'
 import { arbitrateDuel, winningSide } from '@/application/social/arbiter'
-import { BALANCE_FINGERPRINT } from '@/content/balance'
+import { MATCH_RULES_FINGERPRINT } from '@/content/matchRules'
 import { MODE_IDS } from '@/content/ids'
 
 /**
@@ -73,7 +73,7 @@ for (const duel of queue) {
   let side: number | null
   if (!duel.seed) {
     side = null
-  } else if (duel.balance !== BALANCE_FINGERPRINT) {
+  } else if (duel.balance !== MATCH_RULES_FINGERPRINT) {
     if (age < OTHER_RULES_GRACE_MS) {
       console.log(`${duel.id}: played under other battle rules, waiting`)
 
@@ -127,7 +127,7 @@ if (recordingsError) {
 const recordings = queueSchema.parse(recordingsData)
 for (const recording of recordings) {
   if (
-    recording.balance !== BALANCE_FINGERPRINT &&
+    recording.balance !== MATCH_RULES_FINGERPRINT &&
     recording.finishedAt &&
     Date.now() - Date.parse(recording.finishedAt) < OTHER_RULES_GRACE_MS
   ) {
@@ -135,7 +135,7 @@ for (const recording of recordings) {
   }
 
   const valid =
-    recording.balance === BALANCE_FINGERPRINT &&
+    recording.balance === MATCH_RULES_FINGERPRINT &&
     recording.seed !== null &&
     arbitrateDuel({
       mode: recording.mode,
@@ -169,7 +169,7 @@ let verified = 0
 const ghosts = ghostQueueSchema.parse(ghostData)
 for (const ghost of ghosts) {
   if (
-    ghost.balance !== BALANCE_FINGERPRINT &&
+    ghost.balance !== MATCH_RULES_FINGERPRINT &&
     Date.now() - Date.parse(ghost.finishedAt) < OTHER_RULES_GRACE_MS
   ) {
     console.log(`${ghost.id}: other ghost battle rules, waiting`)
@@ -177,8 +177,12 @@ for (const ghost of ghosts) {
     continue
   }
 
-  const side = ghost.balance === BALANCE_FINGERPRINT ? arbitrateGhost(ghost).side : null
-  console.log(`${ghost.id}: ghost verdict ${side ?? 'uncounted'}`)
+  /* Under rules this code no longer has, the reported result stands; a broken recording leaves it uncounted. */
+  const replay = ghost.balance === MATCH_RULES_FINGERPRINT ? arbitrateGhost(ghost) : null
+  const side = replay?.side ?? null
+  const neutralize = replay?.neutralize ?? false
+
+  console.log(`${ghost.id}: ghost verdict ${side ?? (neutralize ? 'uncounted' : 'kept as reported')}`)
 
   if (dryRun) {
     continue
@@ -187,6 +191,7 @@ for (const ghost of ghosts) {
   const { error: verifyError } = await client.rpc('verify_ghost', {
     ghost: ghost.id,
     winning_side: side,
+    neutralize,
   })
 
   if (verifyError) {

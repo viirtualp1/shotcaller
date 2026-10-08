@@ -22,7 +22,7 @@ export const LEGAL_IDS = ['terms', 'privacy', 'delete-account'] as const
 export type LegalId = (typeof LEGAL_IDS)[number]
 
 /** The date both documents last changed; update it with any change to their text. */
-export const LEGAL_UPDATED = '2026-10-06'
+export const LEGAL_UPDATED = '2026-10-08'
 
 /** The address for privacy and legal requests. Until it is set, requests go through the in-game form. */
 export const LEGAL_EMAIL: string | null = 'shotcaller.team@gmail.com'
@@ -313,6 +313,10 @@ const privacy: LegalDocument = {
           en: 'Ranked accounts have an open coach dossier by default: other visitors can view hero and synergy statistics, usual lineups and builds, and the ten latest matches with round lineups and available replays. Duel opponents are not named. Turn off “Open profile on the leaderboard” in your profile to limit dossier access to yourself and friends. Private chat, online status, friend codes and account photos are not included in public dossiers.',
           ru: 'У рейтинговых аккаунтов досье тренера открыто по умолчанию: посетители могут изучать статистику героев и связок, привычные расстановки и билды, а также десять последних матчей с составами по раундам и доступными реплеями. Имена соперников в дуэлях скрыты. Отключи «Открытый профиль в таблице лидеров» в профиле, чтобы оставить досье доступным только себе и друзьям. Личная переписка, онлайн-статус, коды друзей и фото аккаунта не входят в публичное досье.',
         },
+        {
+          en: 'The boards you play in a finished ranked duel can be replayed as a ghost: an opponent for coaches who find no live rival. A ghost shows only the boards, never your name, avatar, photo or rating, and fighting it does not change your rating.',
+          ru: 'Расстановки, которые ты сыграл в завершённой рейтинговой дуэли, могут стать призраком — соперником для тренеров, которым не нашлось живого противника. Призрак показывает только расстановки: ни ника, ни аватара, ни фото, ни рейтинга, и бой с ним не меняет твой рейтинг.',
+        },
       ],
     },
     {
@@ -374,8 +378,8 @@ const privacy: LegalDocument = {
       },
       items: [
         {
-          en: 'Contract (GDPR Art. 6(1)(b)): accounts, cloud saves, friends, chat, duels, ratings and the leaderboard you choose to use.',
-          ru: 'Договор (ст. 6(1)(b) GDPR): аккаунты, облачные сохранения, друзья, чат, дуэли, рейтинг и таблица лидеров, которыми ты решил пользоваться.',
+          en: 'Contract (GDPR Art. 6(1)(b)): accounts, cloud saves, friends, chat, duels, ghost opponents, ratings and the leaderboard you choose to use.',
+          ru: 'Договор (ст. 6(1)(b) GDPR): аккаунты, облачные сохранения, друзья, чат, дуэли, призраки, рейтинг и таблица лидеров, которыми ты решил пользоваться.',
         },
         {
           en: 'Consent (Art. 6(1)(a)): optional gameplay statistics.',
@@ -444,8 +448,8 @@ const privacy: LegalDocument = {
           ru: 'Данные аккаунта, игровые и социальные данные, включая сообщения чата: до удаления аккаунта.',
         },
         {
-          en: 'Match archive summaries: 90 days. Finished duels: 30 days. Invitations, queue entries and live match snapshots: from minutes to days.',
-          ru: 'Сводки архива матчей: 90 дней. Завершённые дуэли: 30 дней. Приглашения, записи очереди и снимки текущих матчей: от минут до нескольких дней.',
+          en: 'Match archive summaries: 90 days. Finished duels and ghost duels: 30 days. Ghost recordings: until 300 newer recordings of the same mode and rules replace them, or until you delete your account. Invitations, queue entries and live match snapshots: from minutes to days.',
+          ru: 'Сводки архива матчей: 90 дней. Завершённые дуэли и бои с призраками: 30 дней. Записи призраков: пока их не вытеснят 300 более новых записей того же режима и правил, или до удаления аккаунта. Приглашения, записи очереди и снимки текущих матчей: от минут до нескольких дней.',
         },
         {
           en: 'Support requests: until they are handled and no longer needed, and always when the account is deleted.',

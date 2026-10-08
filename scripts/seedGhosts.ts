@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util'
 import { createClient } from '@supabase/supabase-js'
 import { createMatch } from '@/application/createMatch'
-import { BALANCE_FINGERPRINT } from '@/content/balance'
+import { MATCH_RULES_FINGERPRINT } from '@/content/matchRules'
 import { MODE_IDS } from '@/content/ids'
 import { opponentStyleFor, type Difficulty } from '@/content/rules'
 import { sequentialIds } from '@/core/ids'
@@ -13,9 +13,10 @@ import { headlessResolver } from '@/simulation/BattleSimulation'
 /** Bootstrap the current rules' pool. --dry-run generates runs without uploading them. */
 const { values } = parseArgs({
   options: {
+    /* A coach never meets a recording twice in 30 days, so the pool needs depth at every rating. */
     runs: {
       type: 'string',
-      default: '3',
+      default: '20',
     },
     seed: {
       type: 'string',
@@ -48,8 +49,8 @@ const tiers: readonly { difficulty: Difficulty; rating: number }[] = [
 const url = process.env.SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!Number.isInteger(count) || count < 1 || count > 20) {
-  throw new Error('--runs must be an integer between 1 and 20 per tier and mode')
+if (!Number.isInteger(count) || count < 1 || count > 60) {
+  throw new Error('--runs must be an integer between 1 and 60 per tier and mode')
 }
 
 if (!values['dry-run'] && (!url || !key)) {
@@ -69,7 +70,8 @@ let total = 0
 for (const mode of MODE_IDS) {
   for (const { difficulty, rating } of tiers) {
     for (let index = 0; index < count; index++) {
-      const seed = `${values.seed}:${mode}:${difficulty}:${index}`
+      /* Every set of rules gets its own matches, not the same ones replayed under new numbers. */
+      const seed = `${values.seed}:${MATCH_RULES_FINGERPRINT}:${mode}:${difficulty}:${index}`
 
       const match = createMatch({
         seed,
@@ -102,7 +104,7 @@ for (const mode of MODE_IDS) {
           runs: [
             {
               mode,
-              balance: BALANCE_FINGERPRINT,
+              balance: MATCH_RULES_FINGERPRINT,
               rating,
               boards,
             },
@@ -120,4 +122,4 @@ for (const mode of MODE_IDS) {
   }
 }
 
-console.log(`${total} runs for ${BALANCE_FINGERPRINT}${client ? '' : ' (dry run)'}`)
+console.log(`${total} runs for ${MATCH_RULES_FINGERPRINT}${client ? '' : ' (dry run)'}`)

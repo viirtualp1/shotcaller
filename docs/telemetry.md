@@ -51,14 +51,16 @@ allowlisted object. It never forwards request headers or arbitrary metadata.
 
 | Property                              | Purpose                                                   |
 | ------------------------------------- | --------------------------------------------------------- |
-| `mode`, `kind`, `difficulty`          | Separate lanes, AI, duels and trials                      |
+| `mode`, `kind`, `difficulty`          | Separate lanes, AI, live duels, ghost duels and trials    |
 | `balance`                             | Separate balance revisions                                |
 | `verdict`, `reason`, `rounds`         | Win rate, draws, forfeits and match length                |
 | `ratingBand`                          | Compare player skill in 200 MMR bands                     |
 | `goldEarned`, `towersDestroyed`       | Economy and objective pressure                            |
 | `lineup`, `heroes`, `synergies`       | Own hero stars, items, stats and final composition        |
+| `factions`                            | Faction steps the final lineup reaches, as `legion:2`     |
 | `roundBoards`                         | Own board, active synergies and result of each round      |
 | `hero_ids`, `item_ids`, `synergy_ids` | Deduplicated match-level breakdown arrays                 |
+| `faction_steps`                       | Faction steps reached in any round or at the end          |
 | `unit = player_match`                 | One consenting player's view of a match                   |
 | `data_source = client_reported`       | Do not confuse analytics with authoritative server rating |
 

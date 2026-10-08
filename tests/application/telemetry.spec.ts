@@ -69,6 +69,52 @@ describe('PostHog gameplay telemetry', () => {
     }
   })
 
+  it('names the faction steps of each round and of the final lineup, and tells ghost duels apart', () => {
+    const payload = telemetryOf({
+      ...record,
+      duel: {
+        opponentName: null,
+        ranked: true,
+        ghost: true,
+      },
+      lineup: [
+        {
+          heroId: 'spearman',
+          stars: 1,
+          lane: 'top',
+          items: [],
+        },
+        {
+          heroId: 'herald',
+          stars: 1,
+          lane: 'top',
+          items: [],
+        },
+        {
+          heroId: 'sniper',
+          stars: 1,
+          lane: 'bot',
+          items: [],
+        },
+      ],
+      roundLineups: [
+        [
+          [
+            ['archer', 1, 'top', []],
+            ['warden', 1, 'top', []],
+            ['giant', 1, 'top', []],
+          ],
+          [],
+        ],
+      ],
+      history: ['win'],
+    })
+
+    expect(payload.kind).toBe('ghost')
+    expect(payload.factions).toEqual(['legion:2'])
+    expect(payload.roundBoards[0]?.factions).toEqual(['wildkin:3'])
+  })
+
   it('drops unexpected personal fields on the server, including inside nested objects', async () => {
     const input = request()
     const send = vi.fn(async () => ({ ok: true }))

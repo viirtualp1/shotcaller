@@ -53,6 +53,11 @@ const shopItemIds = [
 const itemId = z.enum([...shopItemIds, ...shopItemIds.map((id) => `${id}+` as const)])
 
 const synergyId = z.enum(['guardian', 'setup', 'soloMid', 'trilane', 'siege', 'hunt', 'arcane', 'bulwark'])
+
+const factionIds = ['legion', 'wildkin', 'arcanum', 'grave', 'hearth'] as const
+
+/** A faction step reached on some lane: two heroes of it there, or three. */
+const factionStep = z.enum(factionIds.flatMap((id) => [`${id}:2`, `${id}:3`] as const))
 const count = z.int().nonnegative().max(1_000_000)
 const amount = z.number().nonnegative().max(1_000_000_000)
 
@@ -67,7 +72,7 @@ const pick = z.object({
 export const telemetrySchema = z.object({
   schema: z.literal(1),
   mode: z.enum(['threeLanes', 'twoLanes', 'oneLane']),
-  kind: z.enum(['ai', 'duel', 'trial']),
+  kind: z.enum(['ai', 'duel', 'ghost', 'trial']),
   difficulty: z.enum(['relaxed', 'standard', 'hard']),
   balance: z.string().regex(/^[a-f0-9]{0,32}$/),
   verdict: z.enum(['win', 'loss', 'draw']),
@@ -78,6 +83,8 @@ export const telemetrySchema = z.object({
   towersDestroyed: count.max(5),
   lineup: z.array(pick).max(30),
   synergies: z.array(synergyId).max(8),
+  /* Missing in events from clients before factions. */
+  factions: z.array(factionStep).max(10).default([]),
   heroes: z
     .array(
       z.object({
@@ -98,6 +105,7 @@ export const telemetrySchema = z.object({
         verdict: z.enum(['win', 'loss', 'draw']),
         lineup: z.array(pick).max(30),
         synergies: z.array(synergyId).max(8),
+        factions: z.array(factionStep).max(10).default([]),
       }),
     )
     .max(40),

@@ -68,6 +68,14 @@ end;
 $$;
 select public.verify_ghost_recording((select source_duel from public.ghost_runs limit 1), true);
 
+-- Computer runs widen the pool: a coach meets each recording only once in 30 days (20261008120000_ranked_fixes).
+select public.add_ghost_runs(
+  jsonb_build_array(
+    jsonb_build_object('mode', 'oneLane', 'balance', 'abc', 'rating', 0, 'boards', '[{"round":1},{"round":2},{"round":3}]'::jsonb),
+    jsonb_build_object('mode', 'oneLane', 'balance', 'abc', 'rating', 0, 'boards', '[{"round":1},{"round":2},{"round":3}]'::jsonb)
+  )
+);
+
 -- A waiting coach finds a ghost under the same battle rules only.
 select pg_temp.act_as('95000000-0000-4000-8000-000000000003');
 set local role authenticated;
@@ -277,15 +285,16 @@ begin
 end;
 $$;
 
--- A damaged or old-rule recording is uncounted, never an unchecked rating gain.
-insert into public.ghost_duels (coach_id, mode, balance, seed, ghost_rating, ghost_boards)
-select '95000000-0000-4000-8000-000000000003', 'oneLane', 'abc', 'neutral', 0, boards from public.ghost_runs limit 1;
+-- A damaged recording is uncounted, never an unchecked rating gain (20261008120000_ranked_fixes: three rounds first).
+insert into public.ghost_duels (coach_id, mode, balance, seed, ghost_rating, ghost_boards, round, boards)
+select '95000000-0000-4000-8000-000000000003', 'oneLane', 'abc', 'neutral', 0, boards, 4, '[{},{},{}]'::jsonb
+from public.ghost_runs limit 1;
 insert into ids select 'neutral', id from public.ghost_duels where seed = 'neutral';
 select pg_temp.act_as('95000000-0000-4000-8000-000000000003');
 set local role authenticated;
 select public.report_ghost((select id from ids where name = 'neutral'), 0::smallint);
 reset role;
-select public.verify_ghost((select id from ids where name = 'neutral'), null);
+select public.verify_ghost((select id from ids where name = 'neutral'), null, true);
 do $$
 begin
   if pg_temp.rating('95000000-0000-4000-8000-000000000003') <> 0

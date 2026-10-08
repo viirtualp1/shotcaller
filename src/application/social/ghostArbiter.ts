@@ -30,15 +30,12 @@ export function arbitrateGhost(record: GhostRecord) {
   })
 
   // A broken pool entry is a server error: neutralize its rating without blaming the coach.
-  const side =
-    verdict.kind === 'invalidBoard' && verdict.offender === 1
-      ? null
-      : verdict.kind === 'incomplete'
-        ? 1
-        : winningSide(verdict)
+  const broken = verdict.kind === 'invalidBoard' && verdict.offender === 1
+  const side = broken ? null : verdict.kind === 'incomplete' ? 1 : winningSide(verdict)
 
   return {
     verdict,
     side,
+    neutralize: broken,
   }
 }

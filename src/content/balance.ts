@@ -19,7 +19,7 @@ import { CREEPS, STRUCTURES } from './units'
 const LOGIC_REVISION = 5
 
 /** FNV-1a, 32 bits, so a match can remember which balance it was played on. */
-function fnv1a(text: string) {
+export function fnv1a(text: string) {
   let hash = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
     hash ^= text.charCodeAt(i)

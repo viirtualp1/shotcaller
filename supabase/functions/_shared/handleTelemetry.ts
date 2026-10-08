@@ -47,6 +47,7 @@ export async function handleTelemetry(body: unknown, transport: Transport) {
         ),
       ],
       synergy_ids: [...new Set(payload.roundBoards.flatMap((r) => r.synergies).concat(payload.synergies))],
+      faction_steps: [...new Set(payload.roundBoards.flatMap((r) => r.factions).concat(payload.factions))],
     },
   })
 

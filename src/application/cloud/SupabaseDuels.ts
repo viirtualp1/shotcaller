@@ -96,6 +96,8 @@ const ghostRow = z.object({
 
 export class SupabaseDuels implements DuelService {
   private readonly ghostIds = new Set<string>()
+  /** Live duels this service has seen, so a report needs no lookup to pick its endpoint. */
+  private readonly liveIds = new Set<string>()
 
   private ghostEntry(raw: unknown) {
     if (raw === null) {
@@ -248,7 +250,7 @@ export class SupabaseDuels implements DuelService {
       return duel.success
         ? [
             {
-              duel: toDuel(duel.data),
+              duel: this.live(toDuel(duel.data)),
               opponent: {
                 id: duel.data.host === this.userId ? duel.data.guest : duel.data.host,
                 name: row.opponent_name,
@@ -278,7 +280,7 @@ export class SupabaseDuels implements DuelService {
 
     const row = duelRow.safeParse(data)
     if (row.success) {
-      return toDuel(row.data)
+      return this.live(toDuel(row.data))
     }
 
     const { data: ghost, error: ghostError } = await this.client
@@ -358,10 +360,27 @@ export class SupabaseDuels implements DuelService {
     return data === true
   }
 
+  private live(duel: Duel) {
+    this.liveIds.add(duel.id)
+
+    return duel
+  }
+
+  /** Pending reports survive reloads: a duel this service has not seen yet is looked up once. */
+  private async isGhost(duelId: string) {
+    if (this.ghostIds.has(duelId)) {
+      return true
+    }
+
+    if (this.liveIds.has(duelId)) {
+      return false
+    }
+
+    return (await this.find(duelId))?.ghost ?? false
+  }
+
   async report(duelId: string, winningSide: TeamId | null, byThrone: boolean) {
-    // Pending reports survive reloads: discover the duel type before choosing the endpoint.
-    const duel = await this.find(duelId)
-    if (duel?.ghost) {
+    if (await this.isGhost(duelId)) {
       const { error } = await this.client
         .rpc('report_ghost', {
           ghost: duelId,
@@ -390,7 +409,7 @@ export class SupabaseDuels implements DuelService {
   }
 
   async forfeit(duelId: string) {
-    if ((await this.find(duelId))?.ghost) {
+    if (await this.isGhost(duelId)) {
       const { error } = await this.client
         .rpc('forfeit_ghost', { ghost: duelId })
         .abortSignal(AbortSignal.timeout(12_000))

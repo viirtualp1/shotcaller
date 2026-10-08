@@ -44,10 +44,11 @@ describe('public page SEO', () => {
   })
 
   it('includes each faction and both bonus thresholds in the static release article', () => {
-    const html = patchArticle(LATEST_PATCH)
-    expect(LATEST_PATCH.factions).toHaveLength(5)
+    const release = PATCH_NOTES.find((note) => note.version === '10.0')!
+    const html = patchArticle(release)
+    expect(release.factions).toHaveLength(5)
 
-    for (const faction of LATEST_PATCH.factions ?? []) {
+    for (const faction of release.factions ?? []) {
       expect(html).toContain(escapeHtml(faction.name.en))
       expect(html).toContain(escapeHtml(faction.pair.en.replaceAll('**', '')))
       expect(html).toContain(escapeHtml(faction.trio.en.replaceAll('**', '')))
