@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { FRAMES, type FrameId } from '@/content/progression'
+import { computed, ref, watch } from 'vue'
 import type { HeroId } from '@/content/ids'
 import HeroAvatar from '../common/HeroAvatar.vue'
 
 /** `photo` replaces the hero with the account picture; a picture that fails to load falls back to the hero. */
 const props = withDefaults(
-  defineProps<{ heroId: HeroId; level?: number | null; size?: number; photo?: string | null }>(),
+  defineProps<{ heroId: HeroId; level?: number | null; size?: number; photo?: string | null; frame?: FrameId | null }>(),
   {
     level: null,
     size: 48,
@@ -14,6 +15,7 @@ const props = withDefaults(
 )
 
 const broken = ref(false)
+const ornament = computed(() => props.frame ? FRAMES[props.frame] : null)
 watch(
   () => props.photo,
   () => (broken.value = false),
@@ -21,7 +23,7 @@ watch(
 </script>
 
 <template>
-  <span class="coach" :style="{ '--size': `${size}px` }">
+  <span class="coach" :style="{ '--size': `${size}px`, '--frame-color': ornament?.color, '--frame-pattern': ornament?.pattern }" :class="{ framed: ornament }">
     <img
       v-if="photo && !broken"
       class="photo"
@@ -43,6 +45,15 @@ watch(
   position: relative;
   display: inline-grid;
   flex: none;
+}
+
+.framed::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 3px var(--frame-pattern) var(--frame-color);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .photo {

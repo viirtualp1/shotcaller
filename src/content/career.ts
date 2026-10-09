@@ -1,6 +1,7 @@
+import type { Difficulty } from './rules'
 import type { ModeId } from './ids'
 
-export const TRIAL_IDS = ['siege', 'synergy', 'arsenal', 'threeFronts'] as const
+export const TRIAL_IDS = ['siege', 'synergy', 'arsenal', 'threeFronts', 'factionAlliance', 'hardVictory', 'ghostHunter', 'artificer', 'legendary'] as const
 export type TrialId = (typeof TRIAL_IDS)[number]
 
 export interface TrialDefinition {
@@ -8,6 +9,8 @@ export interface TrialDefinition {
   readonly level: number
   readonly mode: ModeId
   readonly xp: number
+  readonly difficulty?: Difficulty
+  readonly ghost?: boolean
 }
 
 /** Optional solo objectives. Account progression never changes the rules of a duel. */
@@ -36,11 +39,16 @@ export const TRIALS: readonly TrialDefinition[] = [
     mode: 'threeLanes',
     xp: 300,
   },
+  { id: 'factionAlliance', level: 10, mode: 'twoLanes', xp: 350 },
+  { id: 'hardVictory', level: 12, mode: 'twoLanes', xp: 400, difficulty: 'hard' },
+  { id: 'ghostHunter', level: 15, mode: 'twoLanes', xp: 450, ghost: true },
+  { id: 'artificer', level: 20, mode: 'threeLanes', xp: 500 },
+  { id: 'legendary', level: 25, mode: 'threeLanes', xp: 600 },
 ]
 
 export const trialById = (id: TrialId) => TRIALS.find((trial) => trial.id === id)!
 
-export const ACHIEVEMENT_IDS = ['regular', 'throneBreaker', 'explorer', 'strategist', 'threeStar'] as const
+export const ACHIEVEMENT_IDS = ['regular', 'throneBreaker', 'explorer', 'strategist', 'threeStar', 'factionWins', 'recipeWins', 'ghostWins', 'hardWins'] as const
 export type AchievementId = (typeof ACHIEVEMENT_IDS)[number]
 
 export const ACHIEVEMENTS: readonly {
@@ -73,9 +81,13 @@ export const ACHIEVEMENTS: readonly {
     target: 1,
     xp: 200,
   },
+  { id: 'factionWins', target: 10, xp: 300 },
+  { id: 'recipeWins', target: 10, xp: 300 },
+  { id: 'ghostWins', target: 5, xp: 350 },
+  { id: 'hardWins', target: 5, xp: 350 },
 ]
 
-export const CONTRACT_IDS = ['matches', 'rounds', 'towers', 'kills', 'synergies', 'upgrades'] as const
+export const CONTRACT_IDS = ['matches', 'rounds', 'towers', 'kills', 'synergies', 'upgrades', 'factionWins', 'recipeWins', 'ghostWins', 'hardWins'] as const
 export type ContractId = (typeof CONTRACT_IDS)[number]
 
 export interface ContractDefinition {
@@ -85,6 +97,10 @@ export interface ContractDefinition {
 }
 
 export const CONTRACTS: Readonly<Record<ContractId, ContractDefinition>> = {
+  factionWins: { id: 'factionWins', target: 2, xp: 120 },
+  recipeWins: { id: 'recipeWins', target: 2, xp: 120 },
+  ghostWins: { id: 'ghostWins', target: 1, xp: 120 },
+  hardWins: { id: 'hardWins', target: 1, xp: 120 },
   matches: {
     id: 'matches',
     target: 4,

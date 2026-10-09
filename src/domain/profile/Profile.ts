@@ -1,3 +1,5 @@
+import { cosmeticsFor, type Cosmetics } from './cosmetics'
+import { trialById } from '@/content/career'
 import { BALANCE_FINGERPRINT } from '@/content/balance'
 import {
   LANE_IDS,
@@ -126,6 +128,7 @@ export interface ProfileTotals {
 }
 
 export interface Profile {
+  readonly cosmetics?: Cosmetics
   readonly name: string
   /** `null` falls back to the most played hero. */
   readonly avatar: HeroId | null
@@ -210,6 +213,7 @@ export const createProfile = (createdAt: string): Profile => ({
   peakRating: 0,
   xp: 0,
   career: emptyCareer(),
+  cosmetics: cosmeticsFor(0),
   totals: {
     matches: 0,
     wins: 0,
@@ -238,7 +242,7 @@ export function finishedMatch(
 
   return {
     mode: match.mode,
-    difficulty: match.trialId ? 'standard' : difficulty,
+    difficulty: match.trialId ? (trialById(match.trialId).difficulty ?? 'standard') : difficulty,
     result: match.result,
     stats: match.stats,
     lineup: match.human.roster.lineup(),
@@ -495,6 +499,7 @@ export function applyRecord(profile: Profile, played: MatchRecord) {
       ...next,
       xp: progress.xp,
       career: progress.career,
+      cosmetics: cosmeticsFor(progress.xp, profile.cosmetics),
       recent: [record, ...next.recent.slice(1)],
     },
     progress,

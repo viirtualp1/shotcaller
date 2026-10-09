@@ -1,3 +1,4 @@
+import type { FrameId, TitleId } from '@/content/progression'
 import type { MatchRecord } from '@/domain/profile/Profile'
 import type { CoachDossier } from '@/domain/profile/dossier'
 import type { LiveMatch } from './liveMatch'
@@ -6,6 +7,8 @@ export type { CoachDossier, MatchSummary, SummaryHero } from '@/domain/profile/d
 
 /** What other players see of a coach. */
 export interface CoachCard {
+  readonly frame?: FrameId | null
+  readonly title?: TitleId | null
   readonly id: string
   readonly name: string
   /** A hero id; null until the coach picks one. */

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
+import CoachPath from '../components/profile/CoachPath.vue'
 import CareerPanel from '../components/profile/CareerPanel.vue'
 import ProfileHeader from '../components/profile/ProfileHeader.vue'
 import { useGameText } from '../composables/useGameText'
@@ -20,6 +21,7 @@ const zoom = useUiZoom()
     <main class="page">
       <ProfileHeader linked />
       <CareerPanel heading="h1" />
+      <CoachPath />
     </main>
   </div>
 </template>

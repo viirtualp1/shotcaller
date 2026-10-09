@@ -1,3 +1,4 @@
+import type { FrameId, TitleId } from '@/content/progression'
 import { HEROES } from '@/content/heroes'
 import {
   LANE_IDS,
@@ -55,6 +56,8 @@ export interface MatchSummary {
  * heroes and synergies they win with, and their latest matches.
  */
 export interface CoachDossier {
+  readonly frame?: FrameId | null
+  readonly title?: TitleId | null
   readonly id: string
   readonly name: string
   readonly avatar: string | null

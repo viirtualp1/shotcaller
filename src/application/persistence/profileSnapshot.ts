@@ -1,3 +1,5 @@
+import { FRAME_IDS, TITLE_IDS } from '@/content/progression'
+import { cosmeticsFor } from '@/domain/profile/cosmetics'
 import { z } from 'zod'
 import { ACHIEVEMENT_IDS, CONTRACT_IDS, TRIAL_IDS } from '@/content/career'
 import { TWIST_IDS } from '@/content/experiments'
@@ -10,7 +12,7 @@ import { emptyRatings, type Profile } from '@/domain/profile/Profile'
 import { migrateCareer } from '@/domain/profile/career'
 
 /** Older clients must not load and then overwrite a career they cannot preserve. */
-const PROFILE_VERSION = 2
+const PROFILE_VERSION = 3
 
 const heroId = z.enum(HERO_IDS)
 const synergyId = z.enum(SYNERGY_IDS)
@@ -39,7 +41,10 @@ const rewards = z.array(
   ]),
 )
 
+const victories = z.object({ factionWins: count.default(0), recipeWins: count.default(0), ghostWins: count.default(0), hardWins: count.default(0) })
+
 const career = z.object({
+  victories: victories.optional(),
   achievements: z.partialRecord(z.enum(ACHIEVEMENT_IDS), z.iso.datetime()),
   weeks: z.record(
     z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -51,6 +56,7 @@ const career = z.object({
         kills: count,
         synergies: count,
         upgrades: count,
+        factionWins: count.default(0), recipeWins: count.default(0), ghostWins: count.default(0), hardWins: count.default(0),
       }),
       completed: z.partialRecord(z.enum(CONTRACT_IDS), z.iso.datetime()),
     }),
@@ -198,7 +204,13 @@ const modeRatings = z.object({
   oneLane: amount,
 })
 
+export const cosmeticsSchema = z.object({
+  frames: z.array(z.enum(FRAME_IDS)), titles: z.array(z.enum(TITLE_IDS)),
+  frame: z.enum(FRAME_IDS).nullable(), title: z.enum(TITLE_IDS).nullable(),
+})
+
 const profile = z.object({
+  cosmetics: cosmeticsSchema.optional(),
   name: z.string().max(PROFILE.nameMaxLength),
   avatar: heroId.nullable(),
   createdAt: z.iso.datetime(),
@@ -230,6 +242,7 @@ const profile = z.object({
 const migratedProfile = profile.transform(({ ratings, peakRatings, ...rest }) =>
   migrateCareer({
     ...rest,
+    cosmetics: cosmeticsFor(rest.xp, rest.cosmetics),
     ratings: ratings ?? {
       ...emptyRatings(),
       threeLanes: rest.rating,
@@ -242,7 +255,7 @@ const migratedProfile = profile.transform(({ ratings, peakRatings, ...rest }) =>
 )
 
 const envelope = z.object({
-  version: z.union([z.literal(1), z.literal(PROFILE_VERSION)]),
+  version: z.union([z.literal(1), z.literal(2), z.literal(PROFILE_VERSION)]),
   profile: migratedProfile,
 })
 

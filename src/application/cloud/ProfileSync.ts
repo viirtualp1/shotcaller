@@ -1,13 +1,15 @@
 import { z } from 'zod'
 import { HERO_IDS, type HeroId } from '@/content/ids'
 import { applyRecord, withSettledRatings, type MatchRecord, type Profile } from '@/domain/profile/Profile'
-import { matchRecordSchema } from '../persistence/profileSnapshot'
+import type { Cosmetics } from '@/domain/profile/cosmetics'
+import { matchRecordSchema, cosmeticsSchema } from '../persistence/profileSnapshot'
 import { STORAGE_KEYS } from '../persistence/storageKeys'
 import type { CloudProfile, CloudStore } from './CloudStore'
 
 type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
 export interface Identity {
+  readonly cosmetics?: Cosmetics
   readonly name: string
   readonly avatar: HeroId | null
   readonly zoomHintSeen?: boolean
@@ -46,6 +48,7 @@ const stateSchema = z.object({
       name: z.string(),
       avatar: z.enum(HERO_IDS).nullable(),
       zoomHintSeen: z.boolean().optional(),
+      cosmetics: cosmeticsSchema.optional(),
     })
     .nullable(),
 })

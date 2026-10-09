@@ -25,6 +25,7 @@ import { useFriendsStore } from '../../stores/friends'
 import { useLeaderboardStore } from '../../stores/leaderboard'
 import { useMatchStore } from '../../stores/match'
 import { useProfileStore } from '../../stores/profile'
+import HeroMastery from '../profile/HeroMastery.vue'
 import HeroAvatar from '../common/HeroAvatar.vue'
 import ItemIcon from '../common/ItemIcon.vue'
 import ModeMap from '../modes/ModeMap.vue'
@@ -326,6 +327,7 @@ watch(
 
               <span class="pool-text">
                 <strong>{{ HEROES[heroId].name }}</strong>
+                <HeroMastery :record="dossier.heroes[heroId]" />
 
                 <small v-if="pool.get(heroId)">{{
                   t('dossier.heroRecord', {

@@ -1,3 +1,4 @@
+import { FRAME_IDS, TITLE_IDS } from '@/content/progression'
 import { z } from 'zod'
 import {
   HERO_IDS,
@@ -62,6 +63,8 @@ const totals = z.object({
 /** Coaches' profiles come from their own devices, so everything is checked and anything odd falls back. */
 export const coachDossierSchema = z
   .object({
+    frame: z.enum(FRAME_IDS).nullable().catch(null),
+    title: z.enum(TITLE_IDS).nullable().catch(null),
     id: z.uuid(),
     name: z.string().max(40),
     avatar: z.string().max(32).nullable(),

@@ -132,6 +132,8 @@ export interface Database {
           position: number
           name: string
           avatar: string | null
+          frame?: string | null
+          title?: string | null
           photo: string | null
           rating: number
           open: boolean
@@ -182,6 +184,8 @@ export interface Database {
           friend_code: string
           name: string
           avatar: string | null
+          frame?: string | null
+          title?: string | null
           photo: string | null
           rating: number
           updated_at: string
@@ -246,6 +250,8 @@ export interface Database {
           id: string
           name: string
           avatar: string | null
+          frame?: string | null
+          title?: string | null
           photo: string | null
           rating: number
           since: string
@@ -372,6 +378,8 @@ export interface Database {
           id: string
           name: string
           avatar: string | null
+          frame?: string | null
+          title?: string | null
           photo: string | null
           rating: number
           status: string

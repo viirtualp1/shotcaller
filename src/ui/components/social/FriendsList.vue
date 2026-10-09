@@ -9,6 +9,7 @@ import { useChatStore } from '../../stores/chat'
 import { useCloudStore } from '../../stores/cloud'
 import { useDuelStore } from '../../stores/duel'
 import { useFriendsStore } from '../../stores/friends'
+import CoachTitle from '../profile/CoachTitle.vue'
 import CoachAvatar from '../profile/CoachAvatar.vue'
 import PresenceDot from './PresenceDot.vue'
 import WatchLiveButton from './WatchLiveButton.vue'
@@ -89,10 +90,10 @@ const nameOf = (name: string) => name || t('profile.defaultName')
 
         <ul class="list">
           <li v-for="entry in friends.incoming" :key="entry.id" class="row request">
-            <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
+            <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="38" />
 
             <span class="who">
-              <strong class="name">{{ nameOf(entry.name) }}</strong>
+              <strong class="name">{{ nameOf(entry.name) }}</strong><CoachTitle :title="entry.title" />
               <span class="status">{{ t('friends.wantsToBeFriends') }}</span>
             </span>
 
@@ -135,7 +136,7 @@ const nameOf = (name: string) => name || t('profile.defaultName')
             <RankMedal :tier="rankFor(entry.rating).tier" :stars="rankFor(entry.rating).stars" :size="30" />
 
             <span class="avatar">
-              <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="38" />
+              <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="38" />
               <PresenceDot :friend-id="entry.id" />
             </span>
           </button>
@@ -147,7 +148,7 @@ const nameOf = (name: string) => name || t('profile.defaultName')
             @click="chat.open(entry.id)"
           >
             <span class="who">
-              <strong class="name">{{ nameOf(entry.name) }}</strong>
+              <strong class="name">{{ nameOf(entry.name) }}</strong><CoachTitle :title="entry.title" />
               <span class="status">{{ statusText(entry.id) }}</span>
             </span>
 
@@ -189,10 +190,10 @@ const nameOf = (name: string) => name || t('profile.defaultName')
 
       <ul v-if="friends.outgoing.length" class="list">
         <li v-for="entry in friends.outgoing" :key="entry.id" class="row pending">
-          <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
+          <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="32" />
 
           <span class="who">
-            <strong class="name">{{ nameOf(entry.name) }}</strong>
+            <strong class="name">{{ nameOf(entry.name) }}</strong><CoachTitle :title="entry.title" />
             <span class="status">{{ t('friends.outgoing') }}</span>
           </span>
 
@@ -221,10 +222,10 @@ const nameOf = (name: string) => name || t('profile.defaultName')
 
         <ul v-if="showBlocked" class="list">
           <li v-for="entry in friends.blocked" :key="entry.id" class="row pending">
-            <CoachAvatar :hero-id="heroOf(entry.avatar)" :photo="entry.photo" :size="32" />
+            <CoachAvatar :hero-id="heroOf(entry.avatar)" :frame="entry.frame" :photo="entry.photo" :size="32" />
 
             <span class="who">
-              <strong class="name">{{ nameOf(entry.name) }}</strong>
+              <strong class="name">{{ nameOf(entry.name) }}</strong><CoachTitle :title="entry.title" />
             </span>
 
             <button type="button" class="btn ghost small" @click="friends.unblock(entry.id)">

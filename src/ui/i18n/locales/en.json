@@ -82,7 +82,7 @@
       "milestones": "Milestones"
     },
     "resets": "New contracts: {date}",
-    "trialsHint": "Trials are permanent and unlock as you level up. Your best result is saved; the XP reward is earned once.",
+    "trialsHint": "Trials unlock through level 25. The first clear earns bonus XP. Hunting shadows counts in regular matchmaking.",
     "completed": "Completed",
     "locked": "Level {level} required",
     "bestRounds": "Best clear: {n} rounds",
@@ -114,6 +114,26 @@
       "threeFronts": {
         "name": "Three fronts",
         "objective": "Win on three lanes. Occupy all three lanes and activate at least three different synergies in your final lineup."
+      },
+      "factionAlliance": {
+        "name": "Faction alliance",
+        "objective": "Win on two lanes with two different active faction bonuses in your final lineup."
+      },
+      "hardVictory": {
+        "name": "No quarter",
+        "objective": "Beat the Hard computer coach on two lanes."
+      },
+      "ghostHunter": {
+        "name": "Hunting shadows",
+        "objective": "Beat a ghost on two lanes after level 15. Find an opponent, then choose a ghost. An account is required."
+      },
+      "artificer": {
+        "name": "Forged victory",
+        "objective": "Win on three lanes with two crafted items equipped in your final lineup."
+      },
+      "legendary": {
+        "name": "A legend in the ranks",
+        "objective": "Win on three lanes with a two-star tier IV hero in your final lineup."
       }
     },
     "contracts": {
@@ -140,6 +160,22 @@
       "upgrades": {
         "name": "A stronger lineup",
         "objective": "Finish {n} matches with two heroes at two stars or higher in your final lineup."
+      },
+      "factionWins": {
+        "name": "Strength in numbers",
+        "objective": "Win {n} matches with two active factions in your final lineup."
+      },
+      "recipeWins": {
+        "name": "Work of the forge",
+        "objective": "Win {n} matches with a crafted item equipped in your final lineup."
+      },
+      "ghostWins": {
+        "name": "Shadow hunter",
+        "objective": "Beat ghosts {n} times."
+      },
+      "hardWins": {
+        "name": "Tempered",
+        "objective": "Beat the Hard computer coach {n} times."
       }
     },
     "achievements": {
@@ -162,6 +198,22 @@
       "threeStar": {
         "name": "Three stars",
         "objective": "Field a three-star hero in combat."
+      },
+      "factionWins": {
+        "name": "Strength in numbers",
+        "objective": "Win {n} matches with two active factions in your final lineup."
+      },
+      "recipeWins": {
+        "name": "Work of the forge",
+        "objective": "Win {n} matches with a crafted item equipped in your final lineup."
+      },
+      "ghostWins": {
+        "name": "Shadow hunter",
+        "objective": "Beat ghosts {n} times."
+      },
+      "hardWins": {
+        "name": "Tempered",
+        "objective": "Beat the Hard computer coach {n} times."
       }
     }
   },
@@ -1714,5 +1766,60 @@
   "legends": {
     "title": "Tier IV heroes",
     "help": "Alpha, Archon and Reaper cost 4 gold, with 4 shared copies each. Shop odds: 8% at the penultimate level and 20% at the maximum. Three copies grant two stars and a talent choice."
+  },
+  "cosmetics": {
+    "eyebrow": "MAKE YOUR MARK",
+    "path": "Coach path",
+    "intro": "40 levels, 40 permanent rewards. Choose a frame and title that tell your story. Experience keeps growing after level 40.",
+    "frame": "Frame",
+    "title": "Title",
+    "clearFrame": "Remove frame",
+    "clearTitle": "Remove title",
+    "mastery": "Mastery {n}/5",
+    "masteryNext": "Next star: {matches} matches and {wins} wins",
+    "titles": {
+      "rookie": "Rookie",
+      "scout": "Scout",
+      "tactician": "Tactician",
+      "vanguard": "Vanguard",
+      "trailblazer": "Trailblazer",
+      "quartermaster": "Quartermaster",
+      "pathfinder": "Pathfinder",
+      "duelist": "Duelist",
+      "captain": "Captain",
+      "artificer": "Artificer",
+      "marshal": "Marshal",
+      "ghostHunter": "Ghost Hunter",
+      "strategist": "Strategist",
+      "warcaller": "Warcaller",
+      "champion": "Champion",
+      "legendKeeper": "Legend Keeper",
+      "grandmaster": "Grandmaster",
+      "thronebreaker": "Thronebreaker",
+      "commander": "Commander",
+      "shotcaller": "The Shotcaller"
+    },
+    "frames": {
+      "copper": "Copper",
+      "fern": "Fern",
+      "slate": "Slate",
+      "ember": "Ember",
+      "tide": "Tide",
+      "ivory": "Ivory",
+      "amethyst": "Amethyst",
+      "oak": "Oak",
+      "steel": "Steel",
+      "sunrise": "Sunrise",
+      "jade": "Jade",
+      "storm": "Storm",
+      "rose": "Rose",
+      "frost": "Frost",
+      "laurel": "Laurel",
+      "obsidian": "Obsidian",
+      "aurora": "Aurora",
+      "royal": "Royal",
+      "celestial": "Celestial",
+      "sovereign": "Sovereign"
+    }
   }
 }

@@ -77,7 +77,11 @@ function start() {
 
   selected.value = null
   profile.close()
-  match.startTrial(trial.id)
+  if (trial.ghost) {
+    void duel.search(trial.mode)
+  } else {
+    match.startTrial(trial.id)
+  }
 }
 
 function watchReplay(trialId: TrialId) {
@@ -169,7 +173,7 @@ function watchReplay(trialId: TrialId) {
                 <button
                   type="button"
                   class="btn"
-                  :disabled="profile.level.level < trial.level || duel.matchmaking"
+                  :disabled="profile.level.level < trial.level || duel.matchmaking || (trial.ghost && !duel.connected)"
                   @click="selected = trial"
                 >
                   <Play :size="14" />

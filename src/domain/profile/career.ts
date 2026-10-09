@@ -8,7 +8,10 @@ import {
   type ContractId,
   type TrialId,
 } from '@/content/career'
-import { ITEM_SLOTS } from '@/content/items'
+import { HEROES } from '@/content/heroes'
+import { LANE_IDS } from '@/content/ids'
+import { laneFactions } from '../synergy/laneFactions'
+import { ITEM_SLOTS, recipeFor } from '@/content/items'
 import type { MatchRecord, Profile } from './Profile'
 import { levelFor } from './progression'
 
@@ -28,6 +31,7 @@ export interface TrialRecord {
 }
 
 export interface Career {
+  readonly victories?: Readonly<Record<'factionWins' | 'recipeWins' | 'ghostWins' | 'hardWins', number>>
   readonly achievements: Partial<Readonly<Record<AchievementId, string>>>
   /** Kept by week so offline matches still count for the week they were actually played in. */
   readonly weeks: Readonly<Record<string, WeeklyProgress>>
@@ -48,6 +52,7 @@ const emptyWeekly = (): WeeklyProgress => ({
     kills: 0,
     synergies: 0,
     upgrades: 0,
+    factionWins: 0, recipeWins: 0, ghostWins: 0, hardWins: 0,
   },
   completed: {},
 })
@@ -69,7 +74,7 @@ export function nextCareerWeek(week: string) {
 
 /** Everyone sees the same three contracts; one always progresses by simply finishing matches. */
 export function weeklyContracts(week: string): readonly ContractDefinition[] {
-  const rotation = ['rounds', 'towers', 'kills', 'synergies', 'upgrades'] as const
+  const rotation = ['rounds', 'towers', 'kills', 'synergies', 'upgrades', 'factionWins', 'recipeWins', 'ghostWins', 'hardWins'] as const
   const index = Math.floor(new Date(`${week}T00:00:00.000Z`).getTime() / (7 * DAY_MS)) % rotation.length
 
   return [CONTRACTS.matches, CONTRACTS[rotation[index]!], CONTRACTS[rotation[(index + 2) % rotation.length]!]]
@@ -82,6 +87,11 @@ export const earnedMatchXp = (record: MatchRecord) =>
 
 export function achievementProgress(profile: Profile, id: AchievementId) {
   switch (id) {
+    case 'factionWins':
+    case 'recipeWins':
+    case 'ghostWins':
+    case 'hardWins':
+      return profile.career.victories?.[id] ?? 0
     case 'regular':
       return profile.totals.matches
     case 'throneBreaker':
@@ -126,20 +136,46 @@ export function migrateCareer(profile: Omit<Profile, 'career'> & { readonly care
   }
 }
 
-export function trialPassed(record: MatchRecord) {
+export function activeFactions(record: MatchRecord) {
+  return new Set(LANE_IDS.flatMap((lane) => laneFactions(record.lineup.filter((hero) => hero.lane === lane).map((hero) => hero.heroId)).standings.filter((standing) => standing.tier !== null).map((standing) => standing.faction))).size
+}
+
+export const equippedRecipes = (record: MatchRecord) => record.lineup.flatMap((hero) => hero.items).filter((item) => recipeFor(item)).length
+
+function victoryProgress(record: MatchRecord) {
+  const won = record.verdict === 'win' && record.reason !== 'forfeit' && record.rounds > 0
+  return {
+    factionWins: Number(won && activeFactions(record) >= 2),
+    recipeWins: Number(won && equippedRecipes(record) > 0),
+    ghostWins: Number(won && record.duel?.ghost === true),
+    hardWins: Number(won && !record.duel && record.difficulty === 'hard'),
+  }
+}
+
+export function trialPassed(record: MatchRecord, trialId = record.trialId) {
+  const trial = trialId ? trialById(trialId) : null
   if (
-    !record.trialId ||
-    record.duel ||
-    record.difficulty !== 'standard' ||
+    !trial ||
+    (trial.ghost ? !record.duel?.ghost : Boolean(record.duel)) ||
+    (!trial.ghost && record.difficulty !== (trial.difficulty ?? 'standard')) ||
     record.verdict !== 'win' ||
     record.reason === 'forfeit' ||
     record.rounds === 0 ||
-    record.mode !== trialById(record.trialId).mode
+    record.mode !== trial.mode
   ) {
     return false
   }
 
-  switch (record.trialId) {
+  switch (trial.id) {
+    case 'factionAlliance':
+      return activeFactions(record) >= 2
+    case 'hardVictory':
+    case 'ghostHunter':
+      return true
+    case 'artificer':
+      return equippedRecipes(record) >= 2
+    case 'legendary':
+      return record.lineup.some((hero) => HEROES[hero.heroId].tier === 4 && hero.stars >= 2)
     case 'siege':
       return record.reason === 'throne'
     case 'synergy':
@@ -153,6 +189,13 @@ export function trialPassed(record: MatchRecord) {
 
 /** Settled from match data, so replaying an offline match in the cloud recomputes rewards fairly. */
 export function advanceCareer(before: Profile, after: Profile, record: MatchRecord) {
+  const increments = victoryProgress(record)
+  const victories = { ...increments }
+  for (const key of Object.keys(increments) as (keyof typeof increments)[]) {
+    victories[key] += before.career.victories?.[key] ?? 0
+  }
+
+  after = { ...after, career: { ...after.career, victories } }
   const rewards: CareerReward[] = []
   const achievements = { ...before.career.achievements }
   const weeks = { ...before.career.weeks }
@@ -176,6 +219,10 @@ export function advanceCareer(before: Profile, after: Profile, record: MatchReco
     const previous = weeklyProgress(before.career, week)
 
     const progress = {
+      factionWins: (previous.progress.factionWins ?? 0) + increments.factionWins,
+      recipeWins: (previous.progress.recipeWins ?? 0) + increments.recipeWins,
+      ghostWins: (previous.progress.ghostWins ?? 0) + increments.ghostWins,
+      hardWins: (previous.progress.hardWins ?? 0) + increments.hardWins,
       matches: previous.progress.matches + 1,
       rounds: previous.progress.rounds + record.rounds,
       towers: previous.progress.towers + record.towersDestroyed,
@@ -204,12 +251,13 @@ export function advanceCareer(before: Profile, after: Profile, record: MatchReco
       completed,
     }
 
+    const trialId = record.duel?.ghost ? 'ghostHunter' : record.trialId
     if (
-      record.trialId &&
-      levelFor(before.xp).level >= trialById(record.trialId).level &&
-      trialPassed(record)
+      trialId &&
+      levelFor(before.xp).level >= trialById(trialId).level &&
+      trialPassed(record, trialId)
     ) {
-      const trial = trialById(record.trialId)
+      const trial = trialById(trialId)
       const previous = trials[trial.id]
 
       trials[trial.id] = {
@@ -234,6 +282,7 @@ export function advanceCareer(before: Profile, after: Profile, record: MatchReco
 
   return {
     career: {
+      victories,
       achievements,
       weeks,
       trials,
